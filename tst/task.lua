@@ -12,6 +12,7 @@ do
     spawn(t, 10)
     emit('X')
     assertx(out(), "10\nX\n")
+    atmos.close()
 end
 
 do
@@ -24,6 +25,7 @@ do
     spawn(T,10)
     emit('ok')
     assertx(out(), "10\nok\n")
+    atmos.close()
 end
 
 do
@@ -39,6 +41,7 @@ do
     emit(2)
     emit(3)
     assertx(out(), "1\t1\n2\t2\n")
+    atmos.close()
 end
 
 do
@@ -49,7 +52,8 @@ do
             emit_in(false,1)
         end)()
     end)
-    assertfx(err, "task.lua:49: invalid emit : invalid target")
+    assertfx(err, "task.lua:52: invalid emit : invalid target")
+    atmos.close()
 end
 
 do
@@ -59,6 +63,7 @@ do
         out(pub().v)
     end)
     assertx(out(), "10\n")
+    atmos.close()
 end
 
 do
@@ -66,7 +71,8 @@ do
     local _,err = pcall(function ()
         pub().v = 10
     end)
-    assertfx(err, "task.lua:67: pub error : expected enclosing task")
+    assertfx(err, "task.lua:72: pub error : expected enclosing task")
+    atmos.close()
 end
 
 do
@@ -76,6 +82,7 @@ do
     end)
     out(pub(t).v)
     assertx(out(), "10\n")
+    atmos.close()
 end
 
 do
@@ -83,7 +90,8 @@ do
     local _,err = pcall(function ()
         out(pub(10).v)
     end)
-    assertfx(err, "task.lua:84: pub error : expected task")
+    assertfx(err, "task.lua:91: pub error : expected task")
+    atmos.close()
 end
 
 do
@@ -95,6 +103,7 @@ do
     emit(10)
     out("ok")
     assertx(out(), "awake\nok\n")
+    atmos.close()
 end
 
 do
@@ -106,6 +115,7 @@ do
     emit(10)
     out("ok")
     assertx(out(), "ok\n")
+    atmos.close()
 end
 
 do
@@ -117,6 +127,7 @@ do
     emit(clock{h=10})
     out("ok")
     assertx(out(), "awake\nok\n")
+    atmos.close()
 end
 
 do
@@ -129,6 +140,7 @@ do
     end)
     out("ok")
     assertx(out(), "awake\nok\n")
+    atmos.close()
 end
 
 do
@@ -143,6 +155,7 @@ do
     emit()
     out("ok")
     assertx(out(), "awake\nok\n")
+    atmos.close()
 end
 
 do
@@ -160,6 +173,7 @@ do
     emit()
     out("ok")
     assertx(out(), "ok\n")
+    atmos.close()
 end
 
 do
@@ -167,7 +181,8 @@ do
     local _,err = pcall(function ()
         await()
     end)
-    assertfx(err, "task.lua:168: invalid await : expected enclosing running task")
+    assertfx(err, "task.lua:182: invalid await : expected enclosing running task")
+    atmos.close()
 end
 
 do
@@ -177,7 +192,8 @@ do
             await()
         end)
     end)
-    assertfx(err, "task.lua:177: invalid await : expected event")
+    assertfx(err, "task.lua:192: invalid await : expected event")
+    atmos.close()
 end
 
 do

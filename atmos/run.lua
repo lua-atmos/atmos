@@ -3,12 +3,48 @@ local run = {}
 local meta_defer = {
     __close = function (t) t.f() end
 }
-local meta_tasks = {
-    __close = function (t)
-        for _,dn in ipairs(t.dns) do
+local meta_tasks; meta_tasks = {
+    __close = function (ts)
+        for _,dn in ipairs(ts.dns) do
             getmetatable(dn).__close(dn)
         end
-    end
+    end,
+    next = function (s, i)
+        if i == s.max then
+            return nil
+        else
+            i = i + 1
+            return i, s.ts.dns[i]
+        end
+    end,
+    __pairs = function (ts)
+        local co = coroutine.create (
+            function ()
+                ts.ing = ts.ing + 1
+                local _ <close> = setmetatable({}, {
+                    __close = function()
+                        ts.ing = ts.ing - 1
+                        --task_gc(ts)
+                    end
+                })
+                for _,v in ipairs(ts.dns) do
+                    coroutine.yield(v)
+                end
+            end
+        )
+        local wr = (
+            function ()
+                return (function (ok, ...)
+                    if not ok then
+                        error(..., 0)
+                    end
+                    return ...
+                end)(coroutine.resume(co))
+            end
+        )
+        local close = setmetatable({}, {__close=function() coroutine.close(co) end})
+        return meta_tasks.next, {ts=ts,max=#ts.dns}, 0, close
+    end,
 }
 local meta_task = {
     __close = function (t)
@@ -121,7 +157,19 @@ local function task_awake_check (time, t, e, v, ...)
     end
 end
 
--------------------------------------------------------------------------------
+local function task_gc (t)
+    if t.gc and t.ing==0 then
+        t.gc = false
+        for i=#t.dns, 1, -1 do
+            local s = t.dns[i]
+            if getmetatable(s)==meta_task and coroutine.status(s.co)=='dead' then
+                table.remove(t.dns, i)
+            end
+        end
+    end
+end
+
+---------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
 function run.close ()
@@ -133,6 +181,22 @@ function run.defer (f)
 end
 
 -------------------------------------------------------------------------------
+
+function run.tasks (max)
+    local n = max and tonumber(max) or nil
+    assertn(2, (not max) or n, 'invalid tasks limit : expected number')
+    local up = me() or TASKS
+    local ts = {
+        up  = up,
+        dns = {},
+        ing = 0,
+        gc  = false,
+        max = n,
+    }
+    up.dns[#up.dns+1] = ts
+    setmetatable(ts, meta_tasks)
+    return ts
+end
 
 function run.task (f, fake)
     local t = {
@@ -287,7 +351,7 @@ local function emit (time, t, ...)
     end
     t.ing = t.ing - 1
 
-    --atm_task_gc(t)
+    task_gc(t)
 
     if getmetatable(t) == meta_task then
         if not ok then

@@ -1,5 +1,7 @@
 print "===== TASK ====="
 dofile "task.lua"
+print "===== TASKS ====="
+dofile "tasks.lua"
 print "===== DEFER ====="
 dofile "defer.lua"
 print "===== PAR ====="

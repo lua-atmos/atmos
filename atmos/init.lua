@@ -6,8 +6,8 @@ local atmos = {
 }
 
 defer = run.defer
-
-task = run.task
+tasks = run.tasks
+task  = run.task
 
 function spawn_in (up, t, ...)
     return run.spawn(up, t, ...)
