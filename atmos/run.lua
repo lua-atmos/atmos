@@ -303,6 +303,8 @@ function run.emit (to, e, ...)
     assertn(0, (not me) or me.status~='aborted', 'atm_aborted')
 end
 
+-------------------------------------------------------------------------------
+
 function run.pub (t)
     if t then
         assertn(2, getmetatable(t)==meta_task, "pub error : expected task")
@@ -310,6 +312,15 @@ function run.pub (t)
     else
         return assertn(2, me(true), "pub error : expected enclosing task").pub
     end
+end
+
+-------------------------------------------------------------------------------
+
+function run.par (...)
+    for i=1, select('#',...) do
+        spawn(select(i,...))
+    end
+    run.await(false)
 end
 
 return run

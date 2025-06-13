@@ -30,4 +30,6 @@ end
 
 pub = run.pub
 
+par = run.par
+
 return atmos
