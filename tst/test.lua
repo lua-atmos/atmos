@@ -1,5 +1,8 @@
-local OUT = ""
+function assertx(cur, exp)
+    return assert(cur == exp, cur)
+end
 
+local OUT = ""
 function out (...)
     if select('#',...) == 0 then
         local ret = OUT
@@ -12,6 +15,6 @@ function out (...)
             end
             OUT = OUT .. tostring(select(i,...))
         end
-        out = out .. '\n'
+        OUT = OUT .. '\n'
     end
 end
