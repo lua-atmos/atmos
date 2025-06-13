@@ -23,7 +23,12 @@ local meta_task = {
         end
     end
 }
-local meta_clock = {}
+local meta_clock = {
+    __atmos = function (awt, evt)
+        awt.e.cur = awt.e.cur - clock_to_ms(evt)
+        return awt.e.cur <= 0
+    end
+}
 
 function clock_to_ms (clk)
     return (clk.ms                         or 0) +
@@ -101,11 +106,14 @@ local function task_awake_check (time, t, e, v, ...)
         else
             return true
         end
-    elseif (getmetatable(t.await.e) == meta_clock) and (getmetatable(e) == meta_clock) then
-        t.await.e.cur = t.await.e.cur - clock_to_ms(e)
-        return t.await.e.cur <= 0
     else
-        return false
+        local mawt = getmetatable(t.await.e)
+        local mevt = getmetatable(e)
+        if mawt==mevt and mawt.__atmos then
+            return mawt.__atmos(t.await, e)
+        else
+            return false
+        end
     end
 end
 
