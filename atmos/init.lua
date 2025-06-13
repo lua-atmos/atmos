@@ -14,6 +14,7 @@ function spawn (t, ...)
 end
 
 await = run.await
+clock = run.clock
 
 function emit_in (to, e, ...)
     return run.emit(to, e, ...)

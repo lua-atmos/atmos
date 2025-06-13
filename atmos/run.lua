@@ -17,6 +17,14 @@ local meta_task = {
         end
     end
 }
+local meta_clock = {}
+
+function clock_to_ms (clk)
+    return (clk.ms                         or 0) +
+           (clk.s   and clk.s  *1000       or 0) +
+           (clk.min and clk.min*1000*60    or 0) +
+           (clk.h   and clk.h  *1000*60*60 or 0)
+end
 
 local TIME = 1
 
@@ -69,7 +77,7 @@ local function task_resume_result (t, ok, err)
     end
 end
 
-local function task_awake_check (time, t, a)
+local function task_awake_check (time, t, e, v, ...)
     if coroutine.status(t.co) ~= 'suspended' then
         -- nothing to awake
         return false
@@ -79,10 +87,27 @@ local function task_awake_check (time, t, a)
     elseif t.await.e == false then
         -- never awakes
         return false
-    elseif t.await.e==true or a==t.await.e then
+    elseif t.await.e == true then
         return true
+    elseif t.await.e == e then
+        if (t.await.v ~= nil) and (t.await.v ~= v) then
+            return false
+        else
+            return true
+        end
     else
-        return false
+        local mawt = getmetatable(t.await.e)
+        local mevt = getmetatable(e)
+        if mawt ~= mevt then
+            return false
+        elseif mawt == meta_task then
+            error "TODO: task await"
+        elseif mawt == meta_clock then
+            t.await.e.cur = t.await.e.cur - clock_to_ms(e)
+            return t.await.e.cur <= 0
+        else
+            return false
+        end
     end
 end
 
@@ -159,20 +184,12 @@ end
 function run.await (e, v, ...)
     local t = me()
     assertn(2, t, 'invalid await : expected enclosing task instance', 2)
-    local tsk = (getmetatable(e) == 'task')
-    if tsk then
+    if getmetatable(e) == 'task' then
         if coroutine.status(e.co)=='dead' then
             return e.ret
-        else
-            v = e
-            e = 'task'
         end
-    elseif e == 'clock' then
-        local ms = v
-        v = function (x)
-            ms = ms - x
-            return (ms <= 0)
-        end
+    elseif getmetatable(e) == meta_clock then
+        e.cur = clock_to_ms(e)
     elseif e == 'par_or' then
         local tsks = { ... }
         e = true
@@ -189,8 +206,12 @@ function run.await (e, v, ...)
             return tsk.ret
         end
     end
-    t.await = { e=e, v=v, time=TIME }
+    t.await = { e=e, v=v, time=TIME, ... }
     return await(coroutine.yield())
+end
+
+function run.clock (t)
+    return setmetatable(t, meta_clock)
 end
 
 -------------------------------------------------------------------------------

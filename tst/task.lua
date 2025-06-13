@@ -2,7 +2,7 @@ require "test"
 require "atmos"
 
 do
-    print("Testing...", "task 1")
+    print("Testing...", "task 1: await(X)")
     local T = function (a)
         out(a)
         local b = await('X')
@@ -15,7 +15,7 @@ do
 end
 
 do
-    print("Testing...", "task 2")
+    print("Testing...", "task 2: await(true)")
     local function T (a)
         out(a)
         local b = await(true)
@@ -78,11 +78,58 @@ do
     assertx(out(), "10\n")
 end
 
-
 do
     print("Testing...", "pub 4")
     local _,err = pcall(function ()
         out(pub(10).v)
     end)
-    assertfx(err, "task.lua:85: pub error : expected task")
+    assertfx(err, "task.lua:84: pub error : expected task")
+end
+
+do
+    print("Testing...", "await 1: true")
+    spawn(function ()
+        await(true)
+        out("awake")
+    end)
+    emit(10)
+    out("ok")
+    assertx(out(), "awake\nok\n")
+end
+
+do
+    print("Testing...", "await 2: false")
+    spawn(function ()
+        await(false)
+        out("awake")
+    end)
+    emit(10)
+    out("ok")
+    assertx(out(), "ok\n")
+end
+
+do
+    print("Testing...", "await 3: clock")
+    spawn(function ()
+        await(clock{h=1,min=1,s=1,ms=10})
+        out("awake")
+    end)
+    emit(clock{h=10})
+    out("ok")
+    assertx(out(), "awake\nok\n")
+end
+
+do
+    print("Testing...", "loop 1")
+    function T ()
+        while true do
+            local e = await(true)
+            out(e)
+        end
+    end
+    spawn(T)
+    emit(10)
+    emit(20)
+    out("ok")
+    assertx(out(), "10\n20\nok\n")
 end
