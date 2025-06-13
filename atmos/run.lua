@@ -324,6 +324,12 @@ end
 
 -------------------------------------------------------------------------------
 
+function run.every (e, f)
+    while true do
+        f(run.await(e))
+    end
+end
+
 function run.par (...)
     for i=1, select('#',...) do
         spawn(select(i,...))

@@ -30,6 +30,7 @@ end
 
 pub = run.pub
 
+every = run.every
 par = run.par
 
 return atmos
