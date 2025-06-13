@@ -1,5 +1,7 @@
 local run = {}
 
+local task_gc
+
 local meta_defer = {
     __close = function (t) t.f() end
 }
@@ -18,31 +20,13 @@ local meta_tasks; meta_tasks = {
         end
     end,
     __pairs = function (ts)
-        local co = coroutine.create (
-            function ()
-                ts.ing = ts.ing + 1
-                local _ <close> = setmetatable({}, {
-                    __close = function()
-                        ts.ing = ts.ing - 1
-                        --task_gc(ts)
-                    end
-                })
-                for _,v in ipairs(ts.dns) do
-                    coroutine.yield(v)
-                end
+        ts.ing = ts.ing + 1
+        local close = setmetatable({}, {
+            __close = function ()
+                ts.ing = ts.ing - 1
+                task_gc(ts)
             end
-        )
-        local wr = (
-            function ()
-                return (function (ok, ...)
-                    if not ok then
-                        error(..., 0)
-                    end
-                    return ...
-                end)(coroutine.resume(co))
-            end
-        )
-        local close = setmetatable({}, {__close=function() coroutine.close(co) end})
+        })
         return meta_tasks.next, {ts=ts,max=#ts.dns}, 0, close
     end,
 }
@@ -157,7 +141,7 @@ local function task_awake_check (time, t, e, v, ...)
     end
 end
 
-local function task_gc (t)
+task_gc = function (t)
     if t.gc and t.ing==0 then
         t.gc = false
         for i=#t.dns, 1, -1 do

@@ -87,3 +87,22 @@ do
     assertx(out(), "1\t10\n2\t20\n")
     atmos.close()
 end
+
+do
+    print("Testing...", "tasks 8: pairs gc")
+    function T ()
+        await(true)
+        out 'ok'
+    end
+    local ts = tasks(1)
+    spawn_in(ts, T)
+    for _, t in getmetatable(ts).__pairs(ts) do
+        emit()                      -- kills t
+        local ok = spawn_in(ts, T)  -- failure b/c ts.ing>0
+        out(ok)
+    end
+    local ok = spawn_in(ts, T)      -- success b/c ts.ing=0
+    out(ok ~= nil)
+    assertx(out(), "ok\nnil\ntrue\n")
+    atmos.close()
+end
