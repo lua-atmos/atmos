@@ -43,9 +43,46 @@ end
 
 do
     print("Testing...", "emit 1")
-    emit(1)
-    (function ()
-        emit_in(false,1)
-    end)()
-    assertx(out(), "anon.atm : line 1 : invalid emit : invalid target")
+    local _,err = pcall(function ()
+        emit(1)
+        ;(function ()
+            emit_in(false,1)
+        end)()
+    end)
+    assertfx(err, "task.lua:49: invalid emit : invalid target")
+end
+
+do
+    print("Testing...", "pub 1")
+    spawn (function ()
+        pub().v = 10
+        out(pub().v)
+    end)
+    assertx(out(), "10\n")
+end
+
+do
+    print("Testing...", "pub 2: error")
+    local _,err = pcall(function ()
+        pub().v = 10
+    end)
+    assertfx(err, "task.lua:67: pub error : expected enclosing task")
+end
+
+do
+    print("Testing...", "pub 3")
+    local t = spawn (function ()
+        pub().v = 10
+    end)
+    out(pub(t).v)
+    assertx(out(), "10\n")
+end
+
+
+do
+    print("Testing...", "pub 4")
+    local _,err = pcall(function ()
+        out(pub(10).v)
+    end)
+    assertfx(err, "task.lua:85: pub error : expected task")
 end

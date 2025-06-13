@@ -2,6 +2,10 @@ function assertx(cur, exp)
     return assert(cur == exp, cur)
 end
 
+function assertfx(cur, exp)
+    return assert(string.find(cur,exp), cur)
+end
+
 local OUT = ""
 function out (...)
     if select('#',...) == 0 then

@@ -20,3 +20,5 @@ end
 function emit (e, ...)
     return run.emit(nil, e, ...)
 end
+
+pub = run.pub

@@ -82,7 +82,7 @@ function run.task (f, fake)
         co  = coroutine.create(f),
         fake = fake,
         status = nil, -- aborted, toggled
-        pub = nil,
+        pub = {},
         ret = nil,
     }
     TASKS.cache[t.co] = t
@@ -256,6 +256,15 @@ function run.emit (to, e, ...)
     local me = me(true)
     emit(time, fto(me,to), e, ...)
     assertn(0, (not me) or me.status~='aborted', 'atm_aborted')
+end
+
+function run.pub (t)
+    if t then
+        assertn(2, getmetatable(t)==meta_task, "pub error : expected task")
+        return t.pub
+    else
+        return assertn(2, me(true), "pub error : expected enclosing task").pub
+    end
 end
 
 return run
