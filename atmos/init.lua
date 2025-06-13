@@ -1,6 +1,8 @@
 require "atmos.aux"
 local run = require "atmos.run"
 
+defer = run.defer
+
 task = run.task
 
 function spawn_in (up, t, ...)

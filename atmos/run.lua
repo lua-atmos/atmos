@@ -1,7 +1,22 @@
 local run = {}
 
+local meta_defer = {
+    __close = function (t) t.f() end
+}
 local meta_tasks = {}
-local meta_task = {}
+local meta_task = {
+    __close = function (t)
+        for _,dn in ipairs(t.dns) do
+            meta_task.__close(dn)
+        end
+        if coroutine.status(t.co) == 'normal' then
+            -- cannot close now (emit continuation will raise error)
+            t.status = 'aborted'
+        else
+            coroutine.close(t.co)
+        end
+    end
+}
 
 local TIME = 1
 
@@ -69,6 +84,12 @@ local function task_awake_check (time, t, a)
     else
         return false
     end
+end
+
+-------------------------------------------------------------------------------
+
+function run.defer (f)
+    return setmetatable({f=f}, meta_defer)
 end
 
 -------------------------------------------------------------------------------
