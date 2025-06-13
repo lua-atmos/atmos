@@ -3,11 +3,17 @@ local run = {}
 local meta_defer = {
     __close = function (t) t.f() end
 }
-local meta_tasks = {}
+local meta_tasks = {
+    __close = function (t)
+        for _,dn in ipairs(t.dns) do
+            getmetatable(dn).__close(dn)
+        end
+    end
+}
 local meta_task = {
     __close = function (t)
         for _,dn in ipairs(t.dns) do
-            meta_task.__close(dn)
+            getmetatable(dn).__close(dn)
         end
         if coroutine.status(t.co) == 'normal' then
             -- cannot close now (emit continuation will raise error)
@@ -72,7 +78,7 @@ local function task_resume_result (t, ok, err)
             while getmetatable(up) == meta_tasks do
                 up = up.up
             end
-            emit(up, 'task', t)
+            run.emit(up, t)
         --end
     end
 end
@@ -95,23 +101,20 @@ local function task_awake_check (time, t, e, v, ...)
         else
             return true
         end
+    elseif (getmetatable(t.await.e) == meta_clock) and (getmetatable(e) == meta_clock) then
+        t.await.e.cur = t.await.e.cur - clock_to_ms(e)
+        return t.await.e.cur <= 0
     else
-        local mawt = getmetatable(t.await.e)
-        local mevt = getmetatable(e)
-        if mawt ~= mevt then
-            return false
-        elseif mawt == meta_task then
-            error "TODO: task await"
-        elseif mawt == meta_clock then
-            t.await.e.cur = t.await.e.cur - clock_to_ms(e)
-            return t.await.e.cur <= 0
-        else
-            return false
-        end
+        return false
     end
 end
 
 -------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+function run.close ()
+    meta_tasks.__close(TASKS)
+end
 
 function run.defer (f)
     return setmetatable({f=f}, meta_defer)
@@ -184,7 +187,7 @@ end
 function run.await (e, v, ...)
     local t = me()
     assertn(2, t, 'invalid await : expected enclosing task instance', 2)
-    if getmetatable(e) == 'task' then
+    if getmetatable(e) == meta_task then
         if coroutine.status(e.co)=='dead' then
             return e.ret
         end

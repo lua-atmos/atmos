@@ -1,6 +1,10 @@
 require "atmos.aux"
 local run = require "atmos.run"
 
+local atmos = {
+    close = run.close
+}
+
 defer = run.defer
 
 task = run.task
@@ -25,3 +29,5 @@ function emit (e, ...)
 end
 
 pub = run.pub
+
+return atmos

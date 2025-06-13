@@ -1,5 +1,5 @@
 require "test"
-require "atmos"
+local atmos = require "atmos"
 
 do
     print("Testing...", "task 1: await(X)")
@@ -120,6 +120,49 @@ do
 end
 
 do
+    print("Testing...", "await 4: task")
+    spawn(function ()
+        local t = spawn(function ()
+        end)
+        await(t)
+        out("awake")
+    end)
+    out("ok")
+    assertx(out(), "awake\nok\n")
+end
+
+do
+    print("Testing...", "await 5: task")
+    spawn(function ()
+        local t = spawn(function ()
+            await(true)
+        end)
+        await(t)
+        out("awake")
+    end)
+    emit()
+    out("ok")
+    assertx(out(), "awake\nok\n")
+end
+
+do
+    print("Testing...", "await 5: task - no awake")
+    spawn(function ()
+        local x = spawn(function ()
+            await(true)
+        end)
+        local y = spawn(function ()
+            await(false)
+        end)
+        await(y)
+        out("awake")
+    end)
+    emit()
+    out("ok")
+    assertx(out(), "ok\n")
+end
+
+do
     print("Testing...", "loop 1")
     function T ()
         while true do
@@ -132,4 +175,11 @@ do
     emit(20)
     out("ok")
     assertx(out(), "10\n20\nok\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "loop 1: check close")
+    emit(10)
+    assertx(out(), "")
 end
