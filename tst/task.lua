@@ -215,4 +215,3 @@ do
     assertx(out(), "10\n20\nok\n")
     atmos.close()
 end
-
