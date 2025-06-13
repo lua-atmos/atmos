@@ -24,6 +24,7 @@ function env.loop ()
             local cur = SDL.getTicks()
             if (cur - old) >= MS_PER_FRAME then
                 old = cur
+                emit(clock{ms=MS_PER_FRAME})
                 emit('step', MS_PER_FRAME)
             end
         end

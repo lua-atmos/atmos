@@ -181,7 +181,7 @@ do
     local _,err = pcall(function ()
         await()
     end)
-    assertfx(err, "task.lua:182: invalid await : expected enclosing running task")
+    assertfx(err, "task.lua:182: invalid await : expected enclosing task")
     atmos.close()
 end
 

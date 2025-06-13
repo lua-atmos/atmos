@@ -44,24 +44,6 @@ local meta_task = {
     end
 }
 
-local function clock_to_ms (clk)
-    return (clk.ms                         or 0) +
-           (clk.s   and clk.s  *1000       or 0) +
-           (clk.min and clk.min*1000*60    or 0) +
-           (clk.h   and clk.h  *1000*60*60 or 0)
-end
-
-local meta_clock; meta_clock = {
-    __atmos = function (evt, awt)
-        if getmetatable(awt.e) == meta_clock then
-            awt.e.cur = awt.e.cur - clock_to_ms(evt)
-            return awt.e.cur <= 0
-        else
-            return false
-        end
-    end
-}
-
 local TIME = 1
 
 local TASKS = setmetatable({
@@ -124,21 +106,29 @@ local function task_awake_check (time, t, e, v, ...)
         -- never awakes
         return false
     elseif t.await.e == true then
-        return true
+        -- ok
     elseif t.await.e == e then
-        if (t.await.v ~= nil) and (t.await.v ~= v) then
-            return false
-        else
-            return true
-        end
+        -- ok
     else
         local mt = getmetatable(e)
-        if mt and mt.__atmos then
-            return mt.__atmos(e, t.await)
+        if mt and mt.__atmos and mt.__atmos(e, t.await) then
+            -- ok
         else
             return false
         end
     end
+
+    if t.await.v == nil then
+        -- ok
+    elseif t.await.v == v then
+        -- ok
+    elseif type(t.await.v)=='function' and t.await.v(v) then
+        -- ok
+    else
+        return false
+    end
+
+    return true
 end
 
 task_gc = function (t)
@@ -244,9 +234,29 @@ local function await (err, a, b, ...)
     end
 end
 
+local function clock_to_ms (clk)
+    return (clk.ms                         or 0) +
+           (clk.s   and clk.s  *1000       or 0) +
+           (clk.min and clk.min*1000*60    or 0) +
+           (clk.h   and clk.h  *1000*60*60 or 0)
+end
+
+local meta_clock; meta_clock = {
+    __atmos = function (evt, awt)
+        if getmetatable(awt.e) == meta_clock then
+            awt.e.cur = awt.e.cur - clock_to_ms(evt)
+            return awt.e.cur <= 0
+        else
+            return false
+        end
+    end
+}
+
+local meta_paror = {}
+
 function run.await (e, v, ...)
     local t = me()
-    assertn(2, t, 'invalid await : expected enclosing running task', 2)
+    assertn(2, t, 'invalid await : expected enclosing task', 2)
     assertn(2, e~=nil, 'invalid await : expected event', 2)
     if getmetatable(e) == meta_task then
         if coroutine.status(e.co)=='dead' then
@@ -254,7 +264,7 @@ function run.await (e, v, ...)
         end
     elseif getmetatable(e) == meta_clock then
         e.cur = clock_to_ms(e)
-    elseif e == 'par_or' then
+    elseif getmetatable(e) == meta_paror then
         local tsks = { ... }
         e = true
         v = function ()
@@ -378,21 +388,44 @@ end
 -------------------------------------------------------------------------------
 
 function run.every (e, f)
+    assertn(2, me(),
+        'invalid every : expected enclosing task')
     while true do
         f(run.await(e))
     end
 end
 
 function run.par (...)
+    assertn(2, me(),
+        'invalid par : expected enclosing task')
     for i=1, select('#',...) do
         local f = select(i,...)
         assertn(2, type(f) == 'function',
             'invalid par : expected task prototype')
         spawn(select(i,...))
     end
-    assertn(2, me(),
-        'invalid par : expected enclosing running task')
     run.await(false)
+end
+
+function run.par_or (...)
+    assertn(2, me(),
+        'invalid par_or : expected enclosing task')
+    local ts = { ... }
+    for i, f in ipairs(ts) do
+        assertn(2, type(f) == 'function',
+            'invalid par_or : expected task prototype')
+        ts[i] = spawn(f)
+    end
+    return run.await(setmetatable(ts, meta_paror))
+end
+
+function run.watching (e, f)
+    assertn(2, me(),
+        'invalid watching : expected enclosing task')
+    local ef = function ()
+        await(e)
+    end
+    return run.par_or(ef, f)
 end
 
 return run
