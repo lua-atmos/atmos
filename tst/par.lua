@@ -45,6 +45,15 @@ do
     local _,err = pcall(function ()
         par(10)
     end)
-    assertfx(err, "par.lua:46: invalid spawn : expected task prototype")
+    assertfx(err, "par.lua:46: invalid par : expected task prototype")
+end
+
+
+do
+    print("Testing...", "par 4: err")
+    local _,err = pcall(function ()
+        par(function() end)
+    end)
+    assertfx(err, "par.lua:55: invalid par : expected enclosing running task")
 end
 

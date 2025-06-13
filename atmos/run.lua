@@ -194,7 +194,8 @@ end
 
 function run.await (e, v, ...)
     local t = me()
-    assertn(2, t, 'invalid await : expected enclosing task instance', 2)
+    assertn(2, t, 'invalid await : expected enclosing running task', 2)
+    assertn(2, e~=nil, 'invalid await : expected event', 2)
     if getmetatable(e) == meta_task then
         if coroutine.status(e.co)=='dead' then
             return e.ret
@@ -332,8 +333,13 @@ end
 
 function run.par (...)
     for i=1, select('#',...) do
+        local f = select(i,...)
+        assertn(2, type(f) == 'function',
+            'invalid par : expected task prototype')
         spawn(select(i,...))
     end
+    assertn(2, me(),
+        'invalid par : expected enclosing running task')
     run.await(false)
 end
 

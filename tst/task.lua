@@ -163,6 +163,24 @@ do
 end
 
 do
+    print("Testing...", "await 6: error")
+    local _,err = pcall(function ()
+        await()
+    end)
+    assertfx(err, "task.lua:168: invalid await : expected enclosing running task")
+end
+
+do
+    print("Testing...", "await 7: error")
+    local _,err = pcall(function ()
+        spawn(function ()
+            await()
+        end)
+    end)
+    assertfx(err, "task.lua:177: invalid await : expected event")
+end
+
+do
     print("Testing...", "loop 1")
     function T ()
         while true do
