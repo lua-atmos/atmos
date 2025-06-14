@@ -1,6 +1,40 @@
 local atmos = require "atmos"
 require "test"
 
+print '--- AWAIT ---'
+
+do
+    print("Testing...", "await 1: error")
+    local _,err = pcall(function ()
+        await()
+    end)
+    assertfx(err, "task.lua:9: invalid await : expected enclosing task")
+    atmos.close()
+end
+
+do
+    print("Testing...", "await 2: error")
+    local _,err = pcall(function ()
+        spawn(function ()
+            await()
+        end)
+    end)
+    assertfx(err, "task.lua:19: invalid await : expected event")
+    atmos.close()
+end
+
+do
+    print("Testing...", "emit 1")
+    local _,err = pcall(function ()
+        emit(1)
+        ;(function ()
+            emit_in(false,1)
+        end)()
+    end)
+    assertfx(err, "task.lua:31: invalid emit : invalid target")
+    atmos.close()
+end
+
 do
     print("Testing...", "task 1: await(X)")
     local T = function (a)
@@ -45,56 +79,6 @@ do
 end
 
 do
-    print("Testing...", "emit 1")
-    local _,err = pcall(function ()
-        emit(1)
-        ;(function ()
-            emit_in(false,1)
-        end)()
-    end)
-    assertfx(err, "task.lua:52: invalid emit : invalid target")
-    atmos.close()
-end
-
-do
-    print("Testing...", "pub 1")
-    spawn (function ()
-        pub().v = 10
-        out(pub().v)
-    end)
-    assertx(out(), "10\n")
-    atmos.close()
-end
-
-do
-    print("Testing...", "pub 2: error")
-    local _,err = pcall(function ()
-        pub().v = 10
-    end)
-    assertfx(err, "task.lua:72: pub error : expected enclosing task")
-    atmos.close()
-end
-
-do
-    print("Testing...", "pub 3")
-    local t = spawn (function ()
-        pub().v = 10
-    end)
-    out(pub(t).v)
-    assertx(out(), "10\n")
-    atmos.close()
-end
-
-do
-    print("Testing...", "pub 4")
-    local _,err = pcall(function ()
-        out(pub(10).v)
-    end)
-    assertfx(err, "task.lua:91: pub error : expected task")
-    atmos.close()
-end
-
-do
     print("Testing...", "await 1: true")
     spawn(function ()
         await(true)
@@ -118,6 +102,8 @@ do
     atmos.close()
 end
 
+print "--- AWAIT / CLOCK ---"
+
 do
     print("Testing...", "await 3: clock")
     spawn(function ()
@@ -129,6 +115,8 @@ do
     assertx(out(), "awake\nok\n")
     atmos.close()
 end
+
+print "--- AWAIT / TASK ---"
 
 do
     print("Testing...", "await 4: task")
@@ -176,25 +164,47 @@ do
     atmos.close()
 end
 
+print '--- PUB ---'
+
 do
-    print("Testing...", "await 6: error")
-    local _,err = pcall(function ()
-        await()
+    print("Testing...", "pub 1")
+    spawn (function ()
+        pub().v = 10
+        out(pub().v)
     end)
-    assertfx(err, "task.lua:182: invalid await : expected enclosing task")
+    assertx(out(), "10\n")
     atmos.close()
 end
 
 do
-    print("Testing...", "await 7: error")
+    print("Testing...", "pub 2: error")
     local _,err = pcall(function ()
-        spawn(function ()
-            await()
-        end)
+        pub().v = 10
     end)
-    assertfx(err, "task.lua:192: invalid await : expected event")
+    assertfx(err, "task.lua:182: pub error : expected enclosing task")
     atmos.close()
 end
+
+do
+    print("Testing...", "pub 3")
+    local t = spawn (function ()
+        pub().v = 10
+    end)
+    out(pub(t).v)
+    assertx(out(), "10\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "pub 4")
+    local _,err = pcall(function ()
+        out(pub(10).v)
+    end)
+    assertfx(err, "task.lua:201: pub error : expected task")
+    atmos.close()
+end
+
+print '--- LOOP / EVERY ---'
 
 do
     print("Testing...", "loop 1")

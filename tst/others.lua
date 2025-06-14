@@ -177,3 +177,16 @@ do
     assertx(out(), "true\t10\n")
     atmos.close()
 end
+
+do
+    print("Testing...", "catch 9")
+    do
+        local a = 1
+        catch('X', function ()
+            local b = 2
+            out(a+b)
+        end)
+    end
+    assertx(out(), "3\n")
+    atmos.close()
+end
