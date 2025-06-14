@@ -5,6 +5,9 @@ local atmos = {
     close = run.close
 }
 
+throw = run.throw
+catch = run.catch
+
 defer = run.defer
 tasks = run.tasks
 task  = run.task

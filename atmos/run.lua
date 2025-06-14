@@ -154,11 +154,34 @@ function run.defer (f)
     return setmetatable({f=f}, meta_defer)
 end
 
+local meta_throw = {}
+
+function run.throw (e)
+    assertn(2, type(e) == 'table', "invalid throw : expected table")
+    error(setmetatable(e, meta_throw), 2)
+end
+
+function run.catch (id, blk)
+    return (function (ok, err, ...)
+        if ok then
+            return err,...
+        elseif getmetatable(err) == meta_throw then
+            if err[1] == id then
+                return err[2] or err[1]
+            else
+                error(err, 0)
+            end
+        else
+             error(err, 0)
+        end
+    end)(pcall(blk))
+end
+
 -------------------------------------------------------------------------------
 
 function run.tasks (max)
     local n = max and tonumber(max) or nil
-    assertn(2, (not max) or n, 'invalid tasks limit : expected number')
+    assertn(2, (not max) or n, "invalid tasks limit : expected number")
     local up = me() or TASKS
     local ts = {
         up  = up,
@@ -263,8 +286,8 @@ local meta_paror = {
 
 function run.await (e, v, ...)
     local t = me()
-    assertn(2, t, 'invalid await : expected enclosing task', 2)
-    assertn(2, e~=nil, 'invalid await : expected event', 2)
+    assertn(2, t, "invalid await : expected enclosing task", 2)
+    assertn(2, e~=nil, "invalid await : expected event", 2)
     if getmetatable(e) == meta_task then
         if coroutine.status(e.co)=='dead' then
             return e.ret
@@ -313,13 +336,13 @@ local function fto (me, to)
         to = me or TASKS
         while n > 0 do
             to = to.up
-            assertn(3, to~=nil, 'invalid emit : invalid target')
+            assertn(3, to~=nil, "invalid emit : invalid target")
             n = n - 1
         end
     elseif getmetatable(to)==meta_task or getmetatable(to)==meta_tasks then
         to = to
     else
-        error('invalid emit : invalid target', 3)
+        error("invalid emit : invalid target", 3)
     end
 
     return to
@@ -398,8 +421,7 @@ function run.every (e, f, blk)
     if not blk then
         f,blk = nil,f
     end
-    assertn(2, me(),
-        'invalid every : expected enclosing task')
+    assertn(2, me(), "invalid every : expected enclosing task")
     while true do
         blk(run.await(e, f))
     end
