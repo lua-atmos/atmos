@@ -1,5 +1,5 @@
-require "test"
 local atmos = require "atmos"
+require "test"
 
 do
     print("Testing...", "tasks 1")

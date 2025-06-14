@@ -32,6 +32,7 @@ pub = run.pub
 
 every = run.every
 par = run.par
+par_or = run.par_or
 watching = run.watching
 
 return atmos

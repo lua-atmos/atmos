@@ -122,8 +122,8 @@ local function task_awake_check (time, t, e, v, ...)
         -- ok
     elseif t.await.v == v then
         -- ok
-    elseif type(t.await.v)=='function' and t.await.v(v) then
-        -- ok
+    elseif type(t.await.v) == 'function' then
+        -- ok: call t.await.v(v) inside
     else
         return false
     end
@@ -198,8 +198,7 @@ function run.spawn (up, t, ...)
             return run.spawn(up, t, ...)
         end
     end
-    assertn(3, getmetatable(t)==meta_task,
-        'invalid spawn : expected task prototype')
+    assertn(3, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
 
     up = up or me() or TASKS
     if up.max and #up.dns>=up.max then
@@ -221,12 +220,14 @@ local function await (err, a, b, ...)
     else
         -- must call t.await.f here (vs atm_task_awake_check) bc of atm_me
         -- a=:X, b={...}, choose b over a, me.await.f(b)
-        if me.await.f==nil or atm_call(me.await.f, b==nil and a or b) then
-            b = (getmetatable(b)==meta_task and b.ret) or b
-            if b then
+        if type(me.await.v)~='function' or me.await.v(b==nil and a or b) then
+            if getmetatable(a) == meta_task then
+                assert(b == nil)
+                return a.ret
+            elseif b ~= nil then
                 return b, a, ...
             else
-                return a    -- avoids repetition of a/b or a/nil
+                return a
             end
         else
             return await(coroutine.yield())
@@ -252,7 +253,13 @@ local meta_clock; meta_clock = {
     end
 }
 
-local meta_paror = {}
+local meta_paror = {
+    __close = function (ts)
+        for _, t in ipairs(ts) do
+            meta_task.__close(t)
+        end
+    end
+}
 
 function run.await (e, v, ...)
     local t = me()
@@ -265,19 +272,19 @@ function run.await (e, v, ...)
     elseif getmetatable(e) == meta_clock then
         e.cur = clock_to_ms(e)
     elseif getmetatable(e) == meta_paror then
-        local tsks = { ... }
+        local ts = e
         e = true
         v = function ()
-            for _,tsk in ipairs(tsks) do
-                if coroutine.status(tsk.co) == 'dead' then
-                    return tsk
+            for _,t in ipairs(ts) do
+                if coroutine.status(t.co) == 'dead' then
+                    return t
                 end
             end
             return false
         end
-        local tsk = v()
-        if tsk then
-            return tsk.ret
+        local t = v()
+        if t then
+            return t.ret
         end
     end
     t.await = { e=e, v=v, time=TIME, ... }
@@ -330,7 +337,7 @@ local function emit (time, t, ...)
     t.ing = t.ing + 1
     for i=1, #t.dns do
         local dn = t.dns[i]
---print(t, dn, i)
+        --print(t, dn, i)
         --f(dn, ...)
         ok, err = pcall(emit, time, dn, ...)
         if not ok then
@@ -396,34 +403,28 @@ function run.every (e, f)
 end
 
 function run.par (...)
-    assertn(2, me(),
-        'invalid par : expected enclosing task')
+    assertn(2, me(), "invalid par : expected enclosing task")
     for i=1, select('#',...) do
         local f = select(i,...)
-        assertn(2, type(f) == 'function',
-            'invalid par : expected task prototype')
-        spawn(select(i,...))
+        assertn(2, type(f) == 'function', "invalid par : expected task prototype")
+        run.spawn(nil, select(i,...))
     end
     run.await(false)
 end
 
 function run.par_or (...)
-    assertn(2, me(),
-        'invalid par_or : expected enclosing task')
-    local ts = { ... }
+    assertn(2, me(), "invalid par_or : expected enclosing task")
+    local ts <close> = setmetatable({ ... }, meta_paror)
     for i, f in ipairs(ts) do
-        assertn(2, type(f) == 'function',
-            'invalid par_or : expected task prototype')
-        ts[i] = spawn(f)
+        assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
+        ts[i] = run.spawn(nil, f)
     end
     return run.await(setmetatable(ts, meta_paror))
 end
 
 function run.watching (e, f)
-    assertn(2, me(),
-        'invalid watching : expected enclosing task')
     local ef = function ()
-        await(e)
+        return run.await(e)
     end
     return run.par_or(ef, f)
 end

@@ -1,5 +1,5 @@
+local atmos = require "atmos"
 require "test"
-require "atmos"
 
 print '--- PAR ---'
 
@@ -12,6 +12,7 @@ do
     end)
     out("ok")
     assertx(out(), "ok\n")
+    atmos.close()
 end
 
 do
@@ -40,6 +41,7 @@ do
     emit 'Z'
     emit 'X'
     assertx(out(), "X\nZ\nZ\nX\n")
+    atmos.close()
 end
 
 do
@@ -49,7 +51,7 @@ do
             par(10)
         end)
     end)
-    assertfx(err, "par.lua:49: invalid par : expected task prototype")
+    assertfx(err, "par.lua:51: invalid par : expected task prototype")
 end
 
 do
@@ -57,7 +59,47 @@ do
     local _,err = pcall(function ()
         par(function() end)
     end)
-    assertfx(err, "par.lua:58: invalid par : expected enclosing task")
+    assertfx(err, "par.lua:60: invalid par : expected enclosing task")
+end
+
+print '--- PAR_OR ---'
+
+do
+    print("Testing...", "par_or 1")
+    spawn(function ()
+        par_or (
+            function ()
+                out(await('X'))
+            end,
+            function ()
+                out(await('Y'))
+            end
+        )
+        out('ok')
+    end)
+    emit('Y')
+    emit('X')
+    assertx(out(), "Y\nok\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "par_or 2")
+    spawn(function ()
+        local v = par_or (
+            function ()
+                return await('X')
+            end,
+            function ()
+                return await('Y')
+            end
+        )
+        out(v)
+    end)
+    emit('Z')
+    emit('Y', 10)
+    assertx(out(), "10\n")
+    atmos.close()
 end
 
 print '--- WATCHING ---'
@@ -70,10 +112,11 @@ do
                 await(false)
             end
         )
-        print(v)
+        out(v)
     end)
     emit 'X'
     assertx(out(), "X\n")
+    atmos.close()
 end
 
 do
@@ -84,10 +127,11 @@ do
                 return 'Y'
             end
         )
-        print(v)
+        out(v)
     end)
     emit 'X'
     assertx(out(), "Y\n")
+    atmos.close()
 end
 
 do
@@ -98,8 +142,27 @@ do
                 return await('X')
             end
         )
-        print(v)
+        out(v)
     end)
     emit 'X'
     assertx(out(), "X\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "watching 4: error")
+    local _,err = pcall(function ()
+        watching (false, function () end)
+    end)
+    assertfx(err, "par.lua:155: invalid par_or : expected enclosing task")
+end
+
+do
+    print("Testing...", "watching 5: error")
+    local _,err = pcall(function ()
+        spawn(function ()
+            watching (false, 'no')
+        end)
+    end)
+    assertfx(err, "par.lua:164: invalid par_or : expected task prototype")
 end

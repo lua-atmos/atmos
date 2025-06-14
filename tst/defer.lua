@@ -1,5 +1,5 @@
+local atmos = require "atmos"
 require "test"
-require "atmos"
 
 do
     print("Testing...", "defer 1")
@@ -12,6 +12,7 @@ do
         end)
     end
     assertx(out(), "2\n1\n")
+    atmos.close()
 end
 
 do
@@ -29,6 +30,7 @@ do
     end
     out(4)
     assertx(out(), "1\n2\n3\ndefer\n4\n")
+    atmos.close()
 end
 
 do
@@ -46,4 +48,5 @@ do
     end
     out(4)
     assertx(out(), "1\n2\n3\ndefer\n4\n")
+    atmos.close()
 end
