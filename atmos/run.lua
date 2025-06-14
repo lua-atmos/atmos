@@ -156,18 +156,26 @@ end
 
 local meta_throw = {}
 
-function run.throw (e)
-    assertn(2, type(e) == 'table', "invalid throw : expected table")
-    error(setmetatable(e, meta_throw), 2)
+function run.throw (...)
+    return error(setmetatable({...}, meta_throw), 2)
 end
 
-function run.catch (id, blk)
+function run.catch (e, f, blk)
+    if blk == nil then
+        f,blk = nil,f
+    end
     return (function (ok, err, ...)
         if ok then
-            return err,...
+            return ok,err,...
         elseif getmetatable(err) == meta_throw then
-            if err[1] == id then
-                return err[2] or err[1]
+            if e == false then
+                error(err, 0)
+            elseif e==true or err[1]==e then
+                if (f==nil or f(table.unpack(err))) then
+                    return false, table.unpack(err)
+                else
+                    error(err, 0)
+                end
             else
                 error(err, 0)
             end
@@ -418,7 +426,7 @@ end
 -------------------------------------------------------------------------------
 
 function run.every (e, f, blk)
-    if not blk then
+    if blk == nil then
         f,blk = nil,f
     end
     assertn(2, me(), "invalid every : expected enclosing task")
@@ -448,7 +456,7 @@ function run.par_or (...)
 end
 
 function run.watching (e, f, blk)
-    if not blk then
+    if blk == nil then
         f,blk = nil,f
     end
     local ef = function ()
