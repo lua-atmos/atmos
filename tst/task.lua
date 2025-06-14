@@ -231,3 +231,20 @@ do
     assertx(out(), "10\n20\nok\n")
     atmos.close()
 end
+
+do
+    print("Testing...", "every 2")
+    spawn(function ()
+        every(true, function (v) return v>10 end,
+            function (e)
+                out(e)
+            end
+        )
+    end)
+    emit(20)
+    emit(10)
+    emit(30)
+    out("ok")
+    assertx(out(), "20\n30\nok\n")
+    atmos.close()
+end

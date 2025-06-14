@@ -394,11 +394,14 @@ end
 
 -------------------------------------------------------------------------------
 
-function run.every (e, f)
+function run.every (e, f, blk)
+    if not blk then
+        f,blk = nil,f
+    end
     assertn(2, me(),
         'invalid every : expected enclosing task')
     while true do
-        f(run.await(e))
+        blk(run.await(e, f))
     end
 end
 
@@ -422,11 +425,14 @@ function run.par_or (...)
     return run.await(setmetatable(ts, meta_paror))
 end
 
-function run.watching (e, f)
-    local ef = function ()
-        return run.await(e)
+function run.watching (e, f, blk)
+    if not blk then
+        f,blk = nil,f
     end
-    return run.par_or(ef, f)
+    local ef = function ()
+        return run.await(e, f)
+    end
+    return run.par_or(ef, blk)
 end
 
 return run

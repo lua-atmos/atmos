@@ -166,3 +166,19 @@ do
     end)
     assertfx(err, "par.lua:164: invalid par_or : expected task prototype")
 end
+
+do
+    print("Testing...", "watching 6")
+    spawn (function ()
+        local v = watching ('X', function (v) return v==10 end,
+            function ()
+                await(false)
+            end
+        )
+        out(v)
+    end)
+    emit('X', 20)
+    emit('X', 10)
+    assertx(out(), "10\n")
+    atmos.close()
+end
