@@ -20,9 +20,6 @@ function spawn (t, ...)
     return run.spawn(nil, t, ...)
 end
 
-await = run.await
-clock = run.clock
-
 function emit_in (to, e, ...)
     return run.emit(to, e, ...)
 end
@@ -31,11 +28,13 @@ function emit (e, ...)
     return run.emit(nil, e, ...)
 end
 
-pub = run.pub
-
-every = run.every
-par = run.par
-par_or = run.par_or
+await    = run.await
+clock    = run.clock
+pub      = run.pub
+toggle   = run.toggle
+every    = run.every
+par      = run.par
+par_or   = run.par_or
 watching = run.watching
 
 return atmos

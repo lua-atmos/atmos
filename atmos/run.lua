@@ -425,6 +425,39 @@ end
 
 -------------------------------------------------------------------------------
 
+function run.toggle (t, on)
+    if type(t) == 'string' then
+        local e, f = t, on
+        assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
+        do
+            local t = run.spawn(nil, f)
+            local _ <close> = run.spawn(nil, function ()
+                while true do
+                    await(e, true)
+                    toggle(t, true)
+                    await(e, false)
+                    toggle(t, false)
+                end
+            end)
+            return await(t)
+        end
+    end
+
+    assertn(2, getmetatable(t)==meta_task or getmetatable(t)==meta_tasks,
+        "invalid toggle : expected task")
+    assertn(2, type(on) == 'boolean', "invalid toggle : expected bool argument")
+    if on then
+        assertn(2, t.state=='toggled', "invalid toggle : expected toggled off task")
+        t.state = nil
+    else
+        assertn(2, t.state==nil and coroutine.status(t.co)=='suspended',
+            "invalid toggle : expected awaiting task")
+        t.state = 'toggled'
+    end
+end
+
+-------------------------------------------------------------------------------
+
 function run.every (e, f, blk)
     if blk == nil then
         f,blk = nil,f
