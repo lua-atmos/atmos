@@ -16,6 +16,11 @@ function M.point_vs_rect (p, r)
     return SDL.hasIntersection(r, { x=p.x, y=p.y, w=1, h=1 })
 end
 
+function M.evt_vs_key (e, key)
+    assert(e.type == SDL.event.KeyDown)
+    return key == SDL.getKeyName(e.keysym.sym)
+end
+
 function M.loop (ren)
     while true do
         local e = SDL.waitEvent(ms)
