@@ -396,19 +396,14 @@ do
     print("Testing...", "toggle block 2")
     do
         function T (v)
-            pub().v = v
             toggle('Show', function ()
-                out(pub().v)
-print'xxx'
+                out(v)
                 every('Draw', function (evt)
-print'yyy'
                     out(evt)
                 end)
             end)
         end
-print'aaa'
         spawn (T,0)
-print'bbb'
         emit('Draw', 1)
         emit('Show', false)
         emit('Show', false)
@@ -418,5 +413,20 @@ print'bbb'
         emit('Draw', 2)
     end
     assertx(out(), "0\n1\n2\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "toggle block 3")
+    do
+        spawn (function ()
+            local x = toggle('Show', function ()
+                return 10
+            end)
+            out(x)
+        end)
+        out('ok')
+    end
+    assertx(out(), "10\nok\n")
     atmos.close()
 end

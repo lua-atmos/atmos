@@ -238,6 +238,18 @@ function run.spawn (up, t, ...)
     up.dns[#up.dns+1] = t
     t.up = assert(t.up==nil and up)
 
+    --[[
+    local function res (co, ...)
+        return (function (ok,...)
+            if not ok then
+                print(debug.traceback(co))
+            end
+            return ok, ...
+        end)(coroutine.resume(co,...))
+    end
+    task_resume_result(t, res(t.co, ...))
+    ]]
+
     task_resume_result(t, coroutine.resume(t.co, ...))
     return t
 end
@@ -433,13 +445,13 @@ function run.toggle (t, on)
             local t = run.spawn(nil, f)
             local _ <close> = run.spawn(nil, function ()
                 while true do
-                    await(e, true)
-                    toggle(t, true)
-                    await(e, false)
-                    toggle(t, false)
+                    run.await(e, false)
+                    run.toggle(t, false)
+                    run.await(e, true)
+                    run.toggle(t, true)
                 end
             end)
-            return await(t)
+            return run.await(t)
         end
     end
 
