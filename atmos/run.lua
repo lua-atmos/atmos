@@ -68,9 +68,6 @@ local function _me_ (nested, t)
 end
 
 function run.me (nested)
-    if nested == nil then
-        nested = true
-    end
     local co = coroutine.running()
     return co and TASKS._.cache[co] and _me_(nested, TASKS._.cache[co])
 end
@@ -195,7 +192,7 @@ end
 function run.tasks (max)
     local n = max and tonumber(max) or nil
     assertn(2, (not max) or n, "invalid tasks limit : expected number")
-    local up = me() or TASKS
+    local up = me(true) or TASKS
     local ts = {
         _ = {
             up  = up,
@@ -239,7 +236,7 @@ function run.spawn (up, nested, t, ...)
     end
     assertn(3, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
 
-    up = up or me() or TASKS
+    up = up or me(true) or TASKS
     if up._.max and #up._.dns>=up._.max then
         return nil
     end
@@ -265,7 +262,7 @@ end
 -------------------------------------------------------------------------------
 
 local function await (err, a, b, ...)
-    local me = assert(me())
+    local me = assert(me(true))
     if err then
         error(a, 0)
     else
@@ -313,7 +310,7 @@ local meta_paror = {
 }
 
 function run.await (e, v, ...)
-    local t = me()
+    local t = me(true)
     assertn(2, t, "invalid await : expected enclosing task", 2)
     assertn(2, e~=nil, "invalid await : expected event", 2)
     if getmetatable(e) == meta_task then
@@ -427,7 +424,7 @@ end
 function run.emit (to, e, ...)
     TIME = TIME + 1
     local time = TIME
-    local me = me(true)
+    local me = me(false)
     emit(time, fto(me,to), e, ...)
     assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
 end
@@ -471,14 +468,14 @@ function run.every (e, f, blk)
     if blk == nil then
         f,blk = nil,f
     end
-    assertn(2, me(), "invalid every : expected enclosing task")
+    assertn(2, me(true), "invalid every : expected enclosing task")
     while true do
         blk(run.await(e, f))
     end
 end
 
 function run.par (...)
-    assertn(2, me(), "invalid par : expected enclosing task")
+    assertn(2, me(true), "invalid par : expected enclosing task")
     for i=1, select('#',...) do
         local f = select(i,...)
         assertn(2, type(f) == 'function', "invalid par : expected task prototype")
@@ -488,7 +485,7 @@ function run.par (...)
 end
 
 function run.par_or (...)
-    assertn(2, me(), "invalid par_or : expected enclosing task")
+    assertn(2, me(true), "invalid par_or : expected enclosing task")
     local ts <close> = setmetatable({ ... }, meta_paror)
     for i, f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")

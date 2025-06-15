@@ -432,3 +432,23 @@ do
     assertx(out(), "10\nok\n")
     atmos.close()
 end
+
+print "--- NESTED ---"
+
+do
+    print("Testing...", "nested 01")
+    do
+        function T ()
+            me().pub = 10
+            out(me().pub)
+            spawn (true, function ()
+                me().pub = 20
+                out(me().pub)
+            end)
+            out(me().pub)
+        end
+        spawn (T)
+    end
+    assertx(out(), "10\n20\n20\n")
+    atmos.close()
+end
