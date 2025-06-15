@@ -456,7 +456,7 @@ function run.toggle (t, on)
         assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
         t._.status = nil
     else
-        assertn(2, t._.status==nil and coroutine.status(t._.co)=='suspended',
+        assertn(2, t._.status==nil --[[and coroutine.status(t._.co)=='suspended']],
             "invalid toggle : expected awaiting task")
         t._.status = 'toggled'
     end

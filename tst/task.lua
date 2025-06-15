@@ -284,13 +284,15 @@ end
 
 do
     print("Testing...", "toggle 2")
-    local _,err = pcall(function ()
+    --local _,err = pcall(function ()
         function T ()
         end
         local t = spawn (T)
         toggle (t,false)
-    end)
-    assertx(err, "task.lua:291: invalid toggle : expected awaiting task")
+        out 'ok'
+    --end)
+    --assertx(err, "task.lua:291: invalid toggle : expected awaiting task")
+    assertx(out(), "ok\n")
     atmos.close()
 end
 
@@ -390,7 +392,7 @@ do
     local _,err = pcall(function ()
         toggle ('X',false)
     end)
-    assertx(err, "task.lua:391: invalid toggle : expected task prototype")
+    assertx(err, "task.lua:393: invalid toggle : expected task prototype")
     atmos.close()
 end
 

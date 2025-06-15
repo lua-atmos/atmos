@@ -106,3 +106,29 @@ do
     assertx(out(), "ok\nnil\ntrue\n")
     atmos.close()
 end
+
+print "--- TOGGLE ---"
+
+do
+    print("Testing...", "toggle 1")
+    do
+        function T (v)
+            every(true, function ()
+                out(v)
+            end)
+        end
+        local ts = tasks()
+        local t = spawn_in (ts, T, 1)
+        local t = spawn_in (ts, T, 2)
+        emit('X')
+        toggle (ts, false)
+        out("---")
+        emit('X')
+        emit('X')
+        out("---")
+        toggle (ts, true)
+        emit('X')
+    end
+    assertx(out(), "1\n2\n---\n---\n1\n2\n")
+    atmos.close()
+end
