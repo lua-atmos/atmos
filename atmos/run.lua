@@ -7,7 +7,7 @@ local meta_defer = {
 }
 local meta_tasks; meta_tasks = {
     __close = function (ts)
-        for _,dn in ipairs(ts.dns) do
+        for _,dn in ipairs(ts._.dns) do
             getmetatable(dn).__close(dn)
         end
     end,
@@ -16,30 +16,30 @@ local meta_tasks; meta_tasks = {
             return nil
         else
             i = i + 1
-            return i, s.ts.dns[i]
+            return i, s.ts._.dns[i]
         end
     end,
     __pairs = function (ts)
-        ts.ing = ts.ing + 1
+        ts._.ing = ts._.ing + 1
         local close = setmetatable({}, {
             __close = function ()
-                ts.ing = ts.ing - 1
+                ts._.ing = ts._.ing - 1
                 task_gc(ts)
             end
         })
-        return meta_tasks.next, {ts=ts,max=#ts.dns}, 0, close
+        return meta_tasks.next, {ts=ts,max=#ts._.dns}, 0, close
     end,
 }
 local meta_task = {
     __close = function (t)
-        for _,dn in ipairs(t.dns) do
+        for _,dn in ipairs(t._.dns) do
             getmetatable(dn).__close(dn)
         end
-        if coroutine.status(t.co) == 'normal' then
+        if coroutine.status(t._.co) == 'normal' then
             -- cannot close now (emit continuation will raise error)
-            t.status = 'aborted'
+            t._.status = 'aborted'
         else
-            coroutine.close(t.co)
+            coroutine.close(t._.co)
         end
     end
 }
@@ -47,27 +47,29 @@ local meta_task = {
 local TIME = 1
 
 local TASKS = setmetatable({
-    up  = nil,
-    dns = {},
-    ing = 0,
-    gc  = false,
-    max = nil,
-    cache = setmetatable({}, {__mode='k'}),
+    _ = {
+        up  = nil,
+        dns = {},
+        ing = 0,
+        gc  = false,
+        max = nil,
+        cache = setmetatable({}, {__mode='k'}),
+    }
 }, meta_tasks)
 
 -------------------------------------------------------------------------------
 
-local function _me_ (skip_fake, t)
-    if skip_fake and t.fake then
-        return _me_(skip_fake, t.up)
+local function _me_ (skip_nested, t)
+    if skip_nested and t._.nested then
+        return _me_(skip_nested, t._.up)
     else
         return t
     end
 end
 
-local function me (skip_fake)
+local function me (skip_nested)
     local co = coroutine.running()
-    return co and TASKS.cache[co] and _me_(skip_fake, TASKS.cache[co])
+    return co and TASKS._.cache[co] and _me_(skip_nested, TASKS._.cache[co])
 end
 
 -------------------------------------------------------------------------------
@@ -77,18 +79,18 @@ local function task_resume_result (t, ok, err)
         -- no error: continue normally
     elseif err == 'atm_aborted' then
         -- callee aborted from outside: continue normally
-        coroutine.close(t.co)   -- needs close b/c t.co is in error state
+        coroutine.close(t._.co)   -- needs close b/c t.co is in error state
     else
         error(err, 0)
     end
 
-    if coroutine.status(t.co) == 'dead' then
-        t.ret = err
-        t.up.gc = true
+    if coroutine.status(t._.co) == 'dead' then
+        t._.ret = err
+        t._.up._.gc = true
         --if t.status ~= 'aborted' then
-            local up = t.up
+            local up = t._.up
             while getmetatable(up) == meta_tasks do
-                up = up.up
+                up = up._.up
             end
             run.emit(up, t)
         --end
@@ -96,34 +98,34 @@ local function task_resume_result (t, ok, err)
 end
 
 local function task_awake_check (time, t, e, v, ...)
-    if coroutine.status(t.co) ~= 'suspended' then
+    if coroutine.status(t._.co) ~= 'suspended' then
         -- nothing to awake
         return false
-    elseif t.await.time >= time then
+    elseif t._.await.time >= time then
         -- await after emit
         return false
-    elseif t.await.e == false then
+    elseif t._.await.e == false then
         -- never awakes
         return false
-    elseif t.await.e == true then
+    elseif t._.await.e == true then
         -- ok
-    elseif t.await.e == e then
+    elseif t._.await.e == e then
         -- ok
     else
         local mt = getmetatable(e)
-        if mt and mt.__atmos and mt.__atmos(e, t.await) then
+        if mt and mt.__atmos and mt.__atmos(e, t._.await) then
             -- ok
         else
             return false
         end
     end
 
-    if t.await.v == nil then
+    if t._.await.v == nil then
         -- ok
-    elseif t.await.v == v then
+    elseif t._.await.v == v then
         -- ok
-    elseif type(t.await.v) == 'function' then
-        -- ok: call t.await.v(v) inside
+    elseif type(t._.await.v) == 'function' then
+        -- ok: call t._.await.v(v) inside
     else
         return false
     end
@@ -132,12 +134,12 @@ local function task_awake_check (time, t, e, v, ...)
 end
 
 task_gc = function (t)
-    if t.gc and t.ing==0 then
-        t.gc = false
-        for i=#t.dns, 1, -1 do
-            local s = t.dns[i]
-            if getmetatable(s)==meta_task and coroutine.status(s.co)=='dead' then
-                table.remove(t.dns, i)
+    if t._.gc and t._.ing==0 then
+        t._.gc = false
+        for i=#t._.dns, 1, -1 do
+            local s = t._.dns[i]
+            if getmetatable(s)==meta_task and coroutine.status(s._.co)=='dead' then
+                table.remove(t._.dns, i)
             end
         end
     end
@@ -192,51 +194,55 @@ function run.tasks (max)
     assertn(2, (not max) or n, "invalid tasks limit : expected number")
     local up = me() or TASKS
     local ts = {
-        up  = up,
-        dns = {},
-        ing = 0,
-        gc  = false,
-        max = n,
+        _ = {
+            up  = up,
+            dns = {},
+            ing = 0,
+            gc  = false,
+            max = n,
+        }
     }
-    up.dns[#up.dns+1] = ts
+    up._.dns[#up._.dns+1] = ts
     setmetatable(ts, meta_tasks)
     return ts
 end
 
-function run.task (f, fake)
+function run.task (f, nested)
     local t = {
-        up  = nil,
-        dns = {},
-        ing = 0,
-        gc  = false,
-        co  = coroutine.create(f),
-        fake = fake,
-        status = nil, -- aborted, toggled
-        pub = {},
-        ret = nil,
+        _ = {
+            up  = nil,
+            dns = {},
+            ing = 0,
+            gc  = false,
+            co  = coroutine.create(f),
+            nested = nested,
+            status = nil, -- aborted, toggled
+            pub = {},
+            ret = nil,
+        }
     }
-    TASKS.cache[t.co] = t
+    TASKS._.cache[t._.co] = t
     setmetatable(t, meta_task)
     return t
 end
 
-function run.spawn (up, t, ...)
+function run.spawn (up, nested, t, ...)
     if type(t) == 'function' then
-        t = task(t)
+        t = run.task(t, nested)
         if t == nil then
             return nil
         else
-            return run.spawn(up, t, ...)
+            return run.spawn(up, nested, t, ...)
         end
     end
     assertn(3, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
 
     up = up or me() or TASKS
-    if up.max and #up.dns>=up.max then
+    if up._.max and #up._.dns>=up._.max then
         return nil
     end
-    up.dns[#up.dns+1] = t
-    t.up = assert(t.up==nil and up)
+    up._.dns[#up._.dns+1] = t
+    t._.up = assert(t._.up==nil and up)
 
     --[[
     local function res (co, ...)
@@ -250,7 +256,7 @@ function run.spawn (up, t, ...)
     task_resume_result(t, res(t.co, ...))
     ]]
 
-    task_resume_result(t, coroutine.resume(t.co, ...))
+    task_resume_result(t, coroutine.resume(t._.co, ...))
     return t
 end
 
@@ -261,12 +267,12 @@ local function await (err, a, b, ...)
     if err then
         error(a, 0)
     else
-        -- must call t.await.f here (vs atm_task_awake_check) bc of atm_me
-        -- a=:X, b={...}, choose b over a, me.await.f(b)
-        if type(me.await.v)~='function' or me.await.v(b==nil and a or b) then
+        -- must call t._.await.f here (vs atm_task_awake_check) bc of atm_me
+        -- a=:X, b={...}, choose b over a, me._.await.f(b)
+        if type(me._.await.v)~='function' or me._.await.v(b==nil and a or b) then
             if getmetatable(a) == meta_task then
                 assert(b == nil)
-                return a.ret
+                return a._.ret
             elseif b ~= nil then
                 return b, a, ...
             else
@@ -309,8 +315,8 @@ function run.await (e, v, ...)
     assertn(2, t, "invalid await : expected enclosing task", 2)
     assertn(2, e~=nil, "invalid await : expected event", 2)
     if getmetatable(e) == meta_task then
-        if coroutine.status(e.co)=='dead' then
-            return e.ret
+        if coroutine.status(e._.co)=='dead' then
+            return e._.ret
         end
     elseif getmetatable(e) == meta_clock then
         e.cur = clock_to_ms(e)
@@ -319,7 +325,7 @@ function run.await (e, v, ...)
         e = true
         v = function ()
             for _,t in ipairs(ts) do
-                if coroutine.status(t.co) == 'dead' then
+                if coroutine.status(t._.co) == 'dead' then
                     return t
                 end
             end
@@ -327,10 +333,10 @@ function run.await (e, v, ...)
         end
         local t = v()
         if t then
-            return t.ret
+            return t._.ret
         end
     end
-    t.await = { e=e, v=v, time=TIME, ... }
+    t._.await = { e=e, v=v, time=TIME, ... }
     return await(coroutine.yield())
 end
 
@@ -355,7 +361,7 @@ local function fto (me, to)
         local n = tonumber(to)
         to = me or TASKS
         while n > 0 do
-            to = to.up
+            to = to._.up
             assertn(3, to~=nil, "invalid emit : invalid target")
             n = n - 1
         end
@@ -371,15 +377,15 @@ end
 local function emit (time, t, ...)
     local ok, err = true, nil
 
-    if t.state == 'toggled' then
+    if t._.status == 'toggled' then
         return ok, err
     end
 
     --local chk = (t.tag=='task') and atm_task_awake_check(t,...)
 
-    t.ing = t.ing + 1
-    for i=1, #t.dns do
-        local dn = t.dns[i]
+    t._.ing = t._.ing + 1
+    for i=1, #t._.dns do
+        local dn = t._.dns[i]
         --print(t, dn, i)
         --f(dn, ...)
         ok, err = pcall(emit, time, dn, ...)
@@ -393,21 +399,21 @@ local function emit (time, t, ...)
             break
         end
     end
-    t.ing = t.ing - 1
+    t._.ing = t._.ing - 1
 
     task_gc(t)
 
     if getmetatable(t) == meta_task then
         if not ok then
-            if coroutine.status(t.co) ~= 'dead' then
-                local ok, err = coroutine.resume(t.co, 'atm_error', err)
+            if coroutine.status(t._.co) ~= 'dead' then
+                local ok, err = coroutine.resume(t._.co, 'atm_error', err)
                 assertn(0, ok, err)
             end
         else
             --if chk then
             if task_awake_check(time,t,...) then
 --print('awake', t.up,t)
-                task_resume_result(t, coroutine.resume(t.co, nil, ...))
+                task_resume_result(t, coroutine.resume(t._.co, nil, ...))
             end
         end
     else
@@ -421,7 +427,7 @@ function run.emit (to, e, ...)
     local time = TIME
     local me = me(true)
     emit(time, fto(me,to), e, ...)
-    assertn(0, (not me) or me.status~='aborted', 'atm_aborted')
+    assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
 end
 
 -------------------------------------------------------------------------------
@@ -429,9 +435,9 @@ end
 function run.pub (t)
     if t then
         assertn(2, getmetatable(t)==meta_task, "pub error : expected task")
-        return t.pub
+        return t._.pub
     else
-        return assertn(2, me(true), "pub error : expected enclosing task").pub
+        return assertn(2, me(true), "pub error : expected enclosing task")._.pub
     end
 end
 
@@ -442,8 +448,8 @@ function run.toggle (t, on)
         local e, f = t, on
         assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
         do
-            local t = run.spawn(nil, f)
-            local _ <close> = run.spawn(nil, function ()
+            local t <close> = run.spawn(nil, true, f)
+            local _ <close> = run.spawn(nil, true, function ()
                 while true do
                     run.await(e, false)
                     run.toggle(t, false)
@@ -459,12 +465,12 @@ function run.toggle (t, on)
         "invalid toggle : expected task")
     assertn(2, type(on) == 'boolean', "invalid toggle : expected bool argument")
     if on then
-        assertn(2, t.state=='toggled', "invalid toggle : expected toggled off task")
-        t.state = nil
+        assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
+        t._.status = nil
     else
-        assertn(2, t.state==nil and coroutine.status(t.co)=='suspended',
+        assertn(2, t._.status==nil and coroutine.status(t._.co)=='suspended',
             "invalid toggle : expected awaiting task")
-        t.state = 'toggled'
+        t._.status = 'toggled'
     end
 end
 
@@ -485,7 +491,7 @@ function run.par (...)
     for i=1, select('#',...) do
         local f = select(i,...)
         assertn(2, type(f) == 'function', "invalid par : expected task prototype")
-        run.spawn(nil, select(i,...))
+        run.spawn(nil, true, select(i,...))
     end
     run.await(false)
 end
@@ -495,7 +501,7 @@ function run.par_or (...)
     local ts <close> = setmetatable({ ... }, meta_paror)
     for i, f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = run.spawn(nil, f)
+        ts[i] = run.spawn(nil, true, f)
     end
     return run.await(setmetatable(ts, meta_paror))
 end

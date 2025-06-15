@@ -13,11 +13,15 @@ tasks = run.tasks
 task  = run.task
 
 function spawn_in (up, t, ...)
-    return run.spawn(up, t, ...)
+    return run.spawn(up, false, t, ...)
 end
 
-function spawn (t, ...)
-    return run.spawn(nil, t, ...)
+function spawn (nested, t, ...)
+    if type(nested) == 'boolean' then
+        return run.spawn(nil, nested, t, ...)
+    else
+        return run.spawn(nil, false, nested, t, ...)
+    end
 end
 
 function emit_in (to, e, ...)
