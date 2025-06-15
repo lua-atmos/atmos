@@ -59,17 +59,20 @@ local TASKS = setmetatable({
 
 -------------------------------------------------------------------------------
 
-local function _me_ (skip_nested, t)
-    if skip_nested and t._.nested then
-        return _me_(skip_nested, t._.up)
+local function _me_ (nested, t)
+    if (not nested) and t._.nested then
+        return _me_(nested, t._.up)
     else
         return t
     end
 end
 
-function run.me (skip_nested)
+function run.me (nested)
+    if nested == nil then
+        nested = true
+    end
     local co = coroutine.running()
-    return co and TASKS._.cache[co] and _me_(skip_nested, TASKS._.cache[co])
+    return co and TASKS._.cache[co] and _me_(nested, TASKS._.cache[co])
 end
 
 -------------------------------------------------------------------------------
