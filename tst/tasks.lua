@@ -75,14 +75,14 @@ end
 do
     print("Testing...", "tasks 7: pairs")
     local function T (v)
-        pub().v = v
+        me().v = v
         await(true)
     end
     local ts = tasks()
     spawn_in(ts, T, 10)
     spawn_in(ts, T, 20)
     for i,t in pairs(ts) do
-        out(i, pub(t).v)
+        out(i, t.v)
     end
     assertx(out(), "1\t10\n2\t20\n")
     atmos.close()

@@ -169,8 +169,8 @@ print '--- PUB ---'
 do
     print("Testing...", "pub 1")
     spawn (function ()
-        pub().v = 10
-        out(pub().v)
+        me().v = 10
+        out(me().v)
     end)
     assertx(out(), "10\n")
     atmos.close()
@@ -179,18 +179,19 @@ end
 do
     print("Testing...", "pub 2: error")
     local _,err = pcall(function ()
-        pub().v = 10
+        me().v = 10
     end)
-    assertfx(err, "task.lua:182: pub error : expected enclosing task")
+    --assertfx(err, "task.lua:182: pub error : expected enclosing task")
+    assertfx(err, "task.lua:182: attempt to index a nil valu")
     atmos.close()
 end
 
 do
     print("Testing...", "pub 3")
     local t = spawn (function ()
-        pub().v = 10
+        me().v = 10
     end)
-    out(pub(t).v)
+    out(t.v)
     assertx(out(), "10\n")
     atmos.close()
 end
@@ -198,9 +199,10 @@ end
 do
     print("Testing...", "pub 4")
     local _,err = pcall(function ()
-        out(pub(10).v)
+        out(me(10).v)
     end)
-    assertfx(err, "task.lua:201: pub error : expected task")
+    --assertfx(err, "task.lua:201: pub error : expected task")
+    assertfx(err, "task.lua:202: attempt to index a nil value")
     atmos.close()
 end
 
@@ -266,7 +268,7 @@ do
     local _,err = pcall(function ()
         toggle(1, true)
     end)
-    assertx(err, "task.lua:267: invalid toggle : expected task")
+    assertx(err, "task.lua:269: invalid toggle : expected task")
     atmos.close()
 end
 
@@ -276,7 +278,7 @@ do
         local f = task(function () end)
         toggle(f)
     end)
-    assertx(err, "task.lua:277: invalid toggle : expected bool argument")
+    assertx(err, "task.lua:279: invalid toggle : expected bool argument")
     atmos.close()
 end
 
@@ -288,7 +290,7 @@ do
         local t = spawn (T)
         toggle (t,false)
     end)
-    assertx(err, "task.lua:289: invalid toggle : expected awaiting task")
+    assertx(err, "task.lua:291: invalid toggle : expected awaiting task")
     atmos.close()
 end
 
@@ -388,7 +390,7 @@ do
     local _,err = pcall(function ()
         toggle ('X',false)
     end)
-    assertx(err, "task.lua:389: invalid toggle : expected task prototype")
+    assertx(err, "task.lua:391: invalid toggle : expected task prototype")
     atmos.close()
 end
 

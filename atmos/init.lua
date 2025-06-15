@@ -5,6 +5,7 @@ local atmos = {
     close = run.close
 }
 
+me    = run.me
 throw = run.throw
 catch = run.catch
 
@@ -34,7 +35,6 @@ end
 
 await    = run.await
 clock    = run.clock
-pub      = run.pub
 toggle   = run.toggle
 every    = run.every
 par      = run.par

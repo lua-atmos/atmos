@@ -67,7 +67,7 @@ local function _me_ (skip_nested, t)
     end
 end
 
-local function me (skip_nested)
+function run.me (skip_nested)
     local co = coroutine.running()
     return co and TASKS._.cache[co] and _me_(skip_nested, TASKS._.cache[co])
 end
@@ -217,7 +217,6 @@ function run.task (f, nested)
             co  = coroutine.create(f),
             nested = nested,
             status = nil, -- aborted, toggled
-            pub = {},
             ret = nil,
         }
     }
@@ -428,17 +427,6 @@ function run.emit (to, e, ...)
     local me = me(true)
     emit(time, fto(me,to), e, ...)
     assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
-end
-
--------------------------------------------------------------------------------
-
-function run.pub (t)
-    if t then
-        assertn(2, getmetatable(t)==meta_task, "pub error : expected task")
-        return t._.pub
-    else
-        return assertn(2, me(true), "pub error : expected enclosing task")._.pub
-    end
 end
 
 -------------------------------------------------------------------------------
