@@ -164,6 +164,24 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "await 6: task - return")
+    spawn(function ()
+        local x = spawn(function (v)
+            return v
+        end, 10)
+        local y = spawn(function (v)
+            await(true)
+            return v
+        end, 20)
+        out(await(y))
+        out(await(x))
+    end)
+    emit()
+    assertx(out(), "20\n10\n")
+    atmos.close()
+end
+
 print '--- PUB ---'
 
 do
@@ -182,7 +200,7 @@ do
         me().v = 10
     end)
     --assertfx(err, "task.lua:182: pub error : expected enclosing task")
-    assertfx(err, "task.lua:182: attempt to index a nil valu")
+    assertfx(err, "task.lua:200: attempt to index a nil valu")
     atmos.close()
 end
 
@@ -202,7 +220,7 @@ do
         out(me(10).v)
     end)
     --assertfx(err, "task.lua:201: pub error : expected task")
-    assertfx(err, "task.lua:202: attempt to index a nil value")
+    assertfx(err, "task.lua:220: attempt to index a nil value")
     atmos.close()
 end
 
@@ -247,7 +265,7 @@ end
 do
     print("Testing...", "every 2")
     spawn(function ()
-        every(function (v) return v>10 end,
+        every(function (v) return v>10 and v end,
             function (e)
                 out(e)
             end
@@ -268,7 +286,7 @@ do
     local _,err = pcall(function ()
         toggle(1, true)
     end)
-    assertx(err, "task.lua:269: invalid toggle : expected task")
+    assertx(err, "task.lua:287: invalid toggle : expected task")
     atmos.close()
 end
 
@@ -278,7 +296,7 @@ do
         local f = task(function () end)
         toggle(f)
     end)
-    assertx(err, "task.lua:279: invalid toggle : expected bool argument")
+    assertx(err, "task.lua:297: invalid toggle : expected bool argument")
     atmos.close()
 end
 
@@ -392,7 +410,7 @@ do
     local _,err = pcall(function ()
         toggle ('X',false)
     end)
-    assertx(err, "task.lua:393: invalid toggle : expected task prototype")
+    assertx(err, "task.lua:411: invalid toggle : expected task prototype")
     atmos.close()
 end
 
@@ -402,8 +420,8 @@ do
         function T (v)
             toggle('Show', function ()
                 out(v)
-                every('Draw', function (evt)
-                    out(evt)
+                every('Draw', function (_,v)
+                    out(v)
                 end)
             end)
         end

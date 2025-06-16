@@ -77,9 +77,9 @@ do
         )
         out('ok')
     end)
-    emit('Y')
+    emit('Y',10)
     emit('X')
-    assertx(out(), "Y\nok\n")
+    assertx(out(), "Y\t10\nok\n")
     atmos.close()
 end
 
@@ -91,7 +91,8 @@ do
                 return await('X')
             end,
             function ()
-                return await('Y')
+                local _,v = await('Y')
+                return v
             end
         )
         out(v)
@@ -99,6 +100,23 @@ do
     emit('Z')
     emit('Y', 10)
     assertx(out(), "10\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "par_or 3")
+    spawn(function ()
+        local v = par_or (
+            function ()
+                return await('X')
+            end,
+            function ()
+                return ('Y')
+            end
+        )
+        out(v)
+    end)
+    assertx(out(), "Y\n")
     atmos.close()
 end
 
@@ -120,9 +138,45 @@ do
 end
 
 do
+    print("Testing...", "watching 2 (par_or)")
+    spawn (function ()
+        local v = par_or (
+            function ()
+                return await('X')
+            end,
+            function ()
+                return 'Y'
+            end
+        )
+        out(v)
+    end)
+    emit 'X'
+    assertx(out(), "Y\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "watching 2 (par_or)")
+    spawn (function ()
+        local v = par_or (
+            function ()
+                return await(true)
+            end,
+            function ()
+                return 'Y'
+            end
+        )
+        out(v._.ret)
+    end)
+    emit 'X'
+    assertfx(out(), "Y\n")
+    atmos.close()
+end
+
+do
     print("Testing...", "watching 2")
     spawn (function ()
-        local v = watching (true,
+        local v = watching ('X',
             function ()
                 return 'Y'
             end
@@ -154,7 +208,7 @@ do
     local _,err = pcall(function ()
         watching (false, function () end)
     end)
-    assertfx(err, "par.lua:155: invalid par_or : expected enclosing task")
+    assertfx(err, "par.lua:209: invalid par_or : expected enclosing task")
 end
 
 do
@@ -164,13 +218,13 @@ do
             watching (false, 'no')
         end)
     end)
-    assertfx(err, "par.lua:164: invalid par_or : expected task prototype")
+    assertfx(err, "par.lua:218: invalid par_or : expected task prototype")
 end
 
 do
     print("Testing...", "watching 6")
     spawn (function ()
-        local v = watching ('X', function (v) return v==10 end,
+        local v = watching (function (e,v) return e=='X' and v==10 and v end,
             function ()
                 await(false)
             end

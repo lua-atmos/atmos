@@ -79,7 +79,7 @@ local function task_resume_result (t, ok, err)
         -- no error: continue normally
     elseif err == 'atm_aborted' then
         -- callee aborted from outside: continue normally
-        coroutine.close(t._.co)   -- needs close b/c t.co is in error state
+        coroutine.close(t._.co)   -- needs close bc t.co is in error state
     else
         error(err, 0)
     end
@@ -114,7 +114,7 @@ local function task_awake_check (time, t, ...)
         else
             error "bug found : impossible case"
         end
-    elseif t._.await.tag == 'equal' then
+    elseif t._.await.tag=='equal' or t._.await.tag=='task' then
         for i,v in ipairs(t._.await) do
             if v ~= select(i,...) then
                 return false
@@ -123,6 +123,13 @@ local function task_awake_check (time, t, ...)
         return true
     elseif t._.await.tag == 'function' then
         return true -- (check in task context)
+    elseif t._.await.tag == '_or_' then
+        for i,v in ipairs(t._.await) do
+            if v == (...) then
+                return true
+            end
+        end
+        return false
     else
         local mt = getmetatable(...)
         if mt and mt.__atmos and mt.__atmos((...), t._.await) then
@@ -261,24 +268,24 @@ end
 
 -------------------------------------------------------------------------------
 
-local function await (err, a, b, ...)
+local function await (err, ...)
     local me = assert(me(true))
     if err then
-        error(a, 0)
+        error((...), 0)
     else
-        -- must call t._.await.f here (vs atm_task_awake_check) bc of atm_me
-        -- a=:X, b={...}, choose b over a, me._.await.f(b)
-        if me._.await.tag~='function' or me._.await[1](b==nil and a or b) then
-            if getmetatable(a) == meta_task then
-                assert(b == nil)
-                return a._.ret
-            elseif b ~= nil then
-                return b, a, ...
-            else
-                return a
-            end
+        -- must call f here bc of me() (vs task_awake_check)
+        if me._.await.tag == 'function' then
+            return (function (ok, ...)
+                if ok then
+                    return ok, ...
+                else
+                    return await(coroutine.yield())
+                end
+            end)(me._.await[1](...))
+        elseif me._.await.tag=='task' or me._.await.tag=='_or_' then
+            return (...)._.ret
         else
-            return await(coroutine.yield())
+            return ...
         end
     end
 end
@@ -301,14 +308,6 @@ local meta_clock; meta_clock = {
     end
 }
 
-local meta_paror = {
-    __close = function (ts)
-        for _, t in ipairs(ts) do
-            meta_task.__close(t)
-        end
-    end
-}
-
 function run.await (e, ...)
     -- await { tag='clock' }
     -- await(f)     -- f(...)
@@ -326,7 +325,15 @@ function run.await (e, ...)
             if coroutine.status(e._.co) == 'dead' then
                 return e._.ret
             end
-            t._.await = { tag='equal', time=TIME, e,... }
+            t._.await = { tag='task', time=TIME, e,... }
+        elseif e.tag == '_or_' then
+            for _,x in ipairs(e) do
+                if coroutine.status(x._.co) == 'dead' then
+                    return x._.ret
+                end
+            end
+            e.time = TIME
+            t._.await = e
         else
             if e.tag == 'clock' then
                 e.cur = clock_to_ms(e)
@@ -342,31 +349,6 @@ function run.await (e, ...)
         t._.await = { tag='equal', time=TIME, e,... }
     end
 
-    return await(coroutine.yield())
-
-    if getmetatable(e) == meta_task then
-        if coroutine.status(e._.co)=='dead' then
-            return e._.ret
-        end
-    elseif getmetatable(e) == meta_clock then
-        e.cur = clock_to_ms(e)
-    elseif getmetatable(e) == meta_paror then
-        local ts = e
-        e = true
-        v = function ()
-            for _,t in ipairs(ts) do
-                if coroutine.status(t._.co) == 'dead' then
-                    return t
-                end
-            end
-            return false
-        end
-        local t = v()
-        if t then
-            return t._.ret
-        end
-    end
-    t._.await = { e=e, v=v, time=TIME, ... }
     return await(coroutine.yield())
 end
 
@@ -516,24 +498,31 @@ function run.par (...)
     run.await(false)
 end
 
+local meta_paror = {
+    __close = function (ts)
+        for _, t in ipairs(ts) do
+            meta_task.__close(t)
+        end
+    end
+}
+
 function run.par_or (...)
     assertn(2, me(true), "invalid par_or : expected enclosing task")
-    local ts <close> = setmetatable({ ... }, meta_paror)
+    local ts <close> = setmetatable({ tag='_or_', ... }, meta_paror)
     for i, f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
         ts[i] = run.spawn(nil, true, f)
     end
-    return run.await(setmetatable(ts, meta_paror))
+    return run.await(ts)
 end
 
-function run.watching (e, f, blk)
-    if blk == nil then
-        f,blk = nil,f
+function run.watching (...)
+    local t = { ... }
+    local blk = table.remove(t, #t)
+    local awt = function ()
+        return run.await(table.unpack(t))
     end
-    local ef = function ()
-        return run.await(e, f)
-    end
-    return run.par_or(ef, blk)
+    return run.par_or(awt, blk)
 end
 
 return run
