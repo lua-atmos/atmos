@@ -247,7 +247,7 @@ end
 do
     print("Testing...", "every 2")
     spawn(function ()
-        every(true, function (v) return v>10 end,
+        every(function (v) return v>10 end,
             function (e)
                 out(e)
             end

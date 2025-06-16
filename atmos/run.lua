@@ -97,40 +97,40 @@ local function task_resume_result (t, ok, err)
     end
 end
 
-local function task_awake_check (time, t, e, v, ...)
+local function task_awake_check (time, t, ...)
+    local mt = getmetatable(...)
     if coroutine.status(t._.co) ~= 'suspended' then
         -- nothing to awake
         return false
     elseif t._.await.time >= time then
         -- await after emit
         return false
-    elseif t._.await.e == false then
-        -- never awakes
-        return false
-    elseif t._.await.e == true then
-        -- ok
-    elseif t._.await.e == e then
-        -- ok
+    elseif t._.await.tag == 'boolean' then
+        if t._.await[1] == false then
+            -- never awakes
+            return false
+        elseif t._.await[1] == true then
+            return true
+        else
+            error "bug found : impossible case"
+        end
+    elseif t._.await.tag == 'equal' then
+        for i,v in ipairs(t._.await) do
+            if v ~= select(i,...) then
+                return false
+            end
+        end
+        return true
+    elseif t._.await.tag == 'function' then
+        return true -- (check in task context)
     else
-        local mt = getmetatable(e)
-        if mt and mt.__atmos and mt.__atmos(e, t._.await) then
-            -- ok
+        local mt = getmetatable(...)
+        if mt and mt.__atmos and mt.__atmos((...), t._.await) then
+            return true
         else
             return false
         end
     end
-
-    if t._.await.v == nil then
-        -- ok
-    elseif t._.await.v == v then
-        -- ok
-    elseif type(t._.await.v) == 'function' then
-        -- ok: call t._.await.v(v) inside
-    else
-        return false
-    end
-
-    return true
 end
 
 task_gc = function (t)
@@ -268,7 +268,7 @@ local function await (err, a, b, ...)
     else
         -- must call t._.await.f here (vs atm_task_awake_check) bc of atm_me
         -- a=:X, b={...}, choose b over a, me._.await.f(b)
-        if type(me._.await.v)~='function' or me._.await.v(b==nil and a or b) then
+        if me._.await.tag~='function' or me._.await[1](b==nil and a or b) then
             if getmetatable(a) == meta_task then
                 assert(b == nil)
                 return a._.ret
@@ -292,9 +292,9 @@ end
 
 local meta_clock; meta_clock = {
     __atmos = function (evt, awt)
-        if getmetatable(awt.e) == meta_clock then
-            awt.e.cur = awt.e.cur - clock_to_ms(evt)
-            return awt.e.cur <= 0
+        if getmetatable(awt) == meta_clock then
+            awt.cur = awt.cur - clock_to_ms(evt)
+            return awt.cur <= 0
         else
             return false
         end
@@ -309,10 +309,41 @@ local meta_paror = {
     end
 }
 
-function run.await (e, v, ...)
+function run.await (e, ...)
+    -- await { tag='clock' }
+    -- await(f)     -- f(...)
+    -- await(true/false)
+    -- await(t)
+    -- await(...)
+    -- await(a _and_ b)
+
     local t = me(true)
     assertn(2, t, "invalid await : expected enclosing task", 2)
     assertn(2, e~=nil, "invalid await : expected event", 2)
+
+    if type(e) == 'table' then
+        if getmetatable(e) == meta_task then
+            if coroutine.status(e._.co) == 'dead' then
+                return e._.ret
+            end
+            t._.await = { tag='equal', time=TIME, e,... }
+        else
+            if e.tag == 'clock' then
+                e.cur = clock_to_ms(e)
+            end
+            e.time = TIME
+            t._.await = e
+        end
+    elseif type(e) == 'function' then
+        t._.await = { tag='function', time=TIME, e,... }
+    elseif type(e) == 'boolean' then
+        t._.await = { tag='boolean', time=TIME, e,... }
+    else
+        t._.await = { tag='equal', time=TIME, e,... }
+    end
+
+    return await(coroutine.yield())
+
     if getmetatable(e) == meta_task then
         if coroutine.status(e._.co)=='dead' then
             return e._.ret
@@ -340,6 +371,8 @@ function run.await (e, v, ...)
 end
 
 function run.clock (t)
+    assertn(2, type(t)=='table', "invalid clock : expected table")
+    t.tag = 'clock'
     return setmetatable(t, meta_clock)
 end
 
@@ -464,13 +497,12 @@ end
 
 -------------------------------------------------------------------------------
 
-function run.every (e, f, blk)
-    if blk == nil then
-        f,blk = nil,f
-    end
+function run.every (...)
     assertn(2, me(true), "invalid every : expected enclosing task")
+    local t = { ... }
+    local blk = table.remove(t, #t)
     while true do
-        blk(run.await(e, f))
+        blk(run.await(table.unpack(t)))
     end
 end
 
