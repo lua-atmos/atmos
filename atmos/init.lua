@@ -35,6 +35,7 @@ end
 
 await    = run.await
 clock    = run.clock
+_or_     = run._or_
 toggle   = run.toggle
 every    = run.every
 par      = run.par
