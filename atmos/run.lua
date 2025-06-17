@@ -124,7 +124,7 @@ local function task_awake_check (time, t, awt, ...)
     elseif awt.tag == 'function' then
         return true -- (check in task context)
     elseif awt.tag == '_or_' then
-        for _,v in ipairs(t._.await) do
+        for _,v in ipairs(awt) do
             if task_awake_check(time, t, v, ...) then
                 return true
             end
@@ -268,7 +268,7 @@ end
 
 -------------------------------------------------------------------------------
 
-local function await (err, ...)
+local function awake (err, ...)
     local me = assert(me(true))
     if err then
         error((...), 0)
@@ -279,13 +279,19 @@ local function await (err, ...)
                 if ok then
                     return ok, ...
                 else
-                    return await(coroutine.yield())
+                    return awake(coroutine.yield())
                 end
             end)(me._.await[1](...))
         elseif me._.await.tag == 'task' then
             return (...)._.ret
         elseif me._.await.tag=='_or_' then
-            error "TODO"
+            for _, t in ipairs(me._.await) do
+                assert(t.tag == 'task')
+                if coroutine.status(t[1]._.co) == 'dead' then
+                    return t[1]._.ret
+                end
+            end
+            error "bug found"
         else
             return ...
         end
@@ -310,27 +316,24 @@ local meta_clock; meta_clock = {
     end
 }
 
-local function check_task_ret (e)
-    if type(e) ~= 'table' then
-        -- no
-    elseif e.tag == 'task' then
-        if coroutine.status(e._.co) == 'dead' then
-            return true, e._.ret
+local function check_task_ret (t)
+    if t.tag == 'task' then
+        if coroutine.status(t[1]._.co) == 'dead' then
+            return true, t[1]._.ret
         else
-            -- no
+            return false
         end
-    elseif e.tag == '_or_' then
-        for _,x in ipairs(e) do
+    elseif t.tag == '_or_' then
+        for _,x in ipairs(t) do
             local chk,ret = check_task_ret(x)
             if chk then
                 return chk, ret
             end
         end
-        -- no
+        return false
     else
-        -- no
+        return false
     end
-    return false
 end
 
 local function await_to_table (e, ...)
@@ -341,7 +344,7 @@ local function await_to_table (e, ...)
         elseif e.tag == '_or_' then
             T = e
             for i,v in ipairs(T) do
-                T[i] = await_to_table(v)
+                T[i] = await_to_table(table.unpack(v))
             end
         else
             if e.tag == 'clock' then
@@ -374,12 +377,12 @@ function run.await (e, ...)
 
     t._.await = await_to_table(e, ...)
 
-    local chk,ret = check_task_ret(e)
+    local chk,ret = check_task_ret(t._.await)
     if chk then
         return ret
     end
 
-    return await(coroutine.yield())
+    return awake(coroutine.yield())
 end
 
 function run.clock (t)
@@ -537,7 +540,7 @@ end
 local meta_paror = {
     __close = function (ts)
         for _, t in ipairs(ts) do
-            meta_task.__close(t)
+            meta_task.__close(t[1])
         end
     end
 }
