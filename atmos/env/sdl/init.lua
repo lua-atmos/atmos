@@ -52,8 +52,17 @@ function M.write (fnt, str, pos)
     REN:copy(tex, nil, M.rect(pos, totable('w','h',sfc:getSize())))
 end
 
+local quit = false
+
+function M.quit ()
+    -- TODO
+    --SDL_Event e = { SDL_QUIT };
+    --assert(1 == SDL_PushEvent(&e));
+    quit = true
+end
+
 function M.loop (ren)
-    while true do
+    while not quit do
         local e = SDL.waitEvent(ms)
         if e then
             emit(setmetatable(e, meta))
@@ -69,6 +78,7 @@ function M.loop (ren)
             end
         end
         if ren then
+            ren:setDrawColor(0x000000)
             ren:clear()
         end
         emit('SDL.Draw')

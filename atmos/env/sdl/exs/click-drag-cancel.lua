@@ -5,6 +5,7 @@ local env = require "atmos.env.sdl"
 
 local point_vs_rect = env.point_vs_rect
 
+assert(TTF.init())
 local _ <close> = defer(function ()
     TTF.quit()
     SDL.quit()
@@ -18,7 +19,6 @@ WIN = assert(SDL.createWindow {
 })
 REN = assert(SDL.createRenderer(WIN, -1))
 
-assert(TTF.init())
 FNT = assert(TTF.open("DejaVuSans.ttf", 20))
 
 spawn(function ()
