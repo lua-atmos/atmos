@@ -36,7 +36,8 @@ local meta_task = {
             getmetatable(dn).__close(dn)
         end
         if coroutine.status(t._.co) == 'normal' then
-            -- cannot close now (emit continuation will raise error)
+            -- cannot close now
+            -- (emit continuation will raise error)
             t._.status = 'aborted'
         else
             coroutine.close(t._.co)
@@ -443,12 +444,6 @@ local function emit (time, t, ...)
         --f(dn, ...)
         ok, err = pcall(emit, time, dn, ...)
         if not ok then
-            --[[
-            if dn.status == 'aborted' then
-                assert(err=='atm_aborted' and status(t)=='dead')
-                close(dn)
-            end
-            ]]
             break
         end
     end
