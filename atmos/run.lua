@@ -36,7 +36,8 @@ local meta_task = {
             getmetatable(dn).__close(dn)
         end
         if coroutine.status(t._.co) == 'normal' then
-            -- cannot close now (emit continuation will raise error)
+            -- cannot close now
+            -- (emit continuation will check 'aborted' and close itself)
             t._.status = 'aborted'
         else
             coroutine.close(t._.co)
@@ -77,9 +78,6 @@ end
 local function task_resume_result (t, ok, err)
     if ok then
         -- no error: continue normally
-    elseif err == 'atm_aborted' then
-        -- callee aborted from outside: continue normally
-        coroutine.close(t._.co)   -- needs close bc t.co is in error state
     else
         error(err, 0)
     end
@@ -443,12 +441,6 @@ local function emit (time, t, ...)
         --f(dn, ...)
         ok, err = pcall(emit, time, dn, ...)
         if not ok then
-            --[[
-            if dn.status == 'aborted' then
-                assert(err=='atm_aborted' and status(t)=='dead')
-                close(dn)
-            end
-            ]]
             break
         end
     end
@@ -480,7 +472,9 @@ function run.emit (to, e, ...)
     local time = TIME
     local me = me(false)
     emit(time, fto(me,to), e, ...)
-    assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
+    if me and me._.status=='aborted' then
+        coroutine.close()
+    end
 end
 
 -------------------------------------------------------------------------------
