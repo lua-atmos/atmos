@@ -7,6 +7,8 @@ local meta = {
     __atmos = function (awt, e)
         if e.type ~= awt[1] then
             return false
+        elseif (e.type==SDL.event.KeyDown or e.type==SDL.event.KeyUp) and type(awt[2])=='string' then
+            return (awt[2] == SDL.getKeyName(e.keysym.sym))
         elseif type(awt[2]) == 'function' then
             return awt[2](e)
         else
