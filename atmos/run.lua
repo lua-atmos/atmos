@@ -138,7 +138,7 @@ local function task_awake_check (time, t, awt, ...)
         end
         return false
     else
-        return true
+        return false
     end
 end
 

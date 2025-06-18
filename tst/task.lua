@@ -105,7 +105,7 @@ end
 print "--- AWAIT / CLOCK ---"
 
 do
-    print("Testing...", "await 3: clock")
+    print("Testing...", "await clock 1")
     spawn(function ()
         await(clock{h=1,min=1,s=1,ms=10})
         out("awake")
@@ -113,6 +113,24 @@ do
     emit(clock{h=10})
     out("ok")
     assertx(out(), "awake\nok\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "await clock 2")
+    spawn(function ()
+        every(clock{s=1}, function ()
+            out("1s elapsed")
+        end)
+    end)
+    emit 'A'
+    emit(clock{ms=500})
+    emit 'B'
+    emit(clock{ms=500})
+    emit 'C'
+    emit(clock{ms=500})
+    emit 'D'
+    assertx(out(), "1s elapsed\n")
     atmos.close()
 end
 
@@ -200,7 +218,7 @@ do
         me().v = 10
     end)
     --assertfx(err, "task.lua:182: pub error : expected enclosing task")
-    assertfx(err, "task.lua:200: attempt to index a nil valu")
+    assertfx(err, "task.lua:%d+: attempt to index a nil valu")
     atmos.close()
 end
 
@@ -220,7 +238,7 @@ do
         out(me(10).v)
     end)
     --assertfx(err, "task.lua:201: pub error : expected task")
-    assertfx(err, "task.lua:220: attempt to index a nil value")
+    assertfx(err, "task.lua:%d+: attempt to index a nil value")
     atmos.close()
 end
 
@@ -286,7 +304,7 @@ do
     local _,err = pcall(function ()
         toggle(1, true)
     end)
-    assertx(err, "task.lua:287: invalid toggle : expected task")
+    assertfx(err, "task.lua:%d+: invalid toggle : expected task")
     atmos.close()
 end
 
@@ -296,7 +314,7 @@ do
         local f = task(function () end)
         toggle(f)
     end)
-    assertx(err, "task.lua:297: invalid toggle : expected bool argument")
+    assertfx(err, "task.lua:%d+: invalid toggle : expected bool argument")
     atmos.close()
 end
 
@@ -410,7 +428,7 @@ do
     local _,err = pcall(function ()
         toggle ('X',false)
     end)
-    assertx(err, "task.lua:411: invalid toggle : expected task prototype")
+    assertfx(err, "task.lua:%d+: invalid toggle : expected task prototype")
     atmos.close()
 end
 
