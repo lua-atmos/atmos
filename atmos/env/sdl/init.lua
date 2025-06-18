@@ -4,8 +4,14 @@ require "atmos.util"
 local M = {}
 
 local meta = {
-    __atmos = function (e, awt)
-        return e.type == awt.e
+    __atmos = function (awt, e)
+        if e.type ~= awt[1] then
+            return false
+        elseif type(awt[2]) == 'function' then
+            return awt[2](e)
+        else
+            return true
+        end
     end
 }
 
@@ -41,9 +47,9 @@ function M.rect (pos, dim)
 end
 
 function M.write (fnt, str, pos)
-    local sfc = assert(fnt:renderUtf8(str, "blended", @{r=255,g=255,b=255}))
+    local sfc = assert(fnt:renderUtf8(str, "blended", {r=255,g=255,b=255}))
     local tex = assert(REN:createTextureFromSurface(sfc))
-    REN:copy(tex, nil, M.rect(pos, totable('w','h',sfc::getSize())))
+    REN:copy(tex, nil, M.rect(pos, totable('w','h',sfc:getSize())))
 end
 
 function M.loop (ren)
