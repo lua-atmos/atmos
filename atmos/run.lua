@@ -106,6 +106,12 @@ local function task_awake_check (time, t, awt, ...)
     elseif awt.time >= time then
         -- await after emit
         return false
+    elseif mt and mt.__atmos then
+        if mt.__atmos(awt,...) then
+            return true
+        else
+            return false
+        end
     elseif awt.tag == 'boolean' then
         if awt[1] == false then
             -- never awakes
@@ -132,12 +138,7 @@ local function task_awake_check (time, t, awt, ...)
         end
         return false
     else
-        local mt = getmetatable(...)
-        if mt and mt.__atmos and mt.__atmos((...), awt) then
-            return true
-        else
-            return false
-        end
+        return true
     end
 end
 
@@ -307,7 +308,7 @@ local function clock_to_ms (clk)
 end
 
 local meta_clock; meta_clock = {
-    __atmos = function (evt, awt)
+    __atmos = function (awt, evt)
         if getmetatable(awt) == meta_clock then
             awt.cur = awt.cur - clock_to_ms(evt)
             return awt.cur <= 0
