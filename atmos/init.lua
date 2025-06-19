@@ -8,6 +8,7 @@ local atmos = {
 me    = run.me
 throw = run.throw
 catch = run.catch
+call  = run.call
 
 defer = run.defer
 tasks = run.tasks
@@ -26,11 +27,11 @@ function spawn (nested, t, ...)
 end
 
 function emit_in (to, e, ...)
-    return run.emit(to, e, ...)
+    return run.emit(true, to, e, ...)
 end
 
 function emit (e, ...)
-    return run.emit(nil, e, ...)
+    return run.emit(true, nil, e, ...)
 end
 
 await    = run.await

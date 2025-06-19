@@ -93,7 +93,7 @@ local function task_resume_result (t, ok, err)
             while getmetatable(up) == meta_tasks do
                 up = up._.up
             end
-            run.emit(up, t)
+            run.emit(false, up, t)
         --end
     end
 end
@@ -168,7 +168,19 @@ end
 local meta_throw = {}
 
 function run.throw (...)
-    return error(setmetatable({...}, meta_throw), 2)
+    local dbg = debug.getinfo(2)
+    local err = {
+        _ = {
+            file   = dbg.short_src,
+            line   = dbg.currentline,
+            stacks = {
+                pre = nil,
+                pos = {},
+            },
+        },
+        ...
+    }
+    return error(setmetatable(err, meta_throw), 2)
 end
 
 function run.catch (e, f, blk)
@@ -194,6 +206,30 @@ function run.catch (e, f, blk)
              error(err, 0)
         end
     end)(pcall(blk))
+end
+
+function run.call (f)
+    (function (ok, err, ...)
+        if ok then
+            return ...
+        elseif getmetatable(err) == meta_throw then
+            local dbg = debug.getinfo(3)
+            local file = dbg.short_src
+            local line = dbg.currentline
+            local str = tostring(err[1]) or ('('..type(err[1])..')')
+            io.stderr:write("==> ERROR:\n")
+            io.stderr:write(" |  " .. file ..       " : line " .. line ..       " : call" .. '\n')
+            for i=#err._.stacks.pos, 1, -1 do
+                local e = err._.stacks.pos[i]
+                io.stderr:write(" |  " .. e.file ..       " : line " .. e.line ..       " : " .. e.msg .. '\n')
+            end
+            io.stderr:write(" v  " .. err._.file .. " : line " .. err._.line .. " : throw" .. '\n')
+            io.stderr:write("==> " .. str .. '\n')
+            os.exit()
+        else
+            error(err)
+        end
+    end)(pcall(f))
 end
 
 -------------------------------------------------------------------------------
@@ -454,9 +490,10 @@ local function emit (time, t, ...)
 
     if getmetatable(t) == meta_task then
         if not ok then
+--print('xxx', ok, err, ...)
             if coroutine.status(t._.co) ~= 'dead' then
                 local ok, err = coroutine.resume(t._.co, 'atm_error', err)
-                assertn(0, ok, err)
+                assertn(0, ok, err) -- TODO: error in defer?
             end
         else
             --if chk then
@@ -470,12 +507,24 @@ local function emit (time, t, ...)
     assertn(0, ok, err)
 end
 
-function run.emit (to, e, ...)
+function run.emit (chk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
     local me = me(false)
-    emit(time, fto(me,to), e, ...)
+    local ok, ret = pcall(emit, time, fto(me,to), e, ...)
+    if not ok then
+        if chk and getmetatable(ret) == meta_throw then
+            local dbg = debug.getinfo(2)
+            ret._.stacks.pos[#ret._.stacks.pos+1] = {
+                msg  = "emit",
+                file = dbg.short_src,
+                line = dbg.currentline,
+            }
+        end
+        error(ret)
+    end
     assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
+    return ret
 end
 
 -------------------------------------------------------------------------------
