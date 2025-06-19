@@ -168,15 +168,22 @@ end
 local meta_throw = {}
 
 function run.throw (...)
+    local pre = {}; do
+        local x = me()
+        while x and x~=TASKS do
+            pre[#pre+1] = {
+                msg = x._.tag,
+                dbg = x._.dbg,
+            }
+            x = x._.up
+        end
+    end
     local dbg = debug.getinfo(2)
     local err = {
         _ = {
-            file   = dbg.short_src,
-            line   = dbg.currentline,
-            stacks = {
-                pre = nil,
-                pos = {},
-            },
+            dbg = { file=dbg.short_src, line=dbg.currentline },
+            pre = pre,
+            pos = {},
         },
         ...
     }
@@ -214,16 +221,19 @@ function run.call (f)
             return ...
         elseif getmetatable(err) == meta_throw then
             local dbg = debug.getinfo(3)
-            local file = dbg.short_src
-            local line = dbg.currentline
+            dbg = { file=dbg.short_src, line=dbg.currentline  }
             local str = tostring(err[1]) or ('('..type(err[1])..')')
             io.stderr:write("==> ERROR:\n")
-            io.stderr:write(" |  " .. file ..       " : line " .. line ..       " : call" .. '\n')
-            for i=#err._.stacks.pos, 1, -1 do
-                local e = err._.stacks.pos[i]
-                io.stderr:write(" |  " .. e.file ..       " : line " .. e.line ..       " : " .. e.msg .. '\n')
+            for i=#err._.pre, 1, -1 do
+                local e = err._.pre[i]
+                io.stderr:write(" |  " .. e.dbg.file .. " : line " .. e.dbg.line .. " : " .. e.msg .. '\n')
             end
-            io.stderr:write(" v  " .. err._.file .. " : line " .. err._.line .. " : throw" .. '\n')
+            io.stderr:write(" *  " .. err._.dbg.file .. " : line " .. err._.dbg.line .. " : throw" .. '\n')
+            for i=1, #err._.pos, 1 do
+                local e = err._.pos[i]
+                io.stderr:write(" |  " .. e.dbg.file .. " : line " .. e.dbg.line .. " : " .. e.msg .. '\n')
+            end
+            io.stderr:write(" |  " .. dbg.file .. " : line " .. dbg.line .. " : call" .. '\n')
             io.stderr:write("==> " .. str .. '\n')
             os.exit()
         else
@@ -238,12 +248,16 @@ function run.tasks (max)
     local n = max and tonumber(max) or nil
     assertn(2, (not max) or n, "invalid tasks limit : expected number")
     local up = me(true) or TASKS
+    local dbg = debug.getinfo(2)
     local ts = {
         _ = {
+            tag = 'tasks',
             up  = up,
             dns = {},
             ing = 0,
             gc  = false,
+            dbg = {file=dbg.short_src, line=dbg.currentline},
+            ---
             max = n,
         }
     }
@@ -253,12 +267,16 @@ function run.tasks (max)
 end
 
 function run.task (f, nested)
+    local dbg = debug.getinfo(3)
     local t = {
         _ = {
+            tag = 'task',
             up  = nil,
             dns = {},
             ing = 0,
             gc  = false,
+            dbg = {file=dbg.short_src, line=dbg.currentline},
+            ---
             co  = coroutine.create(f),
             nested = nested,
             status = nil, -- aborted, toggled
@@ -515,10 +533,9 @@ function run.emit (chk, to, e, ...)
     if not ok then
         if chk and getmetatable(ret) == meta_throw then
             local dbg = debug.getinfo(2)
-            ret._.stacks.pos[#ret._.stacks.pos+1] = {
-                msg  = "emit",
-                file = dbg.short_src,
-                line = dbg.currentline,
+            ret._.pos[#ret._.pos+1] = {
+                msg = "emit",
+                dbg = { file=dbg.short_src, line=dbg.currentline },
             }
         end
         error(ret)

@@ -6,10 +6,13 @@ do
     do
         call(function ()
             spawn(function ()
-                await(spawn(function ()
-                    await(true)
-                end))
-                throw "OK"
+                spawn(function ()
+                    await(spawn(function ()
+                        await(true)
+                    end))
+                    throw "OK"
+                end)
+                --await(false)
             end)
             emit('X')
         end)
