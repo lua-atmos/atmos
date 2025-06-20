@@ -6,13 +6,37 @@ do
     do
         call(function ()
             spawn(function ()
+                spawn(true,function ()
+                    await(spawn(function ()
+                        await('Y')
+                    end))
+                    throw "OK"
+                end)
+                spawn(true,function ()
+                    await('X')
+                    emit('Y')
+                end)
+                await(false)
+            end)
+            emit('X')
+        end)
+    end
+    assertx(out(), "0\n1\n2\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "throw 1")
+    do
+        call(function ()
+            spawn(function ()
                 spawn(function ()
                     await(spawn(function ()
                         await(true)
                     end))
                     throw "OK"
                 end)
-                --await(false)
+                await(false)
             end)
             emit('X')
         end)

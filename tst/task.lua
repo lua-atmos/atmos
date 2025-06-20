@@ -102,6 +102,25 @@ do
     atmos.close()
 end
 
+print "--- EMIT / SCOPE ---"
+
+do
+    print("Testing...", "emit scope 1")
+    do
+        spawn(true,function ()
+            await 'X'
+            emit 'Y'
+        end)
+        spawn(true,function ()
+            await 'Y'
+            out 'OK'
+        end)
+        emit 'X'
+    end
+    assertx(out(), "OK\n")
+    atmos.close()
+end
+
 print "--- AWAIT / CLOCK ---"
 
 do
