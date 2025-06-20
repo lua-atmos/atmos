@@ -75,6 +75,19 @@ end
 
 -------------------------------------------------------------------------------
 
+local function trace ()
+    local ret = {}
+    local x = me(true)
+    while x and x~=TASKS do
+        ret[#ret+1] = {
+            msg = x._.tag,
+            dbg = x._.dbg,
+        }
+        x = x._.up
+    end
+    return ret
+end
+
 local function task_resume_result (t, ok, err)
     if ok then
         -- no error: continue normally
@@ -168,21 +181,11 @@ end
 local meta_throw = {}
 
 function run.throw (...)
-    local pre = {}; do
-        local x = me()
-        while x and x~=TASKS do
-            pre[#pre+1] = {
-                msg = x._.tag,
-                dbg = x._.dbg,
-            }
-            x = x._.up
-        end
-    end
     local dbg = debug.getinfo(2)
     local err = {
         _ = {
             dbg = { file=dbg.short_src, line=dbg.currentline },
-            pre = pre,
+            pre = trace(),
             pos = {},
         },
         ...
@@ -224,16 +227,32 @@ function run.call (f)
             dbg = { file=dbg.short_src, line=dbg.currentline  }
             local str = tostring(err[1]) or ('('..type(err[1])..')')
             io.stderr:write("==> ERROR:\n")
-            for i=#err._.pre, 1, -1 do
+
+            for i=#err._.pos, 1, -1 do
+                local t = err._.pos[i]
+                io.stderr:write(" |  ")
+                for j=1, #t do
+                    local e = t[j]
+                    io.stderr:write(e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg.. ")")
+                    if j < #t then
+                        io.stderr:write(" <- ")
+                    end
+                end
+                if i == #err._.pos then
+                    io.stderr:write(" <- " .. dbg.file .. ":" .. dbg.line .. " (call)" .. '\n')
+                else
+                    io.stderr:write("\n")
+                end
+            end
+
+            io.stderr:write(" v  " .. err._.dbg.file .. ":" .. err._.dbg.line .. " (throw)")
+            for i=1, #err._.pre do
                 local e = err._.pre[i]
-                io.stderr:write(" |  " .. e.dbg.file .. " : line " .. e.dbg.line .. " : " .. e.msg .. '\n')
+                io.stderr:write(" <- ")
+                io.stderr:write(e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg .. ')')
             end
-            io.stderr:write(" *  " .. err._.dbg.file .. " : line " .. err._.dbg.line .. " : throw" .. '\n')
-            for i=1, #err._.pos, 1 do
-                local e = err._.pos[i]
-                io.stderr:write(" |  " .. e.dbg.file .. " : line " .. e.dbg.line .. " : " .. e.msg .. '\n')
-            end
-            io.stderr:write(" |  " .. dbg.file .. " : line " .. dbg.line .. " : call" .. '\n')
+            io.stderr:write("\n")
+
             io.stderr:write("==> " .. str .. '\n')
             os.exit()
         else
@@ -533,10 +552,12 @@ function run.emit (chk, to, e, ...)
     if not ok then
         if chk and getmetatable(ret) == meta_throw then
             local dbg = debug.getinfo(2)
-            ret._.pos[#ret._.pos+1] = {
+            local t = trace()
+            ret._.pos[#ret._.pos+1] = t
+            table.insert(t, 1, {
                 msg = "emit",
                 dbg = { file=dbg.short_src, line=dbg.currentline },
-            }
+            })
         end
         error(ret)
     end
