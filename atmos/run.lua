@@ -180,8 +180,8 @@ end
 
 local meta_throw = {}
 
-function run.throw (...)
-    local dbg = debug.getinfo(2)
+local function tothrow (n, ...)
+    local dbg = debug.getinfo(n)
     local err = {
         _ = {
             dbg = { file=dbg.short_src, line=dbg.currentline },
@@ -190,7 +190,11 @@ function run.throw (...)
         },
         ...
     }
-    return error(setmetatable(err, meta_throw), 2)
+    return setmetatable(err, meta_throw)
+end
+
+function run.throw (...)
+    return error(tothrow(3,...))
 end
 
 function run.catch (e, f, blk)
@@ -222,7 +226,8 @@ function run.call (f)
     (function (ok, err, ...)
         if ok then
             return ...
-        elseif getmetatable(err) == meta_throw then
+        else
+            --if getmetatable(err) == meta_throw then
             local dbg = debug.getinfo(3)
             dbg = { file=dbg.short_src, line=dbg.currentline  }
             local str = tostring(err[1]) or ('('..type(err[1])..')')
@@ -255,8 +260,8 @@ function run.call (f)
 
             io.stderr:write("==> " .. str .. '\n')
             os.exit()
-        else
-            error(err)
+        --else
+            --error(err)
         end
     end)(pcall(f))
 end
@@ -550,14 +555,19 @@ function run.emit (chk, to, e, ...)
     local me = me(false)
     local ok, ret = pcall(emit, time, fto(me,to), e, ...)
     if not ok then
-        if chk and getmetatable(ret) == meta_throw then
-            local dbg = debug.getinfo(2)
-            local t = trace()
-            ret._.pos[#ret._.pos+1] = t
-            table.insert(t, 1, {
-                msg = "emit",
-                dbg = { file=dbg.short_src, line=dbg.currentline },
-            })
+        if chk then
+            if me and (getmetatable(ret) ~= meta_throw) then
+                ret = tothrow(3, ret)
+            end
+            if getmetatable(ret) == meta_throw then
+                local dbg = debug.getinfo(2)
+                local t = trace()
+                ret._.pos[#ret._.pos+1] = t
+                table.insert(t, 1, {
+                    msg = "emit",
+                    dbg = { file=dbg.short_src, line=dbg.currentline },
+                })
+            end
         end
         error(ret)
     end

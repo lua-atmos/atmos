@@ -4,6 +4,37 @@ require "test"
 do
     print("Testing...", "throw 1")
     do
+        function T ()
+            await(spawn(function ()
+                await('Y')
+            end))
+            return 1 + true
+            --error "OK"
+            --throw "OK"
+        end
+        call(function ()
+            spawn(function ()
+                local ts = tasks()
+                spawn(true,function ()
+                    spawn_in(ts, T)
+                    await(false)
+                end)
+                spawn(true,function ()
+                    await('X')
+                    emit('Y')
+                end)
+                await(false)
+            end)
+            emit('X')
+        end)
+    end
+    assertx(out(), "0\n1\n2\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "throw 1")
+    do
         call(function ()
             spawn(function ()
                 spawn(true,function ()
