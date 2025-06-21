@@ -227,7 +227,11 @@ function run.call (f)
         if ok then
             return ...
         else
-            --if getmetatable(err) == meta_throw then
+        --if getmetatable(err) == meta_throw then
+            if getmetatable(err) ~= meta_throw then
+                err = tothrow(2, err)
+            end
+
             local dbg = debug.getinfo(3)
             dbg = { file=dbg.short_src, line=dbg.currentline  }
             local str = tostring(err[1]) or ('('..type(err[1])..')')
