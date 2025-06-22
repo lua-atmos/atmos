@@ -259,8 +259,7 @@ local function mypcall (stk, f, ...)
             return ok, err, ...
         end
         if stk then
-            local me = me(false)
-            if me and (getmetatable(err) ~= meta_throw) then
+            if (getmetatable(err) ~= meta_throw) then
                 err = tothrow(4, err)
             end
             if getmetatable(err) == meta_throw then
@@ -272,7 +271,7 @@ local function mypcall (stk, f, ...)
                     dbg = { file=dbg.short_src, line=dbg.currentline },
                 })
             end
-            if me == nil then
+            if me() == nil then
                 panic(err)
             end
         end
