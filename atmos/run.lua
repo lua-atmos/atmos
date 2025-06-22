@@ -49,6 +49,7 @@ local TIME = 1
 
 local TASKS = setmetatable({
     _ = {
+        tag = 'tasks',
         up  = nil,
         dns = {},
         ing = 0,
@@ -61,7 +62,9 @@ local TASKS = setmetatable({
 -------------------------------------------------------------------------------
 
 local function _me_ (nested, t)
-    if (not nested) and t._.nested then
+    if t == TASKS then
+        return nil
+    elseif (t._.tag == 'tasks') or ((not nested) and t._.nested) then
         return _me_(nested, t._.up)
     else
         return t
@@ -89,11 +92,12 @@ local function task_resume_result (t, ok, err)
         t._.ret = err
         t._.up._.gc = true
         --if t.status ~= 'aborted' then
-            local up = t._.up
-            while getmetatable(up) == meta_tasks do
-                up = up._.up
-            end
+            local up = _me_(false, t._.up)
             run.emit(false, up, t)
+            if t._.up._.tag=='tasks' and t._.up~=TASKS then
+                local up = _me_(false, t._.up._.up)
+                run.emit(false, up, t._.up, t)
+            end
         --end
     end
 end
@@ -434,6 +438,8 @@ local function await_to_table (e, ...)
     if type(e) == 'table' then
         if getmetatable(e) == meta_task then
             T = { tag='task', e,... }
+        elseif getmetatable(e) == meta_tasks then
+            T = { tag='equal', e,... }
         elseif e.tag == '_or_' then
             T = e
             for i,v in ipairs(T) do

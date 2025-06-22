@@ -132,3 +132,26 @@ do
     assertx(out(), "1\n2\n---\n---\n1\n2\n")
     atmos.close()
 end
+
+print("--- AWAIT / TASKS ---")
+
+do
+    print("Testing...", "await tasks 1")
+    do
+        function T (v)
+            await(v)
+        end
+        local ts = tasks()
+        local t1 = spawn_in (ts, T, 1)
+        local t2 = spawn_in (ts, T, 2)
+        local t3 = spawn_in (ts, T, 3)
+        spawn (function ()
+            local ts,t = await(ts)
+            assert(t == t2)
+            out 't2'
+        end)
+        emit(2)
+    end
+    assertx(out(), "t2\n")
+    atmos.close()
+end
