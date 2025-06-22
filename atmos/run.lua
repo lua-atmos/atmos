@@ -303,8 +303,8 @@ function run.tasks (max)
     return ts
 end
 
-function run.task (f, nested)
-    local dbg = debug.getinfo(3)
+function run.task (n, f, nested)
+    local dbg = debug.getinfo(n+1)
     local t = {
         _ = {
             tag = 'task',
@@ -325,13 +325,13 @@ function run.task (f, nested)
     return t
 end
 
-function run.spawn (up, nested, t, ...)
+function run.spawn (n, up, nested, t, ...)
     if type(t) == 'function' then
-        t = run.task(t, nested)
+        t = run.task(n+1, t, nested)
         if t == nil then
             return nil
         else
-            return run.spawn(up, nested, t, ...)
+            return run.spawn(n, up, nested, t, ...)
         end
     end
     assertn(3, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
@@ -578,8 +578,8 @@ function run.toggle (t, on)
         local e, f = t, on
         assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
         do
-            local t <close> = run.spawn(nil, true, f)
-            local _ <close> = run.spawn(nil, true, function ()
+            local t <close> = run.spawn(2, nil, true, f)
+            local _ <close> = run.spawn(2, nil, true, function ()
                 while true do
                     run.await(e, false)
                     run.toggle(t, false)
@@ -620,7 +620,7 @@ function run.par (...)
     for i=1, select('#',...) do
         local f = select(i,...)
         assertn(2, type(f) == 'function', "invalid par : expected task prototype")
-        run.spawn(nil, true, select(i,...))
+        run.spawn(2, nil, true, select(i,...))
     end
     run.await(false)
 end
@@ -638,7 +638,7 @@ function run.par_or (...)
     local ts = { ... }
     for i,f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = { run.spawn(nil, true, f) }
+        ts[i] = { run.spawn(2, nil, true, f) }
     end
     local ret <close> = setmetatable({ tag='_or_', table.unpack(ts) }, meta_paror)
     return run.await(ret)

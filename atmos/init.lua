@@ -12,17 +12,20 @@ call  = run.call
 
 defer = run.defer
 tasks = run.tasks
-task  = run.task
+
+function task (...)
+    return run.task(1, ...)
+end
 
 function spawn_in (up, t, ...)
-    return run.spawn(up, false, t, ...)
+    return run.spawn(1, up, false, t, ...)
 end
 
 function spawn (nested, t, ...)
     if type(nested) == 'boolean' then
-        return run.spawn(nil, nested, t, ...)
+        return run.spawn(1, nil, nested, t, ...)
     else
-        return run.spawn(nil, false, nested, t, ...)
+        return run.spawn(1, nil, false, nested, t, ...)
     end
 end
 
