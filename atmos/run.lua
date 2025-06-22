@@ -223,7 +223,7 @@ function run.catch (e, f, blk)
 end
 
 local function panic (err)
-    local dbg = debug.getinfo(3)
+    local dbg = debug.getinfo(4)
     dbg = { file=dbg.short_src, line=dbg.currentline  }
     local str = tostring(err[1]) or ('('..type(err[1])..')')
     io.stderr:write("==> ERROR:\n")
@@ -238,11 +238,7 @@ local function panic (err)
                 io.stderr:write(" <- ")
             end
         end
-        if i == #err._.pos then
-            io.stderr:write(" <- " .. dbg.file .. ":" .. dbg.line .. " (call)" .. '\n')
-        else
-            io.stderr:write("\n")
-        end
+        io.stderr:write("\n")
     end
 
     io.stderr:write(" v  " .. err._.dbg.file .. ":" .. err._.dbg.line .. " (throw)")
@@ -262,20 +258,17 @@ local function mypcall (stk, f, ...)
         if ok then
             return ok, err, ...
         end
-        if getmetatable(err) ~= meta_throw then
-            err = tothrow(4, err)
-        end
         if stk then
             local me = me(false)
             if me and (getmetatable(err) ~= meta_throw) then
-                err = tothrow(3, err)
+                err = tothrow(4, err)
             end
             if getmetatable(err) == meta_throw then
-                local dbg = debug.getinfo(2)
+                local dbg = debug.getinfo(3)
                 local t = trace()
                 err._.pos[#err._.pos+1] = t
                 table.insert(t, 1, {
-                    msg = "emit",
+                    msg = stk,
                     dbg = { file=dbg.short_src, line=dbg.currentline },
                 })
             end
@@ -285,16 +278,6 @@ local function mypcall (stk, f, ...)
         end
         error(err)
     end)(pcall(f, ...))
-end
-
-function run.call (f)
-    return (function (ok, ...)
-        if ok then
-            return ...
-        else
-            panic(...)
-        end
-    end)(mypcall(true, f))
 end
 
 -------------------------------------------------------------------------------
@@ -584,7 +567,7 @@ function run.emit (stk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
     local me = me(false)
-    local ok, ret = mypcall(stk, emit, time, fto(me,to), e, ...)
+    local ok, ret = mypcall(stk and "emit", emit, time, fto(me,to), e, ...)
     assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
     return ret
 end
