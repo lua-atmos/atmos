@@ -34,6 +34,26 @@ do
 end
 
 do
+    print("Testing...", "task 3: error")
+    do
+        spawn(function ()
+            local x,y,z = catch('Z', function ()
+                spawn (function ()
+                    await(true)
+                    throw('X',10)
+                end)
+                await(false)
+            end)
+            out(x, y, z)
+        end)
+        emit()
+        out('ok')
+    end
+    assertfx(out(), "==> X, 10")
+    atmos.close()
+end
+
+do
     print("Testing...", "throw 1")
     do
         call(function ()

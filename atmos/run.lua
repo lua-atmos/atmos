@@ -556,9 +556,9 @@ local function emit (time, t, ...)
         if not ok then
 --print('xxx', ok, err, ...)
             if coroutine.status(t._.co) ~= 'dead' then
-                local ok, err = coroutine.resume(t._.co, 'atm_error', err)
-                assertn(0, ok, err) -- TODO: error in defer?
+                ok, err = coroutine.resume(t._.co, 'atm_error', err)
             end
+            assertn(0, ok, err) -- TODO: error in defer?
         else
             --if chk then
             if task_awake_check(time,t,t._.await,...) then
