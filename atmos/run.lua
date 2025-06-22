@@ -229,7 +229,13 @@ end
 local function panic (err)
     local dbg = debug.getinfo(4)
     dbg = { file=dbg.short_src, line=dbg.currentline  }
-    local str = tostring(err[1]) or ('('..type(err[1])..')')
+    local str = ""
+    for i,e in ipairs(err) do
+        if i > 1 then
+            str = str .. ", "
+        end
+        str = str .. tostring(e) or ('('..type(e)..')')
+    end
     io.stderr:write("==> ERROR:\n")
 
     for i=#err._.pos, 1, -1 do
