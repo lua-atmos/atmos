@@ -490,6 +490,25 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "toggle block 4: error")
+    do
+        spawn (function ()
+            local x,v = catch('err', function ()
+                toggle('Show', function ()
+                    await(true)
+                    throw 'err'
+                end)
+            end)
+            out(x, v)
+        end)
+        emit()
+        out('ok')
+    end
+    assertx(out(), "false\terr\nok\n")
+    atmos.close()
+end
+
 print "--- NESTED ---"
 
 do
