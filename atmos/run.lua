@@ -49,7 +49,6 @@ local TIME = 1
 
 local TASKS = setmetatable({
     _ = {
-        tag = 'tasks',
         up  = nil,
         dns = {},
         ing = 0,
@@ -64,7 +63,7 @@ local TASKS = setmetatable({
 local function _me_ (nested, t)
     if t == TASKS then
         return nil
-    elseif (t._.tag == 'tasks') or ((not nested) and t._.nested) then
+    elseif (getmetatable(t) == meta_tasks) or ((not nested) and t._.nested) then
         return _me_(nested, t._.up)
     else
         return t
@@ -94,7 +93,7 @@ local function task_resume_result (t, ok, err)
         --if t.status ~= 'aborted' then
             local up = _me_(false, t._.up)
             run.emit(false, up, t)
-            if t._.up._.tag=='tasks' and t._.up~=TASKS then
+            if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
                 local up = _me_(false, t._.up._.up)
                 run.emit(false, up, t._.up, t)
             end
@@ -176,7 +175,7 @@ local function trace ()
     local x = me(true)
     while x and x~=TASKS do
         ret[#ret+1] = {
-            msg = x._.tag,
+            msg = (getmetatable(x)==meta_task and 'task') or 'tasks',
             dbg = x._.dbg,
         }
         x = x._.up
@@ -298,7 +297,6 @@ function run.tasks (max)
     local dbg = debug.getinfo(2)
     local ts = {
         _ = {
-            tag = 'tasks',
             up  = up,
             dns = {},
             ing = 0,
@@ -317,7 +315,6 @@ function run.task (n, f, nested)
     local dbg = debug.getinfo(n+1)
     local t = {
         _ = {
-            tag = 'task',
             up  = nil,
             dns = {},
             ing = 0,
