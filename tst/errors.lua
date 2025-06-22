@@ -8,7 +8,10 @@ do
             await(spawn(function ()
                 await('Y')
             end))
-            return 1 + true
+            local function f ()
+                return 1 + true
+            end
+            f()
             --error "OK"
             --throw "OK"
         end

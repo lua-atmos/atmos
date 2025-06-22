@@ -83,7 +83,7 @@ function M.loop (ren)
             ren:setDrawColor(0x000000)
             ren:clear()
         end
-        emit('SDL.Draw')
+        emit('sdl.draw')
         if ren then
             ren:present()
         end

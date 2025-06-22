@@ -229,7 +229,7 @@ function run.call (f)
         else
         --if getmetatable(err) == meta_throw then
             if getmetatable(err) ~= meta_throw then
-                err = tothrow(2, err)
+                err = tothrow(4, err)
             end
 
             local dbg = debug.getinfo(3)
