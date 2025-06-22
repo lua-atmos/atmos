@@ -1,9 +1,9 @@
 local SDL = require "SDL"
 local TTF = require "SDL.ttf"
 require "atmos"
-local env = require "atmos.env.sdl"
+local sdl = require "atmos.env.sdl"
 
-local point_vs_rect = env.point_vs_rect
+local point_vs_rect = sdl.point_vs_rect
 
 assert(TTF.init())
 local _ <close> = defer(function ()
@@ -30,7 +30,7 @@ spawn(function ()
             REN:clear()
             REN:setDrawColor(0xFFFFFF)
             REN:fillRect(rect)
-            env.write(FNT, text, {x=256/2, y=200})
+            sdl.write(FNT, text, {x=256/2, y=200})
             REN:present()
         end)
     end)
@@ -63,4 +63,4 @@ spawn(function ()
     end
 end)
 
-env.loop()
+sdl.loop()
