@@ -190,3 +190,42 @@ do
     assertx(out(), "3\n")
     atmos.close()
 end
+
+print "-=- TASK -=-"
+
+do
+    print("Testing...", "task 1")
+    do
+        spawn(function ()
+            local x,y,z = catch('X', function ()
+                await(true)
+                throw('X',10)
+            end)
+            out(x, y, z)
+        end)
+        emit()
+        out('ok')
+    end
+    assertx(out(), "false\tX\t10\nok\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "task 2")
+    do
+        spawn(function ()
+            local x,y,z = catch('X', function ()
+                spawn (function ()
+                    await(true)
+                    throw('X',10)
+                end)
+                await(false)
+            end)
+            out(x, y, z)
+        end)
+        emit()
+        out('ok')
+    end
+    assertx(out(), "false\tX\t10\nok\n")
+    atmos.close()
+end

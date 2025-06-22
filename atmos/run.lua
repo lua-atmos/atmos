@@ -569,9 +569,10 @@ local function emit (time, t, ...)
                 task_resume_result(t, coroutine.resume(t._.co, nil, ...))
             end
         end
+    else
+        assert(getmetatable(t) == meta_tasks)
+        assertn(0, ok, err)
     end
-
-    assertn(0, ok, err)
 end
 
 function run.emit (stk, to, e, ...)
