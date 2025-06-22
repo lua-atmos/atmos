@@ -8,7 +8,7 @@ local meta = {
         if e.type ~= awt[1] then
             return false
         elseif (e.type==SDL.event.KeyDown or e.type==SDL.event.KeyUp) and type(awt[2])=='string' then
-            return (awt[2] == SDL.getKeyName(e.keysym.sym))
+            return (awt[2] == e.name)
         elseif type(awt[2]) == 'function' then
             return awt[2](e)
         else
@@ -23,6 +23,10 @@ local ms = 0
 
 function M.point_vs_rect (p, r)
     return SDL.hasIntersection(r, { x=p.x, y=p.y, w=1, h=1 })
+end
+
+function M.rect_vs_rect (r1, r2)
+    return SDL.hasIntersection(r1, r2)
 end
 
 function M.evt_vs_key (e, key)
@@ -67,6 +71,9 @@ function M.loop (ren)
     while not quit do
         local e = SDL.waitEvent(ms)
         if e then
+            if (e.type==SDL.event.KeyDown or e.type==SDL.event.KeyUp) then
+                e.name = SDL.getKeyName(e.keysym.sym)
+            end
             emit(setmetatable(e, meta))
             if e.type == SDL.event.Quit then
                 break
