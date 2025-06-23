@@ -211,11 +211,78 @@ do
             await(true)
             return v
         end, 20)
-        out(await(y))
+        out((await(y)))
         out(await(x))
     end)
     emit()
     assertx(out(), "20\n10\n")
+    atmos.close()
+end
+
+print "--- AWAIT / _OR_ ---"
+
+do
+    print("Testing...", "await or 1")
+    spawn(function ()
+        local v,u = await(_or_('X','Y'))
+        out(v,u)
+    end)
+    emit('Y',10)
+    assertx(out(), "Y\t10\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "await or 2")
+    spawn(function ()
+        local v,u = await(_or_({'Y',5},{'Y',10}))
+        out(v,u)
+    end)
+    emit('Y',10)
+    assertx(out(), "Y\t10\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "await or 3: task")
+    spawn(function ()
+        local t = spawn(function ()
+            await 'X'
+            return 10
+        end)
+        local v,u = await(_or_(t,'X'))
+        out(v,u==t)
+    end)
+    emit 'X'
+    assertx(out(), "10\ttrue\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "await or 4: tasks")
+    spawn(function ()
+        local ts = tasks()
+        local t = spawn_in(ts, function ()
+            await 'X'
+        end)
+        local v,u = await(_or_(ts,'X'))
+        out(v==t,u==ts)
+    end)
+    emit 'X'
+    assertx(out(), "true\ttrue\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "await or 5: clock")
+    spawn(function ()
+        local v,u = await(_or_('X',clock{s=1}))
+        out(v,u)
+    end)
+    emit(clock{ms=510})
+    emit(clock{ms=515})
+    emit 'X'
+    assertx(out(), "clock\t25\n")
     atmos.close()
 end
 

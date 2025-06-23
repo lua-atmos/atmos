@@ -146,7 +146,7 @@ do
         local t2 = spawn_in (ts, T, 2)
         local t3 = spawn_in (ts, T, 3)
         spawn (function ()
-            local ts,t = await(ts)
+            local t,ts = await(ts)
             assert(t == t2)
             out 't2'
         end)

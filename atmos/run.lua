@@ -330,7 +330,7 @@ end
 local function check_task_ret (t)
     if t.tag == '_==_' then
         if (getmetatable(t[1]) == meta_task) and (coroutine.status(t[1]._.co) == 'dead') then
-            return true, t[1]._.ret
+            return true, t[1]._.ret, t[1]
         else
             return false
         end
@@ -348,14 +348,23 @@ local function check_task_ret (t)
 end
 
 local function chk_ret (awt, ...)
+    local e = awt[1]
     local mt = getmetatable(...)
-    if mt and mt.__atmos then
+    if awt.tag == '_or_' then
+        for _, x in ipairs(awt) do
+            local vs = { chk_ret(x, ...) }
+            if vs[1] then
+                return table.unpack(vs)
+            end
+        end
+        return false
+    elseif mt and mt.__atmos then
         return mt.__atmos(awt, ...)
     elseif awt.tag == 'boolean' then
-        if awt[1] == false then
+        if e == false then
             -- never awakes
             return false
-        elseif awt[1] == true then
+        elseif e == true then
             return true, ...
         else
             error "bug found : impossible case"
@@ -366,21 +375,16 @@ local function chk_ret (awt, ...)
                 return false
             end
         end
-        if getmetatable(awt[1]) ~= meta_task then
-            return true, ...
+        if getmetatable(e) == meta_task then
+            return true, e._.ret, e
+        elseif getmetatable(e) == meta_tasks then
+            -- invert ts,t -> t,ts
+            return true, select(2,...), select(1,...), select(3,...)
         else
-            return true, select(1,...)._.ret, select(2,...)
+            return true, ...
         end
     elseif awt.tag == 'function' then
-        return awt[1](...)
-    elseif awt.tag == '_or_' then
-        for _, x in ipairs(awt) do
-            local vs = { chk_ret(x, ...) }
-            if vs[1] then
-                return table.unpack(vs)
-            end
-        end
-        return false
+        return e(...)
     else
         return false
     end
@@ -413,7 +417,7 @@ local meta_clock; meta_clock = {
     __atmos = function (awt, evt)
         if getmetatable(awt) == meta_clock then
             awt.cur = awt.cur - clock_to_ms(evt)
-            return awt.cur <= 0
+            return (awt.cur <= 0), 'clock', -awt.cur
         else
             return false
         end
@@ -482,7 +486,7 @@ function run._or_ (...)
     }
     for i,x in ipairs(t) do
         if type(x) == 'table' then
-            if getmetatable(x)==meta_task or getmetatable(x)==meta_tasks then
+            if getmetatable(x)==meta_task or getmetatable(x)==meta_tasks or x.tag then
                 t[i] = { x }
             end
         else
