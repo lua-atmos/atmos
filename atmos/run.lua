@@ -629,13 +629,12 @@ local meta_paror = {
 
 function run.par_or (...)
     assertn(2, me(true), "invalid par_or : expected enclosing task")
-    local ts = { ... }
+    local ts <close> = setmetatable({ ... }, meta_paror)
     for i,f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
         ts[i] = { run.spawn(2, nil, true, f) }
     end
-    local ret <close> = setmetatable({ tag='_or_', table.unpack(ts) }, meta_paror)
-    return run.await(ret)
+    return run.await { tag='_or_', table.unpack(ts) }
 end
 
 function run.watching (...)
