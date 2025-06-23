@@ -302,7 +302,7 @@ end
 do
     print("Testing...", "every 2")
     spawn(function ()
-        every(function (v) return v>10 and v end,
+        every(function (v) return v>10, v end,
             function (e)
                 out(e)
             end

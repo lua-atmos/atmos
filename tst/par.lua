@@ -224,7 +224,7 @@ end
 do
     print("Testing...", "watching 6")
     spawn (function ()
-        local v = watching (function (e,v) return e=='X' and v==10 and v end,
+        local v = watching (function (e,v) return e=='X' and v==10, v end,
             function ()
                 await(false)
             end

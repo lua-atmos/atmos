@@ -328,8 +328,8 @@ end
 -------------------------------------------------------------------------------
 
 local function check_task_ret (t)
-    if t.tag == 'task' then
-        if coroutine.status(t[1]._.co) == 'dead' then
+    if t.tag == '_==_' then
+        if (getmetatable(t[1]) == meta_task) and (coroutine.status(t[1]._.co) == 'dead') then
             return true, t[1]._.ret
         else
             return false
@@ -347,60 +347,58 @@ local function check_task_ret (t)
     end
 end
 
+local function chk_ret (awt, ...)
+    local mt = getmetatable(...)
+    if mt and mt.__atmos then
+        return mt.__atmos(awt, ...)
+    elseif awt.tag == 'boolean' then
+        if awt[1] == false then
+            -- never awakes
+            return false
+        elseif awt[1] == true then
+            return true, ...
+        else
+            error "bug found : impossible case"
+        end
+    elseif awt.tag == '_==_' then
+        for i,v in ipairs(awt) do
+            if v ~= select(i,...) then
+                return false
+            end
+        end
+        if getmetatable(awt[1]) ~= meta_task then
+            return true, ...
+        else
+            return true, select(1,...)._.ret, select(2,...)
+        end
+    elseif awt.tag == 'function' then
+        return awt[1](...)
+    elseif awt.tag == '_or_' then
+        for _, x in ipairs(awt) do
+            local vs = { chk_ret(x, ...) }
+            if vs[1] then
+                return table.unpack(vs)
+            end
+        end
+        return false
+    else
+        return false
+    end
+end
+
 local function awake (err, ...)
     local me = assert(me(true))
     if err then
         error((...), 0)
     else
         local awt = me._.await
-        local mt = getmetatable(...)
-        if mt and mt.__atmos then
-            return (function(ok, ...)
-                if ok then
-                    return ...
-                else
-                    return awake(coroutine.yield())
-                end
-            end)(mt.__atmos(awt, ...))
-        elseif awt.tag == 'boolean' then
-            if awt[1] == false then
-                -- never awakes
+        return (function (ok, ...)
+            if ok then
+                return ...
+            else
                 return awake(coroutine.yield())
-            elseif awt[1] == true then
-                return ...
-            else
-                error "bug found : impossible case"
             end
-        elseif awt.tag=='equal' or awt.tag=='task' then
-            for i,v in ipairs(awt) do
-                if v ~= select(i,...) then
-                    return awake(coroutine.yield())
-                end
-            end
-            if awt.tag ~= 'task' then
-                return ...
-            else
-                return select(1,...)._.ret, select(2,...)
-            end
-        elseif awt.tag == 'function' then
-            return (function (ok, ...)
-                if ok then
-                    return ok, ...
-                else
-                    return awake(coroutine.yield())
-                end
-            end)(me._.await[1](...))
-        elseif awt.tag == '_or_' then
-            for _, t in ipairs(me._.await) do
-                assert(t.tag == 'task')
-                if coroutine.status(t[1]._.co) == 'dead' then
-                    return t[1]._.ret
-                end
-            end
-            return awake(coroutine.yield())
-        else
-            return awake(coroutine.yield())
-        end
+        end)(chk_ret(awt, ...))
     end
 end
 
@@ -425,10 +423,8 @@ local meta_clock; meta_clock = {
 local function await_to_table (e, ...)
     local T
     if type(e) == 'table' then
-        if getmetatable(e) == meta_task then
-            T = { tag='task', e,... }
-        elseif getmetatable(e) == meta_tasks then
-            T = { tag='equal', e,... }
+        if (getmetatable(e) == meta_task) or getmetatable(e) == meta_tasks then
+            T = { tag='_==_', e,... }
         elseif e.tag == '_or_' then
             T = e
             for i,v in ipairs(T) do
@@ -445,7 +441,7 @@ local function await_to_table (e, ...)
     elseif type(e) == 'boolean' then
         T = { tag='boolean', e,... }
     else
-        T = { tag='equal', e,... }
+        T = { tag='_==_', e,... }
     end
     T.time = TIME
     return T
