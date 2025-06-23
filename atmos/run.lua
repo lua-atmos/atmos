@@ -327,6 +327,26 @@ end
 
 -------------------------------------------------------------------------------
 
+local function check_task_ret (t)
+    if t.tag == 'task' then
+        if coroutine.status(t[1]._.co) == 'dead' then
+            return true, t[1]._.ret
+        else
+            return false
+        end
+    elseif t.tag == '_or_' then
+        for _,x in ipairs(t) do
+            local chk,ret = check_task_ret(x)
+            if chk then
+                return chk, ret
+            end
+        end
+        return false
+    else
+        return false
+    end
+end
+
 local function awake (err, ...)
     local me = assert(me(true))
     if err then
@@ -401,26 +421,6 @@ local meta_clock; meta_clock = {
         end
     end
 }
-
-local function check_task_ret (t)
-    if t.tag == 'task' then
-        if coroutine.status(t[1]._.co) == 'dead' then
-            return true, t[1]._.ret
-        else
-            return false
-        end
-    elseif t.tag == '_or_' then
-        for _,x in ipairs(t) do
-            local chk,ret = check_task_ret(x)
-            if chk then
-                return chk, ret
-            end
-        end
-        return false
-    else
-        return false
-    end
-end
 
 local function await_to_table (e, ...)
     local T
