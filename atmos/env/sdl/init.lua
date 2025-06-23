@@ -8,11 +8,11 @@ local meta = {
         if e.type ~= awt[1] then
             return false
         elseif (e.type==SDL.event.KeyDown or e.type==SDL.event.KeyUp) and type(awt[2])=='string' then
-            return (awt[2] == e.name)
+            return (awt[2] == e.name), e
         elseif type(awt[2]) == 'function' then
             return awt[2](e)
         else
-            return true
+            return true, e
         end
     end
 }

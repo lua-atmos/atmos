@@ -101,50 +101,6 @@ local function task_resume_result (t, ok, err)
     end
 end
 
-local function task_awake_check (time, t, awt, ...)
-    local mt = getmetatable(...)
-    if coroutine.status(t._.co) ~= 'suspended' then
-        -- nothing to awake
-        return false
-    elseif awt.time >= time then
-        -- await after emit
-        return false
-    elseif mt and mt.__atmos then
-        if mt.__atmos(awt,...) then
-            return true
-        else
-            return false
-        end
-    elseif awt.tag == 'boolean' then
-        if awt[1] == false then
-            -- never awakes
-            return false
-        elseif awt[1] == true then
-            return true
-        else
-            error "bug found : impossible case"
-        end
-    elseif awt.tag=='equal' or awt.tag=='task' then
-        for i,v in ipairs(awt) do
-            if v ~= select(i,...) then
-                return false
-            end
-        end
-        return true
-    elseif awt.tag == 'function' then
-        return true -- (check in task context)
-    elseif awt.tag == '_or_' then
-        for _,v in ipairs(awt) do
-            if task_awake_check(time, t, v, ...) then
-                return true
-            end
-        end
-        return false
-    else
-        return false
-    end
-end
-
 task_gc = function (t)
     if t._.gc and t._.ing==0 then
         t._.gc = false
@@ -324,6 +280,9 @@ function run.task (n, f, nested)
             co  = coroutine.create(f),
             nested = nested,
             status = nil, -- aborted, toggled
+            await = {
+                time = 0,
+            },
             ret = nil,
         }
     }
@@ -373,8 +332,37 @@ local function awake (err, ...)
     if err then
         error((...), 0)
     else
-        -- must call f here bc of me() (vs task_awake_check)
-        if me._.await.tag == 'function' then
+        local awt = me._.await
+        local mt = getmetatable(...)
+        if mt and mt.__atmos then
+            return (function(ok, ...)
+                if ok then
+                    return ...
+                else
+                    return awake(coroutine.yield())
+                end
+            end)(mt.__atmos(awt, ...))
+        elseif awt.tag == 'boolean' then
+            if awt[1] == false then
+                -- never awakes
+                return awake(coroutine.yield())
+            elseif awt[1] == true then
+                return ...
+            else
+                error "bug found : impossible case"
+            end
+        elseif awt.tag=='equal' or awt.tag=='task' then
+            for i,v in ipairs(awt) do
+                if v ~= select(i,...) then
+                    return awake(coroutine.yield())
+                end
+            end
+            if awt.tag ~= 'task' then
+                return ...
+            else
+                return select(1,...)._.ret, select(2,...)
+            end
+        elseif awt.tag == 'function' then
             return (function (ok, ...)
                 if ok then
                     return ok, ...
@@ -382,18 +370,16 @@ local function awake (err, ...)
                     return awake(coroutine.yield())
                 end
             end)(me._.await[1](...))
-        elseif me._.await.tag == 'task' then
-            return (...)._.ret
-        elseif me._.await.tag=='_or_' then
+        elseif awt.tag == '_or_' then
             for _, t in ipairs(me._.await) do
                 assert(t.tag == 'task')
                 if coroutine.status(t[1]._.co) == 'dead' then
                     return t[1]._.ret
                 end
             end
-            error "bug found"
+            return awake(coroutine.yield())
         else
-            return ...
+            return awake(coroutine.yield())
         end
     end
 end
@@ -560,9 +546,7 @@ local function emit (time, t, ...)
             end
             assertn(0, ok, err) -- TODO: error in defer?
         else
-            --if chk then
-            if task_awake_check(time,t,t._.await,...) then
---print('awake', t.up,t)
+            if (t._.await.time < time) and (coroutine.status(t._.co) == 'suspended') then
                 task_resume_result(t, coroutine.resume(t._.co, nil, ...))
             end
         end
