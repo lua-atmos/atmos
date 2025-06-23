@@ -475,9 +475,20 @@ function run.clock (t)
     return setmetatable(t, meta_clock)
 end
 
-function run._or_ (ts)
-    assertn(2, type(t)=='table', "invalid _or_ : expected table")
-    t.tag = '_or_'
+function run._or_ (...)
+    local t = {
+        tag = '_or_',
+        ...
+    }
+    for i,x in ipairs(t) do
+        if type(x) == 'table' then
+            if getmetatable(x)==meta_task or getmetatable(x)==meta_tasks then
+                t[i] = { x }
+            end
+        else
+            t[i] = { x }
+        end
+    end
     return t
 end
 
@@ -630,16 +641,16 @@ function run.par_or (...)
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
         ts[i] = { run.spawn(2, nil, true, f) }
     end
-    return run.await { tag='_or_', table.unpack(ts) }
+    return run.await(run._or_(table.unpack(ts)))
 end
 
 function run.watching (...)
+    assertn(2, me(true), "invalid watching : expected enclosing task")
     local t = { ... }
-    local blk = table.remove(t, #t)
-    local awt = function ()
-        return run.await(table.unpack(t))
-    end
-    return run.par_or(awt, blk)
+    local f = table.remove(t, #t)
+    assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
+    local spw <close> = run.spawn(2, nil, true, f)
+    return run.await(run._or_({table.unpack(t)}, spw))
 end
 
 return run

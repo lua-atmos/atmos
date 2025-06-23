@@ -208,7 +208,7 @@ do
     local _,err = pcall(function ()
         watching (false, function () end)
     end)
-    assertfx(err, "par.lua:209: invalid par_or : expected enclosing task")
+    assertfx(err, "par.lua:209: invalid watching : expected enclosing task")
 end
 
 do
@@ -218,7 +218,7 @@ do
             watching (false, 'no')
         end)
     end)
-    assertfx(err, "par.lua:218: invalid par_or : expected task prototype")
+    assertfx(err, "par.lua:218: invalid watching : expected task prototype")
 end
 
 do
