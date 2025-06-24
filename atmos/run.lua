@@ -342,22 +342,53 @@ local function check_task_ret (t)
             end
         end
         return false
+    elseif t.tag == '_and_' then
+        local rets = {}
+        for i,x in ipairs(t) do
+            local chk,ret = check_task_ret(x)
+            if chk then
+                t[i] = { tag='_ok_', ret }
+                rets[#rets+1] = ret
+            end
+        end
+        if #rets == #t then
+            return true, rets
+        else
+            return false
+        end
     else
         return false
     end
 end
 
-local function chk_ret (awt, ...)
+local function check_ret (awt, ...)
     local e = awt[1]
     local mt = getmetatable(...)
     if awt.tag == '_or_' then
         for _, x in ipairs(awt) do
-            local vs = { chk_ret(x, ...) }
+            local vs = { check_ret(x, ...) }
             if vs[1] then
                 return table.unpack(vs)
             end
         end
         return false
+    elseif awt.tag == '_and_' then
+        for i, x in ipairs(awt) do
+            local vs = { check_ret(x, ...) }
+            if vs[1] then
+                local t = (#vs>2 and {table.unpack(vs,2)}) or vs[2]
+                awt[i] = { tag='_ok_', t }
+            end
+        end
+        local ret = {}
+        for _,x in ipairs(awt) do
+            if x.tag == '_ok_' then
+                ret[#ret+1] = x[1]
+            else
+                return false
+            end
+        end
+        return true, table.unpack(ret)
     elseif mt and mt.__atmos then
         return mt.__atmos(awt, ...)
     elseif awt.tag == 'boolean' then
@@ -376,7 +407,7 @@ local function chk_ret (awt, ...)
             end
         end
         if getmetatable(e) == meta_task then
-            return true, e._.ret, e
+            return true, e._.ret --, e
         elseif getmetatable(e) == meta_tasks then
             -- invert ts,t -> t,ts
             return true, select(2,...), select(1,...), select(3,...)
@@ -402,7 +433,7 @@ local function awake (err, ...)
             else
                 return awake(coroutine.yield())
             end
-        end)(chk_ret(awt, ...))
+        end)(check_ret(awt, ...))
     end
 end
 
@@ -429,7 +460,7 @@ local function await_to_table (e, ...)
     if type(e) == 'table' then
         if (getmetatable(e) == meta_task) or getmetatable(e) == meta_tasks then
             T = { tag='_==_', e,... }
-        elseif e.tag == '_or_' then
+        elseif e.tag=='_or_' or e.tag=='_and_' then
             T = e
             for i,v in ipairs(T) do
                 T[i] = await_to_table(table.unpack(v))
@@ -482,6 +513,23 @@ end
 function run._or_ (...)
     local t = {
         tag = '_or_',
+        ...
+    }
+    for i,x in ipairs(t) do
+        if type(x) == 'table' then
+            if getmetatable(x)==meta_task or getmetatable(x)==meta_tasks or x.tag then
+                t[i] = { x }
+            end
+        else
+            t[i] = { x }
+        end
+    end
+    return t
+end
+
+function run._and_ (...)
+    local t = {
+        tag = '_and_',
         ...
     }
     for i,x in ipairs(t) do
@@ -620,32 +668,42 @@ function run.every (...)
     end
 end
 
-function run.par (...)
-    assertn(2, me(true), "invalid par : expected enclosing task")
-    for i=1, select('#',...) do
-        local f = select(i,...)
-        assertn(2, type(f) == 'function', "invalid par : expected task prototype")
-        run.spawn(2, nil, true, select(i,...))
-    end
-    run.await(false)
-end
-
-local meta_paror = {
+local meta_par = {
     __close = function (ts)
         for _, t in ipairs(ts) do
-            meta_task.__close(t[1])
+            meta_task.__close(t)
         end
     end
 }
 
+function run.par (...)
+    assertn(2, me(true), "invalid par : expected enclosing task")
+    local ts <close> = setmetatable({ ... }, meta_par)
+    for i,f in ipairs(ts) do
+        assertn(2, type(f) == 'function', "invalid par : expected task prototype")
+        ts[i] = run.spawn(2, nil, true, select(i,...))
+    end
+    run.await(false)
+end
+
 function run.par_or (...)
     assertn(2, me(true), "invalid par_or : expected enclosing task")
-    local ts <close> = setmetatable({ ... }, meta_paror)
+    local ts <close> = setmetatable({ ... }, meta_par)
     for i,f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = { run.spawn(2, nil, true, f) }
+        ts[i] = run.spawn(2, nil, true, f)
     end
     return run.await(run._or_(table.unpack(ts)))
+end
+
+function run.par_and (...)
+    assertn(2, me(true), "invalid par_or : expected enclosing task")
+    local ts <close> = setmetatable({ ... }, meta_par)
+    for i,f in ipairs(ts) do
+        assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
+        ts[i] = run.spawn(2, nil, true, f)
+    end
+    return run.await(run._and_(table.unpack(ts)))
 end
 
 function run.watching (...)

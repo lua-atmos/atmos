@@ -120,6 +120,66 @@ do
     atmos.close()
 end
 
+print '--- PAR_AND ---'
+
+do
+    print("Testing...", "par_and 1")
+    spawn(function ()
+        par_and (
+            function ()
+                out(await('X'))
+            end,
+            function ()
+                out(await('Y'))
+            end
+        )
+        out('ok')
+    end)
+    emit('Y',10)
+    emit('X')
+    assertx(out(), "Y\t10\nX\nok\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "par_and 2")
+    spawn(function ()
+        local x,y = par_and (
+            function ()
+                return await('X')
+            end,
+            function ()
+                local _,v = await('Y')
+                return v
+            end
+        )
+        out(x,y)
+    end)
+    emit('Z')
+    emit('Y', 10)
+    emit('X')
+    assertx(out(), "X\t10\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "par_and 3")
+    spawn(function ()
+        local x,y = par_and (
+            function ()
+                return await('X')
+            end,
+            function ()
+                return ('Y')
+            end
+        )
+        out(x,y)
+    end)
+    emit 'X'
+    assertx(out(), "X\tY\n")
+    atmos.close()
+end
+
 print '--- WATCHING ---'
 
 do
@@ -208,7 +268,7 @@ do
     local _,err = pcall(function ()
         watching (false, function () end)
     end)
-    assertfx(err, "par.lua:209: invalid watching : expected enclosing task")
+    assertfx(err, "par.lua:269: invalid watching : expected enclosing task")
 end
 
 do
@@ -218,7 +278,7 @@ do
             watching (false, 'no')
         end)
     end)
-    assertfx(err, "par.lua:218: invalid watching : expected task prototype")
+    assertfx(err, "par.lua:278: invalid watching : expected task prototype")
 end
 
 do

@@ -251,7 +251,7 @@ do
             return 10
         end)
         local v,u = await(_or_(t,'X'))
-        out(v,u==t)
+        out(v,u==nil)
     end)
     emit 'X'
     assertx(out(), "10\ttrue\n")
@@ -283,6 +283,75 @@ do
     emit(clock{ms=515})
     emit 'X'
     assertx(out(), "clock\t25\n")
+    atmos.close()
+end
+
+print "--- AWAIT / _AND_ ---"
+
+do
+    print("Testing...", "await and 1")
+    spawn(function ()
+        local v,u = await(_and_('X','Y'))
+        out(table.unpack(v))
+        out(table.unpack(u))
+    end)
+    emit('Y',10)
+    emit('X',20)
+    assertx(out(), "X\t20\nY\t10\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "await and 2")
+    spawn(function ()
+        local v,u = await(_and_('Y','Y'))
+        out(v,u)
+    end)
+    emit('Y')
+    assertx(out(), "Y\tY\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "await and 3: task")
+    spawn(function ()
+        local t = spawn(function ()
+            await 'X'
+            return 10
+        end)
+        local v,u = await(_and_(t,'X'))
+        out(v,u)
+    end)
+    emit 'X'
+    assertx(out(), "10\tX\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "await and 4: tasks")
+    spawn(function ()
+        local ts = tasks()
+        local t = spawn_in(ts, function ()
+            await 'X'
+        end)
+        local v,u = await(_and_(ts,'X'))
+        out(v[1]==t,v[2]==ts,u)
+    end)
+    emit 'X'
+    assertx(out(), "true\ttrue\tX\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "await and 5: clock")
+    spawn(function ()
+        local v,u = await(_and_('X',clock{s=1}))
+        out(v,u[2])
+    end)
+    emit(clock{ms=510})
+    emit(clock{ms=515})
+    emit 'X'
+    assertx(out(), "X\t25\n")
     atmos.close()
 end
 
