@@ -355,6 +355,28 @@ do
     atmos.close()
 end
 
+print '--- AND / OR ---'
+
+do
+    print("Testing...", "await and/or: clock")
+    spawn(function ()
+        local ts = tasks()
+        local t = spawn_in(ts, function ()
+            await(false)
+        end)
+        local T = spawn_in(ts, function ()
+            await('Z')
+        end)
+        local v,u = await(_and_(_or_('X',clock{s=1}), _or_(ts,t)))
+        out(v[2],u[1]==T,u[2]==ts)
+    end)
+    emit(clock{ms=510})
+    emit 'Z'
+    emit(clock{ms=515})
+    assertx(out(), "25\ttrue\ttrue\n")
+    atmos.close()
+end
+
 print '--- PUB ---'
 
 do
