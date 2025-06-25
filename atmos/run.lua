@@ -247,13 +247,11 @@ end
 function run.loop (steps, body)
     return call(2, "loop", function ()
         local t <close> = run.spawn(1, nil, false, body)
+        local i = 0
         while coroutine.status(t._.co) ~= 'dead' do
-            for _, step in ipairs(steps) do
-                local ok, v = step()
-                if ok then
-                    return v
-                end
-            end
+            i = i % #steps
+            steps[i+1](steps)
+            i = i + 1
         end
         return t._.ret
     end)
