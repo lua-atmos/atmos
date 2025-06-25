@@ -1,3 +1,4 @@
+require "atmos"
 local SDL = require "SDL"
 require "atmos.util"
 
@@ -92,5 +93,7 @@ function M.loop (ren, body)
     M.ren = ren
     return loop({M.step}, body)
 end
+
+loop = M.loop
 
 return M

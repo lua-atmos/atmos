@@ -1,8 +1,6 @@
-local SDL = require "SDL"
-require "atmos"
-local sdl = require "atmos.env.sdl"
+require "atmos.env.clock"
 
-sdl.loop(nil, function ()
+loop(function ()
     watching(clock{s=5}, function ()
         every(clock{s=1}, function ()
             print("Hello World!")

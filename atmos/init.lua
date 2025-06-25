@@ -2,13 +2,13 @@ require "atmos.aux"
 local run = require "atmos.run"
 
 local atmos = {
-    close = run.close
+    close = run.close,
+    loop  = run.loop,
 }
 
 me    = run.me
 throw = run.throw
 catch = run.catch
-loop  = run.loop
 
 defer = run.defer
 tasks = run.tasks
