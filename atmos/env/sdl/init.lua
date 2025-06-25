@@ -1,7 +1,9 @@
 local SDL = require "SDL"
 require "atmos.util"
 
-local M = {}
+local M = {
+    ren = nil,
+}
 
 local meta = {
     __atmos = function (awt, e)
