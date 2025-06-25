@@ -229,3 +229,85 @@ do
     assertx(out(), "false\tX\t10\nok\n")
     atmos.close()
 end
+
+print "-=- LOOP -=-"
+
+do
+    print("Testing...", "loop 1: err")
+    local _,err = pcall(function ()
+        loop(true)
+    end)
+    assertfx(err, "others.lua:238: invalid spawn : expected task prototype")
+end
+
+do
+    print("Testing...", "loop 2")
+    do
+        local v = loop(function ()
+            return 1
+        end)
+        out(v)
+    end
+    assertx(out(), "1\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "loop 3")
+    do
+        step = function ()
+            emit 'X'
+        end
+        local v = loop(function ()
+            await 'X'
+            return 1
+        end)
+        out(v)
+    end
+    assertx(out(), "1\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "loop 4: err")
+    do
+        local v = loop(function ()
+            throw 'X'
+            return 1
+        end)
+        out(v)
+    end
+    assertx(out(), "1\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "loop 5: err")
+    do
+        step = function ()
+            emit 'X'
+        end
+        local v = loop(function ()
+            await 'X'
+            throw 'X'
+        end)
+        out(v)
+    end
+    assertx(out(), "1\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "loop 6: err")
+    do
+        step = function ()
+            throw 'X'
+        end
+        local v = loop(function ()
+            await 'X'
+        end)
+        out(v)
+    end
+    assertx(out(), "1\n")
+    atmos.close()
+end

@@ -8,7 +8,8 @@ local atmos = {
 me    = run.me
 throw = run.throw
 catch = run.catch
-call  = run.call
+loop  = run.loop
+step  = run.step
 
 defer = run.defer
 tasks = run.tasks

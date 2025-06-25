@@ -218,10 +218,10 @@ local function panic (err)
     os.exit()
 end
 
-local function mypcall (stk, f, ...)
+local function call (stk, f, ...)
     return (function (ok, err, ...)
         if ok then
-            return ok, err, ...
+            return err, ...
         end
         if stk then
             if (getmetatable(err) ~= meta_throw) then
@@ -242,6 +242,19 @@ local function mypcall (stk, f, ...)
         end
         error(err)
     end)(pcall(f, ...))
+end
+
+function run.step ()
+end
+
+function run.loop (f)
+    return call("loop", function ()
+        local t = run.spawn(1, nil, false, f)
+        while coroutine.status(t._.co) ~= 'dead' do
+            step()
+        end
+        return t._.ret
+    end)
 end
 
 -------------------------------------------------------------------------------
@@ -619,7 +632,7 @@ function run.emit (stk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
     local me = me(false)
-    local ok, ret = mypcall(stk and "emit", emit, time, fto(me,to), e, ...)
+    local ret = call(stk and "emit", emit, time, fto(me,to), e, ...)
     assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
     return ret
 end
