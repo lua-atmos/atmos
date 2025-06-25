@@ -69,34 +69,38 @@ function M.quit ()
     quit = true
 end
 
-function M.loop (ren)
-    while not quit do
-        local e = SDL.waitEvent(ms)
-        if e then
-            if (e.type==SDL.event.KeyDown or e.type==SDL.event.KeyUp) then
-                e.name = SDL.getKeyName(e.keysym.sym)
-            end
-            emit(setmetatable(e, meta))
-            if e.type == SDL.event.Quit then
-                break
-            end
-        else
-            local cur = SDL.getTicks()
-            if (cur - old) >= MS_PER_FRAME then
-                old = cur
-                emit(clock{ms=MS_PER_FRAME})
-                emit('step', MS_PER_FRAME)
-            end
+function M.step ()
+    local e = SDL.waitEvent(ms)
+    if e then
+        if (e.type==SDL.event.KeyDown or e.type==SDL.event.KeyUp) then
+            e.name = SDL.getKeyName(e.keysym.sym)
         end
-        if ren then
-            ren:setDrawColor(0x000000)
-            ren:clear()
+        emit(setmetatable(e, meta))
+        if e.type == SDL.event.Quit then
+            return true
         end
-        emit('sdl.draw')
-        if ren then
-            ren:present()
+    else
+        local cur = SDL.getTicks()
+        if (cur - old) >= MS_PER_FRAME then
+            old = cur
+            emit(clock{ms=MS_PER_FRAME})
+            emit('step', MS_PER_FRAME)
         end
     end
+    if M.ren then
+        M.ren:setDrawColor(0x000000)
+        M.ren:clear()
+    end
+    emit('sdl.draw')
+    if M.ren then
+        M.ren:present()
+    end
+    return quit
+end
+
+function M.loop (ren, body)
+    M.ren = ren
+    return loop({M.step}, body)
 end
 
 return M

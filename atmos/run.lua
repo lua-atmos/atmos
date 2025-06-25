@@ -244,14 +244,16 @@ local function call (n, stk, f, ...)
     end)(pcall(f, ...))
 end
 
-function run.step ()
-end
-
-function run.loop (f)
+function run.loop (steps, body)
     return call(2, "loop", function ()
-        local t = run.spawn(1, nil, false, f)
+        local t <close> = run.spawn(1, nil, false, body)
         while coroutine.status(t._.co) ~= 'dead' do
-            step()
+            for _, step in ipairs(steps) do
+                local ok, v = step()
+                if ok then
+                    return v
+                end
+            end
         end
         return t._.ret
     end)

@@ -9,7 +9,6 @@ me    = run.me
 throw = run.throw
 catch = run.catch
 loop  = run.loop
-step  = run.step
 
 defer = run.defer
 tasks = run.tasks

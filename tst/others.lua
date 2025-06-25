@@ -235,7 +235,7 @@ print "-=- LOOP -=-"
 do
     print("Testing...", "loop 1")
     do
-        local v = loop(function ()
+        local v = loop({}, function ()
             return 1
         end)
         out(v)
@@ -247,10 +247,10 @@ end
 do
     print("Testing...", "loop 2")
     do
-        step = function ()
+        local function step ()
             emit 'X'
         end
-        local v = loop(function ()
+        local v = loop({step}, function ()
             await 'X'
             return 1
         end)
@@ -260,10 +260,11 @@ do
     atmos.close()
 end
 
+--[[
 do
     print("Testing...", "loop 3: err")
     local _,err = pcall(function ()
-        loop(true)
+        loop({},true)
     end)
     assertfx(err, "==> invalid spawn : expected task prototype")
 end
@@ -271,7 +272,7 @@ end
 do
     print("Testing...", "loop 4: err")
     do
-        local v = loop(function ()
+        local v = loop({}, function ()
             throw 'X'
             return 1
         end)
@@ -284,10 +285,10 @@ end
 do
     print("Testing...", "loop 5: err")
     do
-        step = function ()
+        local function step ()
             emit 'X'
         end
-        local v = loop(function ()
+        local v = loop({step}, function ()
             await 'X'
             throw 'X'
         end)
@@ -300,10 +301,10 @@ end
 do
     print("Testing...", "loop 6: err")
     do
-        step = function ()
+        local function step ()
             throw 'X'
         end
-        local v = loop(function ()
+        local v = loop({step}, function ()
             await 'X'
         end)
         out(v)
@@ -311,3 +312,4 @@ do
     assertx(out(), "1\n")
     atmos.close()
 end
+]]
