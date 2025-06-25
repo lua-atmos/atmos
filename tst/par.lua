@@ -120,6 +120,44 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "par_or 4")
+    spawn (function ()
+        par_or (
+            function ()
+                await 'X'
+                out 'ok'
+            end,
+            function ()
+                await 'X'
+                out 'no'
+            end
+        )
+    end)
+    emit 'X'
+    assertx(out(), "ok\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "par_or 5")
+    spawn (function ()
+        par_or (
+            function ()
+                await(true)
+                out 'ok'
+            end,
+            function ()
+                await(true)
+                out 'no'
+            end
+        )
+    end)
+    emit()
+    assertx(out(), "ok\nno\n")
+    atmos.close()
+end
+
 print '--- PAR_AND ---'
 
 do
@@ -268,7 +306,7 @@ do
     local _,err = pcall(function ()
         watching (false, function () end)
     end)
-    assertfx(err, "par.lua:269: invalid watching : expected enclosing task")
+    assertfx(err, "par.lua:307: invalid watching : expected enclosing task")
 end
 
 do
@@ -278,7 +316,7 @@ do
             watching (false, 'no')
         end)
     end)
-    assertfx(err, "par.lua:278: invalid watching : expected task prototype")
+    assertfx(err, "par.lua:316: invalid watching : expected task prototype")
 end
 
 do
@@ -294,5 +332,37 @@ do
     emit('X', 20)
     emit('X', 10)
     assertx(out(), "10\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "watching 7")
+    spawn (function ()
+        watching (true,
+            function ()
+                await(true)
+                out 'no'
+            end
+        )
+        out 'ok'
+    end)
+    emit()
+    assertx(out(), "no\nok\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "watching 8")
+    spawn (function ()
+        watching ('X',
+            function ()
+                await('X')
+                out 'no'
+            end
+        )
+        out 'ok'
+    end)
+    emit 'X'
+    assertx(out(), "no\nok\n")
     atmos.close()
 end
