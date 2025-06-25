@@ -140,7 +140,7 @@ local function trace ()
 end
 
 local function tothrow (n, ...)
-    local dbg = debug.getinfo(n)
+    local dbg = debug.getinfo(1+n)
     local err = {
         _ = {
             dbg = { file=dbg.short_src, line=dbg.currentline },
@@ -153,7 +153,7 @@ local function tothrow (n, ...)
 end
 
 function run.throw (...)
-    return error(tothrow(3,...))
+    return error(tothrow(2,...))
 end
 
 function run.catch (e, f, blk)
@@ -218,17 +218,17 @@ local function panic (err)
     os.exit()
 end
 
-local function call (stk, f, ...)
+local function call (n, stk, f, ...)
     return (function (ok, err, ...)
         if ok then
             return err, ...
         end
         if stk then
             if (getmetatable(err) ~= meta_throw) then
-                err = tothrow(4, err)
+                err = tothrow(n+2, err)
             end
             if getmetatable(err) == meta_throw then
-                local dbg = debug.getinfo(3)
+                local dbg = debug.getinfo(1+1+n)
                 local t = trace()
                 err._.pos[#err._.pos+1] = t
                 table.insert(t, 1, {
@@ -248,7 +248,7 @@ function run.step ()
 end
 
 function run.loop (f)
-    return call("loop", function ()
+    return call(2, "loop", function ()
         local t = run.spawn(1, nil, false, f)
         while coroutine.status(t._.co) ~= 'dead' do
             step()
@@ -632,7 +632,7 @@ function run.emit (stk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
     local me = me(false)
-    local ret = call(stk and "emit", emit, time, fto(me,to), e, ...)
+    local ret = call(1, stk and "emit", emit, time, fto(me,to), e, ...)
     assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
     return ret
 end

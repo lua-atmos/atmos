@@ -233,15 +233,7 @@ end
 print "-=- LOOP -=-"
 
 do
-    print("Testing...", "loop 1: err")
-    local _,err = pcall(function ()
-        loop(true)
-    end)
-    assertfx(err, "others.lua:238: invalid spawn : expected task prototype")
-end
-
-do
-    print("Testing...", "loop 2")
+    print("Testing...", "loop 1")
     do
         local v = loop(function ()
             return 1
@@ -253,7 +245,7 @@ do
 end
 
 do
-    print("Testing...", "loop 3")
+    print("Testing...", "loop 2")
     do
         step = function ()
             emit 'X'
@@ -266,6 +258,14 @@ do
     end
     assertx(out(), "1\n")
     atmos.close()
+end
+
+do
+    print("Testing...", "loop 3: err")
+    local _,err = pcall(function ()
+        loop(true)
+    end)
+    assertfx(err, "==> invalid spawn : expected task prototype")
 end
 
 do
