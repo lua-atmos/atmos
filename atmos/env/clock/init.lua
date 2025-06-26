@@ -12,11 +12,11 @@ function M.step ()
     end
 end
 
-function M.loop (body)
+function M.call (body)
     old = math.floor(os.clock() * 1000)
-    return atmos.loop({M.step}, body)
+    return atmos.call({M.step}, body)
 end
 
-loop = M.loop
+call = M.call
 
 return M

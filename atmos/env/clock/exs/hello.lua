@@ -1,8 +1,8 @@
 require "atmos.env.clock"
 
-loop(function ()
+call(function ()
     watching(clock{s=5}, function ()
-        every(clock{s=1}, function ()
+        every(clock{ms=500}, function ()
             print("Hello World!")
         end)
     end)

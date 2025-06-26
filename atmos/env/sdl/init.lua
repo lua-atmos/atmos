@@ -89,11 +89,11 @@ function M.step ()
     end
 end
 
-function M.loop (ren, body)
+function M.call (ren, body)
     M.ren = ren
-    return loop({M.step}, body)
+    return call({M.step}, body)
 end
 
-loop = M.loop
+call = M.call
 
 return M

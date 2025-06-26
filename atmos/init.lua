@@ -3,7 +3,7 @@ local run = require "atmos.run"
 
 local atmos = {
     close = run.close,
-    loop  = run.loop,
+    call  = run.call,
 }
 
 me    = run.me

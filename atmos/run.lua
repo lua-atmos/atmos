@@ -218,7 +218,7 @@ local function panic (err)
     os.exit()
 end
 
-local function call (n, stk, f, ...)
+local function xcall (n, stk, f, ...)
     return (function (ok, err, ...)
         if ok then
             return err, ...
@@ -244,8 +244,8 @@ local function call (n, stk, f, ...)
     end)(pcall(f, ...))
 end
 
-function run.loop (steps, body)
-    return call(2, "loop", function ()
+function run.call (steps, body)
+    return xcall(2, "call", function ()
         local t <close> = run.spawn(1, nil, false, body)
         local i = 0
         while coroutine.status(t._.co) ~= 'dead' do
@@ -632,7 +632,7 @@ function run.emit (stk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
     local me = me(false)
-    local ret = call(1, stk and "emit", emit, time, fto(me,to), e, ...)
+    local ret = xcall(1, stk and "emit", emit, time, fto(me,to), e, ...)
     assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
     return ret
 end
