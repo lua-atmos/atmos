@@ -47,7 +47,14 @@ as follows:
 
 # Documentation
 
+[Guide](#guide) |
+[API](#api)
+
 ## Guide
+
+[Tasks](#tasks) |
+[Events](#events) |
+[Environments](#environments)
 
 ### Tasks
 
@@ -136,7 +143,7 @@ The standard distribution of Atmos provides the following environments:
 - compounds
 - scheduling
 
-## Complete API
+## API
 
 [1]: https://www.lua.org/
 [2]: https://fsantanna.github.io/sc.html
