@@ -79,8 +79,8 @@ local T = task (function (i)
 end)
 ```
 
-The `emit` primitive broadcasts an event, which awakes all tasks with a
-matching `await`:
+The `emit` primitive broadcasts an event, which awakes all suspended tasks with
+a matching `await`:
 
 ```
 spawn(T, 1)
