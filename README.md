@@ -1,5 +1,12 @@
 # lua-atmos (v0.1)
 
+[
+    [Hello World!](#hello-world)    |
+    [Install](#install)             |
+    [Guide](#guide)                 |
+    [API](#api)
+]
+
 `lua-atmos` is a [synchronous programming][1] library for [Lua][2] that
 reconciles *[Structured Concurrency][3]* with *[Event-Driven Programming][4]*
 in order to extend classical structured programming with two main
@@ -45,18 +52,17 @@ as follows:
 
 # Install
 
-# Documentation
+`TODO`
 
-[Guide](#guide) |
-[API](#api)
+# Guide
 
-## Guide
+[
+    [Tasks](#tasks)                 |
+    [Events](#events)               |
+    [Environments](#environments)
+]
 
-[Tasks](#tasks) |
-[Events](#events) |
-[Environments](#environments)
-
-### Tasks
+## Tasks
 
 The basic unit of execution of Atmos is a task, which receives a Lua function
 as its body:
@@ -75,7 +81,7 @@ local t1 = spawn(T, <...>)
 local t2 = spawn(T, <...>)
 ```
 
-### Events
+## Events
 
 The `await` primitive suspends a task until a matching event occurs:
 
@@ -97,7 +103,7 @@ emit 'X'
     -- "task 2 awakes from X"
 ```
 
-### Environments
+## Environments
 
 An environment is an external component that bridges input events from the real
 world into an Atmos application.
@@ -134,7 +140,7 @@ The standard distribution of Atmos provides the following environments:
     An environment that relies on [lua-sdl2][7] to provide window, mouse, key,
     and timer events.
 
-### TODO
+## TODO
 
 - scope
 - abortion
@@ -143,7 +149,9 @@ The standard distribution of Atmos provides the following environments:
 - compounds
 - scheduling
 
-## API
+# API
+
+`TODO`
 
 [1]: https://www.lua.org/
 [2]: https://fsantanna.github.io/sc.html
