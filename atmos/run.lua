@@ -98,6 +98,7 @@ local function task_resume_result (t, ok, err)
                 run.emit(false, up, t._.up, t)
             end
         --end
+        meta_task.__close(t)
     end
 end
 
@@ -253,6 +254,7 @@ function run.call (steps, body)
             steps[i+1](steps)
             i = i + 1
         end
+        run.close()
         return t._.ret
     end)
 end

@@ -53,6 +53,36 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "nested task 1")
+    call(function ()
+        spawn(function ()
+            spawn(function ()
+                local _ <close> = defer(function ()
+                    out "nested task aborted"
+                end)
+                await(false)    -- never awakes
+            end)
+        end)
+    end)
+    assertx(out(), "nested task aborted\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "nested task 2")
+    spawn(function ()
+        spawn(function ()
+            local _ <close> = defer(function ()
+                out "nested task aborted"
+            end)
+            await(false)    -- never awakes
+        end)
+    end)
+    assertx(out(), "nested task aborted\n")
+    atmos.close()
+end
+
 print "--- THROW / CATCH ---"
 
 do
