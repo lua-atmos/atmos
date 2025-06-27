@@ -9,10 +9,7 @@ local atmos = {
 me    = run.me
 throw = run.throw
 catch = run.catch
-
-call = function (...)
-    return run.call({}, ...)
-end
+call  = run.call
 
 defer = run.defer
 tasks = run.tasks

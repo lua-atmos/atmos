@@ -55,7 +55,7 @@ end
 
 do
     print("Testing...", "nested task 1")
-    call(function ()
+    call({}, function ()
         spawn(function ()
             spawn(function ()
                 local _ <close> = defer(function ()
