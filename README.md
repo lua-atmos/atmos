@@ -64,7 +64,9 @@ as follows:
     [Events](#events) |
     [Scheduling](#deterministic-scheduling) |
     [Environments](#environments) |
-    [Task Hierarchy](#lexical-task-hierarchy)
+    [Task Hierarchy](#lexical-task-hierarchy) |
+    [Errors](#errors) |
+    [Compound Statements](#compound-statements)
 ]
 
 ## Tasks
@@ -295,11 +297,39 @@ print "5"
 -- 5
 ```
 
-## TODO
+## Errors
 
-- errors
-- compounds
-- scheduling
+Atmos provides `throw` and `catch` primitives to handle errors, taking the task
+hierarchy into consideration:
+
+```
+function T ()
+    spawn (function ()
+        throw 'X'
+    end)
+end
+
+spawn(function ()
+    local ok, err = catch('X', function ()
+        spawn(T)
+    end)
+    print(ok, err)
+end)
+
+-- "false, X"
+```
+
+In the example, we spawn a task that catches errors of type `X`.
+Then we spawn a named task, which spawns an anonymous task, which finally
+throws an error `X`.
+The error propagates up in the task hierarchy until it is caught, returning
+`false` and the error `X`.
+
+`TODO: stack trace`
+
+## Compound Statements
+
+`TODO`
 
 # API
 
@@ -309,6 +339,6 @@ print "5"
 [2]: https://en.wikipedia.org/wiki/Structured_concurrency
 [3]: https://en.wikipedia.org/wiki/Event-driven_programming
 [4]: https://fsantanna.github.io/sc.html
-[5]: https://www.ceu-lang.org/
+[5]: http://www.ceu-lang.org/
 [6]: https://en.wikipedia.org/wiki/Esterel
 [7]: https://github.com/Tangent128/luasdl2
