@@ -109,8 +109,8 @@ a matching `await`:
 spawn(T, 1)
 spawn(T, 2)
 emit 'X'
-    -- "task 1 awakes from X"
-    -- "task 2 awakes from X"
+-- "task 1 awakes from X"
+-- "task 2 awakes from X"
 ```
 
 ## Synchronous and Deterministic Scheduling
@@ -247,7 +247,49 @@ is necessary when bounding a `spawn` to a block.
 We can omit this annotation only when we want to attach the `spawn` to its
 enclosing task.
 
-### Defers
+### Deferred Statements
+
+A task can register deferred functions to execute when they terminate or
+abort within a task hierarchy:
+
+```
+call(function ()
+    spawn(function ()
+        local _ <close> = defer(function ()
+            print "nested task aborted"
+        end)
+        await(false) -- never awakes
+    end)
+end)
+-- "nested task aborted"
+```
+
+The nested spawned task never awakes, but executes its `defer` clause when
+its enclosing hierarchy terminates.
+
+Note that the annotation `local _ <close> =` is also required for deferred
+statements.
+
+Deferred statements also attach to the scope of explicit blocks:
+
+```
+print "1"
+do
+    print "2"
+    local _ <close> = defer(function ()
+        print "3"
+    end)
+    print "4"
+end
+print "5"
+
+-- Output:
+-- 1
+-- 2
+-- 4
+-- 3
+-- 5
+```
 
 ## TODO
 
