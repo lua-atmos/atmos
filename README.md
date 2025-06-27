@@ -1,5 +1,3 @@
-# lua-atmos (v0.1)
-
 [
     [Hello World!](#hello-world)    |
     [Install](#install)             |
@@ -7,10 +5,11 @@
     [API](#api)
 ]
 
+# lua-atmos (v0.1)
+
 `lua-atmos` is a [synchronous programming][1] library for [Lua][2] that
-reconciles *[Structured Concurrency][3]* with *[Event-Driven Programming][4]*
-in order to extend classical structured programming with two main
-functionalities:
+reconciles *[Structured Concurrency][3]* with *[Event-Driven Programming][4]*,
+extending classical structured programming with two main functionalities:
 
 - Structured Deterministic Concurrency:
     - A task primitive with synchronous and deterministic scheduling, which
@@ -57,8 +56,10 @@ as follows:
 # Guide
 
 [
-    [Tasks](#tasks)                 |
-    [Events](#events)               |
+    [Tasks](#tasks) |
+    [Events](#events) |
+    [Scheduling](#synchronous-and-deterministic-scheduling) |
+    [Task Hierarchy](#lexical-task-hierarchy) |
     [Environments](#environments)
 ]
 
@@ -79,6 +80,15 @@ instantiate passing optional arguments:
 ```
 local t1 = spawn(T, <...>)
 local t2 = spawn(T, <...>)
+```
+
+If a task prototype is spawned only once, its body can be passed directly to
+`spawn`:
+
+```
+local t = spawn(function ()
+    <...>   -- task body
+end)
 ```
 
 ## Events
@@ -102,6 +112,55 @@ emit 'X'
     -- "task 1 awakes from X"
     -- "task 2 awakes from X"
 ```
+
+## Synchronous and Deterministic Scheduling
+
+Tasks are based on Lua coroutines, and follows its run-to-completion semantics:
+When a task spawns or awakes, it takes full control of the application and
+executes until it awaits or terminates.
+
+Consider the code that spawns two tasks and await the same event `X` as
+follows:
+
+```
+print "1"
+spawn(function ()
+    print "a1"
+    await 'X'
+    print "a2"
+end)
+print "2"
+spawn(function ()
+    print "b1"
+    await 'X'
+    print "b2"
+end)
+print "3"
+emit 'X'
+print "4"
+
+-- Output:
+-- 1
+-- a1
+-- 2
+-- b1
+-- 3
+-- a2
+-- b2
+-- 4
+```
+
+In the example, the scheduling behaves as follows:
+
+- Main application prints `1` and spawns the first task.
+- The first task takes control, prints `a1`, and suspends, returning the
+  control back to the main application.
+- The main application print `2` and spawns the second task.
+- The second task starts, prints `b1`, and suspends.
+- The main application prints `3`, and broadcasts `X`.
+- The first task awakes, prints `a2`, and suspends.
+- The second task awakes, prints `b2`, and suspends.
+- The main application prints `4`.
 
 ## Environments
 
@@ -139,6 +198,56 @@ The standard distribution of Atmos provides the following environments:
 - `atmos.env.sdl`:
     An environment that relies on [lua-sdl2][7] to provide window, mouse, key,
     and timer events.
+
+## Lexical Task Hierarchy
+
+Tasks form a hierarchy based on the textual position in which they are spawned.
+Therefore, the lexical structure of the program determines the lifetime of
+tasks, which helps to reason about its control flow:
+
+```
+spawn(function ()
+    spawn(function ()
+        await 'Y'   -- never awakes after 'X' occurs
+    end)
+    await 'X'       -- aborts the whole task hierarchy
+end)
+emit 'X'
+emit 'Y'
+```
+
+The same rule extends to explicit blocks with the help of Lua `<close>`
+declarations:
+
+```
+spawn(function ()
+    <...>   -- some logic before the block
+    do
+        local _ <close> = spawn(function ()
+            await 'Y'   -- never awakes after 'X' occurs
+        end)
+        local _ <close> = spawn(function ()
+            await 'Z'   -- never awakes after 'X' occurs
+        end)
+        await 'X'       -- aborts the whole task hierarchy
+    end
+    <...>   -- some logic after the block
+end)
+emit 'X'
+emit 'Y'
+```
+
+In the example, we enclose particular tasks we want to live only within the
+explicit block.
+When the event `X` occurs, the block goes out and automatically aborts all
+attached spawned tasks.
+
+Since Atmos is a pure-Lua library, note that the annotation `local _ <close> =`
+is necessary when bounding a `spawn` to a block.
+We can omit this annotation only when we want to attach the `spawn` to its
+enclosing task.
+
+### Defers
 
 ## TODO
 
