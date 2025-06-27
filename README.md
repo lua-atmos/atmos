@@ -15,15 +15,15 @@ Concurrency][2]* with *[Event-Driven Programming][3]*, extending classical
 structured programming with two main functionalities:
 
 - Structured Deterministic Concurrency:
-    - A `task` primitive with deterministic scheduling provides predictable
+    - The `task` primitive with deterministic scheduling provides predictable
       behavior and supports safe abortion.
-    - A set of structured primitives compose concurrent tasks with lexical
-      scope (e.g., `watching`, `every`, `par_or`).
-    - A `tasks` container holds dynamic tasks, which automatically releases
-      them as they terminate.
+    - Structured primitives compose concurrent tasks with lexical scope (e.g.,
+      `watching`, `every`, `par_or`).
+    - The `tasks` container primitive holds dynamic tasks, which automatically
+      releases them as they terminate.
 - Event Signaling Mechanisms:
-    - An `await` primitive suspends a task and wait for events.
-    - An `emit` primitive signal events and awake awaiting tasks.
+    - The `await` primitive suspends a task and wait for events.
+    - The `emit` primitive signal events and awake awaiting tasks.
 
 Atmos is inspired by [synchronous programming languages][4], such as [Ceu][5]
 and [Esterel][6].
@@ -63,8 +63,8 @@ as follows:
     [Tasks](#tasks) |
     [Events](#events) |
     [Scheduling](#deterministic-scheduling) |
-    [Task Hierarchy](#lexical-task-hierarchy) |
-    [Environments](#environments)
+    [Environments](#environments) |
+    [Task Hierarchy](#lexical-task-hierarchy)
 ]
 
 ## Tasks
