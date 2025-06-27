@@ -10,7 +10,7 @@
 
 # About
 
-`lua-atmos` is a programming library for [Lua][1] that reconciles *[Structured
+Atmos is a programming library for [Lua][1] that reconciles *[Structured
 Concurrency][2]* with *[Event-Driven Programming][3]*, extending classical
 structured programming with two main functionalities:
 
@@ -25,7 +25,8 @@ structured programming with two main functionalities:
     - An `await` primitive to suspend a task and wait for events.
     - An `emit` primitive to signal events and awake awaiting tasks.
 
-`lua-atmos` is [inspired][4] by the programming languages [Ceu][5] and [Esterel][6].
+Atmos is inspired by [synchronous programming languages][4], such as [Ceu][5]
+and [Esterel][6].
 
 # Hello World!
 
@@ -296,9 +297,6 @@ print "5"
 
 ## TODO
 
-- scope
-- abortion
-- defer
 - errors
 - compounds
 - scheduling
