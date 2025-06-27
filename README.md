@@ -1,18 +1,21 @@
+# lua-atmos (v0.1)
+
 [
+    [About](#about)                 |
     [Hello World!](#hello-world)    |
     [Install](#install)             |
     [Guide](#guide)                 |
     [API](#api)
 ]
 
-# lua-atmos (v0.1)
+# About
 
-`lua-atmos` is a [synchronous programming][1] library for [Lua][2] that
-reconciles *[Structured Concurrency][3]* with *[Event-Driven Programming][4]*,
-extending classical structured programming with two main functionalities:
+`lua-atmos` is a programming library for [Lua][1] that reconciles *[Structured
+Concurrency][2]* with *[Event-Driven Programming][3]*, extending classical
+structured programming with two main functionalities:
 
 - Structured Deterministic Concurrency:
-    - A task primitive with synchronous and deterministic scheduling, which
+    - A task primitive with deterministic scheduling, which
       provides predictable behavior and safe abortion.
     - A set of structured primitives to lexically compose concurrent tasks
       (e.g., `watching`, `every`, `par_or`).
@@ -22,7 +25,7 @@ extending classical structured programming with two main functionalities:
     - An `await` primitive to suspend a task and wait for events.
     - An `emit` primitive to signal events and awake awaiting tasks.
 
-`lua-atmos` is inspired by [Ceu][5], which is inpired by [Esterel][6].
+`lua-atmos` is [inspired][4] by the programming languages [Ceu][5] and [Esterel][6].
 
 # Hello World!
 
@@ -58,7 +61,7 @@ as follows:
 [
     [Tasks](#tasks) |
     [Events](#events) |
-    [Scheduling](#synchronous-and-deterministic-scheduling) |
+    [Scheduling](#deterministic-scheduling) |
     [Task Hierarchy](#lexical-task-hierarchy) |
     [Environments](#environments)
 ]
@@ -113,7 +116,7 @@ emit 'X'
 -- "task 2 awakes from X"
 ```
 
-## Synchronous and Deterministic Scheduling
+## Deterministic Scheduling
 
 Tasks are based on Lua coroutines, and follows its run-to-completion semantics:
 When a task spawns or awakes, it takes full control of the application and
@@ -305,9 +308,9 @@ print "5"
 `TODO`
 
 [1]: https://www.lua.org/
-[2]: https://fsantanna.github.io/sc.html
-[3]: https://en.wikipedia.org/wiki/Structured_concurrency
-[4]: https://en.wikipedia.org/wiki/Event-driven_programming
+[2]: https://en.wikipedia.org/wiki/Structured_concurrency
+[3]: https://en.wikipedia.org/wiki/Event-driven_programming
+[4]: https://fsantanna.github.io/sc.html
 [5]: https://www.ceu-lang.org/
 [6]: https://en.wikipedia.org/wiki/Esterel
 [7]: https://github.com/Tangent128/luasdl2
