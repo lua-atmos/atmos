@@ -62,12 +62,11 @@ do
          v  /tmp/err.lua:7 (throw) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task) <- /tmp/err.lua:1 (task)
         ==> OK
     ]])
-    atmos.close()
 end
 
 do
     print("Testing...", "throw 3")
-    do
+    local out = exec [[
         call({}, function ()
             spawn(function ()
                 spawn(true,function ()
@@ -84,39 +83,53 @@ do
             end)
             emit('X')
         end)
-    end
-    assertx(out, "0\n1\n2\n")
-    atmos.close()
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+        |  /tmp/err.lua:1 (call)
+        |  /tmp/err.lua:15 (emit) <- /tmp/err.lua:1 (task)
+        |  /tmp/err.lua:11 (emit) <- /tmp/err.lua:9 (task) <- /tmp/err.lua:2 (task) <- /tmp/err.lua:1 (task)
+        v  /tmp/err.lua:7 (throw) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task) <- /tmp/err.lua:1 (task)
+        ==> OK
+    ]])
 end
 
 do
-    print("Testing...", "throw 1")
+    print("Testing...", "throw 4")
 
-    function T ()
-        spawn (function ()
-            throw 'X'
-        end)
-    end
-
-    call(function ()  
-        spawn(function ()
-            local ok, err = catch('Y', function ()
-                spawn(T)
+    local out = exec [[
+        function T ()
+            spawn (function ()
+                throw 'X'
             end)
-            print(ok, err)
-        end)
-    end)  
+        end
+
+        call({}, function ()  
+            spawn(function ()
+                local ok, err = catch('Y', function ()
+                    spawn(T)
+                end)
+                print(ok, err)
+            end)
+        end)  
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+        |  /tmp/err.lua:7 (call)
+        v  /tmp/err.lua:3 (throw) <- /tmp/err.lua:2 (task) <- /tmp/err.lua:10 (task) <- /tmp/err.lua:8 (task) <- /tmp/err.lua:7 (task)
+        ==> X
+    ]])
 end
 
 do
-    print("Testing...", "throw 1")
+    print("Testing...", "tasks 1")
     local out = exec [[
         function T ()
             await(spawn(function ()
                 await('Y')
             end))
             local function f ()
-                return 1 + true
+                throw 'OK'
             end
             f()
             --error "OK"
@@ -136,5 +149,27 @@ do
         end)
         emit('X')
     ]]
-    assertx(out, "xxx")
+    assertx(trim(out), trim [[
+        ==> ERROR:
+        |  /tmp/err.lua:24 (emit)
+        |  /tmp/err.lua:20 (emit) <- /tmp/err.lua:18 (task) <- /tmp/err.lua:12 (task)
+        v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:15 (task) <- /tmp/err.lua:13 (tasks) <- /tmp/err.lua:12 (task)
+        ==> OK
+    ]])
+end
+
+do
+    print "TODO: error w/o throw"
+    print("Testing...", "error 1")
+    local out = exec [[
+        call({}, function ()
+            local x = 1 + true
+        end)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+        |  /tmp/err.lua:1 (call)
+        v  /tmp/err.lua:1 (throw)
+        ==> /tmp/err.lua:2: attempt to perform arithmetic on a boolean value
+    ]])
 end

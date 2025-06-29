@@ -224,7 +224,7 @@ local function xcall (n, stk, f, ...)
         end
         if stk then
             if (getmetatable(err) ~= meta_throw) then
-                err = tothrow(n+2, err)
+                err = tothrow(n+1, err)
             end
             if getmetatable(err) == meta_throw then
                 local dbg = debug.getinfo(n+1)
@@ -323,18 +323,6 @@ function run.spawn (n, up, nested, t, ...)
     end
     up._.dns[#up._.dns+1] = t
     t._.up = assert(t._.up==nil and up)
-
-    --[[
-    local function res (co, ...)
-        return (function (ok,...)
-            if not ok then
-                print(debug.traceback(co))
-            end
-            return ok, ...
-        end)(coroutine.resume(co,...))
-    end
-    task_resume_result(t, res(t.co, ...))
-    ]]
 
     task_resume_result(t, coroutine.resume(t._.co, ...))
     return t
