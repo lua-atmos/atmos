@@ -354,36 +354,43 @@ it will print the task ids that did not awake.
 
 ## Errors
 
-Atmos provides `throw` and `catch` primitives to handle errors, taking the task
-hierarchy into consideration:
+Atmos provides `throw` and `catch` primitives to handle errors, which take in
+consideration task hierarchy, i.e., a parent task catches errors from child
+tasks.
 
 ```
 function T ()
     spawn (function ()
-        throw 'X'
+        await 'X'
+        throw 'Y'
     end)
+    await(false)
 end
 
 spawn(function ()
-    local ok, err = catch('X', function ()
+    local ok, err = catch('Y', function ()
         spawn(T)
+        await(false)
     end)
     print(ok, err)
 end)
 
--- "false, X"
+emit 'X'
+
+-- "false, Y"
 ```
 
-In the example, we spawn a task that catches errors of type `X`.
-Then we spawn a named task, which spawns an anonymous task, which finally
-throws an error `X`.
-The error propagates up in the task hierarchy until it is caught, returning
-`false` and the error `X`.
+In the example, we spawn a parent task that catches errors of type `Y`.
+Then we spawn a named task `T`, which spawns an anonymous task, which awaits
+`X` to finally throw `Y`.
+Outside the task hierarchy, we `emit X`, which only awakes the nested task.
+Nevertheless, the error propagates up in the task hierarchy until it is caught
+by the top-level task, returning `false` and the error `Y`.
 
 ### Bidimensional Stack Traces
 
 An error trace may cross multiple tasks from a series of emits and awaits,
-i.e., an `emit` in one task awakes an `await` in another task, which may `emit`
+e.g.: an `emit` in one task awakes an `await` in another task, which may `emit`
 and match an `await` in a third task.
 However, *cross-task traces* do not inform how each task in the trace started
 and reached its `emit`, i.e. each of the *intra-task* traces, which is as much
