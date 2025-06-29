@@ -98,6 +98,19 @@ local t = spawn(function ()
 end)
 ```
 
+### Public Data
+
+A task is a Lua table, and can hold public data fields normally.
+It is also possible to self refer to the running task with a call to `me()`:
+
+```
+function T ()
+    me().v = 10
+end
+local t = spawn(T)
+print(t.v)  -- 10
+```
+
 ## Events
 
 The `await` primitive suspends a task until a matching event occurs:
