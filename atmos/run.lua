@@ -183,8 +183,6 @@ function run.catch (e, f, blk)
 end
 
 local function panic (err)
-    local dbg = debug.getinfo(4)
-    dbg = { file=dbg.short_src, line=dbg.currentline  }
     local str = ""
     for i,e in ipairs(err) do
         if i > 1 then
@@ -229,7 +227,7 @@ local function xcall (n, stk, f, ...)
                 err = tothrow(n+2, err)
             end
             if getmetatable(err) == meta_throw then
-                local dbg = debug.getinfo(1+1+n)
+                local dbg = debug.getinfo(n+1)
                 local t = trace()
                 err._.pos[#err._.pos+1] = t
                 table.insert(t, 1, {
@@ -246,8 +244,10 @@ local function xcall (n, stk, f, ...)
 end
 
 function run.call (steps, body)
-    return xcall(2, "call", function ()
-        local t <close> = run.spawn(1, nil, false, body)
+    assertn(2, type(steps) == 'table', "invalid call : expected table")
+    assertn(2, type(body) == 'function', "invalid call : expected function")
+    return xcall(1, "call", function ()
+        local t <close> = run.spawn(4, nil, false, body)
         local i = 0
         while coroutine.status(t._.co) ~= 'dead' do
             i = i % #steps
@@ -615,7 +615,7 @@ local function emit (time, t, ...)
     if getmetatable(t) == meta_task then
         if not ok then
 --print('xxx', ok, err, ...)
-            if coroutine.status(t._.co) ~= 'dead' then
+            if coroutine.status(t._.co) == 'suspended' then
                 ok, err = coroutine.resume(t._.co, 'atm_error', err)
             end
             assertn(0, ok, err) -- TODO: error in defer?
@@ -634,7 +634,7 @@ function run.emit (stk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
     local me = me(false)
-    local ret = xcall(1, stk and "emit", emit, time, fto(me,to), e, ...)
+    local ret = xcall(2, stk and "emit", emit, time, fto(me,to), e, ...)
     assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
     return ret
 end
