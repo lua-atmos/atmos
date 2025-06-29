@@ -173,3 +173,18 @@ do
         ==> /tmp/err.lua:2: attempt to perform arithmetic on a boolean value
     ]])
 end
+
+do
+    print("Testing...", "tasks 2")
+    local out = exec [[
+        call({}, function ()
+            local x = 1 + true
+        end)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+        |  /tmp/err.lua:1 (call)
+        v  /tmp/err.lua:1 (throw)
+        ==> /tmp/err.lua:2: attempt to perform arithmetic on a boolean value
+    ]])
+end

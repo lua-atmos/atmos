@@ -16,16 +16,16 @@ structured programming with two main functionalities:
 
 - Structured Deterministic Concurrency:
     - The `task` primitive with deterministic scheduling provides predictable
-      behavior and supports safe abortion.
+      behavior and safe abortion.
     - Structured primitives compose concurrent tasks with lexical scope (e.g.,
       `watching`, `every`, `par_or`).
-    - The `tasks` container primitive holds dynamic tasks, which automatically
-      releases them as they terminate.
+    - The `tasks` container primitive holds attached tasks and control their
+      lifecycle.
 - Event Signaling Mechanisms:
     - The `await` primitive suspends a task and wait for events.
     - The `emit` primitive signal events and awake awaiting tasks.
 
-Atmos is inspired by [synchronous programming languages][4], such as [Ceu][5]
+Atmos is inspired by [synchronous programming languages][4] like as [Ceu][5]
 and [Esterel][6].
 
 # Hello World!
@@ -65,6 +65,7 @@ as follows:
     [Scheduling](#deterministic-scheduling) |
     [Environments](#environments) |
     [Task Hierarchy](#lexical-task-hierarchy) |
+    [Task Pools](#task-pools) |
     [Errors](#errors) |
     [Compound Statements](#compound-statements)
 ]
@@ -245,8 +246,8 @@ emit 'Y'
 
 In the example, we enclose particular tasks we want to live only within the
 explicit block.
-When the event `X` occurs, the block goes out and automatically aborts all
-attached spawned tasks.
+When the event `X` occurs, the block goes out of scope and automatically aborts
+all attached spawned tasks.
 
 Since Atmos is a pure-Lua library, note that the annotation `local _ <close> =`
 is necessary when bounding a `spawn` to a block.
@@ -297,6 +298,45 @@ print "5"
 -- 5
 ```
 
+## Task Pools
+
+A task pool allows for multiple tasks to share a parent container in the task
+hierarchy.
+When the pool goes out of scope, all attached tasks are aborted.
+When a task terminates, it is automatically removed from the pool.
+
+```
+function T (ms)
+    print('start', ms)
+    await(clock{ms=ms})
+    print('stop', ms)
+end
+
+do
+    local ts <close> = tasks()
+    for i=1, 10 do
+        spawn_in(ts, T, math.random(500,1500))
+    end
+    await(clock{s=1})
+end
+```
+
+In the example, we create and attach 10 tasks into the pool `ts` created with
+the `tasks` primitive.
+Each task starts and sleeps between `500ms` and `1500ms` before terminating.
+After `1s`, the `ts` block goes out of scope, aborting all tasks that did not
+complete.
+
+Task pools provide a `pairs` method to traverse attached tasks:
+
+```
+local n = 0
+for _ in pairs(ts) do
+    n = n + 1
+end
+print("Tasks alive:", n)
+```
+
 ## Errors
 
 Atmos provides `throw` and `catch` primitives to handle errors, taking the task
@@ -325,7 +365,8 @@ throws an error `X`.
 The error propagates up in the task hierarchy until it is caught, returning
 `false` and the error `X`.
 
-`TODO: stack trace`
+### Bidimensional Stack Traces
+
 
 ## Compound Statements
 
