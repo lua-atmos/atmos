@@ -100,7 +100,7 @@ end)
 
 ### Public Data
 
-A task is a Lua table, and can hold public data fields normally.
+A task is a Lua table, and can hold public data fields as usual.
 It is also possible to self refer to the running task with a call to `me()`:
 
 ```
@@ -319,36 +319,38 @@ When the pool goes out of scope, all attached tasks are aborted.
 When a task terminates, it is automatically removed from the pool.
 
 ```
-function T (ms)
-    print('start', ms)
+function T (id, ms)
+    me().id = id
+    print('start', id, ms)
     await(clock{ms=ms})
-    print('stop', ms)
+    print('stop', id, ms)
 end
 
 do
     local ts <close> = tasks()
     for i=1, 10 do
-        spawn_in(ts, T, math.random(500,1500))
+        spawn_in(ts, T, i, math.random(500,1500))
     end
     await(clock{s=1})
 end
 ```
 
-In the example, we create and attach 10 tasks into the pool `ts` created with
-the `tasks` primitive.
-Each task starts and sleeps between `500ms` and `1500ms` before terminating.
+In the example, we first create a pool `ts` with the `tasks` primitive.
+Then we use `spawn_in` to spawn and attach 10 tasks into the pool.
+Each task sleeps between `500ms` and `1500ms` before terminating.
 After `1s`, the `ts` block goes out of scope, aborting all tasks that did not
 complete.
 
-Task pools provide a `pairs` method to traverse attached tasks:
+Task pools provide a `pairs` iterator to traverse currently attached tasks:
 
 ```
-local n = 0
-for _ in pairs(ts) do
-    n = n + 1
+for _,t in pairs(ts) do
+    print(t.id)
 end
-print("Tasks alive:", n)
 ```
+
+If we include this loop after the `await(clock{s=1})` in the previous example,
+it will print the task ids that did not awake.
 
 ## Errors
 
@@ -380,6 +382,43 @@ The error propagates up in the task hierarchy until it is caught, returning
 
 ### Bidimensional Stack Traces
 
+An error trace may cross multiple tasks from a series of emits and awaits,
+i.e., an `emit` in one task awakes an `await` in another task, which may `emit`
+and match an `await` in a third task.
+However, *cross-task traces* do not inform how each task in the trace started
+and reached its `emit`, i.e. each of the *intra-task* traces, which is as much
+as insightful to understand the errors.
+
+Atmos provides bidimensional stack traces, which include cross-task and
+intra-task traces.
+
+In the next example, we spawn 3 tasks in `ts`, and then `emit` an event
+targeting the task with `id=2`.
+Only this task awakes and generates an uncaught error:
+
+```
+function T (id)
+    await('X', id)
+    throw 'error'
+end
+
+local ts <close> = tasks()
+spawn_in(ts, T, 1)
+spawn_in(ts, T, 2)
+spawn_in(ts, T, 3)
+
+emit('X', 2)
+```
+
+The stack trace identifies that the task lives in `ts` in line 6 and spawns in
+line 8, before throwing the error in line 3:
+
+```
+==> ERROR:
+ |  x.lua:11 (emit)
+ v  x.lua:3 (throw) <- x.lua:8 (task) <- x.lua:6 (tasks)
+==> error
+```
 
 ## Compound Statements
 
