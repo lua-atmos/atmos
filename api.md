@@ -1,9 +1,21 @@
 # API
 
-- Tasks
+## Tasks
 
-task (...)
-tasks
+- `task (f, inv)`
+    - `f: function`
+        :: task prototype as a Lua function
+    - `inv: boolean`
+        :: if task is invisible in the hierarchy
+
+An invisible task is substituted by its parent in the context of [me](#TODO)
+and [emit](#TODO) calls.
+
+- `tasks (n)`
+    - `n: number`
+        :: maximum number instances
+
+<!--
 spawn (nested, t, ...)
 spawn_in (up, t, ...)
 toggle
@@ -41,3 +53,4 @@ atmos.call (t)
 atmos.close (task | tasks)
 call
 defer
+-->
