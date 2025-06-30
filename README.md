@@ -2,8 +2,8 @@
 
 [
     [About](#about)                 |
-    [Hello World!](#hello-world)    |
     [Install](#install)             |
+    [Hello World!](#hello-world)    |
     [Documentation](#documentation) |
     [Resources](#resources)
 ]
@@ -27,6 +27,10 @@ structured programming with two main functionalities:
 
 Atmos is inspired by [synchronous programming languages][4] like as [Ceu][5]
 and [Esterel][6].
+
+# Install
+
+`TODO`
 
 # Hello World!
 
@@ -53,10 +57,6 @@ as follows:
 - The `every` loop will execute its inner function every second.
 - After the `watching` terminates, the `call` returns back to Lua.
 
-# Install
-
-`TODO`
-
 # Documentation
 
 - [Guide](guide.md)
@@ -64,7 +64,7 @@ as follows:
 
 # Resources
 
-- A [toy problem][8]: Drag, Click, or Cancel
+- [A toy problem][8]: Drag, Click, or Cancel
     - https://github.com/lua-atmos/atmos/blob/main/atmos/env/sdl/exs/click-drag-cancel.lua
 - A simple but complete 2D game in Atmos:
     - https://github.com/lua-atmos/sdl-rocks
