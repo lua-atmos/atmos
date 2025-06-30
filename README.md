@@ -5,7 +5,7 @@
     [Hello World!](#hello-world)    |
     [Install](#install)             |
     [Documentation](#documentation) |
-    [Resource](#resources)
+    [Resources](#resources)
 ]
 
 # About
@@ -64,10 +64,8 @@ as follows:
 
 # Resources
 
-- A toy Problem: Drag, Click, or Cancel
-    - https://fsantanna.github.io/toy.html
-    - Implementation in Atmos and SDL:
-        - https://github.com/lua-atmos/atmos/blob/main/atmos/env/sdl/exs/click-drag-cancel.lua
+- A [toy problem][8]: Drag, Click, or Cancel
+    - https://github.com/lua-atmos/atmos/blob/main/atmos/env/sdl/exs/click-drag-cancel.lua
 - A simple but complete 2D game in Atmos:
     - https://github.com/lua-atmos/sdl-rocks
 - Academic publications (Ceu):
@@ -82,3 +80,4 @@ as follows:
 [5]: http://www.ceu-lang.org/
 [6]: https://en.wikipedia.org/wiki/Esterel
 [7]: https://github.com/Tangent128/luasdl2
+[8]: https://fsantanna.github.io/toy.html
