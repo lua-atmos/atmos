@@ -129,7 +129,7 @@ local meta_throw = {}
 
 local function trace ()
     local ret = {}
-    local x = me(true)
+    local x = run.me(true)
     while x and x~=TASKS do
         ret[#ret+1] = {
             msg = (getmetatable(x)==meta_task and 'task') or 'tasks',
@@ -235,7 +235,7 @@ local function xcall (n, stk, f, ...)
                     dbg = { file=dbg.short_src, line=dbg.currentline },
                 })
             end
-            if me() == nil then
+            if run.me(true) == nil then
                 panic(err)
             end
         end
@@ -266,7 +266,7 @@ end
 function run.tasks (max)
     local n = max and tonumber(max) or nil
     assertn(2, (not max) or n, "invalid tasks limit : expected number")
-    local up = me(true) or TASKS
+    local up = run.me(true) or TASKS
     local dbg = debug.getinfo(2)
     local ts = {
         _ = {
@@ -319,7 +319,7 @@ function run.spawn (n, up, nested, t, ...)
     end
     assertn(3, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
 
-    up = up or me(true) or TASKS
+    up = up or run.me(true) or TASKS
     if up._.max and #up._.dns>=up._.max then
         return nil
     end
@@ -427,7 +427,7 @@ local function check_ret (awt, ...)
 end
 
 local function awake (err, ...)
-    local me = assert(me(true))
+    local me = assert(run.me(true))
     if err then
         error((...), 0)
     else
@@ -495,7 +495,7 @@ function run.await (e, ...)
     -- await(...)
     -- await(a _and_ b)
 
-    local t = me(true)
+    local t = run.me(true)
     assertn(2, t, "invalid await : expected enclosing task", 2)
     assertn(2, e~=nil, "invalid await : expected event", 2)
 
@@ -623,7 +623,7 @@ end
 function run.emit (stk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
-    local me = me(false)
+    local me = run.me(false)
     local ret = xcall(2, stk and "emit", emit, time, fto(me,to), e, ...)
     assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
     return ret
@@ -665,7 +665,7 @@ end
 -------------------------------------------------------------------------------
 
 function run.every (...)
-    assertn(2, me(true), "invalid every : expected enclosing task")
+    assertn(2, run.me(true), "invalid every : expected enclosing task")
     local t = { ... }
     local blk = table.remove(t, #t)
     while true do
@@ -682,7 +682,7 @@ local meta_par = {
 }
 
 function run.par (...)
-    assertn(2, me(true), "invalid par : expected enclosing task")
+    assertn(2, run.me(true), "invalid par : expected enclosing task")
     local ts <close> = setmetatable({ ... }, meta_par)
     for i,f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par : expected task prototype")
@@ -692,7 +692,7 @@ function run.par (...)
 end
 
 function run.par_or (...)
-    assertn(2, me(true), "invalid par_or : expected enclosing task")
+    assertn(2, run.me(true), "invalid par_or : expected enclosing task")
     local ts <close> = setmetatable({ ... }, meta_par)
     for i,f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
@@ -702,7 +702,7 @@ function run.par_or (...)
 end
 
 function run.par_and (...)
-    assertn(2, me(true), "invalid par_or : expected enclosing task")
+    assertn(2, run.me(true), "invalid par_or : expected enclosing task")
     local ts <close> = setmetatable({ ... }, meta_par)
     for i,f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
@@ -712,7 +712,7 @@ function run.par_and (...)
 end
 
 function run.watching (...)
-    assertn(2, me(true), "invalid watching : expected enclosing task")
+    assertn(2, run.me(true), "invalid watching : expected enclosing task")
     local t = { ... }
     local f = table.remove(t, #t)
     assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
