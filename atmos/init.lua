@@ -14,19 +14,23 @@ call  = run.call
 defer = run.defer
 tasks = run.tasks
 
-function task (...)
-    return run.task(1, ...)
+function task (inv, ...)
+    if type(inv) == 'boolean' then
+        return run.task(1, inv, ...)
+    else
+        return run.task(1, false, inv, ...)
+    end
 end
 
 function spawn_in (up, t, ...)
     return run.spawn(1, up, false, t, ...)
 end
 
-function spawn (nested, t, ...)
-    if type(nested) == 'boolean' then
-        return run.spawn(1, nil, nested, t, ...)
+function spawn (inv, t, ...)
+    if type(inv) == 'boolean' then
+        return run.spawn(1, nil, inv, t, ...)
     else
-        return run.spawn(1, nil, false, nested, t, ...)
+        return run.spawn(1, nil, false, inv, t, ...)
     end
 end
 

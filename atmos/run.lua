@@ -284,7 +284,7 @@ function run.tasks (max)
     return ts
 end
 
-function run.task (n, f, inv)
+function run.task (n, inv, f)
     local dbg = debug.getinfo(n+1)
     local t = {
         _ = {
@@ -310,7 +310,7 @@ end
 
 function run.spawn (n, up, inv, t, ...)
     if type(t) == 'function' then
-        t = run.task(n+1, t, inv)
+        t = run.task(n+1, inv, t)
         if t == nil then
             return nil
         else
