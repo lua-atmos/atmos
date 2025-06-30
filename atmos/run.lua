@@ -60,19 +60,19 @@ local TASKS = setmetatable({
 
 -------------------------------------------------------------------------------
 
-local function _me_ (nested, t)
+local function _me_ (inv, t)
     if t == TASKS then
         return nil
-    elseif (getmetatable(t) == meta_tasks) or ((not nested) and t._.nested) then
-        return _me_(nested, t._.up)
+    elseif (getmetatable(t) == meta_tasks) or ((not inv) and t._.inv) then
+        return _me_(inv, t._.up)
     else
         return t
     end
 end
 
-function run.me (nested)
+function run.me (inv)
     local co = coroutine.running()
-    return co and TASKS._.cache[co] and _me_(nested, TASKS._.cache[co])
+    return co and TASKS._.cache[co] and _me_(inv, TASKS._.cache[co])
 end
 
 -------------------------------------------------------------------------------
@@ -284,7 +284,7 @@ function run.tasks (max)
     return ts
 end
 
-function run.task (n, f, nested)
+function run.task (n, f, inv)
     local dbg = debug.getinfo(n+1)
     local t = {
         _ = {
@@ -295,7 +295,7 @@ function run.task (n, f, nested)
             dbg = {file=dbg.short_src, line=dbg.currentline},
             ---
             co  = coroutine.create(f),
-            nested = nested,
+            inv = inv,
             status = nil, -- aborted, toggled
             await = {
                 time = 0,
@@ -308,13 +308,13 @@ function run.task (n, f, nested)
     return t
 end
 
-function run.spawn (n, up, nested, t, ...)
+function run.spawn (n, up, inv, t, ...)
     if type(t) == 'function' then
-        t = run.task(n+1, t, nested)
+        t = run.task(n+1, t, inv)
         if t == nil then
             return nil
         else
-            return run.spawn(n, up, nested, t, ...)
+            return run.spawn(n, up, inv, t, ...)
         end
     end
     assertn(3, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
