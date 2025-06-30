@@ -251,7 +251,9 @@ function run.call (steps, body)
         local i = 0
         while coroutine.status(t._.co) ~= 'dead' do
             i = i % #steps
-            steps[i+1](steps)
+            if steps[i+1](steps) then
+                break
+            end
             i = i + 1
         end
         run.close()

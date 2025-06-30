@@ -1,4 +1,4 @@
-require "atmos"
+local atmos = require "atmos"
 local SDL = require "SDL"
 require "atmos.util"
 
@@ -97,7 +97,7 @@ end
 
 function M.call (ren, body)
     M.ren = ren
-    return call({M.step}, body)
+    return atmos.call({M.step}, body)
 end
 
 call = M.call
