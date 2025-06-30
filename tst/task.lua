@@ -686,3 +686,22 @@ do
     assertx(out(), "10\n20\n20\n")
     atmos.close()
 end
+
+print "--- ERRORS ---"
+
+do
+    print("Testing...", "spawn 1: err")
+    local _,err = pcall(function ()
+        spawn()
+    end)
+    assertx(err, "invalid spawn : expected task prototype")
+end
+
+do
+    print("Testing...", "spawn 2: err")
+    local _,err = pcall(function ()
+        local t = task(function()end)
+        spawn(true, t)
+    end)
+    assertfx(err, "task.lua:%d+: invalid spawn : expected function prototype")
+end

@@ -292,14 +292,6 @@ end
 
 --[[
 do
-    print("Testing...", "call 3: err")
-    local _,err = pcall(function ()
-        call({},true)
-    end)
-    assertfx(err, "==> invalid spawn : expected task prototype")
-end
-
-do
     print("Testing...", "call 4: err")
     do
         local v = call({}, function ()
