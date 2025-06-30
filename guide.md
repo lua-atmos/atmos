@@ -5,13 +5,13 @@
     [Events](#events) |
     [Scheduling](#deterministic-scheduling) |
     [Environments](#environments) |
-    [Task Hierarchy](#lexical-task-hierarchy) |
-    [Task Pools](#task-pools) |
+    [Hierarchy](#lexical-task-hierarchy) |
+    [Pools](#task-pools) |
     [Errors](#errors) |
-    [Compound Statements](#compound-statements)
+    [Compounds](#compound-statements)
 ]
 
-## Tasks
+# Tasks
 
 The basic unit of execution of Atmos is a task, which receives a Lua function
 as its body:
@@ -39,7 +39,7 @@ local t = spawn(function ()
 end)
 ```
 
-### Public Data
+## Public Data
 
 A task is a Lua table, and can hold public data fields as usual.
 It is also possible to self refer to the running task with a call to `me()`:
@@ -52,7 +52,7 @@ local t = spawn(T)
 print(t.v)  -- 10
 ```
 
-## Events
+# Events
 
 The `await` primitive suspends a task until a matching event occurs:
 
@@ -74,7 +74,7 @@ emit 'X'
 -- "task 2 awakes from X"
 ```
 
-## Deterministic Scheduling
+# Deterministic Scheduling
 
 Tasks are based on Lua coroutines, and follows its run-to-completion semantics:
 When a task spawns or awakes, it takes full control of the application and
@@ -123,7 +123,7 @@ In the example, the scheduling behaves as follows:
 - The second task awakes, prints `b2`, and suspends.
 - The main application prints `4`.
 
-## Environments
+# Environments
 
 An environment is an external component that bridges input events from the real
 world into an Atmos application.
@@ -160,7 +160,7 @@ The standard distribution of Atmos provides the following environments:
     An environment that relies on [lua-sdl2][7] to provide window, mouse, key,
     and timer events.
 
-## Lexical Task Hierarchy
+# Lexical Task Hierarchy
 
 Tasks form a hierarchy based on the textual position in which they are spawned.
 Therefore, the lexical structure of the program determines the lifetime of
@@ -208,7 +208,7 @@ is necessary when bounding a `spawn` to a block.
 We can omit this annotation only when we want to attach the `spawn` to its
 enclosing task.
 
-### Deferred Statements
+## Deferred Statements
 
 A task can register deferred functions to execute when they terminate or
 abort within a task hierarchy:
@@ -252,7 +252,7 @@ print "5"
 -- 5
 ```
 
-## Task Pools
+# Task Pools
 
 A task pool allows for multiple tasks to share a parent container in the task
 hierarchy.
@@ -293,7 +293,7 @@ end
 If we include this loop after the `await(clock{s=1})` in the previous example,
 it will print the task ids that did not awake.
 
-## Errors
+# Errors
 
 Atmos provides `throw` and `catch` primitives to handle errors, which take in
 consideration task hierarchy, i.e., a parent task catches errors from child
@@ -328,7 +328,7 @@ Outside the task hierarchy, we `emit X`, which only awakes the nested task.
 Nevertheless, the error propagates up in the task hierarchy until it is caught
 by the top-level task, returning `false` and the error `Y`.
 
-### Bidimensional Stack Traces
+## Bidimensional Stack Traces
 
 An error trace may cross multiple tasks from a series of emits and awaits,
 e.g.: an `emit` in one task awakes an `await` in another task, which may `emit`
@@ -368,7 +368,7 @@ line 8, before throwing the error in line 3:
 ==> error
 ```
 
-## Compound Statements
+# Compound Statements
 
 `TODO`
 
