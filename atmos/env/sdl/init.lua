@@ -61,6 +61,12 @@ function M.write (fnt, str, pos)
     REN:copy(tex, nil, M.rect(pos, totable('w','h',sfc:getSize())))
 end
 
+local f
+function M.play (wav)
+    f = assert(MIX.loadWAV(wav))
+    f:playChannel(1,0)
+end
+
 function M.step ()
     local e = SDL.waitEvent(ms)
     if e then
