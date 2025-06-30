@@ -74,6 +74,22 @@ emit 'X'
 -- "task 2 awakes from X"
 ```
 
+## Task Toggling
+
+A task can be toggled off (and back to on) to remain alive but unresponsive
+(and back to responsive) to upcoming events:
+
+```
+local t = spawn (function ()
+    await 'X'
+    print "awakes from X"
+end)
+toggle(t, false)
+emit 'X'    -- ignored
+toggle(t, true)
+emit 'X'    -- awakes
+```
+
 # Deterministic Scheduling
 
 Tasks are based on Lua coroutines, and follows its run-to-completion semantics:
@@ -370,6 +386,57 @@ line 8, before throwing the error in line 3:
 
 # Compound Statements
 
-`TODO`
+Atmos provides many compound statements built on top of tasks and awaits as
+follows:
 
+- The `every` statement expands to a loop that awaits its first argument at the
+  beginning of each iteration:
+
+```
+every(clock{s=1}, function ()
+    print "1 second elapses"    -- prints this message every second
+end)
+```
+
+- The `watching` statement awaits the given body to terminate, or aborts if its
+  first argument occurs:
+
+```
+watching(clock{s=1}, function ()
+    await 'X'
+    print "X happens before 1s" -- prints this message unless 1 second elapses
+end)
+```
+
+- The `par`, `par_and`, `par_or` statements spawn multiple bodies and rejoin
+  after their bodies terminates as follows: `par` never rejoins, `par_and`
+  rejoins after all terminate, `par_or` rejoins after any terminates.
+
+```
+par_and(function ()
+    await 'X'
+end, function ()
+    await 'Y'
+end, function ()
+    await 'Z'
+end)
+print "X, Y, and Z occurred"
+```
+
+- The `toggle` statement awaits the given body to terminate, while also
+  observing its first argument as a boolean event:
+  When receiving `false`, the body toggles off.
+  When receiving `true`, the body toggles on.
+
+```
+toggle('X', function ()
+    every(clock{s=1}, function ()
+        print "1s elapses"
+    end)
+end)
+emit('X', false)    -- body above toggles off
+<...>
+emit('X', true)     -- body above toggles on
+<...>
+```
 
