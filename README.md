@@ -4,7 +4,8 @@
     [About](#about)                 |
     [Hello World!](#hello-world)    |
     [Install](#install)             |
-    [Documentation](#documentation)
+    [Documentation](#documentation) |
+    [Resource](#resources)
 ]
 
 # About
@@ -60,6 +61,19 @@ as follows:
 
 - [Guide](guide.md)
 - [API](api.md)
+
+# Resources
+
+- A toy Problem: Drag, Click, or Cancel
+    - https://fsantanna.github.io/toy.html
+    - Implementation in Atmos and SDL:
+        - https://github.com/lua-atmos/atmos/blob/main/atmos/env/sdl/exs/click-drag-cancel.lua
+- A simple but complete 2D game in Atmos:
+    - https://github.com/lua-atmos/sdl-rocks
+- Academic publications (Ceu):
+    - http://ceu-lang.org/chico/#ceu
+- Mailing list (Ceu):
+    - https://groups.google.com/g/ceu-lang
 
 [1]: https://www.lua.org/
 [2]: https://en.wikipedia.org/wiki/Structured_concurrency
