@@ -7,18 +7,16 @@
     [Compounds](#compound-statements)
 ]
 
-## Tasks
+# Tasks
 
 [
-    [task](#TODO) |
-    [tasks](#TODO) |
-    [spawn](#TODO) |
-    [spawn_in](#TODO)
+    [task](#task-inv-f) |
+    [tasks](#tasks-n) |
+    [spawn](#spawn-tsk-) |
+    [spawn_in](#spawn_in-tsks-tsk-)
 ]
 
-<a name="f-task"\>
-
-### `task ([inv,] f)`
+## `task ([inv,] f)`
 
 Creates a task from a given prototype.
 
@@ -33,7 +31,7 @@ Creates a task from a given prototype.
 An invisible task (`inv=true`) is substituted by its parent in the context
 of [me](#me) and [emit](#emit) calls.
 
-### `tasks (n)`
+## `tasks (n)`
 
 Creates a task pool.
 
@@ -43,7 +41,7 @@ Creates a task pool.
 - Returns:
     - task pool
 
-### `spawn (tsk, ...)`
+## `spawn (tsk, ...)`
 
 Spawns a task.
 
@@ -53,7 +51,7 @@ Spawns a task.
     - `...`
         :: extra arguments to pass to the task prototype
 
-#### `spawn ([inv,] f, ...)`
+### `spawn ([inv,] f, ...)`
 
 Spawns a function prototype as a task.
 
@@ -63,7 +61,7 @@ Expands to
 spawn(task(inv,f), ...)
 ```
 
-### `spawn_in (tsks, tsk, ...)`
+## `spawn_in (tsks, tsk, ...)`
 
 Spawns a task in a task pool.
 
@@ -75,40 +73,48 @@ Spawns a task in a task pool.
     - `...`
         :: extra arguments to pass to the task prototype
 
+## toggle (tsk)
+
+## me ()
+
 # Events
 
+## Event patterns
 
-
-toggle
-me
-
-- Emit
-
-emit (e, ...)
-emit_in (to, e, ...)
-
-- Await
-
-await
 clock
 _and_
 _or_
 
-## Errors
+## Emit
 
-catch
-throw
+emit (e, ...)
+emit_in (to, e, ...)
 
-## Compounds
+## Await
 
-every
-par
-par_and
-par_or
-toggle
-watching
+await
 
-- Other
+# Errors
+
+## catch
+
+## throw
+
+# Compounds
+
+## every
+
+## watching
+
+## Parallels
+
+### par
+### par_and
+### par_or
+
+## toggle
+
+# Other
 
 atmos.call (t)
 atmos.close (task | tasks)
