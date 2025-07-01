@@ -1,6 +1,22 @@
 # API
 
+[
+    [Tasks](#tasks) |
+    [Events](#events) |
+    [Errors](#errors) |
+    [Compounds](#compound-statements)
+]
+
 ## Tasks
+
+[
+    [task](#TODO) |
+    [tasks](#TODO) |
+    [spawn](#TODO) |
+    [spawn_in](#TODO)
+]
+
+<a name="f-task"\>
 
 ### `task ([inv,] f)`
 
@@ -59,8 +75,7 @@ Spawns a task in a task pool.
     - `...`
         :: extra arguments to pass to the task prototype
 
--
-
+# Events
 
 
 
@@ -79,12 +94,12 @@ clock
 _and_
 _or_
 
-- Errors
+## Errors
 
 catch
 throw
 
-- Compounds
+## Compounds
 
 every
 par
@@ -99,4 +114,3 @@ atmos.call (t)
 atmos.close (task | tasks)
 call
 defer
--->
