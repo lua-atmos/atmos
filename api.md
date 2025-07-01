@@ -2,13 +2,13 @@
 
 ## Tasks
 
-### `task (inv, f)`
+### `task ([inv,] f)`
 
 Creates a task from a given prototype.
 
 - Parameters:
     - `inv: boolean = false`
-        :: if task is invisible in the hierarchy
+        :: if the task should become invisible in the hierarchy
     - `f: function`
         :: task prototype as a Lua function
 - Returns:
@@ -35,9 +35,11 @@ Spawns a task.
     - `tsk: task`
         :: task to spawn
     - `...`
-        :: extra arguments passed to the task prototype
+        :: extra arguments to pass to the task prototype
 
-#### `spawn (inv, f, ...)`
+#### `spawn ([inv,] f, ...)`
+
+Spawns a function prototype as a task.
 
 Expands to
 
@@ -45,17 +47,23 @@ Expands to
 spawn(task(inv,f), ...)
 ```
 
+### `spawn_in (tsks, tsk, ...)`
+
+Spawns a task in a task pool.
+
 - Parameters:
-    - `inv: boolean = false`
-        :: if task is invisible in the hierarchy
-    - `tsk: task|function`
-        :: task or function prototype to spawn
+    - `tsks: task pool`
+        :: pool to spawn
+    - `tsk: task`
+        :: task to spawn
     - `...`
-        :: extra arguments passed to the task prototype
+        :: extra arguments to pass to the task prototype
+
+-
 
 
-- Returns 
-spawn_in (up, t, ...)
+
+
 toggle
 me
 
