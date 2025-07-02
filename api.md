@@ -11,8 +11,10 @@
 
 [
     [task](#task-inv-f) |
+    [task](#TODO) |
     [tasks](#tasks-n) |
     [spawn](#spawn-tsk-) |
+    [spawn](#TODO) |
     [spawn_in](#spawn_in-tsks-tsk-) |
     [toggle](#toggle-tsk-on) |
     [me](#me-)
@@ -194,7 +196,7 @@ When the task terminates, its parent emits an event
 [
     [every](#every--f) |
     [watching](#watching--f) |
-    [toglle](#toggle-evt-f) |
+    [toggle](#toggle-evt-f) |
     [par](#par-) |
     [par_and](#par_and-) |
     [par_or](#par_or-)
