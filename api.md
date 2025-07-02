@@ -113,8 +113,6 @@ Returns a self-reference to the running task.
     [await](#await)
 ]
 
-Events provide a notification mechanism between tasks:
-
 ### `emit (e, ...)`
 
 Emits an event.
@@ -169,36 +167,49 @@ The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 - `true`:: matches any emit
 - `false`:: never matches an emit
 - `x, ...`:: `x==e` and all remaining arguments match the emit payloads
-- `x: task`:: `x==e`, modifying matches
-- `: tasks`::
+- `x: task`:: `x==e`, modifying the await return to be the task return
+- `x: tasks`:: `e` matches any task in `x`
 - `{ tag='_or_', ...}`::
 - `{ tag='_and_', ...}`::
-- clock
+- `{ tag='clock', ...}`::
 - `mt.__atmos`::
-- `: function`:: function receives `e,...` and returns
+- `: function`:: function receives `e,...` and returns if it matches, also
+    modifying the await return
 
 When the task terminates, its parent emits an event
 
-
 # Errors
 
-## catch
+[
+    [catch](#catch-err-f) |
+    [throw](#throw-err-)
+]
 
-## throw
+## `catch (err, f)`
+
+## `throw (err, ...)`
 
 # Compounds
 
-## every
+[
+    [every](#every-f) |
+    [watching](#watching-f) |
+    [par](#par) |
+    [par_and](#par_and) |
+    [par_or](#par_or)
+]
 
-## watching
+## `every (..., f)`
+
+## `watching (..., f)`
 
 ## Parallels
 
-### par
-### par_and
-### par_or
+### `par (...)`
+### `par_and (...)`
+### `par_or (...)`
 
-## toggle
+## `toggle (evt, f)`
 
 # Other
 
