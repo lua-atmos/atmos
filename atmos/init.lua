@@ -6,7 +6,6 @@ local atmos = {
     call  = run.call,
 }
 
-me    = run.me
 throw = run.throw
 catch = run.catch
 call  = run.call
@@ -15,7 +14,9 @@ defer = run.defer
 tasks = run.tasks
 
 function task (inv, ...)
-    if type(inv) == 'boolean' then
+    if inv == nil then
+        return run.me()
+    elseif type(inv) == 'boolean' then
         return run.task(1, inv, ...)
     else
         return run.task(1, false, inv, ...)

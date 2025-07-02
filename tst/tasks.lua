@@ -75,7 +75,7 @@ end
 do
     print("Testing...", "tasks 7: pairs")
     local function T (v)
-        me().v = v
+        task().v = v
         await(true)
     end
     local ts = tasks()

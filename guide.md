@@ -42,11 +42,11 @@ end)
 ## Public Data
 
 A task is a Lua table, and can hold public data fields as usual.
-It is also possible to self refer to the running task with a call to `me()`:
+It is also possible to self refer to the running task with a call to `task()`:
 
 ```
 function T ()
-    me().v = 10
+    task().v = 10
 end
 local t = spawn(T)
 print(t.v)  -- 10
@@ -277,7 +277,7 @@ When a task terminates, it is automatically removed from the pool.
 
 ```
 function T (id, ms)
-    me().id = id
+    task().id = id
     print('start', id, ms)
     await(clock{ms=ms})
     print('stop', id, ms)

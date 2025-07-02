@@ -382,8 +382,8 @@ print '--- PUB ---'
 do
     print("Testing...", "pub 1")
     spawn (function ()
-        me().v = 10
-        out(me().v)
+        task().v = 10
+        out(task().v)
     end)
     assertx(out(), "10\n")
     atmos.close()
@@ -392,7 +392,7 @@ end
 do
     print("Testing...", "pub 2: error")
     local _,err = pcall(function ()
-        me().v = 10
+        task().v = 10
     end)
     --assertfx(err, "task.lua:182: pub error : expected enclosing task")
     assertfx(err, "task.lua:%d+: attempt to index a nil valu")
@@ -402,7 +402,7 @@ end
 do
     print("Testing...", "pub 3")
     local t = spawn (function ()
-        me().v = 10
+        task().v = 10
     end)
     out(t.v)
     assertx(out(), "10\n")
@@ -412,10 +412,11 @@ end
 do
     print("Testing...", "pub 4")
     local _,err = pcall(function ()
-        out(me(10).v)
+        out(task(10).v)
     end)
     --assertfx(err, "task.lua:201: pub error : expected task")
-    assertfx(err, "task.lua:%d+: attempt to index a nil value")
+    --assertfx(err, "task.lua:%d+: attempt to index a nil value")
+    assertx(err, "invalid task : expected function")
     atmos.close()
 end
 
@@ -673,13 +674,13 @@ do
     print("Testing...", "nested 01")
     do
         function T ()
-            me().pub = 10
-            out(me().pub)
+            task().pub = 10
+            out(task().pub)
             spawn (true, function ()
-                me().pub = 20
-                out(me().pub)
+                task().pub = 20
+                out(task().pub)
             end)
-            out(me().pub)
+            out(task().pub)
         end
         spawn (T)
     end

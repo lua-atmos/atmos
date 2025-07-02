@@ -10,14 +10,13 @@
 # Tasks
 
 [
-    [task](#task-inv-f) |
-    [task](#TODO) |
+    [task(f)](#task-inv-f) |
+    [task()](#task) |
     [tasks](#tasks-n) |
-    [spawn](#spawn-tsk-) |
-    [spawn](#TODO) |
+    [spawn(tsk)](#spawn-tsk-) |
+    [spawn(f)](#spawn-inv-f-) |
     [spawn_in](#spawn_in-tsks-tsk-) |
     [toggle](#toggle-tsk-on) |
-    [me](#me-)
 ]
 
 ## `task ([inv,] f)`
@@ -34,7 +33,17 @@ Creates a task from a given prototype.
         :: reference to task just created
 
 An invisible task (`inv=true`) is substituted by its parent in the context
-of [me](#me) and [emit](#emit) calls.
+of [task()](#task) and [emit](#emit) calls.
+
+## `task ()`
+
+Returns a self-reference to the running task.
+
+- Parameters:
+    - none
+- Returns:
+    - `: task`
+        :: reference to running task
 
 ## `tasks (n)`
 
@@ -96,16 +105,6 @@ Toggles a task on and off.
         :: toggle on (`true`) or off (`false`)
 - Returns:
     - `nil`
-
-## me ()
-
-Returns a self-reference to the running task.
-
-- Parameters:
-    - none
-- Returns:
-    - `: task`
-        :: reference to running task
 
 # Events
 

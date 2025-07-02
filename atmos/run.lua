@@ -278,6 +278,7 @@ function run.tasks (max)
 end
 
 function run.task (n, inv, f)
+    assertn(3, type(f)=='function', "invalid task : expected function")
     local dbg = debug.getinfo(n+1)
     local t = {
         _ = {
