@@ -13,7 +13,9 @@
     [task](#task-inv-f) |
     [tasks](#tasks-n) |
     [spawn](#spawn-tsk-) |
-    [spawn_in](#spawn_in-tsks-tsk-)
+    [spawn_in](#spawn_in-tsks-tsk-) |
+    [toggle](#toggle-tsk-on) |
+    [me](#me-)
 ]
 
 ## `task ([inv,] f)`
@@ -26,7 +28,8 @@ Creates a task from a given prototype.
     - `f: function`
         :: task prototype as a Lua function
 - Returns:
-    - task
+    - `: task`
+        :: reference to task just created
 
 An invisible task (`inv=true`) is substituted by its parent in the context
 of [me](#me) and [emit](#emit) calls.
@@ -39,7 +42,8 @@ Creates a task pool.
     - `n: number`
         :: maximum number instances
 - Returns:
-    - task pool
+    - `: task`
+        :: task pool
 
 ## `spawn (tsk, ...)`
 
@@ -50,8 +54,11 @@ Spawns a task.
         :: task to spawn
     - `...`
         :: extra arguments to pass to the task prototype
+- Returns:
+    - `: task`
+        :: reference to task just spawned
 
-### `spawn ([inv,] f, ...)`
+## `spawn ([inv,] f, ...)`
 
 Spawns a function prototype as a task.
 
@@ -72,27 +79,100 @@ Spawns a task in a task pool.
         :: task to spawn
     - `...`
         :: extra arguments to pass to the task prototype
+- Returns:
+    - `: task`
+        :: reference to task just spawned
 
-## toggle (tsk)
+## toggle (tsk, on)
+
+Toggles a task on and off.
+
+- Parameters:
+    - `tsk: task`
+        :: task to toggle
+    - `on: boolean`
+        :: toggle on (`true`) or off (`false`)
+- Returns:
+    - `nil`
 
 ## me ()
 
+Returns a self-reference to the running task.
+
+- Parameters:
+    - none
+- Returns:
+    - `: task`
+        :: reference to running task
+
 # Events
 
-## Event patterns
+[
+    [emit](#emit-e-) |
+    [emit_in](#emit-in-to-) |
+    [xxx](#xxx)
+]
 
-clock
-_and_
-_or_
+### `emit (e, ...)`
 
-## Emit
+Emits an event.
 
-emit (e, ...)
-emit_in (to, e, ...)
+- Parameters:
+    - `e`
+        :: event to emit
+    - `...`
+        :: event payloads
+- Returns
+    - `nil`
 
-## Await
+### `emit_in (to, e, ...)`
 
-await
+Emits an event into a target.
+
+- Parameters:
+    - `to`
+        :: emit target
+    - `e`
+        :: event to emit
+    - `...`
+        :: event payloads
+- Returns
+    - `nil`
+
+The event target determines the scope of tasks affected by the emit.
+The following values are accepted as target:
+
+- `number`:: level above in the task hierarchy
+    - `0`:: current task
+    - `1`:: parent task
+    - `2`:: parent of parent task
+    - `n`:: (n times) parent of task
+- `nil` or `'task'`:: equivalent to `0`
+- `'global'`:: all top-level tasks
+- `: task`:: the given task
+
+## `await (...)`
+
+Awaits an event pattern in the running task.
+
+- Parameters:
+    - `...`
+        :: event pattern
+- Returns:
+    - `...`
+        :: arguments of matching emit
+
+The task awakes if an `emit(e,...)` matches the event pattern as follows:
+
+- `true`:: matches any emit
+- `false`:: never matches an emit
+- `x, ...`:: `x==e` and all remaining arguments match the emit payloads
+- `{ tag='_or_', ...}`::
+- `{ tag='_and_', ...}`::
+- task, tasks
+- clock
+- `mt.__atmos`::
+- `: function`:: function receives `e,...` and returns
 
 # Errors
 
