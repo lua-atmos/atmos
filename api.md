@@ -4,7 +4,7 @@
     [Tasks](#tasks) |
     [Events](#events) |
     [Errors](#errors) |
-    [Compounds](#compound-statements)
+    [Compounds](#compounds)
 ]
 
 # Tasks
@@ -192,24 +192,25 @@ When the task terminates, its parent emits an event
 # Compounds
 
 [
-    [every](#every-f) |
-    [watching](#watching-f) |
-    [par](#par) |
-    [par_and](#par_and) |
-    [par_or](#par_or)
+    [every](#every--f) |
+    [watching](#watching--f) |
+    [toglle](#toggle-evt-f) |
+    [par](#par-) |
+    [par_and](#par_and-) |
+    [par_or](#par_or-)
 ]
 
 ## `every (..., f)`
 
 ## `watching (..., f)`
 
+## `toggle (evt, f)`
+
 ## Parallels
 
 ### `par (...)`
 ### `par_and (...)`
 ### `par_or (...)`
-
-## `toggle (evt, f)`
 
 # Other
 
