@@ -157,10 +157,7 @@ function run.throw (...)
     return error(tothrow(2,...))
 end
 
-function run.catch (e, f, blk)
-    if blk == nil then
-        f,blk = nil,f
-    end
+function run.catch (e, blk)
     return (function (ok, err, ...)
         if ok then
             return ok,err,...
@@ -168,11 +165,7 @@ function run.catch (e, f, blk)
             if e == false then
                 error(err, 0)
             elseif e==true or err[1]==e then
-                if (f==nil or f(table.unpack(err))) then
-                    return false, table.unpack(err)
-                else
-                    error(err, 0)
-                end
+                return false, table.unpack(err)
             else
                 error(err, 0)
             end

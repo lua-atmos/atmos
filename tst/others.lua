@@ -169,9 +169,9 @@ do
     print("Testing...", "catch 6")
     do
         out(1)
-        catch ('X', function (e,v1,v2) return v2==20 end, function ()
+        catch ('X', --[[function (e,v1,v2) return v2==20 end,]] function ()
             out(2)
-            catch ('X', function (e,v1,v2) return v1~=10 end, function ()
+            catch ('X', --[[function (e,v1,v2) return v1~=10 end,]] function ()
                 out(3)
                 throw('X',10,20)
                 out(4)
@@ -180,7 +180,8 @@ do
         end)
         out(6)
     end
-    assertx(out(), "1\n2\n3\n6\n")
+    --assertx(out(), "1\n2\n3\n6\n")
+    assertx(out(), "1\n2\n3\n5\n6\n")
     atmos.close()
 end
 
