@@ -109,9 +109,11 @@ Returns a self-reference to the running task.
 
 [
     [emit](#emit-e-) |
-    [emit_in](#emit-in-to-) |
-    [xxx](#xxx)
+    [emit_in](#emit_in-to-) |
+    [await](#await)
 ]
+
+Events provide a notification mechanism between tasks:
 
 ### `emit (e, ...)`
 
@@ -162,17 +164,21 @@ Awaits an event pattern in the running task.
     - `...`
         :: arguments of matching emit
 
-The task awakes if an `emit(e,...)` matches the event pattern as follows:
+The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 
 - `true`:: matches any emit
 - `false`:: never matches an emit
 - `x, ...`:: `x==e` and all remaining arguments match the emit payloads
+- `x: task`:: `x==e`, modifying matches
+- `: tasks`::
 - `{ tag='_or_', ...}`::
 - `{ tag='_and_', ...}`::
-- task, tasks
 - clock
 - `mt.__atmos`::
 - `: function`:: function receives `e,...` and returns
+
+When the task terminates, its parent emits an event
+
 
 # Errors
 
