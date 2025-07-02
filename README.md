@@ -25,8 +25,8 @@ structured programming with two main functionalities:
     - The `await` primitive suspends a task and wait for events.
     - The `emit` primitive signal events and awake awaiting tasks.
 
-Atmos is inspired by [synchronous programming languages][4] like as [Ceu][5]
-and [Esterel][6].
+Atmos is inspired by [synchronous programming languages][4] like [Ceu][5] and
+[Esterel][6].
 
 # Install
 

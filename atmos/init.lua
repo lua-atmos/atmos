@@ -1,4 +1,4 @@
-require "atmos.aux"
+require "atmos.util"
 local run = require "atmos.run"
 
 local atmos = {
