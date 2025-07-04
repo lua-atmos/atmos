@@ -13,7 +13,7 @@
 [
     [call](#call--f) |
     [atmos.call](#atmoscall-steps-f) |
-    [defer](#defer-f) |
+    [defer](#defer-f)
 ]
 
 ## `call (..., f)`
@@ -240,19 +240,31 @@ Awaits an event pattern in the running task.
 
 The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 
-- `true`| matches any emit
-- `false`| never matches an emit
-- `x, ...`| `x==e` and all remaining arguments match the emit payloads
-- `x: task`| `x==e`, modifying the await return to be the task return
-- `x: tasks`| `e` matches any task in `x`
-- `{ tag='_or_', ...}`|
-- `{ tag='_and_', ...}`|
-- `{ tag='clock', ...}`|
-- `mt.__atmos`|
-- `: function`| function receives `e,...` and returns if it matches, also
+- `true` | matches any emit
+- `false` | never matches an emit
+- `x, ...` | `x==e` and all remaining arguments match the emit payloads
+- `x: task` | `x==e`, modifying the await return to be the task return
+- `x: tasks` | `e` matches any task in `x`
+- `{ tag='clock', h=?, min=?, s=?, ms=? }` | `e=='step'` (TODO)
+- `{ tag='_and_', ...}` | `e` matches all the patterns in `...`
+- `{ tag='_or_', ...}` | `e` matches any of the patterns in `...`
+- `mt.__atmos` | TODO
+- `: function` | function receives `e,...` and returns if it matches, also
     modifying the await return
 
 When the task terminates, its parent emits an event
+
+### `clock { ... }`
+
+Expands to `{ tag='clock', ... }`.
+
+### `_and_ (...)`
+
+Expands to `{ tag='_and_', ... }`.
+
+### `_or_ (...)`
+
+Expands to `{ tag='_or_', ... }`.
 
 # Errors
 
