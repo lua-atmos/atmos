@@ -1,4 +1,4 @@
-# lua-atmos (v0.1)
+# lua-atmos (v0.1) -- Structured Event-Driven Concurrency for Lua
 
 [
     [About](#about)                 |

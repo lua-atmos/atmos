@@ -6,8 +6,7 @@ source = {
 }
 description = {
    summary = [[
-    Atmos is a programming library for Lua that reconciles Structured
-    Concurrency with Event-Driven Programming
+    Structured Event-Driven Concurrency for Lua
    ]],
    detailed = [[
     Atmos is a programming library for Lua that reconciles *Structured
