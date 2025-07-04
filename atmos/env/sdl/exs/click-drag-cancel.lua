@@ -21,11 +21,11 @@ REN = assert(SDL.createRenderer(WIN, -1))
 
 FNT = assert(TTF.open("DejaVuSans.ttf", 20))
 
-spawn(function ()
+call(REN, function ()
     local text = " "
     local rect = {x=256/2-20,y=256/2-20, w=40,h=40}
     spawn(function ()
-        every('SDL.Draw', function ()
+        every('sdl.draw', function ()
             REN:setDrawColor(0x000000)
             REN:clear()
             REN:setDrawColor(0xFFFFFF)
@@ -36,7 +36,7 @@ spawn(function ()
     end)
     while true do
         local click = await(SDL.event.MouseButtonDown, function (e)
-            return point_vs_rect(e, rect)
+            return point_vs_rect(e, rect), e
         end)
         local orig = {x=rect.x, y=rect.y, w=rect.w, h=rect.h}
         text = "... clicking ..."
@@ -62,5 +62,3 @@ spawn(function ()
         end)
     end
 end)
-
-sdl.loop()
