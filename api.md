@@ -4,7 +4,8 @@
     [Tasks](#tasks) |
     [Events](#events) |
     [Errors](#errors) |
-    [Compounds](#compounds)
+    [Compounds](#compounds) |
+    [Basic](#basic)
 ]
 
 # Tasks
@@ -247,7 +248,8 @@ occurs.
     - `f: function`
         | body as a function
 - Returns:
-    - never returns
+    - `...`
+        | return values of the body or matching event
 
 A `watching` is equivalent to the call as follows:
 
@@ -257,15 +259,32 @@ await(_or_({...}, spawn(f)))
 
 ## `toggle (evt, f)`
 
+Executes the given body until it terminates.
+Meanwhile, toggles it on and off based on occurrences of the given event.
+
+- Parameters:
+    - `evt`
+        | boolean event
+    - `f: function`
+        | body as a function
+- Returns:
+    - `...`
+        | return values of the body
+
 ## Parallels
 
 ### `par (...)`
 ### `par_and (...)`
 ### `par_or (...)`
 
-# Other
+# Basic
 
-atmos.call (t)
-atmos.close (task | tasks)
-call
-defer
+[
+    [call](#call-f) |
+    [atmos.call](#atmos-call-steps-f) |
+    [defer](#defer-f) |
+]
+
+## `call (..., f)`
+## `atmos.call (steps, f)`
+## `defer (f)`
