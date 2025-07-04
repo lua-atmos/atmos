@@ -1,7 +1,8 @@
 package = "atmos"
 version = "0.1-1"
 source = {
-   url = "git+https://github.com/lua-atmos/atmos"
+   url = "git+https://github.com/lua-atmos/atmos",
+   branch = "v0.1",
 }
 description = {
    summary = [[
@@ -28,10 +29,10 @@ description = {
     Esterel.
    ]],
    homepage = "https://github.com/lua-atmos/atmos",
-   license = "MIT"
+   license = "MIT",
 }
 dependencies = {
-   "lua ~> 5.4"
+   "lua ~> 5.4",
 }
 build = {
    type = "builtin",
@@ -42,5 +43,5 @@ build = {
       ["atmos.env.clock.init"] = "atmos/env/clock/init.lua",
       ["atmos.env.clock.exs.hello"] = "atmos/env/clock/exs/hello.lua",
       ["atmos.env.sdl.init"] = "atmos/env/sdl/init.lua",
-   }
+   },
 }
