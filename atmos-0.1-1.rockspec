@@ -36,10 +36,11 @@ dependencies = {
 build = {
    type = "builtin",
    modules = {
-      ["atmos.env.clock.init"] = "atmos/env/clock/init.lua",
-      ["atmos.env.sdl.init"] = "atmos/env/sdl/init.lua",
       ["atmos.init"] = "atmos/init.lua",
       ["atmos.run"] = "atmos/run.lua",
       ["atmos.util"] = "atmos/util.lua",
+      ["atmos.env.clock.init"] = "atmos/env/clock/init.lua",
+      ["atmos.env.clock.exs.hello"] = "atmos/env/clock/exs/hello.lua",
+      ["atmos.env.sdl.init"] = "atmos/env/sdl/init.lua",
    }
 }
