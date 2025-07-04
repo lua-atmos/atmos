@@ -337,5 +337,31 @@ Meanwhile, toggles it on and off based on occurrences of the given event.
 ## Parallels
 
 ### `par (...)`
+
+Spawn the given bodies and never terminates.
+
+- Parameters:
+    - `...`
+        | tasks to spawn as functions
+- Returns:
+    - never returns
+
 ### `par_and (...)`
+
+Spawn the given bodies and terminate when all of them terminate.
+
+- Parameters:
+    - `...`
+        | tasks to spawn as functions
+- Returns:
+    - `: table`: combined returns of the tasks
+
 ### `par_or (...)`
+
+Spawn the given bodies and terminate when any of them terminates.
+
+- Parameters:
+    - `...`
+        | tasks to spawn as functions
+- Returns:
+    - `...`: return values of the terminating task
