@@ -245,14 +245,12 @@ The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 - `x, ...` | `x==e` and all remaining arguments match the emit payloads
 - `x: task` | `x==e`, modifying the await return to be the task return
 - `x: tasks` | `e` matches any task in `x`
-- `{ tag='clock', h=?, min=?, s=?, ms=? }` | `e=='step'` (TODO)
+- `{ tag='clock', h=?, min=?, s=?, ms=? }` | TODO
 - `{ tag='_and_', ...}` | `e` matches all the patterns in `...`
 - `{ tag='_or_', ...}` | `e` matches any of the patterns in `...`
 - `mt.__atmos` | TODO
 - `: function` | function receives `e,...` and returns if it matches, also
     modifying the await return
-
-When the task terminates, its parent emits an event
 
 ### `clock { ... }`
 
