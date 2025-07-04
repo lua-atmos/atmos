@@ -1,12 +1,75 @@
 # API
 
 [
+    [Basic](#basic) |
     [Tasks](#tasks) |
     [Events](#events) |
     [Errors](#errors) |
-    [Compounds](#compounds) |
-    [Basic](#basic)
+    [Compounds](#compounds)
 ]
+
+# Basic
+
+[
+    [call](#call--f) |
+    [atmos.call](#atmoscall-steps-f) |
+    [defer](#defer-f) |
+]
+
+## `call (..., f)`
+
+Calls the given body as a task, passing control to an Atmos environment.
+
+- Parameters:
+    - `...`
+        | extra arguments to the environment
+    - `f: function`
+        | task prototype as a function
+- Returns:
+    - `...`
+        | return values from the task
+
+The call returns when the given body terminates.
+
+(This function is overridden by environments.)
+
+## `atmos.call (steps, f)`
+
+Calls the given body as a task, passing a list of step functions to execute in
+a loop.
+
+- Parameters:
+    - `steps: {function}`
+        | list of step functions
+    - `f: function`
+        | task prototype as a function
+- Returns:
+    - `...`
+        | return values from the task
+
+The call returns when the given body terminates.
+
+(This function is only used internally by environments.)
+
+## `defer (f)`
+
+Executes the given function when the enclosing scope terminates.
+
+- Parameters:
+    - `f: function`
+        | function to execute
+- Returns:
+    - `: table`
+        | special table that requires a `<close>` assignment
+
+A defer requires a `<close>` assignment in the scope of interest:
+
+```
+do
+    local _ <close> = defer(<...>)
+    <...>
+end
+```
 
 # Tasks
 
@@ -17,7 +80,7 @@
     [spawn(tsk)](#spawn-tsk-) |
     [spawn(f)](#spawn-inv-f-) |
     [spawn_in](#spawn_in-tsks-tsk-) |
-    [toggle](#toggle-tsk-on) |
+    [toggle](#toggle-tsk-on)
 ]
 
 ## `task ([inv,] f)`
@@ -276,15 +339,3 @@ Meanwhile, toggles it on and off based on occurrences of the given event.
 ### `par (...)`
 ### `par_and (...)`
 ### `par_or (...)`
-
-# Basic
-
-[
-    [call](#call-f) |
-    [atmos.call](#atmos-call-steps-f) |
-    [defer](#defer-f) |
-]
-
-## `call (..., f)`
-## `atmos.call (steps, f)`
-## `defer (f)`
