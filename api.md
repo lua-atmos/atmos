@@ -27,7 +27,7 @@ Creates a task from a given prototype.
     - `inv: boolean = false`
         | if the task should become invisible in the hierarchy
     - `f: function`
-        | task prototype as a Lua function
+        | task prototype as a function
 - Returns:
     - `: task`
         | reference to task just created
@@ -73,7 +73,18 @@ Spawns a task.
 
 Spawns a function prototype as a task.
 
-Expands to
+- Parameters:
+    - `inv: boolean = false`
+        | if the task should become invisible in the hierarchy
+    - `f: function`
+        | task to spawn as a function
+    - `...`
+        | extra arguments to pass to the function
+- Returns:
+    - `: task`
+        | reference to task just spawned
+
+A function spawn is equivalent to the call as follows:
 
 ```
 spawn(task(inv,f), ...)
@@ -201,9 +212,48 @@ When the task terminates, its parent emits an event
     [par_or](#par_or-)
 ]
 
+Compound statements combine tasks, awaits, and other primitive to provide
+higher-level constructs.
+
 ## `every (..., f)`
 
+Executes the given body, in a loop, after every occurrence of the given event
+pattern.
+
+- Parameters:
+    - `...`
+        | event pattern
+    - `f: function`
+        | loop body as a function
+- Returns:
+    - never returns
+
+An `every` is equivalent to the code as follows:
+
+```
+while true do
+    f(await(...))
+end
+```
+
 ## `watching (..., f)`
+
+Executes the given body until it terminates or until the given event pattern
+occurs.
+
+- Parameters:
+    - `...`
+        | event pattern
+    - `f: function`
+        | body as a function
+- Returns:
+    - never returns
+
+A `watching` is equivalent to the call as follows:
+
+```
+await(_or_({...}, spawn(f)))
+```
 
 ## `toggle (evt, f)`
 
