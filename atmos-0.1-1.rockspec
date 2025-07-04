@@ -43,5 +43,6 @@ build = {
       ["atmos.env.clock.init"] = "atmos/env/clock/init.lua",
       ["atmos.env.clock.exs.hello"] = "atmos/env/clock/exs/hello.lua",
       ["atmos.env.sdl.init"] = "atmos/env/sdl/init.lua",
+      ["atmos.env.sdl.exs.click-drag-cancel"] = "atmos/env/sdl/exs/click-drag-cancel.lua",
    },
 }
