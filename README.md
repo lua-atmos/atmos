@@ -95,9 +95,9 @@ world into an Atmos application.
 
 The standard distribution of Atmos provides the following environments:
 
-- `atmos.env.clock`:
+- [`atmos.env.clock`](atmos/env/clock/):
     A simple pure-Lua environment that uses `os.clock` to issue timer events.
-- `atmos.env.sdl`:
+- [`atmos.env.sdl](atmos/env/sdl/)`:
     An environment that relies on [lua-sdl2][7] to provide window, mouse, key,
     and timer events.
 
