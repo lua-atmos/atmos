@@ -2,7 +2,7 @@
 
 <img src="atmos-logo.png" width="250" align="right">
 
-** *Structured Event-Driven Concurrency for Lua* **
+***Structured Event-Driven Concurrency for Lua***
 
 [
     [About](#about)                 |
