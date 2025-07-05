@@ -1,6 +1,8 @@
 # `lua-atmos`
 
-[ [`v0.1`](tree/v0.1/) ]
+[
+    [`v0.1`](https://github.com/lua-atmos/atmos/tree/v0.1)
+]
 
 <img src="atmos-logo.png" width="250" align="right">
 
