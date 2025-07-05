@@ -32,6 +32,31 @@ structured programming with two main functionalities:
 Atmos is inspired by [synchronous programming languages][4] like [Ceu][5] and
 [Esterel][6].
 
+# Hello World!
+
+During 5 seconds, displays `Hello World!` every second:
+
+```
+require "atmos.env.clock"
+
+call(function ()
+    watching(clock{s=5}, function ()
+        every(clock{s=1}, function ()
+            print("Hello World!")
+        end)
+    end)
+end)
+```
+
+We first import the library with the builtin `clock` environment, which
+provides timers to applications.
+The `call` primitive receives a function with the application logic in Atmos,
+as follows:
+
+- The `watching` command will execute its inner function during 5 seconds.
+- The `every` loop will execute its inner function every second.
+- After the `watching` terminates, the `call` returns back to Lua.
+
 # Install & Run
 
 ```
@@ -57,31 +82,6 @@ atmos/
         |-- hello.lua
       |-- init.lua
 ```
-
-# Hello World!
-
-During 5 seconds, displays `Hello World!` every second:
-
-```
-require "atmos.env.clock"
-
-call(function ()
-    watching(clock{s=5}, function ()
-        every(clock{s=1}, function ()
-            print("Hello World!")
-        end)
-    end)
-end)
-```
-
-We first import the library with the builtin `clock` environment, which
-provides timers to applications.
-The `call` primitive receives a function with the application logic in Atmos,
-as follows:
-
-- The `watching` command will execute its inner function during 5 seconds.
-- The `every` loop will execute its inner function every second.
-- After the `watching` terminates, the `call` returns back to Lua.
 
 # Documentation
 
