@@ -1,6 +1,6 @@
 # atmos.env.sdl
 
-A [lua-atmos](../../) environment for [SDL][1] based on [lua-sdl2][2].
+A [lua-atmos](../../../) environment for [SDL][1] based on [lua-sdl2][2].
 
 # Run
 

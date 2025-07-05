@@ -1,6 +1,6 @@
 # atmos.env.clock
 
-A simple `clock` environment for [lua-atmos](../../).
+A simple `clock` environment for [lua-atmos](../../../).
 
 # Run
 
