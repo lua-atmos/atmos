@@ -1,4 +1,6 @@
-# `lua-atmos` (`v0.1`): Structured Event-Driven Concurrency for Lua
+## `lua-atmos` (`v0.1`): Structured Event-Driven Concurrency for Lua
+
+<img src="atmos-logo.png" align="right">
 
 [
     [About](#about)                 |
