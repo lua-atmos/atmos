@@ -1,6 +1,6 @@
 # `lua-atmos` (`v0.1`)
 
-<img src="atmos-logo.png" align="right">
+<img src="atmos-logo.png" width="250" align="right">
 
 <b>Structured Event-Driven Concurrency for Lua</b>
 
