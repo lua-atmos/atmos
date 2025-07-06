@@ -108,9 +108,9 @@ The standard distribution of Atmos provides the following environments:
 # Resources
 
 - [A toy problem][8]: Drag, Click, or Cancel
-    - https://github.com/lua-atmos/atmos/blob/v0.1/atmos/env/sdl/exs/click-drag-cancel.lua
+    - https://github.com/lua-atmos/atmos/blob/main/atmos/env/sdl/exs/click-drag-cancel.lua
 - A simple but complete 2D game in Atmos:
-    - https://github.com/lua-atmos/sdl-rocks/tree/v0.1
+    - https://github.com/lua-atmos/sdl-rocks/
 - Academic publications (Ceu):
     - http://ceu-lang.org/chico/#ceu
 - Mailing list (Ceu):
