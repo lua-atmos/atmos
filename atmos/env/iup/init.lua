@@ -43,11 +43,21 @@ local M = {
 function M.step ()
     assert(iup.MainLoopLevel() == 0)
     iup.MainLoop()
+    iup.Close()
     return true
 end
 
 function M.call (body)
-    return atmos.call({M.step}, body)
+    local timer = iup.timer{time=100}
+    function timer:action_cb()
+        emit(clock{ms=100})
+        return iup.DEFAULT
+    end
+    timer.run = "YES"
+    return atmos.call({M.step}, function ()
+        body()
+        iup.ExitLoop()
+    end)
 end
 
 call = M.call
