@@ -28,6 +28,13 @@ function iup.text (...)
     return h
 end
 
+local iup_list = iup.list
+function iup.list (...)
+    local h = iup_list(...)
+    h.valuechanged_cb = iup_value
+    return h
+end
+
 -------------------------------------------------------------------------------
 
 local M = {
