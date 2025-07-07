@@ -38,7 +38,7 @@ local M = {}
 local old
 
 function M.step ()
-    local r,s = socket.select(l, l, 0)
+    local r,s = socket.select(l, l, 0.1)
     for k in pairs(r) do
         if type(k) == 'userdata' then
             local v = ""
@@ -54,15 +54,15 @@ function M.step ()
             emit(k, 'send')
         end
     end
-    local now = math.floor(os.clock() * 1000)
+    local now = socket.gettime()
     if now > old then
-        emit(clock { ms=now-old })
+        emit(clock { ms=(now-old)*1000 })
         old = now
     end
 end
 
 function M.call (body)
-    old = math.floor(os.clock() * 1000)
+    old = socket.gettime()
     return atmos.call({M.step}, body)
 end
 
