@@ -37,6 +37,10 @@ local M = {}
 
 local old
 
+function M.init ()
+    old = socket.gettime()
+end
+
 function M.step ()
     local r,s = socket.select(l, l, 0.1)
     for k in pairs(r) do
@@ -61,9 +65,13 @@ function M.step ()
     end
 end
 
+M.env = {
+    init = M.init,
+    step = M.step,
+}
+
 function M.call (body)
-    old = socket.gettime()
-    return atmos.call({M.step}, body)
+    return atmos.call(M.env, body)
 end
 
 call = M.call

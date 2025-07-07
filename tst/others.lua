@@ -55,7 +55,7 @@ end
 
 do
     print("Testing...", "nested task 1")
-    call({}, function ()
+    call(nil, function ()
         spawn(function ()
             spawn(function ()
                 local _ <close> = defer(function ()
@@ -266,7 +266,7 @@ print "-=- CALL -=-"
 do
     print("Testing...", "call 1")
     do
-        local v = call({}, function ()
+        local v = call(nil, function ()
             return 1
         end)
         out(v)
@@ -281,7 +281,7 @@ do
         local function step ()
             emit 'X'
         end
-        local v = call({step}, function ()
+        local v = call({init=function()end,step=step}, function ()
             await 'X'
             return 1
         end)

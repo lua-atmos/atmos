@@ -238,19 +238,26 @@ local function xcall (n, stk, f, ...)
     end)(pcall(f, ...))
 end
 
-function run.call (steps, body)
-    assertn(2, type(steps) == 'table', "invalid call : expected table")
-    assertn(2, type(body) == 'function', "invalid call : expected function")
+function run.call (env, body)
+    env = env or { init=function()end, step=function()end }
+    assertn(2, type(env) == 'table', "invalid call : expected environment table")
+    assertn(2, type(body) == 'function', "invalid call : expected body function")
     return xcall(1, "call", function ()
         local t <close> = run.spawn(4, nil, false, body)
-        local i = 0
-        while coroutine.status(t._.co) ~= 'dead' do
-            i = i % #steps
-            if steps[i+1](steps) then
-                break
+        env.init(true)
+        if env.loop then
+            env.loop()
+        else
+            while true do
+                if coroutine.status(t._.co) == 'dead' then
+                    break
+                end
+                if env.step() then
+                    break
+                end
             end
-            i = i + 1
         end
+        env.init(false)
         run.close()
         return t._.ret
     end)
