@@ -86,18 +86,29 @@ function M.step (opts)
     local r,s = socket.select(rs, ss, 0.1)
     for k in pairs(r) do
         if type(k) == 'userdata' then
-            local v = ""
-            if k:getpeername() then
-                local a,b,c,d,e = k:receive('*a')
-                v = c
+            if not k:getpeername() then
+                emit(k, 'recv') -- server connection
+            else
+                local ok,err,s = k:receive('*a')
+                if ok then
+                    emit(k, 'recv', ok)
+                else
+                    if s ~= '' then
+                        emit(k, 'recv', s)
+                    end
+                    if err == 'timeout' then
+                        -- ok
+                    elseif err == 'closed' then
+                        emit(k, 'closed')
+                    else
+                        error(err)
+                    end
+                end
             end
---print('recv', k, v)
-            emit(k, 'recv', v)
         end
     end
     for k in pairs(s) do
         if type(k) == 'userdata' then
---print('send', k, v)
             emit(k, 'send')
         end
     end
