@@ -41,7 +41,7 @@ function M.init ()
     old = socket.gettime()
 end
 
-function M.step ()
+function M.step (opts)
     local r,s = socket.select(l, l, 0.1)
     for k in pairs(r) do
         if type(k) == 'userdata' then
@@ -58,10 +58,12 @@ function M.step ()
             emit(k, 'send')
         end
     end
-    local now = socket.gettime()
-    if now > old then
-        emit(clock { ms=(now-old)*1000 })
-        old = now
+    if (not opts) or (opts.clock~=false) then
+        local now = socket.gettime()
+        if now > old then
+            emit(clock { ms=(now-old)*1000 })
+            old = now
+        end
     end
 end
 

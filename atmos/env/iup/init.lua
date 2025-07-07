@@ -54,9 +54,11 @@ function M.init (on)
     end
 end
 
+M.loop = iup.MainLoop
+
 M.env = {
     init = M.init,
-    loop = iup.MainLoop,
+    loop = M.loop,
 }
 
 function M.call (body)
