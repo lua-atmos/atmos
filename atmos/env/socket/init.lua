@@ -50,10 +50,12 @@ end
 
 function M.xconnect (tcp, addr, port)
     ss[#ss+1] = tcp
+    local _ <close> = defer(function ()
+        rem(ss, tcp)
+    end)
     local ok, err = tcp:connect(addr, port)
     assert(ok==nil and err=='timeout')
     await(tcp, 'send')
-    rem(ss, tcp)
 --[[
     local ok, err = tcp:connect(addr, port)
     if ok==1 or (ok==nil and err=="Already connected") then
@@ -67,8 +69,10 @@ end
 
 function M.xrecv (tcp)
     rs[#rs+1] = tcp
+    local _ <close> = defer(function ()
+        rem(rs, tcp)
+    end)
     local _,_,s = await(tcp, 'recv')
-    rem(rs, tcp)
     return s
 end
 
