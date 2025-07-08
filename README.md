@@ -68,7 +68,7 @@ sudo luarocks install atmos --lua-version=5.4
 lua5.4 <lua-path>/atmos/env/clock/exs/hello.lua
 ```
 
-You may also clone de repository and copy part of the source tree, as follows,
+You may also clone the repository and copy part of the source tree, as follows,
 into your Lua path (e.g., `/usr/local/share/lua/5.4`):
 
 ```
