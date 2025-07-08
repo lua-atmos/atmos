@@ -18,8 +18,8 @@
 
 # About
 
-Atmos is a programming library for [Lua][1] that reconciles *[Structured
-Concurrency][2]* with *[Event-Driven Programming][3]*, extending classical
+Atmos is a programming library for [Lua][lua] that reconciles *[Structured
+Concurrency][sc]* with *[Event-Driven Programming][events]*, extending classical
 structured programming with two main functionalities:
 
 - Structured Deterministic Concurrency:
@@ -33,8 +33,8 @@ structured programming with two main functionalities:
     - The `await` primitive suspends a task and wait for events.
     - The `emit` primitive signal events and awake awaiting tasks.
 
-Atmos is inspired by [synchronous programming languages][4] like [Ceu][5] and
-[Esterel][6].
+Atmos is inspired by [synchronous programming languages][sync] like [Ceu][ceu]
+and [Esterel][esterel].
 
 # Hello World!
 
@@ -101,13 +101,19 @@ The standard distribution of Atmos provides the following environments:
 
 - [`atmos.env.clock`](atmos/env/clock/):
     A simple pure-Lua environment that uses `os.clock` to issue timer events.
+- [`atmos.env.socket`](atmos/env/socket/):
+    An environment that relies on [luasocket][luasocket] to provide network
+    communication.
 - [`atmos.env.sdl`](atmos/env/sdl/):
-    An environment that relies on [lua-sdl2][7] to provide window, mouse, key,
-    and timer events.
+    An environment that relies on [lua-sdl2][luasdl] to provide window, mouse,
+    key, and timer events.
+- [`atmos.env.iup`](atmos/env/iup/):
+    An environment that relies on [IUP][iup] to provide graphical user
+    interfaces (GUIs).
 
 # Resources
 
-- [A toy problem][8]: Drag, Click, or Cancel
+- [A toy problem][toy]: Drag, Click, or Cancel
     - https://github.com/lua-atmos/atmos/blob/main/atmos/env/sdl/exs/click-drag-cancel.lua
 - A simple but complete 2D game in Atmos:
     - https://github.com/lua-atmos/sdl-rocks/
@@ -116,11 +122,13 @@ The standard distribution of Atmos provides the following environments:
 - Mailing list (Ceu):
     - https://groups.google.com/g/ceu-lang
 
-[1]: https://www.lua.org/
-[2]: https://en.wikipedia.org/wiki/Structured_concurrency
-[3]: https://en.wikipedia.org/wiki/Event-driven_programming
-[4]: https://fsantanna.github.io/sc.html
-[5]: http://www.ceu-lang.org/
-[6]: https://en.wikipedia.org/wiki/Esterel
-[7]: https://github.com/Tangent128/luasdl2/
-[8]: https://fsantanna.github.io/toy.html
+[lua]:          https://www.lua.org/
+[sc]:           https://en.wikipedia.org/wiki/Structured_concurrency
+[events]:       https://en.wikipedia.org/wiki/Event-driven_programming
+[sync]:         https://fsantanna.github.io/sc.html
+[ceu]:          http://www.ceu-lang.org/
+[esterel]:      https://en.wikipedia.org/wiki/Esterel
+[luasocket]:    https://lunarmodules.github.io/luasocket/
+[luasdl]:       https://github.com/Tangent128/luasdl2/
+[iup]:          https://www.tecgraf.puc-rio.br/iup/
+[toy]:          https://fsantanna.github.io/toy.html
