@@ -177,7 +177,7 @@ function run.catch (e, blk)
     end)(pcall(blk))
 end
 
-local function panic (err)
+local function xpanic (err)
     local str = ""
     for i,e in ipairs(err) do
         if i > 1 then
@@ -212,6 +212,41 @@ local function panic (err)
     os.exit()
 end
 
+local function panic (err)
+    local str = ""
+    for i,e in ipairs(err) do
+        if i > 1 then
+            str = str .. ", "
+        end
+        str = str .. tostring(e) or ('('..type(e)..')')
+    end
+    local ret = "==> ERROR:\n"
+
+    for i=#err._.pos, 1, -1 do
+        local t = err._.pos[i]
+        ret = ret .. " |  "
+        for j=1, #t do
+            local e = t[j]
+            ret = ret .. e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg.. ")"
+            if j < #t then
+                ret = ret .. " <- "
+            end
+        end
+        ret = ret .. "\n"
+    end
+
+    ret = ret .. " v  " .. err._.dbg.file .. ":" .. err._.dbg.line .. " (throw)"
+    for i=1, #err._.pre do
+        local e = err._.pre[i]
+        ret = ret .. " <- "
+        ret = ret .. e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg .. ')'
+    end
+    ret = ret .. "\n"
+
+    ret = ret .. "==> " .. str .. '\n'
+    return ret
+end
+
 local function xcall (n, stk, f, ...)
     return (function (ok, err, ...)
         if ok then
@@ -231,7 +266,7 @@ local function xcall (n, stk, f, ...)
                 })
             end
             if run.me(true) == nil then
-                panic(err)
+                err = panic(err)
             end
         end
         error(err)
