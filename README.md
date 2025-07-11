@@ -52,14 +52,14 @@ call(function ()
 end)
 ```
 
-We first import the library with the builtin `clock` environment, which
-provides timers to applications.
+We first the builtin `clock` environment, which provides timers to
+applications.
 The `call` primitive receives a function with the application logic in Atmos,
 as follows:
 
 - The `watching` command will execute its inner function during 5 seconds.
 - The `every` loop will execute its inner function every second.
-- After the `watching` terminates, the `call` returns back to Lua.
+- Once the `watching` terminates, the `call` returns back to Lua.
 
 # Install & Run
 
