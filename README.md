@@ -59,7 +59,7 @@ as follows:
 
 - The `watching` command will execute its inner function during 5 seconds.
 - The `every` loop will execute its inner function every second.
-- After the `watching` terminates, the `call` returns back to Lua.
+- Once the `watching` terminates, the `call` returns back to Lua.
 
 # Install & Run
 
