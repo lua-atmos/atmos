@@ -222,6 +222,38 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "catch 10")
+    local ok,v = catch(function() return true end, function ()
+        out(1)
+        catch ('X', function ()
+            out(2)
+            throw()
+            out(3)
+        end)
+        out(4)
+    end)
+    out(ok,v)
+    assertx(out(), "1\n2\nfalse\tnil\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "catch 11")
+    local ok,v = catch(function(a,b) if a=='X' then return true,b end end, function ()
+        out(1)
+        catch (function () return false end, function ()
+            out(2)
+            throw('X','Y')
+            out(3)
+        end)
+        out(4)
+    end)
+    out(ok,v)
+    assertx(out(), "1\n2\nfalse\tY\n")
+    atmos.close()
+end
+
 print "-=- TASK -=-"
 
 do

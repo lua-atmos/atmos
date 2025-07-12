@@ -166,6 +166,14 @@ function run.catch (e, blk)
         elseif getmetatable(err) == meta_throw then
             if e == false then
                 error(err, 0)
+            elseif type(e) == 'function' then
+                return (function (ok, ...)
+                    if ok then
+                        return false, ...
+                    else
+                        error(err, 0)
+                    end
+                end)(e(table.unpack(err)))
             elseif e==true or err[1]==e then
                 return false, table.unpack(err)
             else
