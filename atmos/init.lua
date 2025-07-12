@@ -6,6 +6,7 @@ local atmos = {
     call  = run.call,
 }
 
+_is_  = run.is
 throw = run.throw
 catch = run.catch
 call  = run.call
