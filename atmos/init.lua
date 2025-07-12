@@ -30,7 +30,6 @@ end
 
 function spawn (inv, t, ...)
     if type(inv) == 'boolean' then
-        assertn(2, type(t) == 'function', "invalid spawn : expected function prototype")
         return run.spawn(1, nil, inv, t, ...)
     else
         return run.spawn(1, nil, false, inv, t, ...)

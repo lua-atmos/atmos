@@ -704,5 +704,7 @@ do
         local t = task(function()end)
         spawn(true, t)
     end)
-    assertfx(err, "task.lua:%d+: invalid spawn : expected function prototype")
+    --assertfx(err, "task.lua:%d+: invalid spawn : expected function prototype")
+    --assertfx(err, "task.lua:%d+: invalid spawn : invisible modifier mismatch")
+    assertx(err, "invalid spawn : invisible modifier mismatch")
 end

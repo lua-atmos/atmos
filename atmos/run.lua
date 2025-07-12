@@ -388,6 +388,7 @@ function run.spawn (n, up, inv, t, ...)
         end
     end
     assertn(3, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
+    assertn(3, t._.inv == inv, "invalid spawn : invisible modifier mismatch")
 
     up = up or run.me(true) or TASKS
     if up._.max and #up._.dns>=up._.max then
