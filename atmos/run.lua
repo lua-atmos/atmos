@@ -159,25 +159,34 @@ function run.throw (...)
     return error(tothrow(2,...))
 end
 
-function run.catch (e, blk)
+function run.catch (...)
+    local cnd = { ... }
+    local blk = table.remove(cnd, #cnd)
     return (function (ok, err, ...)
         if ok then
             return ok,err,...
         elseif getmetatable(err) == meta_throw then
-            if e == false then
+            local X = cnd[1]
+            if false then
+            elseif X == false then
                 error(err, 0)
-            elseif type(e) == 'function' then
+            elseif X == true then
+                return false, table.unpack(err)
+            elseif type(X) == 'function' then
                 return (function (ok, ...)
                     if ok then
                         return false, ...
                     else
                         error(err, 0)
                     end
-                end)(e(table.unpack(err)))
-            elseif e==true or err[1]==e then
-                return false, table.unpack(err)
+                end)(X(table.unpack(err)))
             else
-                error(err, 0)
+                for i=1, #cnd do
+                    if cnd[i] ~= err[i] then
+                        error(err, 0)
+                    end
+                end
+                return false, table.unpack(err)
             end
         else
              error(err, 0)
