@@ -37,12 +37,12 @@ local meta_task = {
         for _,dn in ipairs(t._.dns) do
             getmetatable(dn).__close(dn)
         end
-        if coroutine.status(t._.co) == 'normal' then
+        if coroutine.status(t._.th) == 'normal' then
             -- cannot close now
             -- (emit continuation will raise error)
             t._.status = 'aborted'
         else
-            coroutine.close(t._.co)
+            coroutine.close(t._.th)
         end
     end
 }
@@ -73,8 +73,8 @@ local function _me_ (inv, t)
 end
 
 function run.me (inv)
-    local co = coroutine.running()
-    return co and TASKS._.cache[co] and _me_(inv, TASKS._.cache[co])
+    local th = coroutine.running()
+    return th and TASKS._.cache[th] and _me_(inv, TASKS._.cache[th])
 end
 
 -------------------------------------------------------------------------------
@@ -84,12 +84,12 @@ local function task_resume_result (t, ok, err)
         -- no error: continue normally
     elseif err == 'atm_aborted' then
         -- callee aborted from outside: continue normally
-        coroutine.close(t._.co)   -- needs close bc t.co is in error state
+        coroutine.close(t._.th)   -- needs close bc t.th is in error state
     else
         error(err, 0)
     end
 
-    if coroutine.status(t._.co) == 'dead' then
+    if coroutine.status(t._.th) == 'dead' then
         t._.ret = err
         t._.up._.gc = true
         --if t.status ~= 'aborted' then
@@ -109,7 +109,7 @@ task_gc = function (t)
         t._.gc = false
         for i=#t._.dns, 1, -1 do
             local s = t._.dns[i]
-            if getmetatable(s)==meta_task and coroutine.status(s._.co)=='dead' then
+            if getmetatable(s)==meta_task and coroutine.status(s._.th)=='dead' then
                 table.remove(t._.dns, i)
             end
         end
@@ -292,7 +292,7 @@ function run.call (env, body)
             env.loop()
         else
             while true do
-                if coroutine.status(t._.co) == 'dead' then
+                if coroutine.status(t._.th) == 'dead' then
                     break
                 end
                 if env.step() then
@@ -340,7 +340,7 @@ function run.task (n, inv, f)
             gc  = false,
             dbg = {file=dbg.short_src, line=dbg.currentline},
             ---
-            co  = coroutine.create(f),
+            th  = coroutine.create(f),
             inv = inv,
             status = nil, -- aborted, toggled
             await = {
@@ -349,7 +349,7 @@ function run.task (n, inv, f)
             ret = nil,
         }
     }
-    TASKS._.cache[t._.co] = t
+    TASKS._.cache[t._.th] = t
     setmetatable(t, meta_task)
     return t
 end
@@ -372,7 +372,7 @@ function run.spawn (n, up, inv, t, ...)
     up._.dns[#up._.dns+1] = t
     t._.up = assert(t._.up==nil and up)
 
-    task_resume_result(t, coroutine.resume(t._.co, ...))
+    task_resume_result(t, coroutine.resume(t._.th, ...))
     return t
 end
 
@@ -380,7 +380,7 @@ end
 
 local function check_task_ret (t)
     if t.tag == '_==_' then
-        if (getmetatable(t[1]) == meta_task) and (coroutine.status(t[1]._.co) == 'dead') then
+        if (getmetatable(t[1]) == meta_task) and (coroutine.status(t[1]._.th) == 'dead') then
             return true, t[1]._.ret, t[1]
         else
             return false
@@ -651,13 +651,13 @@ local function emit (time, t, ...)
     if getmetatable(t) == meta_task then
         if not ok then
 --print('xxx', ok, err, ...)
-            if coroutine.status(t._.co) == 'suspended' then
-                ok, err = coroutine.resume(t._.co, 'atm_error', err)
+            if coroutine.status(t._.th) == 'suspended' then
+                ok, err = coroutine.resume(t._.th, 'atm_error', err)
             end
             assertn(0, ok, err) -- TODO: error in defer?
         else
-            if (t._.await.time < time) and (coroutine.status(t._.co) == 'suspended') then
-                task_resume_result(t, coroutine.resume(t._.co, nil, ...))
+            if (t._.await.time < time) and (coroutine.status(t._.th) == 'suspended') then
+                task_resume_result(t, coroutine.resume(t._.th, nil, ...))
             end
         end
     else
@@ -702,7 +702,7 @@ function run.toggle (t, on)
         assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
         t._.status = nil
     else
-        assertn(2, t._.status==nil --[[and coroutine.status(t._.co)=='suspended']],
+        assertn(2, t._.status==nil --[[and coroutine.status(t._.th)=='suspended']],
             "invalid toggle : expected awaiting task")
         t._.status = 'toggled'
     end
