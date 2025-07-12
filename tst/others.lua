@@ -254,6 +254,32 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "catch 12: multi val")
+    local ok,x,y,z = catch('X','Y', function ()
+        out(1)
+        catch ('X','Z', function ()
+            out(2)
+            throw('X','Y')
+            out(3)
+        end)
+        out(4)
+    end)
+    out(ok,x,y,z)
+    assertx(out(), "1\n2\nfalse\tX\tY\tnil\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "catch 13: tag is")
+    local ok,x = catch('X', function ()
+        throw { tag='X' }
+    end)
+    out(ok, type(x), x.tag)
+    assertx(out(), "false\ttable\tX\n")
+    atmos.close()
+end
+
 print "-=- TASK -=-"
 
 do

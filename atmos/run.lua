@@ -77,6 +77,21 @@ function run.me (inv)
     return th and TASKS._.cache[th] and _me_(inv, TASKS._.cache[th])
 end
 
+function run.is (v, x)
+    if v == x then
+        return true
+    end
+    local tp = type(v)
+    if tp == x then
+        return true
+    elseif tp=='string' and type(x)=='string' then
+        return (string.find(v, '^'..x) == 1)
+    elseif tp=='table' and type(x)=='string' then
+        return (string.find(v.tag or '', '^'..x) == 1)
+    end
+    return false
+end
+
 -------------------------------------------------------------------------------
 
 local function task_resume_result (t, ok, err)
@@ -182,7 +197,7 @@ function run.catch (...)
                 end)(X(table.unpack(err)))
             else
                 for i=1, #cnd do
-                    if cnd[i] ~= err[i] then
+                    if not run.is(err[i],cnd[i]) then
                         error(err, 0)
                     end
                 end
