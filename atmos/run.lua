@@ -82,14 +82,20 @@ function run.is (v, x)
         return true
     end
     local tp = type(v)
+    local mt = getmetatable(v)
     if tp == x then
         return true
     elseif tp=='string' and type(x)=='string' then
         return (string.find(v, '^'..x) == 1)
+    elseif mt==meta_task and x=='task' then
+        return true
+    elseif mt==meta_tasks and x=='tasks' then
+        return true
     elseif tp=='table' and type(x)=='string' then
         return (string.find(v.tag or '', '^'..x) == 1)
+    else
+        return false
     end
-    return false
 end
 
 -------------------------------------------------------------------------------
