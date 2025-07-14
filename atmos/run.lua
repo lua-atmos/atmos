@@ -497,7 +497,14 @@ local function check_ret (awt, ...)
             return true, ...
         end
     elseif awt.tag == 'function' then
-        return e(...)
+        local es = { ... }
+        return (function (v, ...)
+            if select('#',...) == 0 then
+                return v, table.unpack(es)
+            else
+                return v, ...
+            end
+        end)(e(...))
     else
         return false
     end
