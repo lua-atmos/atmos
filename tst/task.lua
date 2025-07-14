@@ -688,6 +688,53 @@ do
     atmos.close()
 end
 
+print "--- ABORT ---"
+
+do
+    print("Testing...", "abort 1")
+    do
+        call(nil, function ()
+            spawn(function ()
+                spawn(function ()
+                    spawn(function ()
+                        out(0)
+                        await(true)
+                        out(2)
+                        emit_in('global', true)
+                        out(4)
+                    end)
+                    await(true)
+                    out(3)
+                end)
+                out(1)
+                emit(true)
+                out(5)
+            end)
+            out(6)
+        end)
+        out(7)
+    end
+    assertx(out(), "0\n1\n2\n3\n5\n6\n7\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "abort 2")
+    do
+        spawn(true, function ()
+            local _ <close> = spawn(false, function ()
+                await(true)
+                return emit_in("global", "true")
+            end)
+            return await(true)
+        end)
+        emit("true")
+        return print("ok")
+    end
+    assertx(out(), "0\n1\n2\n3\n5\n6\n7\n")
+    atmos.close()
+end
+
 print "--- ERRORS ---"
 
 do

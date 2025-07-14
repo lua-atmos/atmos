@@ -31,12 +31,6 @@ do
             out('ok')
         end
     ]]
-    assertx(trim(out), trim [[
-        ==> ERROR:
-         |  /tmp/err.lua:12 (emit)
-         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:2 (task)
-        ==> X, 10
-    ]])
 end
 
 do

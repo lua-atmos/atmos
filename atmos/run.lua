@@ -37,10 +37,14 @@ local meta_task = {
         for _,dn in ipairs(t._.dns) do
             getmetatable(dn).__close(dn)
         end
-        if coroutine.status(t._.th) == 'normal' then
+        local status = coroutine.status(t._.th)
+        if status == 'normal' then
             -- cannot close now
             -- (emit continuation will raise error)
             t._.status = 'aborted'
+        elseif status == 'running' then
+            t._.status = 'aborted'
+            -- TODO
         else
             coroutine.close(t._.th)
         end
@@ -103,7 +107,7 @@ end
 local function task_resume_result (t, ok, err)
     if ok then
         -- no error: continue normally
-    elseif err == 'atm_aborted' then
+    elseif err == 'atm-aborted' then
         -- callee aborted from outside: continue normally
         coroutine.close(t._.th)   -- needs close bc t.th is in error state
     else
@@ -113,8 +117,9 @@ local function task_resume_result (t, ok, err)
     if coroutine.status(t._.th) == 'dead' then
         t._.ret = err
         t._.up._.gc = true
-        --if t.status ~= 'aborted' then
+        --if t._.status ~= 'aborted' then
             local up = _me_(false, t._.up)
+--print(debug.traceback())
             run.emit(false, up, t)
             if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
                 local up = _me_(false, t._.up._.up)
@@ -165,6 +170,7 @@ end
 
 local function tothrow (n, ...)
     local dbg = debug.getinfo(1+n)
+--print(n,...)
     local err = {
         _ = {
             dbg = { file=dbg.short_src, line=dbg.currentline },
@@ -215,41 +221,6 @@ function run.catch (...)
     end)(pcall(blk))
 end
 
-local function xpanic (err)
-    local str = ""
-    for i,e in ipairs(err) do
-        if i > 1 then
-            str = str .. ", "
-        end
-        str = str .. tostring(e) or ('('..type(e)..')')
-    end
-    io.stderr:write("==> ERROR:\n")
-
-    for i=#err._.pos, 1, -1 do
-        local t = err._.pos[i]
-        io.stderr:write(" |  ")
-        for j=1, #t do
-            local e = t[j]
-            io.stderr:write(e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg.. ")")
-            if j < #t then
-                io.stderr:write(" <- ")
-            end
-        end
-        io.stderr:write("\n")
-    end
-
-    io.stderr:write(" v  " .. err._.dbg.file .. ":" .. err._.dbg.line .. " (throw)")
-    for i=1, #err._.pre do
-        local e = err._.pre[i]
-        io.stderr:write(" <- ")
-        io.stderr:write(e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg .. ')')
-    end
-    io.stderr:write("\n")
-
-    io.stderr:write("==> " .. str .. '\n')
-    os.exit()
-end
-
 local function panic (err)
     local str = ""
     for i,e in ipairs(err) do
@@ -285,6 +256,11 @@ local function panic (err)
     return ret
 end
 
+local function xpanic (err)
+    io.stderr:write(panic(err))
+    os.exit()
+end
+
 local function xcall (n, stk, f, ...)
     return (function (ok, err, ...)
         if ok then
@@ -298,13 +274,23 @@ local function xcall (n, stk, f, ...)
                 local dbg = debug.getinfo(n+1)
                 local t = trace()
                 err._.pos[#err._.pos+1] = t
+--[[
+print(n+1)
+local dbg = debug.getinfo(1)
+print(stk, 1, dbg.short_src, dbg.currentline)
+local dbg = debug.getinfo(2)
+print(stk, 2, dbg.short_src, dbg.currentline)
+local dbg = debug.getinfo(3)
+print(stk, 3, dbg.short_src, dbg.currentline)
+local dbg = debug.getinfo(n+1)
+]]
                 table.insert(t, 1, {
                     msg = stk,
                     dbg = { file=dbg.short_src, line=dbg.currentline },
                 })
             end
             if run.me(true) == nil then
-                err = panic(err)
+                err = xpanic(err)
             end
         end
         error(err)
@@ -708,8 +694,14 @@ function run.emit (stk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
     local me = run.me(false)
+    if me and me._.status=='aborted' then
+        print('>>>', me._.th, stk, to, e, ...)
+    end
     local ret = xcall(2, stk and "emit", emit, time, fto(me,to), e, ...)
-    assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
+    if me and me._.status=='aborted' then
+        print('<<<', me._.th, stk, to, e, ...)
+    end
+    assertn(0, (not me) or me._.status~='aborted', 'atm-aborted')
     return ret
 end
 
