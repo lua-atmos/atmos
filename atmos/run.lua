@@ -37,16 +37,11 @@ local meta_task = {
         for _,dn in ipairs(t._.dns) do
             getmetatable(dn).__close(dn)
         end
-        local status = coroutine.status(t._.th)
-        if status == 'normal' then
-            -- cannot close now
-            -- (emit continuation will raise error)
-            t._.status = 'aborted'
-        elseif status == 'running' then
-            t._.status = 'aborted'
-            -- TODO
-        else
+        local st = coroutine.status(t._.th)
+        if st == 'suspended' then
             coroutine.close(t._.th)
+        elseif st ~= 'dead' then
+            t._.status = 'aborted'
         end
     end
 }
@@ -107,9 +102,12 @@ end
 local function task_resume_result (t, ok, err)
     if ok then
         -- no error: continue normally
-    elseif err == 'atm-aborted' then
-        -- callee aborted from outside: continue normally
-        coroutine.close(t._.th)   -- needs close bc t.th is in error state
+    elseif t._.status == 'aborted' then
+        -- t aborted from outside
+        -- close now and continue normally
+        -- could not close before b/c t was running
+        -- TODO: lua5.5
+        coroutine.close(t._.th)
     else
         error(err, 0)
     end
@@ -119,7 +117,6 @@ local function task_resume_result (t, ok, err)
         t._.up._.gc = true
         --if t._.status ~= 'aborted' then
             local up = _me_(false, t._.up)
---print(debug.traceback())
             run.emit(false, up, t)
             if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
                 local up = _me_(false, t._.up._.up)
@@ -693,15 +690,12 @@ end
 function run.emit (stk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
-    local me = run.me(false)
+    local ret = xcall(2, stk and "emit", emit, time, fto(run.me(false),to), e, ...)
+    local me = run.me(true)
     if me and me._.status=='aborted' then
-        print('>>>', me._.th, stk, to, e, ...)
+        -- TODO: lua5.5
+        coroutine.yield()   -- wait to be closed from outside
     end
-    local ret = xcall(2, stk and "emit", emit, time, fto(me,to), e, ...)
-    if me and me._.status=='aborted' then
-        print('<<<', me._.th, stk, to, e, ...)
-    end
-    assertn(0, (not me) or me._.status~='aborted', 'atm-aborted')
     return ret
 end
 
