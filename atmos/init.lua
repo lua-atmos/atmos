@@ -2,8 +2,9 @@ require "atmos.util"
 local run = require "atmos.run"
 
 local atmos = {
-    close = run.close,
-    call  = run.call,
+    close  = run.close,
+    call   = run.call,
+    status = run.status,
 }
 
 _is_  = run.is

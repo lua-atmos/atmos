@@ -97,6 +97,10 @@ function run.is (v, x)
     end
 end
 
+function run.status (t)
+    return coroutine.status(t._.th)
+end
+
 -------------------------------------------------------------------------------
 
 local function task_result (t, ok, err)
@@ -113,7 +117,7 @@ local function task_result (t, ok, err)
     end
 
     if coroutine.status(t._.th) == 'dead' then
-        t._.ret = err
+        t.ret = err
         t._.up._.gc = true
         --if t._.status ~= 'aborted' then
             local up = _me_(false, t._.up)
@@ -314,7 +318,7 @@ function run.call (env, body)
         end
         env.init(false)
         run.close()
-        return t._.ret
+        return t.ret
     end)
 end
 
@@ -394,7 +398,7 @@ end
 local function check_task_ret (t)
     if t.tag == '_==_' then
         if (getmetatable(t[1]) == meta_task) and (coroutine.status(t[1]._.th) == 'dead') then
-            return true, t[1]._.ret, t[1]
+            return true, t[1].ret, t[1]
         else
             return false
         end
@@ -471,7 +475,7 @@ local function check_ret (awt, ...)
             end
         end
         if getmetatable(e) == meta_task then
-            return true, e._.ret --, e
+            return true, e.ret --, e
         elseif getmetatable(e) == meta_tasks then
             -- invert ts,t -> t,ts
             return true, select(2,...), select(1,...), select(3,...)
