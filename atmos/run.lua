@@ -99,15 +99,15 @@ end
 
 -------------------------------------------------------------------------------
 
-local function task_resume_result (t, ok, err)
-    if ok then
-        -- no error: continue normally
-    elseif t._.status == 'aborted' then
+local function task_result (t, ok, err)
+    if t._.status == 'aborted' then
         -- t aborted from outside
         -- close now and continue normally
         -- could not close before b/c t was running
         -- TODO: lua5.5
         coroutine.close(t._.th)
+    elseif ok then
+        -- no error: continue normally
     else
         error(err, 0)
     end
@@ -167,7 +167,6 @@ end
 
 local function tothrow (n, ...)
     local dbg = debug.getinfo(1+n)
---print(n,...)
     local err = {
         _ = {
             dbg = { file=dbg.short_src, line=dbg.currentline },
@@ -287,7 +286,7 @@ local dbg = debug.getinfo(n+1)
                 })
             end
             if run.me(true) == nil then
-                err = xpanic(err)
+                err = panic(err)
             end
         end
         error(err)
@@ -386,7 +385,7 @@ function run.spawn (n, up, inv, t, ...)
     up._.dns[#up._.dns+1] = t
     t._.up = assert(t._.up==nil and up)
 
-    task_resume_result(t, coroutine.resume(t._.th, ...))
+    task_result(t, coroutine.resume(t._.th, ...))
     return t
 end
 
@@ -653,13 +652,9 @@ local function emit (time, t, ...)
         return ok, err
     end
 
-    --local chk = (t.tag=='task') and atm_task_awake_check(t,...)
-
     t._.ing = t._.ing + 1
     for i=1, #t._.dns do
         local dn = t._.dns[i]
-        --print(t, dn, i)
-        --f(dn, ...)
         ok, err = pcall(emit, time, dn, ...)
         if not ok then
             break
@@ -671,14 +666,13 @@ local function emit (time, t, ...)
 
     if getmetatable(t) == meta_task then
         if not ok then
---print('xxx', ok, err, ...)
             if coroutine.status(t._.th) == 'suspended' then
                 ok, err = coroutine.resume(t._.th, 'atm_error', err)
             end
             assertn(0, ok, err) -- TODO: error in defer?
         else
             if (t._.await.time < time) and (coroutine.status(t._.th) == 'suspended') then
-                task_resume_result(t, coroutine.resume(t._.th, nil, ...))
+                task_result(t, coroutine.resume(t._.th, nil, ...))
             end
         end
     else

@@ -735,6 +735,27 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "abort 3")
+    do
+        local _ <close> = spawn(function ()
+            local _ <close> = spawn(function ()
+                await(true)
+                local _ <close> = setmetatable({}, {__close=function ()
+                    print("1")
+                end})
+                emit_in("global", "")
+            end);
+            await(true)
+            print("0")
+        end)
+        emit("")
+        print("2")
+    end
+    assertx(out(), "0\n1\n2\n3\n5\n6\n7\n")
+    atmos.close()
+end
+
 print "--- ERRORS ---"
 
 do
