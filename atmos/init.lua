@@ -19,21 +19,21 @@ function task (inv, ...)
     if inv == nil then
         return run.me()
     elseif type(inv) == 'boolean' then
-        return run.task(1, inv, ...)
+        return run.task(debug.getinfo(2), inv, ...)
     else
-        return run.task(1, false, inv, ...)
+        return run.task(debug.getinfo(2), false, inv, ...)
     end
 end
 
 function spawn_in (up, t, ...)
-    return run.spawn(1, up, false, t, ...)
+    return run.spawn(debug.getinfo(2), up, false, t, ...)
 end
 
 function spawn (inv, t, ...)
     if type(inv) == 'boolean' then
-        return run.spawn(1, nil, inv, t, ...)
+        return run.spawn(debug.getinfo(2), nil, inv, t, ...)
     else
-        return run.spawn(1, nil, false, inv, t, ...)
+        return run.spawn(debug.getinfo(2), nil, false, inv, t, ...)
     end
 end
 
