@@ -83,6 +83,19 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "defer - throw 1")
+    local _,err = pcall(spawn, function ()
+        local _ <close> = defer(function ()
+            out("defer")
+        end)
+        error('ok')
+    end)
+    assertfx(err, "ok")
+    assertx(out(), "defer\n")
+    atmos.close()
+end
+
 print "--- THROW / CATCH ---"
 
 do
@@ -352,7 +365,7 @@ end
 do
     print("Testing...", "call 4: err")
     local _, err = pcall(function ()
-        local v = call({}, function ()
+        local v = call(nil, function ()
             throw 'X'
             return 1
         end)
@@ -438,7 +451,7 @@ end
 do
     print("Testing...", "throw 2")
     local _, err = pcall(function ()
-        call({}, function ()
+        call(nil, function ()
             spawn(function ()
                 spawn(function ()
                     await(spawn(function ()
@@ -501,7 +514,7 @@ do
             end)
         end
 
-        call({}, function ()
+        call(nil, function ()
             spawn(function ()
                 local ok, err = catch('Y', function ()
                     spawn(T)

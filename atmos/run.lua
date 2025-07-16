@@ -113,6 +113,7 @@ local function task_result (t, ok, err)
     elseif ok then
         -- no error: continue normally
     else
+        coroutine.close(t._.th)
         error(err, 0)
     end
 
@@ -255,10 +256,12 @@ local function panic (err)
     return ret
 end
 
+--[[
 local function xpanic (err)
     io.stderr:write(panic(err))
     os.exit()
 end
+]]
 
 local function xcall (dbg, stk, f, ...)
     return (function (ok, err, ...)
@@ -291,8 +294,12 @@ function run.call (env, body)
     assertn(2, type(env) == 'table', "invalid call : expected environment table")
     assertn(2, type(body) == 'function', "invalid call : expected body function")
     return xcall(debug.getinfo(2), "call", function ()
-        local t <close> = run.spawn(debug.getinfo(4), nil, false, body)
+        local _ <close> = run.defer(function ()
+            env.init(false)
+            run.close()
+        end)
         env.init(true)
+        local t <close> = run.spawn(debug.getinfo(4), nil, false, body)
         if env.loop then
             env.loop()
         else
@@ -305,8 +312,6 @@ function run.call (env, body)
                 end
             end
         end
-        env.init(false)
-        run.close()
         return t.ret
     end)
 end

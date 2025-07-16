@@ -44,7 +44,7 @@ do
     print("Testing...", "throw 2")
     local out = exec [[
         local _, err = pcall(function ()
-            call({}, function ()
+            call(nil, function ()
                 spawn(function ()
                     spawn(function ()
                         await(spawn(function ()
@@ -71,7 +71,7 @@ end
 do
     print("Testing...", "throw 3")
     local out = exec [[
-        local _, err = pcall(function () call({}, function ()
+        local _, err = pcall(function () call(nil, function ()
             spawn(function ()
                 spawn(true,function ()
                     await(spawn(function ()
@@ -109,7 +109,7 @@ do
             end)
         end
 
-        call({}, function ()  
+        call(nil, function ()
             spawn(function ()
                 local ok, err = catch('Y', function ()
                     spawn(T)
@@ -170,7 +170,7 @@ do
     print("Testing...", "error 1")
     local out = exec [[
         local _, err = pcall(function ()
-            call({}, function ()
+            call(nil, function ()
                 local x = 1 + true
             end)
         end)
@@ -188,7 +188,7 @@ do
     print("Testing...", "tasks 2")
     local out = exec [[
         local _, err = pcall(function ()
-            call({}, function ()
+            call(nil, function ()
                 local x = 1 + true
             end)
         end)

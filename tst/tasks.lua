@@ -199,7 +199,7 @@ do
     print "TODO: error w/o throw"
     print("Testing...", "error 1")
     local _, err = pcall(function ()
-        call({}, function ()
+        call(nil, function ()
             local x = 1 + true
         end)
     end)
@@ -214,7 +214,7 @@ end
 do
     print("Testing...", "tasks 2")
     local _, err = pcall(function ()
-        call({}, function ()
+        call(nil, function ()
             local x = 1 + true
         end)
     end)
