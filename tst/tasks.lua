@@ -207,7 +207,7 @@ do
         ==> ERROR:
          |  tasks.lua:%d+ %(call%)
          v  tasks.lua:%d+ %(throw%)
-        ==> tasks.lua:%d+: attempt to perform arithmetic on a boolean value
+        ==> attempt to perform arithmetic on a boolean value
     ]])
 end
 
@@ -222,6 +222,6 @@ do
         ==> ERROR:
          |  tasks.lua:%d+ %(call%)
          v  tasks.lua:%d+ %(throw%)
-        ==> tasks.lua:%d+: attempt to perform arithmetic on a boolean value
+        ==> attempt to perform arithmetic on a boolean value
     ]])
 end

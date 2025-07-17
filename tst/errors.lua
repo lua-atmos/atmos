@@ -14,6 +14,42 @@ function exec (src)
 end
 
 do
+    print("Testing...", "error 1")
+    local out = exec [[
+        local _, err = pcall(function ()
+            call(nil,function ()
+                error 'OK'
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (call)
+         v  /tmp/err.lua:3 (throw)
+        ==> OK
+    ]])
+end
+
+do
+    print("Testing...", "error 2")
+    local out = exec [[
+        local _, err = pcall(function ()
+            call(nil,function ()
+                print(1 + true)
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (call)
+         v  /tmp/err.lua:3 (throw)
+        ==> attempt to perform arithmetic on a boolean value
+    ]])
+end
+
+do
     print("Testing...", "throw 1")
     local out = exec [[
         local _, err = pcall(function ()
@@ -179,8 +215,8 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
         |  /tmp/err.lua:2 (call)
-        v  /tmp/err.lua:2 (throw)
-        ==> /tmp/err.lua:3: attempt to perform arithmetic on a boolean value
+        v  /tmp/err.lua:3 (throw)
+        ==> attempt to perform arithmetic on a boolean value
     ]])
 end
 
@@ -197,7 +233,7 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
         |  /tmp/err.lua:2 (call)
-        v  /tmp/err.lua:2 (throw)
-        ==> /tmp/err.lua:3: attempt to perform arithmetic on a boolean value
+        v  /tmp/err.lua:3 (throw)
+        ==> attempt to perform arithmetic on a boolean value
     ]])
 end

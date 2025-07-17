@@ -221,7 +221,7 @@ function run.catch (...)
     end)(pcall(blk))
 end
 
-local function panic (err)
+local function flatten (err)
     local str = ""
     for i,e in ipairs(err) do
         if i > 1 then
@@ -256,21 +256,29 @@ local function panic (err)
     return ret
 end
 
---[[
-local function xpanic (err)
-    io.stderr:write(panic(err))
-    os.exit()
-end
-]]
-
 local function xcall (dbg, stk, f, ...)
     return (function (ok, err, ...)
         if ok then
             return err, ...
         end
+
+        if type(err)=='string' and string.match(err, '^==> ERROR:') then
+            -- already flatten
+            error(err, 0)
+        end
+
         if stk then
             if (getmetatable(err) ~= meta_throw) then
-                err = tothrow(dbg, err)
+                local file, line, msg = string.match(err, '(.-):(%d-): (.*)')
+                err = {
+                    _ = {
+                        dbg = { file=file, line=line },
+                        pre = trace(),
+                        pos = {},
+                    },
+                    msg
+                }
+                err = setmetatable(err, meta_throw)
             end
             if getmetatable(err) == meta_throw then
                 local dbg = dbg
@@ -281,11 +289,12 @@ local function xcall (dbg, stk, f, ...)
                     dbg = { file=dbg.short_src, line=dbg.currentline },
                 })
             end
-            if run.me(true) == nil then
-                err = panic(err)
-            end
+        end
+        if run.me(true) == nil then
+            err = flatten(err)
         end
         error(err, 0)
+
     end)(pcall(f, ...))
 end
 
