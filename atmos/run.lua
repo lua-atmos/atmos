@@ -272,11 +272,11 @@ local function xcall (dbg, stk, f, ...)
                 local file, line, msg = string.match(err, '(.-):(%d-): (.*)')
                 err = {
                     _ = {
-                        dbg = { file=file, line=line },
+                        dbg = { file=file or '?', line=line or '?' },
                         pre = trace(),
                         pos = {},
                     },
-                    msg
+                    msg or err
                 }
                 err = setmetatable(err, meta_throw)
             end
@@ -381,8 +381,8 @@ function run.spawn (dbg, up, inv, t, ...)
             return run.spawn(dbg, up, inv, t, ...)
         end
     end
-    assertn(3, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
-    assertn(3, t._.inv == inv, "invalid spawn : invisible modifier mismatch")
+    assertn(2, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
+    assertn(2, t._.inv == inv, "invalid spawn : invisible modifier mismatch")
 
     up = up or run.me(true) or TASKS
     if up._.max and #up._.dns>=up._.max then
