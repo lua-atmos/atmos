@@ -14,9 +14,45 @@ function exec (src)
 end
 
 do
+    print("Testing...", "error 1")
+    local out = exec [[
+        local _, err = pcall(function ()
+            call(nil,function ()
+                error 'OK'
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (call)
+         v  /tmp/err.lua:3 (throw)
+        ==> OK
+    ]])
+end
+
+do
+    print("Testing...", "error 2")
+    local out = exec [[
+        local _, err = pcall(function ()
+            call(nil,function ()
+                print(1 + true)
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (call)
+         v  /tmp/err.lua:3 (throw)
+        ==> attempt to perform arithmetic on a boolean value
+    ]])
+end
+
+do
     print("Testing...", "throw 1")
     local out = exec [[
-        do
+        local _, err = pcall(function ()
             spawn(function ()
                 local x,y,z = catch('Z', function ()
                     spawn (function ()
@@ -29,7 +65,8 @@ do
             end)
             emit()
             out('ok')
-        end
+        end)
+        print(err)
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
@@ -42,24 +79,27 @@ end
 do
     print("Testing...", "throw 2")
     local out = exec [[
-        call({}, function ()
-            spawn(function ()
+        local _, err = pcall(function ()
+            call(nil, function ()
                 spawn(function ()
-                    await(spawn(function ()
-                        await(true)
-                    end))
-                    throw "OK"
+                    spawn(function ()
+                        await(spawn(function ()
+                            await(true)
+                        end))
+                        throw "OK"
+                    end)
+                    await(false)
                 end)
-                await(false)
+                emit('X')
             end)
-            emit('X')
         end)
+        print(err)
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-         |  /tmp/err.lua:1 (call)
-         |  /tmp/err.lua:11 (emit) <- /tmp/err.lua:1 (task)
-         v  /tmp/err.lua:7 (throw) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task) <- /tmp/err.lua:1 (task)
+         |  /tmp/err.lua:2 (call)
+         |  /tmp/err.lua:12 (emit) <- /tmp/err.lua:2 (task)
+         v  /tmp/err.lua:8 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
         ==> OK
     ]])
 end
@@ -67,7 +107,7 @@ end
 do
     print("Testing...", "throw 3")
     local out = exec [[
-        call({}, function ()
+        local _, err = pcall(function () call(nil, function ()
             spawn(function ()
                 spawn(true,function ()
                     await(spawn(function ()
@@ -82,7 +122,8 @@ do
                 await(false)
             end)
             emit('X')
-        end)
+        end) end)
+        print(err)
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
@@ -98,20 +139,21 @@ do
     print("Testing...", "throw 4")
 
     local out = exec [[
-        function T ()
+        local _, err = pcall(function () function T ()
             spawn (function ()
                 throw 'X'
             end)
         end
 
-        call({}, function ()  
+        call(nil, function ()
             spawn(function ()
                 local ok, err = catch('Y', function ()
                     spawn(T)
                 end)
                 print(ok, err)
             end)
-        end)  
+        end) end)
+        print(err)
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
@@ -124,7 +166,7 @@ end
 do
     print("Testing...", "tasks 1")
     local out = exec [[
-        function T ()
+        local _, err = pcall(function () function T ()
             await(spawn(function ()
                 await('Y')
             end))
@@ -147,7 +189,8 @@ do
             end)
             await(false)
         end)
-        emit('X')
+        emit('X') end)
+        print(err)
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
@@ -162,29 +205,35 @@ do
     print "TODO: error w/o throw"
     print("Testing...", "error 1")
     local out = exec [[
-        call({}, function ()
-            local x = 1 + true
+        local _, err = pcall(function ()
+            call(nil, function ()
+                local x = 1 + true
+            end)
         end)
+        print(err)
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-        |  /tmp/err.lua:1 (call)
-        v  /tmp/err.lua:1 (throw)
-        ==> /tmp/err.lua:2: attempt to perform arithmetic on a boolean value
+        |  /tmp/err.lua:2 (call)
+        v  /tmp/err.lua:3 (throw)
+        ==> attempt to perform arithmetic on a boolean value
     ]])
 end
 
 do
     print("Testing...", "tasks 2")
     local out = exec [[
-        call({}, function ()
-            local x = 1 + true
+        local _, err = pcall(function ()
+            call(nil, function ()
+                local x = 1 + true
+            end)
         end)
+        print(err)
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-        |  /tmp/err.lua:1 (call)
-        v  /tmp/err.lua:1 (throw)
-        ==> /tmp/err.lua:2: attempt to perform arithmetic on a boolean value
+        |  /tmp/err.lua:2 (call)
+        v  /tmp/err.lua:3 (throw)
+        ==> attempt to perform arithmetic on a boolean value
     ]])
 end

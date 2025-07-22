@@ -37,12 +37,11 @@ local meta_task = {
         for _,dn in ipairs(t._.dns) do
             getmetatable(dn).__close(dn)
         end
-        if coroutine.status(t._.co) == 'normal' then
-            -- cannot close now
-            -- (emit continuation will raise error)
+        local st = coroutine.status(t._.th)
+        if st == 'suspended' then
+            coroutine.close(t._.th)
+        elseif st ~= 'dead' then
             t._.status = 'aborted'
-        else
-            coroutine.close(t._.co)
         end
     end
 }
@@ -73,26 +72,55 @@ local function _me_ (inv, t)
 end
 
 function run.me (inv)
-    local co = coroutine.running()
-    return co and TASKS._.cache[co] and _me_(inv, TASKS._.cache[co])
+    local th = coroutine.running()
+    return th and TASKS._.cache[th] and _me_(inv, TASKS._.cache[th])
+end
+
+function run.is (v, x)
+    if v == x then
+        return true
+    end
+    local tp = type(v)
+    local mt = getmetatable(v)
+    if tp == x then
+        return true
+    elseif tp=='string' and type(x)=='string' then
+        return (string.find(v, '^'..x) == 1)
+    elseif mt==meta_task and x=='task' then
+        return true
+    elseif mt==meta_tasks and x=='tasks' then
+        return true
+    elseif tp=='table' and type(x)=='string' then
+        return (string.find(v.tag or '', '^'..x) == 1)
+    else
+        return false
+    end
+end
+
+function run.status (t)
+    return coroutine.status(t._.th)
 end
 
 -------------------------------------------------------------------------------
 
-local function task_resume_result (t, ok, err)
-    if ok then
+local function task_result (t, ok, err)
+    if t._.status == 'aborted' then
+        -- t aborted from outside
+        -- close now and continue normally
+        -- could not close before b/c t was running
+        -- TODO: lua5.5
+        coroutine.close(t._.th)
+    elseif ok then
         -- no error: continue normally
-    elseif err == 'atm_aborted' then
-        -- callee aborted from outside: continue normally
-        coroutine.close(t._.co)   -- needs close bc t.co is in error state
     else
+        coroutine.close(t._.th)
         error(err, 0)
     end
 
-    if coroutine.status(t._.co) == 'dead' then
-        t._.ret = err
+    if coroutine.status(t._.th) == 'dead' then
+        t.ret = err
         t._.up._.gc = true
-        --if t.status ~= 'aborted' then
+        --if t._.status ~= 'aborted' then
             local up = _me_(false, t._.up)
             run.emit(false, up, t)
             if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
@@ -109,7 +137,7 @@ task_gc = function (t)
         t._.gc = false
         for i=#t._.dns, 1, -1 do
             local s = t._.dns[i]
-            if getmetatable(s)==meta_task and coroutine.status(s._.co)=='dead' then
+            if getmetatable(s)==meta_task and coroutine.status(s._.th)=='dead' then
                 table.remove(t._.dns, i)
             end
         end
@@ -142,8 +170,7 @@ local function trace ()
     return ret
 end
 
-local function tothrow (n, ...)
-    local dbg = debug.getinfo(1+n)
+local function tothrow (dbg, ...)
     local err = {
         _ = {
             dbg = { file=dbg.short_src, line=dbg.currentline },
@@ -156,20 +183,37 @@ local function tothrow (n, ...)
 end
 
 function run.throw (...)
-    return error(tothrow(2,...))
+    return error(tothrow(debug.getinfo(2),...))
 end
 
-function run.catch (e, blk)
+function run.catch (...)
+    local cnd = { ... }
+    local blk = table.remove(cnd, #cnd)
     return (function (ok, err, ...)
         if ok then
             return ok,err,...
         elseif getmetatable(err) == meta_throw then
-            if e == false then
+            local X = cnd[1]
+            if false then
+            elseif X == false then
                 error(err, 0)
-            elseif e==true or err[1]==e then
+            elseif X == true then
                 return false, table.unpack(err)
+            elseif type(X) == 'function' then
+                return (function (ok, ...)
+                    if ok then
+                        return false, ...
+                    else
+                        error(err, 0)
+                    end
+                end)(X(table.unpack(err)))
             else
-                error(err, 0)
+                for i=1, #cnd do
+                    if not run.is(err[i],cnd[i]) then
+                        error(err, 0)
+                    end
+                end
+                return false, table.unpack(err)
             end
         else
              error(err, 0)
@@ -177,7 +221,7 @@ function run.catch (e, blk)
     end)(pcall(blk))
 end
 
-local function panic (err)
+local function flatten (err)
     local str = ""
     for i,e in ipairs(err) do
         if i > 1 then
@@ -185,44 +229,59 @@ local function panic (err)
         end
         str = str .. tostring(e) or ('('..type(e)..')')
     end
-    io.stderr:write("==> ERROR:\n")
+    local ret = "==> ERROR:\n"
 
     for i=#err._.pos, 1, -1 do
         local t = err._.pos[i]
-        io.stderr:write(" |  ")
+        ret = ret .. " |  "
         for j=1, #t do
             local e = t[j]
-            io.stderr:write(e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg.. ")")
+            ret = ret .. e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg.. ")"
             if j < #t then
-                io.stderr:write(" <- ")
+                ret = ret .. " <- "
             end
         end
-        io.stderr:write("\n")
+        ret = ret .. "\n"
     end
 
-    io.stderr:write(" v  " .. err._.dbg.file .. ":" .. err._.dbg.line .. " (throw)")
+    ret = ret .. " v  " .. err._.dbg.file .. ":" .. err._.dbg.line .. " (throw)"
     for i=1, #err._.pre do
         local e = err._.pre[i]
-        io.stderr:write(" <- ")
-        io.stderr:write(e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg .. ')')
+        ret = ret .. " <- "
+        ret = ret .. e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg .. ')'
     end
-    io.stderr:write("\n")
+    ret = ret .. "\n"
 
-    io.stderr:write("==> " .. str .. '\n')
-    os.exit()
+    ret = ret .. "==> " .. str .. '\n'
+    return ret
 end
 
-local function xcall (n, stk, f, ...)
+local function xcall (dbg, stk, f, ...)
     return (function (ok, err, ...)
         if ok then
             return err, ...
         end
+
+        if type(err)=='string' and string.match(err, '^==> ERROR:') then
+            -- already flatten
+            error(err, 0)
+        end
+
         if stk then
             if (getmetatable(err) ~= meta_throw) then
-                err = tothrow(n+1, err)
+                local file, line, msg = string.match(err, '(.-):(%d-): (.*)')
+                err = {
+                    _ = {
+                        dbg = { file=file or '?', line=line or '?' },
+                        pre = trace(),
+                        pos = {},
+                    },
+                    msg or err
+                }
+                err = setmetatable(err, meta_throw)
             end
             if getmetatable(err) == meta_throw then
-                local dbg = debug.getinfo(n+1)
+                local dbg = dbg
                 local t = trace()
                 err._.pos[#err._.pos+1] = t
                 table.insert(t, 1, {
@@ -230,11 +289,12 @@ local function xcall (n, stk, f, ...)
                     dbg = { file=dbg.short_src, line=dbg.currentline },
                 })
             end
-            if run.me(true) == nil then
-                panic(err)
-            end
         end
-        error(err)
+        if run.me(true) == nil then
+            err = flatten(err)
+        end
+        error(err, 0)
+
     end)(pcall(f, ...))
 end
 
@@ -242,14 +302,18 @@ function run.call (env, body)
     env = env or { init=function()end, step=function()end }
     assertn(2, type(env) == 'table', "invalid call : expected environment table")
     assertn(2, type(body) == 'function', "invalid call : expected body function")
-    return xcall(1, "call", function ()
-        local t <close> = run.spawn(4, nil, false, body)
+    return xcall(debug.getinfo(2), "call", function ()
+        local _ <close> = run.defer(function ()
+            env.init(false)
+            run.close()
+        end)
         env.init(true)
+        local t <close> = run.spawn(debug.getinfo(4), nil, false, body)
         if env.loop then
             env.loop()
         else
             while true do
-                if coroutine.status(t._.co) == 'dead' then
+                if coroutine.status(t._.th) == 'dead' then
                     break
                 end
                 if env.step() then
@@ -257,9 +321,7 @@ function run.call (env, body)
                 end
             end
         end
-        env.init(false)
-        run.close()
-        return t._.ret
+        return t.ret
     end)
 end
 
@@ -286,9 +348,8 @@ function run.tasks (max)
     return ts
 end
 
-function run.task (n, inv, f)
+function run.task (dbg, inv, f)
     assertn(3, type(f)=='function', "invalid task : expected function")
-    local dbg = debug.getinfo(n+1)
     local t = {
         _ = {
             up  = nil,
@@ -297,7 +358,7 @@ function run.task (n, inv, f)
             gc  = false,
             dbg = {file=dbg.short_src, line=dbg.currentline},
             ---
-            co  = coroutine.create(f),
+            th  = coroutine.create(f),
             inv = inv,
             status = nil, -- aborted, toggled
             await = {
@@ -306,21 +367,22 @@ function run.task (n, inv, f)
             ret = nil,
         }
     }
-    TASKS._.cache[t._.co] = t
+    TASKS._.cache[t._.th] = t
     setmetatable(t, meta_task)
     return t
 end
 
-function run.spawn (n, up, inv, t, ...)
+function run.spawn (dbg, up, inv, t, ...)
     if type(t) == 'function' then
-        t = run.task(n+1, inv, t)
+        t = run.task(dbg, inv, t)
         if t == nil then
             return nil
         else
-            return run.spawn(n, up, inv, t, ...)
+            return run.spawn(dbg, up, inv, t, ...)
         end
     end
-    assertn(3, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
+    assertn(2, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
+    assertn(2, t._.inv == inv, "invalid spawn : invisible modifier mismatch")
 
     up = up or run.me(true) or TASKS
     if up._.max and #up._.dns>=up._.max then
@@ -329,7 +391,7 @@ function run.spawn (n, up, inv, t, ...)
     up._.dns[#up._.dns+1] = t
     t._.up = assert(t._.up==nil and up)
 
-    task_resume_result(t, coroutine.resume(t._.co, ...))
+    task_result(t, coroutine.resume(t._.th, ...))
     return t
 end
 
@@ -337,8 +399,8 @@ end
 
 local function check_task_ret (t)
     if t.tag == '_==_' then
-        if (getmetatable(t[1]) == meta_task) and (coroutine.status(t[1]._.co) == 'dead') then
-            return true, t[1]._.ret, t[1]
+        if (getmetatable(t[1]) == meta_task) and (coroutine.status(t[1]._.th) == 'dead') then
+            return true, t[1].ret, t[1]
         else
             return false
         end
@@ -370,6 +432,7 @@ local function check_task_ret (t)
 end
 
 local function check_ret (awt, ...)
+    -- awt = await pattern | ... = occurring event arguments
     local e = awt[1]
     local mt = getmetatable(...)
     if awt.tag == '_or_' then
@@ -415,7 +478,7 @@ local function check_ret (awt, ...)
             end
         end
         if getmetatable(e) == meta_task then
-            return true, e._.ret --, e
+            return true, e.ret --, e
         elseif getmetatable(e) == meta_tasks then
             -- invert ts,t -> t,ts
             return true, select(2,...), select(1,...), select(3,...)
@@ -423,7 +486,14 @@ local function check_ret (awt, ...)
             return true, ...
         end
     elseif awt.tag == 'function' then
-        return e(...)
+        local es = { ... }
+        return (function (v, ...)
+            if select('#',...) == 0 then
+                return v, table.unpack(es)
+            else
+                return v, ...
+            end
+        end)(e(...))
     else
         return false
     end
@@ -589,13 +659,9 @@ local function emit (time, t, ...)
         return ok, err
     end
 
-    --local chk = (t.tag=='task') and atm_task_awake_check(t,...)
-
     t._.ing = t._.ing + 1
     for i=1, #t._.dns do
         local dn = t._.dns[i]
-        --print(t, dn, i)
-        --f(dn, ...)
         ok, err = pcall(emit, time, dn, ...)
         if not ok then
             break
@@ -607,14 +673,13 @@ local function emit (time, t, ...)
 
     if getmetatable(t) == meta_task then
         if not ok then
---print('xxx', ok, err, ...)
-            if coroutine.status(t._.co) == 'suspended' then
-                ok, err = coroutine.resume(t._.co, 'atm_error', err)
+            if coroutine.status(t._.th) == 'suspended' then
+                ok, err = coroutine.resume(t._.th, 'atm_error', err)
             end
             assertn(0, ok, err) -- TODO: error in defer?
         else
-            if (t._.await.time < time) and (coroutine.status(t._.co) == 'suspended') then
-                task_resume_result(t, coroutine.resume(t._.co, nil, ...))
+            if (t._.await.time < time) and (coroutine.status(t._.th) == 'suspended') then
+                task_result(t, coroutine.resume(t._.th, nil, ...))
             end
         end
     else
@@ -626,9 +691,12 @@ end
 function run.emit (stk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
-    local me = run.me(false)
-    local ret = xcall(2, stk and "emit", emit, time, fto(me,to), e, ...)
-    assertn(0, (not me) or me._.status~='aborted', 'atm_aborted')
+    local ret = xcall(debug.getinfo(2), stk and "emit", emit, time, fto(run.me(false),to), e, ...)
+    local me = run.me(true)
+    if me and me._.status=='aborted' then
+        -- TODO: lua5.5
+        coroutine.yield()   -- wait to be closed from outside
+    end
     return ret
 end
 
@@ -639,8 +707,8 @@ function run.toggle (t, on)
         local e, f = t, on
         assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
         do
-            local t <close> = run.spawn(2, nil, true, f)
-            local _ <close> = run.spawn(2, nil, true, function ()
+            local t <close> = run.spawn(debug.getinfo(2), nil, true, f)
+            local _ <close> = run.spawn(debug.getinfo(2), nil, true, function ()
                 while true do
                     run.await(e, false)
                     run.toggle(t, false)
@@ -659,7 +727,7 @@ function run.toggle (t, on)
         assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
         t._.status = nil
     else
-        assertn(2, t._.status==nil --[[and coroutine.status(t._.co)=='suspended']],
+        assertn(2, t._.status==nil --[[and coroutine.status(t._.th)=='suspended']],
             "invalid toggle : expected awaiting task")
         t._.status = 'toggled'
     end
@@ -689,7 +757,7 @@ function run.par (...)
     local ts <close> = setmetatable({ ... }, meta_par)
     for i,f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par : expected task prototype")
-        ts[i] = run.spawn(2, nil, true, select(i,...))
+        ts[i] = run.spawn(debug.getinfo(2), nil, true, select(i,...))
     end
     run.await(false)
 end
@@ -699,7 +767,7 @@ function run.par_or (...)
     local ts <close> = setmetatable({ ... }, meta_par)
     for i,f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = run.spawn(2, nil, true, f)
+        ts[i] = run.spawn(debug.getinfo(2), nil, true, f)
     end
     return run.await(run._or_(table.unpack(ts)))
 end
@@ -709,7 +777,7 @@ function run.par_and (...)
     local ts <close> = setmetatable({ ... }, meta_par)
     for i,f in ipairs(ts) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = run.spawn(2, nil, true, f)
+        ts[i] = run.spawn(debug.getinfo(2), nil, true, f)
     end
     return run.await(run._and_(table.unpack(ts)))
 end
@@ -719,7 +787,7 @@ function run.watching (...)
     local t = { ... }
     local f = table.remove(t, #t)
     assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
-    local spw <close> = run.spawn(2, nil, true, f)
+    local spw <close> = run.spawn(debug.getinfo(2), nil, true, f)
     return run.await(run._or_({table.unpack(t)}, spw))
 end
 

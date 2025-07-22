@@ -14,7 +14,7 @@ do
     local _,err = pcall(function ()
         local ts = tasks(true)
     end)
-    assertfx(err, "tasks.lua:15: invalid tasks limit : expected number")
+    assertfx(err, "tasks.lua:%d+: invalid tasks limit : expected number")
     atmos.close()
 end
 
@@ -154,4 +154,74 @@ do
     end
     assertx(out(), "t2\n")
     atmos.close()
+end
+
+print "--- ERROR ---"
+
+do
+    print("Testing...", "error 1")
+    local _, err = pcall(function ()
+        function T ()
+            await(spawn(function ()
+                await('Y')
+            end))
+            local function f ()
+                throw 'OK'
+            end
+            f()
+            --error "OK"
+            --throw "OK"
+        end
+        spawn(function ()
+            local ts = tasks()
+            spawn(true,function ()
+                spawn_in(ts, T)
+                await(false)
+            end)
+            spawn(true,function ()
+                await('X')
+                emit('Y')
+            end)
+            await(false)
+        end)
+        emit('X')
+    end)
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  tasks.lua:%d+ %(emit%)
+         |  tasks.lua:%d+ %(emit%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(task%)
+         v  tasks.lua:%d+ %(throw%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(tasks%) <%- tasks.lua:%d+ %(task%)
+        ==> OK
+    ]])
+end
+
+do
+    print "TODO: error w/o throw"
+    print("Testing...", "error 1")
+    local _, err = pcall(function ()
+        call(nil, function ()
+            local x = 1 + true
+        end)
+    end)
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  tasks.lua:%d+ %(call%)
+         v  tasks.lua:%d+ %(throw%)
+        ==> attempt to perform arithmetic on a boolean value
+    ]])
+end
+
+do
+    print("Testing...", "tasks 2")
+    local _, err = pcall(function ()
+        call(nil, function ()
+            local x = 1 + true
+        end)
+    end)
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  tasks.lua:%d+ %(call%)
+         v  tasks.lua:%d+ %(throw%)
+        ==> attempt to perform arithmetic on a boolean value
+    ]])
 end

@@ -83,6 +83,19 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "defer - throw 1")
+    local _,err = pcall(spawn, function ()
+        local _ <close> = defer(function ()
+            out("defer")
+        end)
+        error('ok')
+    end)
+    assertfx(err, "ok")
+    assertx(out(), "defer\n")
+    atmos.close()
+end
+
 print "--- THROW / CATCH ---"
 
 do
@@ -222,7 +235,85 @@ do
     atmos.close()
 end
 
-print "-=- TASK -=-"
+do
+    print("Testing...", "catch 10")
+    local ok,v = catch(function() return true end, function ()
+        out(1)
+        catch ('X', function ()
+            out(2)
+            throw()
+            out(3)
+        end)
+        out(4)
+    end)
+    out(ok,v)
+    assertx(out(), "1\n2\nfalse\tnil\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "catch 11")
+    local ok,v = catch(function(a,b) if a=='X' then return true,b end end, function ()
+        out(1)
+        catch (function () return false end, function ()
+            out(2)
+            throw('X','Y')
+            out(3)
+        end)
+        out(4)
+    end)
+    out(ok,v)
+    assertx(out(), "1\n2\nfalse\tY\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "catch 12: multi val")
+    local ok,x,y,z = catch('X','Y', function ()
+        out(1)
+        catch ('X','Z', function ()
+            out(2)
+            throw('X','Y')
+            out(3)
+        end)
+        out(4)
+    end)
+    out(ok,x,y,z)
+    assertx(out(), "1\n2\nfalse\tX\tY\tnil\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "catch 13: tag is")
+    local ok,x = catch('X', function ()
+        throw { tag='X' }
+    end)
+    out(ok, type(x), x.tag)
+    assertx(out(), "false\ttable\tX\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "catch 14")
+    local _, err = pcall(function ()
+        call(nil, function ()
+            catch('X', function ()
+                catch('Y', function ()
+                    throw 'Z'
+                end)
+            end)
+        end)
+    end)
+    atmos.close()
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  others.lua:%d+ %(call%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%)
+        ==> Z
+    ]])
+end
+
+print "--- TASK ---"
 
 do
     print("Testing...", "task 1")
@@ -261,7 +352,7 @@ do
     atmos.close()
 end
 
-print "-=- CALL -=-"
+print "--- CALL ---"
 
 do
     print("Testing...", "call 1")
@@ -291,48 +382,171 @@ do
     atmos.close()
 end
 
---[[
 do
     print("Testing...", "call 4: err")
-    do
-        local v = call({}, function ()
+    local _, err = pcall(function ()
+        local v = call(nil, function ()
             throw 'X'
             return 1
         end)
         out(v)
-    end
-    assertx(out(), "1\n")
+    end)
     atmos.close()
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  others.lua:%d+ %(call%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%)
+        ==> X
+    ]])
 end
 
 do
     print("Testing...", "call 5: err")
-    do
+    local _, err = pcall(function ()
         local function step ()
             emit 'X'
         end
-        local v = call({step}, function ()
+        local v = call({init=function()end,step=step}, function ()
             await 'X'
             throw 'X'
         end)
         out(v)
-    end
-    assertx(out(), "1\n")
+    end)
     atmos.close()
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  others.lua:%d+ %(emit%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%)
+        ==> X
+    ]])
 end
 
 do
     print("Testing...", "call 6: err")
-    do
+    local _, err = pcall(function ()
         local function step ()
             throw 'X'
         end
-        local v = call({step}, function ()
+        local v = call({init=function()end,step=step}, function ()
             await 'X'
         end)
         out(v)
-    end
-    assertx(out(), "1\n")
+    end)
     atmos.close()
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  others.lua:%d+ %(call%)
+         v  others.lua:%d+ %(throw%)
+        ==> X
+    ]])
 end
-]]
+
+print "--- THROW / ERROR ---"
+
+do
+    print("Testing...", "throw 1")
+    local _, err = pcall(function ()
+        spawn(function ()
+            local x,y,z = catch('Z', function ()
+                spawn (function ()
+                    await(true)
+                    throw('X',10)
+                end)
+                await(false)
+            end)
+            out(x, y, z)
+        end)
+        emit()
+        out('ok')
+    end)
+    atmos.close()
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  others.lua:%d+ %(emit%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
+        ==> X, 10
+    ]])
+end
+
+do
+    print("Testing...", "throw 2")
+    local _, err = pcall(function ()
+        call(nil, function ()
+            spawn(function ()
+                spawn(function ()
+                    await(spawn(function ()
+                        await(true)
+                    end))
+                    throw "OK"
+                end)
+                await(false)
+            end)
+            emit('X')
+        end)
+    end)
+    atmos.close()
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  others.lua:%d+ %(call%)
+         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
+        ==> OK
+    ]])
+end
+
+do
+    print("Testing...", "throw 3")
+    local _, err = pcall(function ()
+        call(nil, function ()
+            spawn(function ()
+                spawn(true,function ()
+                    await(spawn(function ()
+                        await('Y')
+                    end))
+                    throw "OK"
+                end)
+                spawn(true,function ()
+                    await('X')
+                    emit('Y')
+                end)
+                await(false)
+            end)
+            emit('X')
+        end)
+    end)
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  others.lua:%d+ %(call%)
+         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%)
+         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
+        ==> OK
+    ]])
+end
+
+do
+    print("Testing...", "throw 4")
+
+    local _, err = pcall(function ()
+        function T ()
+            spawn (function ()
+                throw 'X'
+            end)
+        end
+
+        call(nil, function ()
+            spawn(function ()
+                local ok, err = catch('Y', function ()
+                    spawn(T)
+                end)
+                print(ok, err)
+            end)
+        end)
+    end)
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  others.lua:%d+ %(call%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
+        ==> X
+    ]])
+end

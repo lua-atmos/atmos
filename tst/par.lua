@@ -264,7 +264,7 @@ do
                 return 'Y'
             end
         )
-        out(v._.ret)
+        out(v.ret)
     end)
     emit 'X'
     assertfx(out(), "Y\n")
