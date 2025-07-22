@@ -293,6 +293,26 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "catch 14")
+    local _, err = pcall(function ()
+        call(nil, function ()
+            catch('X', function ()
+                catch('Y', function ()
+                    throw 'Z'
+                end)
+            end)
+        end)
+    end)
+    atmos.close()
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  others.lua:%d+ %(call%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%)
+        ==> Z
+    ]])
+end
+
 print "--- TASK ---"
 
 do
