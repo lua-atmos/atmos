@@ -432,6 +432,7 @@ local function check_task_ret (t)
 end
 
 local function check_ret (awt, ...)
+    -- awt = await pattern | ... = occurring event arguments
     local e = awt[1]
     local mt = getmetatable(...)
     if awt.tag == '_or_' then

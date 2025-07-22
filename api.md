@@ -12,8 +12,9 @@
 
 [
     [call](#call--f) |
+    [defer](#defer-f) |
     [atmos.call](#atmoscall-steps-f) |
-    [defer](#defer-f)
+    [atmos.status](#atmosstatus-tsk) |
 ]
 
 ## `call (..., f)`
@@ -32,24 +33,6 @@ Calls the given body as a task, passing control to an Atmos environment.
 The call returns when the given body terminates.
 
 (This function is overridden by environments.)
-
-## `atmos.call (steps, f)`
-
-Calls the given body as a task, passing a list of step functions to execute in
-a loop.
-
-- Parameters:
-    - `steps: {function}`
-        | list of step functions
-    - `f: function`
-        | task prototype as a function
-- Returns:
-    - `...`
-        | return values from the task
-
-The call returns when the given body terminates.
-
-(This function is only used internally by environments.)
 
 ## `defer (f)`
 
@@ -70,6 +53,34 @@ do
     <...>
 end
 ```
+
+## `atmos.call (env, f)`
+
+Calls the given body as a task, passing an environment to execute in a loop.
+
+- Parameters:
+    - `env: {init=function, step=function}`
+        | environment table with initialization and step functions
+    - `f: function`
+        | task prototype as a function
+- Returns:
+    - `...`
+        | return values from the task
+
+The call returns when the given body terminates.
+
+(This function is only used internally by environments.)
+
+## `atmos.status (tsk)`
+
+Returns the status of the given task.
+
+- Parameters:
+    - `tsk: task`
+        | task to check
+- Returns:
+    - `: string`
+        | task status: 'running', 'suspended', 'normal', 'dead'
 
 # Tasks
 
@@ -273,7 +284,14 @@ Expands to `{ tag='_or_', ... }`.
 
 ## `catch (err, f)`
 
+`TODO`
+
+- true, false, function
+- list `is`
+
 ## `throw (err, ...)`
+
+`TODO`
 
 # Compounds
 
