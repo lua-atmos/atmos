@@ -14,7 +14,7 @@
     [call](#call--f) |
     [defer](#defer-f) |
     [atmos.call](#atmoscall-steps-f) |
-    [atmos.status](#atmosstatus-tsk) |
+    [atmos.status](#atmosstatus-tsk)
 ]
 
 ## `call (..., f)`
