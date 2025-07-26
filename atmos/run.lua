@@ -153,8 +153,8 @@ local _env_ = {
     close = nil,
 }
 
-function run.env (t)
-    _env_ = t
+function run.env (e)
+    _env_ = e
 end
 
 function run.close ()

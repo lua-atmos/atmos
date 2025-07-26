@@ -11,19 +11,17 @@
 # Basic
 
 [
-    [call](#call--f) |
+    [call](#call-f) |
     [defer](#defer-f) |
-    [atmos.call](#atmoscall-env-f) |
+    [atmos.env](#atmosenv-e) |
     [atmos.status](#atmosstatus-tsk)
 ]
 
-## `call (..., f)`
+## `call (f)`
 
-Calls the given body as a task, passing control to an Atmos environment.
+Calls the given body as a task, passing control to Atmos.
 
 - Parameters:
-    - `...`
-        | extra arguments to the environment
     - `f: function`
         | task prototype as a function
 - Returns:
@@ -31,8 +29,6 @@ Calls the given body as a task, passing control to an Atmos environment.
         | return values from the task
 
 The call returns when the given body terminates.
-
-(This function is overridden by environments.)
 
 ## `defer (f)`
 
@@ -54,20 +50,13 @@ do
 end
 ```
 
-## `atmos.call (env, f)`
+## `atmos.env (e)`
 
-Calls the given body as a task, passing an environment to execute in a loop.
+`TODO`
 
 - Parameters:
-    - `env: {init=function, step=function}`
-        | environment table with initialization and step functions
-    - `f: function`
-        | task prototype as a function
-- Returns:
-    - `...`
-        | return values from the task
-
-The call returns when the given body terminates.
+    - `env: {step=function, loop=function, close=function}`
+        | environment table with callback functions
 
 (This function is only used internally by environments.)
 
