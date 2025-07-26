@@ -96,15 +96,10 @@ function M.step ()
 end
 
 M.env = {
-    init = function () end,
+    ren  = nil,
     step = M.step,
 }
 
-function M.call (ren, body)
-    M.ren = ren
-    return atmos.call(M.env, body)
-end
-
-call = M.call
+atmos.env(M.env)
 
 return M

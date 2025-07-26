@@ -150,6 +150,7 @@ end
 local _env_ = {
     step  = nil,
     loop  = nil,
+    stop  = nil,
     close = nil,
 }
 
@@ -310,6 +311,14 @@ end
 
 function run.call (body)
     assertn(2, type(body) == 'function', "invalid call : expected body function")
+    local body = function (...)
+        (function (...)
+            if _env_.stop then
+                _env_.stop()
+            end
+            return ...
+        end)(body(...))
+    end
     return xcall(debug.getinfo(2), "call", function ()
         local _ <close> = run.defer(function ()
             if _env_.close then
