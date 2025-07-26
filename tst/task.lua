@@ -693,7 +693,7 @@ print "--- ABORT ---"
 do
     print("Testing...", "abort 1")
     do
-        call(nil, function ()
+        call(function ()
             spawn(function ()
                 spawn(function ()
                     spawn(function ()

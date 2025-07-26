@@ -55,7 +55,7 @@ end
 
 do
     print("Testing...", "nested task 1")
-    call(nil, function ()
+    call(function ()
         spawn(function ()
             spawn(function ()
                 local _ <close> = defer(function ()
@@ -296,7 +296,7 @@ end
 do
     print("Testing...", "catch 14")
     local _, err = pcall(function ()
-        call(nil, function ()
+        call(function ()
             catch('X', function ()
                 catch('Y', function ()
                     throw 'Z'
@@ -357,7 +357,7 @@ print "--- CALL ---"
 do
     print("Testing...", "call 1")
     do
-        local v = call(nil, function ()
+        local v = call(function ()
             return 1
         end)
         out(v)
@@ -372,7 +372,8 @@ do
         local function step ()
             emit 'X'
         end
-        local v = call({init=function()end,step=step}, function ()
+        atmos.env { init=function()end, step=step }
+        local v = call(function ()
             await 'X'
             return 1
         end)
@@ -385,7 +386,7 @@ end
 do
     print("Testing...", "call 4: err")
     local _, err = pcall(function ()
-        local v = call(nil, function ()
+        local v = call(function ()
             throw 'X'
             return 1
         end)
@@ -406,7 +407,8 @@ do
         local function step ()
             emit 'X'
         end
-        local v = call({init=function()end,step=step}, function ()
+        atmos.env { step=step }
+        local v = call(function ()
             await 'X'
             throw 'X'
         end)
@@ -427,7 +429,8 @@ do
         local function step ()
             throw 'X'
         end
-        local v = call({init=function()end,step=step}, function ()
+        atmos.env { step=step }
+        local v = call(function ()
             await 'X'
         end)
         out(v)
@@ -471,7 +474,7 @@ end
 do
     print("Testing...", "throw 2")
     local _, err = pcall(function ()
-        call(nil, function ()
+        call(function ()
             spawn(function ()
                 spawn(function ()
                     await(spawn(function ()
@@ -497,7 +500,7 @@ end
 do
     print("Testing...", "throw 3")
     local _, err = pcall(function ()
-        call(nil, function ()
+        call(function ()
             spawn(function ()
                 spawn(true,function ()
                     await(spawn(function ()
@@ -534,7 +537,7 @@ do
             end)
         end
 
-        call(nil, function ()
+        call(function ()
             spawn(function ()
                 local ok, err = catch('Y', function ()
                     spawn(T)

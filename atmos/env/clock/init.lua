@@ -23,10 +23,6 @@ M.env = {
     step = M.step,
 }
 
-function M.call (body)
-    return atmos.call(M.env, body)
-end
-
-call = M.call
+atmos.env(M.env)
 
 return M
