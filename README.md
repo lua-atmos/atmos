@@ -1,7 +1,8 @@
 # `lua-atmos`
 
+<!--[`v0.2`](https://github.com/lua-atmos/atmos/tree/v0.2) |-->
+
 [
-    [`v0.2`](https://github.com/lua-atmos/atmos/tree/v0.2) |
     [`v0.1`](https://github.com/lua-atmos/atmos/tree/v0.1)
 ]
 
