@@ -312,7 +312,7 @@ end
 function run.call (body)
     assertn(2, type(body) == 'function', "invalid call : expected body function")
     local body = function (...)
-        (function (...)
+        return (function (...)
             if _env_.stop then
                 _env_.stop()
             end
