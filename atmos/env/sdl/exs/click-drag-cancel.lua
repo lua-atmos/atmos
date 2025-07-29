@@ -21,7 +21,8 @@ REN = assert(SDL.createRenderer(WIN, -1))
 
 FNT = assert(TTF.open("DejaVuSans.ttf", 20))
 
-call(REN, function ()
+sdl.ren = REN
+call(function ()
     local text = " "
     local rect = {x=256/2-20,y=256/2-20, w=40,h=40}
     spawn(function ()

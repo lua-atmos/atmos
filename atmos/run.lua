@@ -147,6 +147,17 @@ end
 ---------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
+local _env_ = {
+    step  = nil,
+    loop  = nil,
+    stop  = nil,
+    close = nil,
+}
+
+function run.env (e)
+    _env_ = e
+end
+
 function run.close ()
     meta_tasks.__close(TASKS)
 end
@@ -298,25 +309,32 @@ local function xcall (dbg, stk, f, ...)
     end)(pcall(f, ...))
 end
 
-function run.call (env, body)
-    env = env or { init=function()end, step=function()end }
-    assertn(2, type(env) == 'table', "invalid call : expected environment table")
+function run.call (body)
     assertn(2, type(body) == 'function', "invalid call : expected body function")
+    local body = function (...)
+        return (function (...)
+            if _env_.stop then
+                _env_.stop()
+            end
+            return ...
+        end)(body(...))
+    end
     return xcall(debug.getinfo(2), "call", function ()
         local _ <close> = run.defer(function ()
-            env.init(false)
+            if _env_.close then
+                _env_.close()
+            end
             run.close()
         end)
-        env.init(true)
         local t <close> = run.spawn(debug.getinfo(4), nil, false, body)
-        if env.loop then
-            env.loop()
+        if _env_.loop then
+            _env_.loop()
         else
             while true do
                 if coroutine.status(t._.th) == 'dead' then
                     break
                 end
-                if env.step() then
+                if _env_.step() then
                     break
                 end
             end

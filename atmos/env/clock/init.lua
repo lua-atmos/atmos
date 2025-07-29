@@ -2,13 +2,7 @@ local atmos = require "atmos"
 
 local M = {}
 
-local old
-
-function M.init (on)
-    if on then
-        old = math.floor(os.clock() * 1000)
-    end
-end
+local old = math.floor(os.clock() * 1000)
 
 function M.step ()
     local now = math.floor(os.clock() * 1000)
@@ -23,10 +17,6 @@ M.env = {
     step = M.step,
 }
 
-function M.call (body)
-    return atmos.call(M.env, body)
-end
-
-call = M.call
+atmos.env(M.env)
 
 return M

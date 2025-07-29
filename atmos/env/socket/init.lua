@@ -76,11 +76,7 @@ function M.xrecv (tcp)
     return s
 end
 
-local old
-
-function M.init ()
-    old = socket.gettime()
-end
+local old = socket.gettime()
 
 function M.step (opts)
     local r,s = socket.select(rs, ss, 0.1)
@@ -126,10 +122,6 @@ M.env = {
     step = M.step,
 }
 
-function M.call (body)
-    return atmos.call(M.env, body)
-end
-
-call = M.call
+atmos.env(M.env)
 
 return M

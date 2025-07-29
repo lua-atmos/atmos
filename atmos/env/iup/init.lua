@@ -40,34 +40,26 @@ end
 local M = {
 }
 
-function M.init (on)
-    if on then
-        assert(iup.MainLoopLevel() == 0)
-        local timer = iup.timer{time=100}
-        function timer:action_cb()
-            emit(clock{ms=100})
-            return iup.DEFAULT
-        end
-        timer.run = "YES"
-    else
-        iup.Close()
+do
+    assert(iup.MainLoopLevel() == 0)
+    local timer = iup.timer{time=100}
+    function timer:action_cb()
+        emit(clock{ms=100})
+        return iup.DEFAULT
     end
+    timer.run = "YES"
 end
-
-M.loop = iup.MainLoop
 
 M.env = {
-    init = M.init,
-    loop = M.loop,
+    loop  = iup.MainLoop,
+    stop  = function ()
+        iup.ExitLoop()
+    end,
+    close = function ()
+        iup.Close()
+    end,
 }
 
-function M.call (body)
-    return atmos.call(M.env, function ()
-        body()
-        iup.ExitLoop()
-    end)
-end
-
-call = M.call
+atmos.env(M.env)
 
 return M

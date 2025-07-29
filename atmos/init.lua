@@ -5,6 +5,7 @@ local atmos = {
     close  = run.close,
     call   = run.call,
     status = run.status,
+    env    = run.env,
 }
 
 _is_  = run.is
