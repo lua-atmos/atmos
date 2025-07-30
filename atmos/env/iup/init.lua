@@ -7,8 +7,20 @@ local iup = require("iuplua")
 -------------------------------------------------------------------------------
 
 local meta = {
-    __atmos = function (awt,e)
-        return (awt[1].atm == e)
+    __atmos = function (awt, ...)
+        for i,x in ipairs(awt) do
+            local y = select(i, ...)
+            if i == 1 then
+                local mt = getmetatable(x)
+                if mt and mt.__index then
+                    x = x.atm
+                end
+            end
+            if x ~= y then
+                return false
+            end
+        end
+        return true
     end
 }
 
