@@ -6,17 +6,24 @@ local iup = require("iuplua")
 
 -------------------------------------------------------------------------------
 
+local meta = {
+    __atmos = function (awt,e)
+        return (awt[1].atm == e)
+    end
+}
+
 local function iup_action (self, ...)
-    emit(self, 'action', ...)
+    emit(self.atm, 'action', ...)
 end
 
 local function iup_value (self, ...)
-    emit(self, 'value', ...)
+    emit(self.atm, 'value', ...)
 end
 
 local iup_button = iup.button
 function iup.button (...)
     local h = iup_button(...)
+    h.atm = setmetatable({}, meta)
     h.action = iup_action
     return h
 end
@@ -24,6 +31,7 @@ end
 local iup_text = iup.text
 function iup.text (...)
     local h = iup_text(...)
+    h.atm = setmetatable({}, meta)
     h.valuechanged_cb = iup_value
     return h
 end
@@ -31,6 +39,7 @@ end
 local iup_list = iup.list
 function iup.list (...)
     local h = iup_list(...)
+    h.atm = setmetatable({}, meta)
     h.valuechanged_cb = iup_value
     return h
 end
