@@ -1,7 +1,6 @@
 local atmos = require "atmos"
 require "atmos.util"
 
-package.cpath = package.cpath .. ';/usr/lib64/libiuplua54.so'
 local iup = require("iuplua")
 
 -------------------------------------------------------------------------------
@@ -61,24 +60,23 @@ end
 local M = {
 }
 
-do
-    assert(iup.MainLoopLevel() == 0)
-    local timer = iup.timer{time=100}
-    function timer:action_cb()
-        emit(clock{ms=100})
-        return iup.DEFAULT
-    end
-    timer.run = "YES"
-end
-
 M.env = {
-    loop  = iup.MainLoop,
-    stop  = function ()
-        iup.ExitLoop()
+    loop = function ()
+        assert(iup.MainLoopLevel() == 0)
+        local timer = iup.timer{time=500}
+        function timer:action_cb()
+            if M.env.idle then
+                M.env.idle()
+            end
+            emit(clock{ms=500})
+            return iup.DEFAULT
+        end
+        timer.run = "YES"
+        iup.MainLoop()
     end,
-    close = function ()
-        iup.Close()
-    end,
+    idle = nil,
+    stop = iup.ExitLoop,
+    close = iup.Close,
 }
 
 atmos.env(M.env)
