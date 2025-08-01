@@ -21,3 +21,7 @@ function totable (...)
     end
     return t
 end
+
+function debug_getinfo (n)
+    return debug.getinfo(n+1) or { short_src='?', currentline='?' }
+end
