@@ -55,7 +55,7 @@ end
 `TODO`
 
 - Parameters:
-    - `env: {step=function, loop=function, close=function}`
+    - `env: {step=function, loop=function, stop=function, close=function}`
         | environment table with callback functions
 
 (This function is only used internally by environments.)
