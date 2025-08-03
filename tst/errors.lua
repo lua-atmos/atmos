@@ -53,25 +53,28 @@ do
     print("Testing...", "throw 1")
     local out = exec [[
         local _, err = pcall(function ()
-            spawn(function ()
-                local x,y,z = catch('Z', function ()
-                    spawn (function ()
-                        await(true)
-                        throw('X',10)
+            call(function ()
+                spawn(function ()
+                    local x,y,z = catch('Z', function ()
+                        spawn (function ()
+                            await(true)
+                            throw('X',10)
+                        end)
+                        await(false)
                     end)
-                    await(false)
+                    out(x, y, z)
                 end)
-                out(x, y, z)
+                emit()
             end)
-            emit()
             out('ok')
         end)
         print(err)
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-         |  /tmp/err.lua:12 (emit)
-         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:2 (task)
+         |  /tmp/err.lua:2 (call)
+         |  /tmp/err.lua:13 (emit) <- /tmp/err.lua:2 (task)
+         v  /tmp/err.lua:7 (throw) <- /tmp/err.lua:5 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
         ==> X, 10
     ]])
 end
@@ -177,26 +180,29 @@ do
             --error "OK"
             --throw "OK"
         end
-        spawn(function ()
-            local ts = tasks()
-            spawn(true,function ()
-                spawn_in(ts, T)
+        call(function ()
+            spawn(function ()
+                local ts = tasks()
+                spawn(true,function ()
+                    spawn_in(ts, T)
+                    await(false)
+                end)
+                spawn(true,function ()
+                    await('X')
+                    emit('Y')
+                end)
                 await(false)
             end)
-            spawn(true,function ()
-                await('X')
-                emit('Y')
-            end)
-            await(false)
+            emit('X') end)
         end)
-        emit('X') end)
         print(err)
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-        |  /tmp/err.lua:24 (emit)
-        |  /tmp/err.lua:20 (emit) <- /tmp/err.lua:18 (task) <- /tmp/err.lua:12 (task)
-        v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:15 (task) <- /tmp/err.lua:13 (tasks) <- /tmp/err.lua:12 (task)
+        |  /tmp/err.lua:12 (call)
+        |  /tmp/err.lua:25 (emit) <- /tmp/err.lua:12 (task)
+        |  /tmp/err.lua:21 (emit) <- /tmp/err.lua:19 (task) <- /tmp/err.lua:13 (task) <- /tmp/err.lua:12 (task)
+        v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:16 (task) <- /tmp/err.lua:14 (tasks) <- /tmp/err.lua:13 (task) <- /tmp/err.lua:12 (task)
         ==> OK
     ]])
 end
@@ -234,6 +240,29 @@ do
         ==> ERROR:
         |  /tmp/err.lua:2 (call)
         v  /tmp/err.lua:3 (throw)
+        ==> attempt to perform arithmetic on a boolean value
+    ]])
+end
+
+do
+    print("Testing...", "spawn termination")
+    local out = exec [[
+        local _, err = pcall(function ()
+            call(function ()
+                spawn(function ()
+                    await(spawn(function() await('X') end))
+                    print(1+true)
+                end)
+                emit 'X'
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (call)
+         |  /tmp/err.lua:7 (emit) <- /tmp/err.lua:2 (task)
+         v  /tmp/err.lua:5 (throw) <- /tmp/err.lua:2 (task)
         ==> attempt to perform arithmetic on a boolean value
     ]])
 end

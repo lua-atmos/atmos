@@ -300,7 +300,7 @@ local function xcall (dbg, stk, f, ...)
                 })
             end
         end
-        if run.me(true) == nil then
+        if stk == "call" then
             err = flatten(err)
         end
         error(err, 0)
