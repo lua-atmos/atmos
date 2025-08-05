@@ -85,7 +85,7 @@ function run.is (v, x)
     if tp == x then
         return true
     elseif tp=='string' and type(x)=='string' then
-        return (string.find(v, '^'..x) == 1)
+        return (string.find(v, '^'..x..'%.') == 1)
     elseif mt==meta_task and x=='task' then
         return true
     elseif mt==meta_tasks and x=='tasks' then
