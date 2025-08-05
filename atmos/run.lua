@@ -771,8 +771,9 @@ local meta_par = {
 
 function run.par (...)
     assertn(2, run.me(true), "invalid par : expected enclosing task")
-    local ts <close> = setmetatable({ ... }, meta_par)
-    for i,f in ipairs(ts) do
+    local fs = { ... }
+    local ts <close> = setmetatable({}, meta_par)
+    for i,f in ipairs(fs) do
         assertn(2, type(f) == 'function', "invalid par : expected task prototype")
         ts[i] = run.spawn(debug_getinfo(2), nil, true, select(i,...))
     end
@@ -781,8 +782,9 @@ end
 
 function run.par_or (...)
     assertn(2, run.me(true), "invalid par_or : expected enclosing task")
-    local ts <close> = setmetatable({ ... }, meta_par)
-    for i,f in ipairs(ts) do
+    local fs = { ... }
+    local ts <close> = setmetatable({}, meta_par)
+    for i,f in ipairs(fs) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
         ts[i] = run.spawn(debug_getinfo(2), nil, true, f)
     end
@@ -791,8 +793,9 @@ end
 
 function run.par_and (...)
     assertn(2, run.me(true), "invalid par_or : expected enclosing task")
-    local ts <close> = setmetatable({ ... }, meta_par)
-    for i,f in ipairs(ts) do
+    local fs = { ... }
+    local ts <close> = setmetatable({}, meta_par)
+    for i,f in ipairs(fs) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
         ts[i] = run.spawn(debug_getinfo(2), nil, true, f)
     end

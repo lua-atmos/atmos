@@ -158,6 +158,31 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "par_or 6")
+    local _,err = pcall(function ()
+        call(function ()
+            catch(true, function ()
+                par_or (
+                    function ()
+                        return f()
+                    end,
+                    function ()
+                        await(false)
+                    end
+                )
+            end)
+        end)
+    end)
+    assertfx(trim(err), trim [[
+        ==> ERROR:
+         |  par.lua:%d+ %(call%)
+         v  par.lua:%d+ %(throw%)
+        ==> attempt to call a nil value %(global 'f'%)
+    ]])
+    atmos.close()
+end
+
 print '--- PAR_AND ---'
 
 do
@@ -306,7 +331,7 @@ do
     local _,err = pcall(function ()
         watching (false, function () end)
     end)
-    assertfx(err, "par.lua:307: invalid watching : expected enclosing task")
+    assertfx(err, "par.lua:%d+: invalid watching : expected enclosing task")
 end
 
 do
@@ -316,7 +341,7 @@ do
             watching (false, 'no')
         end)
     end)
-    assertfx(err, "par.lua:316: invalid watching : expected task prototype")
+    assertfx(err, "par.lua:%d+: invalid watching : expected task prototype")
 end
 
 do
