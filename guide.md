@@ -146,8 +146,8 @@ world into an Atmos application.
 These events can be timers, key presses, network packets, or other kind of
 inputs, depending on the environment.
 
-The environment is loaded through `require` and exports a `call` primitive that
-emits events to the received body:
+The environment is loaded through `require` and relies on the `call` primitive
+to handle events:
 
 ```
 require "x"         -- environment "x" with events of type "X"
@@ -168,14 +168,21 @@ from `call` to the Lua application.
 The actual available events depend on the environment and should be documented
 appropriately.
 
+<!--
 The standard distribution of Atmos provides the following environments:
 
-- `atmos.env.clock`:
+- [`atmos.env.clock`](atmos/env/clock/):
     A simple pure-Lua environment that uses `os.clock` to issue timer events.
-- `atmos.env.sdl`:
-    An environment that relies on
-    [lua-sdl2](https://github.com/Tangent128/luasdl2) to provide window, mouse,
+- [`atmos.env.socket`](atmos/env/socket/):
+    An environment that relies on [luasocket][luasocket] to provide network
+    communication.
+- [`atmos.env.sdl`](atmos/env/sdl/):
+    An environment that relies on [lua-sdl2][luasdl] to provide window, mouse,
     key, and timer events.
+- [`atmos.env.iup`](atmos/env/iup/):
+    An environment that relies on [IUP][iup] ([iup-lua][iup-lua]) to provide
+    graphical user interfaces (GUIs).
+-->
 
 # Lexical Task Hierarchy
 

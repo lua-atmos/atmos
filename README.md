@@ -1,8 +1,7 @@
 # `lua-atmos`
 
-<!--[`v0.2`](https://github.com/lua-atmos/atmos/tree/v0.2) |-->
-
 [
+    [`v0.2`](https://github.com/lua-atmos/atmos/tree/v0.2) |
     [`v0.1`](https://github.com/lua-atmos/atmos/tree/v0.1)
 ]
 
@@ -74,19 +73,28 @@ You may also clone the repository and copy part of the source tree, as follows,
 into your Lua path (e.g., `/usr/local/share/lua/5.4/`):
 
 ```
-atmos/
-  |-- run.lua
-  |-- init.lua
-  |-- util.lua
-  +-- env/
-    +-- sdl/
-      +-- exs/
-        |-- click-drag-cancel.lua
-      |-- init.lua
-    +-- clock/
-      +-- exs/
-        |-- hello.lua
-      |-- init.lua
+atmos
+├── env/
+│   ├── clock/
+│   │   ├── exs/
+│   │   │   └── hello.lua
+│   │   └── init.lua
+│   ├── iup/
+│   │   ├── exs/
+│   │   │   ├── button-counter.lua
+│   │   └── init.lua
+│   ├── sdl/
+│   │   ├── exs/
+│   │   │   ├── click-drag-cancel.lua
+│   │   │   └── DejaVuSans.ttf
+│   │   └── init.lua
+│   └── socket/
+│       ├── exs/
+│       │   └── cli-srv.lua
+│       └── init.lua
+├── init.lua
+├── run.lua
+└── util.lua
 ```
 
 # Documentation

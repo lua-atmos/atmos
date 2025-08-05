@@ -172,25 +172,28 @@ do
             --error "OK"
             --throw "OK"
         end
-        spawn(function ()
-            local ts = tasks()
-            spawn(true,function ()
-                spawn_in(ts, T)
+        call(function ()
+            spawn(function ()
+                local ts = tasks()
+                spawn(true,function ()
+                    spawn_in(ts, T)
+                    await(false)
+                end)
+                spawn(true,function ()
+                    await('X')
+                    emit('Y')
+                end)
                 await(false)
             end)
-            spawn(true,function ()
-                await('X')
-                emit('Y')
-            end)
-            await(false)
+            emit('X')
         end)
-        emit('X')
     end)
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  tasks.lua:%d+ %(emit%)
-         |  tasks.lua:%d+ %(emit%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(task%)
-         v  tasks.lua:%d+ %(throw%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(tasks%) <%- tasks.lua:%d+ %(task%)
+         |  tasks.lua:%d+ %(call%)
+         |  tasks.lua:%d+ %(emit%) <%- tasks.lua:%d+ %(task%)
+         |  tasks.lua:%d+ %(emit%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(task%)
+         v  tasks.lua:%d+ %(throw%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(tasks%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(task%)
         ==> OK
     ]])
 end

@@ -417,6 +417,7 @@ do
     atmos.close()
     assertfx(trim(err), trim [[
         ==> ERROR:
+         |  others.lua:%d+ %(call%)
          |  others.lua:%d+ %(emit%)
          v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%)
         ==> X
@@ -449,24 +450,27 @@ print "--- THROW / ERROR ---"
 do
     print("Testing...", "throw 1")
     local _, err = pcall(function ()
-        spawn(function ()
-            local x,y,z = catch('Z', function ()
-                spawn (function ()
-                    await(true)
-                    throw('X',10)
+        call(function ()
+            spawn(function ()
+                local x,y,z = catch('Z', function ()
+                    spawn (function ()
+                        await(true)
+                        throw('X',10)
+                    end)
+                    await(false)
                 end)
-                await(false)
+                out(x, y, z)
             end)
-            out(x, y, z)
+            emit()
         end)
-        emit()
         out('ok')
     end)
     atmos.close()
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  others.lua:%d+ %(emit%)
-         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
+         |  others.lua:%d+ %(call%)
+         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
         ==> X, 10
     ]])
 end
