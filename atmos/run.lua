@@ -52,6 +52,7 @@ local TASKS = setmetatable({
     _ = {
         up  = nil,
         dns = {},
+        pin = true,
         ing = 0,
         gc  = false,
         max = nil,
@@ -353,6 +354,7 @@ function run.tasks (max)
         _ = {
             up  = up,
             dns = {},
+            pin = false,
             ing = 0,
             gc  = false,
             dbg = {file=dbg.short_src, line=dbg.currentline},
@@ -371,6 +373,7 @@ function run.task (dbg, inv, f)
         _ = {
             up  = nil,
             dns = {},
+            pin = false,
             ing = 0,
             gc  = false,
             dbg = {file=dbg.short_src, line=dbg.currentline},
@@ -402,6 +405,9 @@ function run.spawn (dbg, up, inv, t, ...)
     assertn(2, t._.inv == inv, "invalid spawn : invisible modifier mismatch")
 
     up = up or run.me(true) or TASKS
+    if getmetatable(up) == meta_tasks then
+        t.pin = true
+    end
     if up._.max and #up._.dns>=up._.max then
         return nil
     end
