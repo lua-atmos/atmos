@@ -496,7 +496,7 @@ local function check_ret (awt, ...)
         end
     elseif awt.tag == '_==_' then
         for i,v in ipairs(awt) do
-            if v ~= select(i,...) then
+            if not _is_(select(i,...),v) then
                 return false
             end
         end
