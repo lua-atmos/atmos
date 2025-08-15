@@ -16,13 +16,13 @@ call  = run.call
 defer = run.defer
 tasks = run.tasks
 
-function task (inv, ...)
-    if inv == nil then
+function task (tra, ...)
+    if tra == nil then
         return run.me()
-    elseif type(inv) == 'boolean' then
-        return run.task(debug.getinfo(2), inv, ...)
+    elseif type(tra) == 'boolean' then
+        return run.task(debug.getinfo(2), tra, ...)
     else
-        return run.task(debug.getinfo(2), false, inv, ...)
+        return run.task(debug.getinfo(2), false, tra, ...)
     end
 end
 
@@ -30,11 +30,11 @@ function spawn_in (up, t, ...)
     return run.spawn(debug.getinfo(2), up, false, t, ...)
 end
 
-function spawn (inv, t, ...)
-    if type(inv) == 'boolean' then
-        return run.spawn(debug.getinfo(2), nil, inv, t, ...)
+function spawn (tra, t, ...)
+    if type(tra) == 'boolean' then
+        return run.spawn(debug.getinfo(2), nil, tra, t, ...)
     else
-        return run.spawn(debug.getinfo(2), nil, false, inv, t, ...)
+        return run.spawn(debug.getinfo(2), nil, false, tra, t, ...)
     end
 end
 
