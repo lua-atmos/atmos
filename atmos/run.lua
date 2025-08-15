@@ -62,19 +62,19 @@ local TASKS = setmetatable({
 
 -------------------------------------------------------------------------------
 
-local function _me_ (inv, t)
+local function _me_ (tra, t)
     if t == TASKS then
         return nil
-    elseif (getmetatable(t) == meta_tasks) or ((not inv) and t._.inv) then
-        return _me_(inv, t._.up)
+    elseif (getmetatable(t) == meta_tasks) or ((not tra) and t._.tra) then
+        return _me_(tra, t._.up)
     else
         return t
     end
 end
 
-function run.me (inv)
+function run.me (tra)
     local th = coroutine.running()
-    return th and TASKS._.cache[th] and _me_(inv, TASKS._.cache[th])
+    return th and TASKS._.cache[th] and _me_(tra, TASKS._.cache[th])
 end
 
 function run.is (v, x)
@@ -367,7 +367,7 @@ function run.tasks (max)
     return ts
 end
 
-function run.task (dbg, inv, f)
+function run.task (dbg, tra, f)
     assertn(3, type(f)=='function', "invalid task : expected function")
     local t = {
         _ = {
@@ -379,7 +379,7 @@ function run.task (dbg, inv, f)
             dbg = {file=dbg.short_src, line=dbg.currentline},
             ---
             th  = coroutine.create(f),
-            inv = inv,
+            tra = tra,
             status = nil, -- aborted, toggled
             await = {
                 time = 0,
@@ -392,17 +392,17 @@ function run.task (dbg, inv, f)
     return t
 end
 
-function run.spawn (dbg, up, inv, t, ...)
+function run.spawn (dbg, up, tra, t, ...)
     if type(t) == 'function' then
-        t = run.task(dbg, inv, t)
+        t = run.task(dbg, tra, t)
         if t == nil then
             return nil
         else
-            return run.spawn(dbg, up, inv, t, ...)
+            return run.spawn(dbg, up, tra, t, ...)
         end
     end
     assertn(2, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
-    assertn(2, t._.inv == inv, "invalid spawn : invisible modifier mismatch")
+    assertn(2, t._.tra == tra, "invalid spawn : transparent modifier mismatch")
 
     up = up or run.me(true) or TASKS
     if getmetatable(up) == meta_tasks then

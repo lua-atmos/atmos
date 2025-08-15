@@ -74,29 +74,29 @@ Returns the status of the given task.
 # Tasks
 
 [
-    [task(f)](#task-inv-f) |
+    [task(f)](#task-tra-f) |
     [task()](#task-) |
     [tasks](#tasks-n) |
     [spawn(tsk)](#spawn-tsk-) |
-    [spawn(f)](#spawn-inv-f-) |
+    [spawn(f)](#spawn-tra-f-) |
     [spawn_in](#spawn_in-tsks-tsk-) |
     [toggle](#toggle-tsk-on)
 ]
 
-## `task ([inv,] f)`
+## `task ([tra,] f)`
 
 Creates a task from a given prototype.
 
 - Parameters:
-    - `inv: boolean = false`
-        | if the task should become invisible in the hierarchy
+    - `tra: boolean = false`
+        | if the task should become transparent in the hierarchy
     - `f: function`
         | task prototype as a function
 - Returns:
     - `: task`
         | reference to task just created
 
-An invisible task (`inv=true`) is substituted by its parent in the context
+A transparent task (`tra=true`) is substituted by its parent in the context
 of [task()](#task-) and [emit](#emit) calls.
 
 ## `task ()`
@@ -133,13 +133,13 @@ Spawns a task.
     - `: task`
         | reference to task just spawned
 
-## `spawn ([inv,] f, ...)`
+## `spawn ([tra,] f, ...)`
 
 Spawns a function prototype as a task.
 
 - Parameters:
-    - `inv: boolean = false`
-        | if the task should become invisible in the hierarchy
+    - `tra: boolean = false`
+        | if the task should become transparent in the hierarchy
     - `f: function`
         | task to spawn as a function
     - `...`
@@ -151,7 +151,7 @@ Spawns a function prototype as a task.
 A function spawn is equivalent to the call as follows:
 
 ```
-spawn(task(inv,f), ...)
+spawn(task(tra,f), ...)
 ```
 
 ## `spawn_in (tsks, tsk, ...)`
