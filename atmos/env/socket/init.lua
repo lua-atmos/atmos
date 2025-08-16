@@ -79,7 +79,7 @@ end
 local old = socket.gettime()
 
 function M.step (opts)
-    local ms = opts.ms or 0.1
+    local ms = (opts and opts.ms) or 0.1
     local r,s = socket.select(rs, ss, ms)
     for k in pairs(r) do
         if type(k) == 'userdata' then
