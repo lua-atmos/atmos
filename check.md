@@ -80,6 +80,9 @@ lua5.4 /x/lua-atmos/atmos/atmos/env/clock/exs/hello.lua
 - Develop
 
 ```
+git checkout main
+git merge v-NEW
+
 cd /usr/local/share/lua/5.4/
 sudo rm -Rf atmos/
 sudo ln -s /x/lua-atmos/atmos/atmos
