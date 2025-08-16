@@ -82,8 +82,19 @@ lua5.4 /x/lua-atmos/atmos/atmos/env/clock/exs/hello.lua
 ```
 git checkout main
 git merge v-NEW
+git push
+
+lua5.4 /x/lua-atmos/atmos/atmos/env/clock/exs/hello.lua
+    # works
 
 cd /usr/local/share/lua/5.4/
 sudo rm -Rf atmos/
+
+lua5.4 /x/lua-atmos/atmos/atmos/env/clock/exs/hello.lua
+    # fails
+
 sudo ln -s /x/lua-atmos/atmos/atmos
+
+lua5.4 /x/lua-atmos/atmos/atmos/env/clock/exs/hello.lua
+    # works
 ```
