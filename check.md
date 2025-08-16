@@ -30,22 +30,23 @@ lua5.4 * # test each example
 git branch              # should be in `main`
 git checkout main
 git pull                # ensure newest `main`
-git branch v-new
-git checkout v-new
-git push --set-upstream origin v-new
+git branch v-NEW
+git checkout v-NEW
+git push --set-upstream origin v-NEW
 ```
 
 - Docs
 
 ```
-git difftool vOLD       # examine all diffs
+git difftool v-OLD       # examine all diffs
 ```
 
 - Branch
 
 ```
-git branch vA.B.c
-git push --origin
+git branch v-NEW
+git checkout v-NEW
+git push --set-upstream origin v-NEW
 ```
 
 - LuaRocks
@@ -53,5 +54,33 @@ git push --origin
 ```
 cp atmos-OLD.rockspec atmos-NEW.rockspec
 vi atmos-NEW.rockspec
-    # version, source.branch
+    # set version, source.branch
+luarocks upload atmos-NEW.rockspec --api-key=...
+```
+
+- Install
+
+```
+lua5.4 /x/lua-atmos/atmos/atmos/env/clock/exs/hello.lua
+    # works
+
+cd /usr/local/share/lua/5.4/
+ls -l atmos         # check if link to dev
+sudo rm atmos
+
+lua5.4 /x/lua-atmos/atmos/atmos/env/clock/exs/hello.lua
+    # fails
+
+sudo luarocks install atmos --lua-version=5.4  # check if atmos-NEW
+
+lua5.4 /x/lua-atmos/atmos/atmos/env/clock/exs/hello.lua
+    # works
+```
+
+- Develop
+
+```
+cd /usr/local/share/lua/5.4/
+sudo rm -Rf atmos/
+sudo ln -s /x/lua-atmos/atmos/atmos
 ```
