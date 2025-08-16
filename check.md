@@ -1,5 +1,3 @@
-# Tests
-
 - Self tests:
 
 ```
@@ -28,7 +26,6 @@ lua5.4 * # test each example
 
 ```
 git branch              # should be in `main`
-git checkout main
 git pull                # ensure newest `main`
 git branch v-NEW
 git checkout v-NEW
