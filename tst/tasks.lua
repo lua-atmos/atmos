@@ -26,6 +26,7 @@ do
     local ts = tasks()
     spawn_in(ts,T)
     out "out"
+    assertx(#ts, 0)
     assertx(out(), "in\nout\n")
     atmos.close()
 end
@@ -38,6 +39,7 @@ do
     local ts = tasks(2)
     spawn_in(ts,T)
     spawn_in(ts,T)
+    assertx(#ts, 0)
     assertx(out(), "ok\nok\n")
     atmos.close()
 end
@@ -52,6 +54,7 @@ do
     local ok1 = spawn_in(ts, T, 1)
     local ok2 = spawn_in(ts, T, 2)
     out(ok1==nil, ok2==nil)
+    assertx(#ts, 1)
     assertx(out(), "1\nfalse\ttrue\n")
     atmos.close()
 end
@@ -65,8 +68,11 @@ do
     end
     local ts = tasks(1)
     local ok1 = spawn_in(ts, T, 1)
+    assertx(#ts, 1)
     emit()
+    assertx(#ts, 0)
     local ok2 = spawn_in(ts, T, 2)
+    assertx(#ts, 1)
     out(ok1==nil, ok2==nil)
     assertx(out(), "1\n1\n2\nfalse\tfalse\n")
     atmos.close()

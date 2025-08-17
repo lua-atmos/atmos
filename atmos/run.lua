@@ -13,6 +13,8 @@ local meta_tasks; meta_tasks = {
             getmetatable(dn).__close(dn)
         end
     end,
+    __len = function (ts)
+        return #ts._.dns
     next = function (s, i)
         if i == s.max then
             return nil
