@@ -316,7 +316,7 @@ local function xcall (dbg, stk, f, ...)
     end)(pcall(f, ...))
 end
 
-function run.call (body)
+function run.call (body, ...)
     assertn(2, type(body) == 'function', "invalid call : expected body function")
     local body = function (...)
         return (function (...)
@@ -326,14 +326,14 @@ function run.call (body)
             return ...
         end)(body(...))
     end
-    return xcall(debug_getinfo(2), "call", function ()
+    return xcall(debug_getinfo(2), "call", function (...)
         local _ <close> = run.defer(function ()
             if _env_.close then
                 _env_.close()
             end
             run.close()
         end)
-        local t <close> = run.spawn(debug_getinfo(4), nil, false, body)
+        local t <close> = run.spawn(debug_getinfo(4), nil, false, body, ...)
         if _env_.loop then
             _env_.loop()
         else
@@ -347,7 +347,7 @@ function run.call (body)
             end
         end
         return t.ret
-    end)
+    end, ...)
 end
 
 -------------------------------------------------------------------------------
