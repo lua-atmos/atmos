@@ -7,4 +7,12 @@ function S.fr_await (...)
     end
 end
 
+function S.fr_task (...)
+    local args = { ... }
+    return function ()
+        local t <close> = spawn(table.unpack(args))
+        return await(t)
+    end
+end
+
 return S
