@@ -1,6 +1,11 @@
 # `lua-atmos`
 
+This is the unstable (probably broken) `main` branch towards `v0.3`.
+
+For a stable release, please switch to [`v0.2.1`](https://github.com/lua-atmos/atmos/tree/v0.2.1).
+
 [
+    [`v0.3`](https://github.com/lua-atmos/atmos/tree/v0.3) |
     [`v0.2.1`](https://github.com/lua-atmos/atmos/tree/v0.2.1) |
     [`v0.1`](https://github.com/lua-atmos/atmos/tree/v0.1)
 ]
@@ -20,8 +25,9 @@
 # About
 
 Atmos is a programming library for [Lua][lua] that reconciles *[Structured
-Concurrency][sc]* with *[Event-Driven Programming][events]*, extending classical
-structured programming with two main functionalities:
+Concurrency][sc]*, *[Event-Driven Programming][events]*, and
+*[Functional Streams][rx]*, extending classical structured programming with
+three main functionalities:
 
 - Structured Deterministic Concurrency:
     - A `task` primitive with deterministic scheduling provides predictable
@@ -33,6 +39,15 @@ structured programming with two main functionalities:
 - Event Signaling Mechanisms:
     - An `await` primitive suspends a task and wait for events.
     - An `emit` primitive signal events and awake awaiting tasks.
+- Functional Streams (à la [ReactiveX][rx])":
+    - A rich set of functional combinators for lazy stream processing.
+    - Proper finalization of stateful streams.
+    - Interoperability with events:
+        streams can signal events, and
+        awaits can be sources of streams.
+    - Interoperability with tasks:
+        streams can have tasks as sources, and
+        tasks can await streams.
 
 Atmos is inspired by [synchronous programming languages][sync] like [Ceu][ceu]
 and [Esterel][esterel].
@@ -135,6 +150,7 @@ The standard distribution of Atmos provides the following environments:
 [lua]:          https://www.lua.org/
 [sc]:           https://en.wikipedia.org/wiki/Structured_concurrency
 [events]:       https://en.wikipedia.org/wiki/Event-driven_programming
+[rx]:           https://en.wikipedia.org/wiki/ReactiveX
 [sync]:         https://fsantanna.github.io/sc.html
 [ceu]:          http://www.ceu-lang.org/
 [esterel]:      https://en.wikipedia.org/wiki/Esterel
