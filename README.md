@@ -39,18 +39,25 @@ three main functionalities:
 - Event Signaling Mechanisms:
     - An `await` primitive suspends a task and wait for events.
     - An `emit` primitive signal events and awake awaiting tasks.
-- Functional Streams (à la [ReactiveX][rx]):
-    - A rich set of functional combinators for lazy stream processing.
+- Functional Streams (à la [JavaStreams][java-streams]):
+    - Functional combinators for lazy (pull-based) stream processing.
     - Proper finalization of stateful streams.
-    - Interoperability with events:
-        streams can signal events &
-        awaits can be sources of streams.
-    - Interoperability with tasks:
-        streams can have tasks as sources &
-        tasks can await streams.
+    - TODO: merge
+    - Interoperability with tasks & events:
+        streams can have tasks and awaits as sources,
+        streams can signal events (TODO), and
+        tasks can await streams (TODO).
 
 Atmos is inspired by [synchronous programming languages][sync] like [Ceu][ceu]
 and [Esterel][esterel].
+
+[lua]:          https://www.lua.org/
+[sc]:           https://en.wikipedia.org/wiki/Structured_concurrency
+[rx]:           https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html
+[java-streams]: https://en.wikipedia.org/wiki/Event-driven_programming
+[sync]:         https://fsantanna.github.io/sc.html
+[ceu]:          http://www.ceu-lang.org/
+[esterel]:      https://en.wikipedia.org/wiki/Esterel
 
 # Hello World!
 
@@ -136,6 +143,11 @@ The standard distribution of Atmos provides the following environments:
     An environment that relies on [IUP][iup] ([iup-lua][iup-lua]) to provide
     graphical user interfaces (GUIs).
 
+[luasocket]:    https://lunarmodules.github.io/luasocket/
+[luasdl]:       https://github.com/Tangent128/luasdl2/
+[iup]:          https://www.tecgraf.puc-rio.br/iup/
+[iup-lua]:      https://www.tecgraf.puc-rio.br/iup/en/basic/index.html
+
 # Resources
 
 - [A toy problem][toy]: Drag, Click, or Cancel
@@ -147,15 +159,4 @@ The standard distribution of Atmos provides the following environments:
 - Mailing list (Ceu):
     - https://groups.google.com/g/ceu-lang
 
-[lua]:          https://www.lua.org/
-[sc]:           https://en.wikipedia.org/wiki/Structured_concurrency
-[events]:       https://en.wikipedia.org/wiki/Event-driven_programming
-[rx]:           https://en.wikipedia.org/wiki/ReactiveX
-[sync]:         https://fsantanna.github.io/sc.html
-[ceu]:          http://www.ceu-lang.org/
-[esterel]:      https://en.wikipedia.org/wiki/Esterel
-[luasocket]:    https://lunarmodules.github.io/luasocket/
-[luasdl]:       https://github.com/Tangent128/luasdl2/
-[iup]:          https://www.tecgraf.puc-rio.br/iup/
-[iup-lua]:      https://www.tecgraf.puc-rio.br/iup/en/basic/index.html
-[toy]:          https://fsantanna.github.io/toy.html
+[toy]:  https://fsantanna.github.io/toy.html
