@@ -11,4 +11,5 @@ call(function ()
     )
 end)
 
--- @1 --> fr_await --> take(1) --> to_each --> \{print "Hello World"}
+-- from(@1) --> take(1) --> to_each --> \{print "Hello World"}
+-- fr_await(@1) --> take(1) --> to_each --> \{print "Hello World"}
