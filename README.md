@@ -39,14 +39,14 @@ three main functionalities:
 - Event Signaling Mechanisms:
     - An `await` primitive suspends a task and wait for events.
     - An `emit` primitive signal events and awake awaiting tasks.
-- Functional Streams (à la [ReactiveX][rx])":
+- Functional Streams (à la [ReactiveX][rx]):
     - A rich set of functional combinators for lazy stream processing.
     - Proper finalization of stateful streams.
     - Interoperability with events:
-        streams can signal events, and
+        streams can signal events &
         awaits can be sources of streams.
     - Interoperability with tasks:
-        streams can have tasks as sources, and
+        streams can have tasks as sources &
         tasks can await streams.
 
 Atmos is inspired by [synchronous programming languages][sync] like [Ceu][ceu]
