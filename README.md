@@ -42,7 +42,6 @@ three main functionalities:
 - Functional Streams (à la [JavaStreams][java-streams]):
     - Functional combinators for lazy (pull-based) stream processing.
     - Proper finalization of stateful streams.
-    - TODO: merge
     - Interoperability with tasks & events:
         streams can have tasks and awaits as sources,
         streams can signal events (TODO), and
