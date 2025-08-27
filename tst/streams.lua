@@ -1,5 +1,8 @@
 local atmos = require "atmos"
+
 local S = require "atmos.streams"
+S.methods(true)
+
 require "test"
 
 do
@@ -8,7 +11,7 @@ do
     emit 'E'
     emit 'E'
     spawn(function()
-        local t = S.to_table(S.take(s, 2))
+        local t = s:take(2):to_table()
         out('ok')
         assert(#t==2 and t[1]=='E' and t[2]=='E')
     end)
@@ -34,7 +37,7 @@ do
     emit 'E'
     emit 'E'
     spawn(function()
-        local t = S.to_table(S.take(s, 2))
+        local t = s:take(2):to_table()
         out('ok')
         assert(#t==2 and t[1]=='E' and t[2]=='E')
     end)
@@ -48,8 +51,6 @@ do
     assertx(out(), "antes\ndefer\nmeio\ndefer\nok\ndepois\nfim\n")
     atmos.close()
 end
-
-merge --> first
 
 do
     print("Testing...", "task 2: abortion")
