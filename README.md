@@ -39,13 +39,13 @@ three main functionalities:
 - Event Signaling Mechanisms:
     - An `await` primitive suspends a task and wait for events.
     - An `emit` primitive signal events and awake awaiting tasks.
-- Functional Streams (à la [JavaStreams][java-streams]):
-    - Functional combinators for lazy (pull-based) stream processing.
-    - Proper finalization of stateful streams.
+- Pull-Based Streams (à la [JavaStreams][java-streams]):
+    - Functional combinators for lazy (infinite) lists.
     - Interoperability with tasks & events:
         streams can have tasks and awaits as sources,
         streams can signal events (TODO), and
         tasks can await streams (TODO).
+    - Proper finalization of stateful (task-based) streams.
 
 Atmos is inspired by [synchronous programming languages][sync] like [Ceu][ceu]
 and [Esterel][esterel].
