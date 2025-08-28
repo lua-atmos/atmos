@@ -7,7 +7,7 @@ require "test"
 
 do
     print("Testing...", "await 1")
-    local s = S.fr_await('E')
+    local s = S.fr_awaits('E')
     emit 'E'
     emit 'E'
     spawn(function()
@@ -31,24 +31,14 @@ do
         local _ <close> = defer(function()
             out'defer'
         end)
-        return await('E')
+        await('E')
+        return 'ok'
     end
-    local s = S.fr_task(T)
-    emit 'E'
-    emit 'E'
     spawn(function()
-        local t = s:take(2):to_table()
-        out('ok')
-        assert(#t==2 and t[1]=='E' and t[2]=='E')
+        local v = S.fr_task(spawn(T)):to_first()
+        assert(v == 'ok')
     end)
-    out 'antes'
-    emit('E', 1)
-    out 'meio'
     emit('E')
-    out 'depois'
-    emit('E')
-    out 'fim'
-    assertx(out(), "antes\ndefer\nmeio\ndefer\nok\ndepois\nfim\n")
     atmos.close()
 end
 
@@ -58,20 +48,41 @@ do
         local _ <close> = defer(function()
             out'defer'
         end)
-        return await('E')
+        await('E')
     end
-    local s = S.fr_task(T)
     spawn(function()
         watching('F', function()
-            S.to_table(s)
-            error "never reached"
+            local s = S.fr_task(spawn(T)):to_first()
+            await(false)
         end)
     end)
-    emit('E')
-    emit('E')
+out'x'
     emit('F')
-    assertx(out(), "defer\ndefer\ndefer\n")
+out'y'
+    assertx(out(), "defer\n")
     atmos.close()
+end
+
+do
+    print("Testing...", "merge 1")
+    local xy  = S.fr_awaits('X'):take(1):concat(S.fr_awaits('Y'):take(1))
+    local abc = S.fr_awaits('A'):take(1):concat(S.fr_awaits('B'):take(1)):concat(S.fr_awaits('C'):take(1))
+    spawn(function()
+        local s = xy:merge(abc)
+        s:to_each(function(it)
+            print(it)
+        end)
+    end)
+    emit 'X'
+    emit 'Y'
+    emit 'Y'
+    emit 'X'
+    emit 'Y'
+error'oi'
+    --emit 'Y'
+    --emit 'A'
+    --emit 'B'
+    --emit 'C'
 end
 
 error "OK"
