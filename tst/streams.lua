@@ -36,9 +36,10 @@ do
     end
     spawn(function()
         local v = S.fr_task(spawn(T)):to_first()
-        assert(v == 'ok')
+        out(v)
     end)
     emit('E')
+    assertx(out(), "defer\nok\n")
     atmos.close()
 end
 
@@ -52,13 +53,11 @@ do
     end
     spawn(function()
         watching('F', function()
-            local s = S.fr_task(spawn(T)):to_first()
+            local s = S.fr_task(spawn(T))
             await(false)
         end)
     end)
-out'x'
     emit('F')
-out'y'
     assertx(out(), "defer\n")
     atmos.close()
 end
@@ -74,11 +73,11 @@ do
         end)
     end)
     emit 'X'
+error'oi'
     emit 'Y'
     emit 'Y'
     emit 'X'
     emit 'Y'
-error'oi'
     --emit 'Y'
     --emit 'A'
     --emit 'B'

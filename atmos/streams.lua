@@ -13,7 +13,8 @@ function S.fr_task (t)
         if not ok then
             ok = true
             local t <close> = t
-            return await(t)
+            local v = await(t)
+            return v
         end
     end
 end
