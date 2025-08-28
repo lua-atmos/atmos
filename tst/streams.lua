@@ -71,17 +71,24 @@ do
         s:to_each(function(it)
             print(it)
         end)
+print'ok'
     end)
+
     emit 'X'
-error'oi'
-    emit 'Y'
-    emit 'Y'
     emit 'X'
+    emit 'A'
+    emit 'B'
+print'1'
     emit 'Y'
-    --emit 'Y'
-    --emit 'A'
-    --emit 'B'
-    --emit 'C'
+print'2'
+
+    emit 'C'
+    emit 'Y'
+    emit 'A'
+    emit 'X'
+    emit 'B'
+    emit 'X'
+    emit 'C'
 end
 
 error "OK"

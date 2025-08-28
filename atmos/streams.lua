@@ -13,8 +13,7 @@ function S.fr_task (t)
         if not ok then
             ok = true
             local t <close> = t
-            local v = await(t)
-            return v
+            return await(t)
         end
     end
 end
@@ -26,8 +25,12 @@ function S.merge (s1, s2)
             function() return s2() end
         )
     end)
+    local ok = false
     return function ()
-        return await(t)
+        if not ok then
+            ok = true
+            return await(t)
+        end
     end
 end
 
