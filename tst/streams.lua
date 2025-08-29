@@ -34,7 +34,7 @@ do
         return 'ok'
     end
     spawn(function()
-        local v = S.fr_task(spawn(T)):to_first()
+        local v = S.fr_spawn(T):to_first()
         out(v)
     end)
     emit('E')
@@ -52,7 +52,8 @@ do
     end
     spawn(function()
         watching('F', function()
-            local s = S.fr_task(spawn(T))
+            local s = S.fr_spawn(T)
+            s:to_table()
             await(false)
         end)
     end)

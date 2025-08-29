@@ -2,13 +2,11 @@ require "atmos.env.clock"
 local S = require "atmos.streams"
 
 call(function ()
-    local s1 = S.fr_await(clock{s=1})
-    local s2 = S.take(s1, 5)
-    local s3 = S.to_each(s2,
-        function ()
+    S.fr_awaits(clock{s=1})
+        :take(5)
+        :to_each(function()
             print("Hello World!")
-        end
-    )
+        end)
 end)
 
 -- from(@1) --> take(1) --> to_each --> \{print "Hello World"}

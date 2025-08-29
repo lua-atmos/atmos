@@ -8,12 +8,13 @@ function S.fr_awaits (...)
     return setmetatable({f=f}, S.mt)
 end
 
-function S.fr_task (t)
+function S.fr_spawn (T, ...)
+    local args = { ... }
     local ok = false
     local f = function ()
         if not ok then
             ok = true
-            local t <close> = t
+            local t <close> = spawn(T, table.unpack(args))
             return await(t)
         end
     end
