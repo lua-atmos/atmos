@@ -2,20 +2,22 @@ local S = require "streams"
 
 function S.fr_awaits (...)
     local args = { ... }
-    return function ()
+    local f = function ()
         return await(table.unpack(args))
     end
+    return setmetatable({f=f}, S.mt)
 end
 
 function S.fr_task (t)
     local ok = false
-    return function ()
+    local f = function ()
         if not ok then
             ok = true
             local t <close> = t
             return await(t)
         end
     end
+    return setmetatable({f=f}, S.mt)
 end
 
 local N = 0
@@ -38,13 +40,11 @@ function S.par (s1, s2)
         local t2 <close> = spawn(T, n, s2)
         await(false)
     end)
-    local mt = getmetatable(t)
-    mt.__index = getmetatable(s1).__index
-    mt.__call = function (t)
+    local f = function (t)
         local _,v = await(n)
         return v
     end
-    return t
+    return setmetatable({f=f}, S.mt)
 end
 
 return S

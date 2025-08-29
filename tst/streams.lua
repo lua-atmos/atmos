@@ -68,12 +68,14 @@ do
     local _ <close> = spawn(function()
         local xy = x:par(y)
         xy:to_each(function(it)
-            print(it)
+            out(it)
         end)
     end)
     emit 'X'
     emit 'Y'
     emit 'X'
+    assertx(out(), "X\nY\nX\n")
+    atmos.close()
 end
 error'ok'
 
