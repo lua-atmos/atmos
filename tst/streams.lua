@@ -62,7 +62,7 @@ do
 end
 
 do
-    print("Testing...", "merge 1")
+    print("Testing...", "par 1")
     local x = S.fr_awaits('X')
     local y = S.fr_awaits('Y')
     local _ <close> = spawn(function()
@@ -77,46 +77,33 @@ do
     assertx(out(), "X\nY\nX\n")
     atmos.close()
 end
-error'ok'
 
 do
-    print("Testing...", "merge 1")
+    print("Testing...", "par 2")
     local xy  = S.fr_awaits('X'):take(1):concat(S.fr_awaits('Y'):take(1))
-    local abc = S.fr_awaits('A'):take(1):concat(S.fr_awaits('B'):take(1)):concat(S.fr_awaits('C'):take(1))
+    local abc = S.fr_awaits('A'):take(1):concat(S.fr_awaits('B'):take(2)):concat(S.fr_awaits('C'):take(1))
     spawn(function()
-        local s = xy:merge(abc)
+        local s = xy:par(abc)
         s:to_each(function(it)
-            print(it)
+            out(it)
         end)
-print'ok'
     end)
 
-    emit 'X'
-    emit 'X'
-    emit 'A'
-    emit 'B'
-print'1'
     emit 'Y'
-print'2'
-
+    emit 'X'    -- X
+    emit 'X'
+    emit 'A'    -- A
+    emit 'B'    -- B
+    emit 'A'
+    emit 'X'
+    emit 'Y'    -- Y
     emit 'C'
     emit 'Y'
     emit 'A'
     emit 'X'
-    emit 'B'
+    emit 'B'    -- B
     emit 'X'
-    emit 'C'
-end
-
-error "OK"
-
-do
-    print("Testing...", "await 2: error")
-    local _,err = pcall(function ()
-        spawn(function ()
-            await()
-        end)
-    end)
-    assertfx(err, "task.lua:19: invalid await : expected event")
+    emit 'C'    -- C
+    assertx(out(), "X\nA\nB\nY\nB\nC\n")
     atmos.close()
 end
