@@ -1,7 +1,6 @@
 local atmos = require "atmos"
 
 local S = require "atmos.streams"
-S.methods(true)
 
 require "test"
 
@@ -61,6 +60,22 @@ do
     assertx(out(), "defer\n")
     atmos.close()
 end
+
+do
+    print("Testing...", "merge 1")
+    local x = S.fr_awaits('X')
+    local y = S.fr_awaits('Y')
+    local _ <close> = spawn(function()
+        local xy = x:par(y)
+        xy:to_each(function(it)
+            print(it)
+        end)
+    end)
+    emit 'X'
+    emit 'Y'
+    emit 'X'
+end
+error'ok'
 
 do
     print("Testing...", "merge 1")
