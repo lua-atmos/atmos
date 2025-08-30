@@ -85,7 +85,21 @@ as follows:
 - The `every` loop will execute its inner function every second.
 - Once the `watching` terminates, the `call` returns back to Lua.
 
-`TODO: streams`
+Now, the same specification, but using streams:
+
+```
+require "atmos.env.clock"
+local S = require "atmos.streams"
+
+call(function ()
+    local s1 = S.from(clock{s=5}):take(1)
+    local s2 = S.from(clock{s=1})
+    s1:paror(s2)
+        :to_each(function()
+            print("Hello World!")
+        end)
+end)
+```
 
 # Install & Run
 
@@ -102,7 +116,8 @@ atmos
 ├── env/
 │   ├── clock/
 │   │   ├── exs/
-│   │   │   └── hello.lua
+│   │   │   ├── hello.lua
+│   │   │   └── hello-rx.lua
 │   │   └── init.lua
 │   ├── iup/
 │   │   ├── exs/
@@ -119,6 +134,7 @@ atmos
 │       └── init.lua
 ├── init.lua
 ├── run.lua
+├── streams.lua
 └── util.lua
 ```
 

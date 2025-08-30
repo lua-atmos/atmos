@@ -1,5 +1,14 @@
 local S = require "streams"
 
+local from = S.from
+
+function S.from (v)
+    if _is_(v, 'clock') then
+        return S.fr_awaits(v)
+    end
+    return from(v)
+end
+
 -------------------------------------------------------------------------------
 
 local function fr_awaits (t)
@@ -49,7 +58,10 @@ local function T (n, s)
 end
 
 local function par (t)
-    local _,v = await(t.n)
+    local x,v = await(_or_(t.n,t.t))
+    if _is_(x, 'task') then
+        return nil
+    end
     return v
 end
 

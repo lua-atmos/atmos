@@ -144,11 +144,12 @@ do
         xy:to_each(function(it)
             out(it)
         end)
+        out 'fim'
     end)
     emit 'X'
     emit 'Y'
     emit 'X'
-    assertx(out(), "X\n")
+    assertx(out(), "X\nfim\n")
     atmos.close()
 end
 
@@ -165,14 +166,14 @@ do
         local y = S.fr_spawn(T, 'B'):take(1)
         local xy = x:paror(y)
         watching ('X', function()
-            xy:take(1):to_each(function(it)
+            xy:to_each(function(it)
                 out(it)
             end)
         end)
         out 'X'
     end)
     emit 'B'
-    emit 'X'
+    --emit 'X'
     emit 'A'
     assertx(out(), "defer\tB\nB\ndefer\tA\nX\n")
     atmos.close()
