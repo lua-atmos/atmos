@@ -121,7 +121,50 @@ do
         watching ('X', function()
             local x = S.fr_spawn(T, 'A')
             local y = S.fr_spawn(T, 'B')
-            local xy = x:par(y)                 -- close aqui e matar por fora
+            local xy = x:par(y)
+            xy:take(1):to_each(function(it)
+                out(it)
+            end)
+        end)
+        out 'X'
+    end)
+    emit 'B'
+    emit 'X'
+    emit 'A'
+    assertx(out(), "defer\tB\nB\ndefer\tA\nX\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "paror 1")
+    local x = S.fr_awaits('X'):take(1)
+    local y = S.fr_awaits('Y'):take(1)
+    local _ <close> = spawn(function()
+        local xy = x:paror(y)
+        xy:to_each(function(it)
+            out(it)
+        end)
+    end)
+    emit 'X'
+    emit 'Y'
+    emit 'X'
+    assertx(out(), "X\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "paror 2: defer")
+    function T (x)
+        local _ <close> = defer(function()
+            out('defer',x)
+        end)
+        return await(x)
+    end
+    local _ <close> = spawn(function()
+        local x = S.fr_spawn(T, 'A'):take(1)
+        local y = S.fr_spawn(T, 'B'):take(1)
+        local xy = x:paror(y)
+        watching ('X', function()
             xy:take(1):to_each(function(it)
                 out(it)
             end)

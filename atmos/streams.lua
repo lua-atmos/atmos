@@ -68,6 +68,21 @@ function S.par (s1, s2)
     return setmetatable(t, S.mt)
 end
 
+function S.paror (s1, s2)
+    N = N + 1
+    local n = N
+    local t = {
+        n = n,
+        t = spawn(function()
+            local t1 <close> = spawn(T, n, s1)
+            local t2 <close> = spawn(T, n, s2)
+            await(_or_(t1,t2))
+        end),
+        f = par,
+    }
+    return setmetatable(t, S.mt)
+end
+
 -------------------------------------------------------------------------------
 
 return S
