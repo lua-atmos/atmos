@@ -108,3 +108,31 @@ do
     assertx(out(), "X\nA\nB\nY\nB\nC\n")
     atmos.close()
 end
+
+do
+    print("Testing...", "par 3: defer")
+    function T (x)
+        local _ <close> = defer(function()
+            out('defer',x)
+        end)
+        return await(x)
+    end
+    local _ <close> = spawn(function()
+        watching ('X', function()
+            local x = S.fr_spawn(T, 'A')
+            local y = S.fr_spawn(T, 'B')
+            local xy = x:par(y)                 -- close aqui e matar por fora
+            xy:take(1):to_each(function(it)
+                out(it)
+            end)
+        end)
+        out 'X'
+    end)
+    emit 'B'
+    emit 'X'
+    emit 'A'
+    assertx(out(), "defer\tB\nB\ndefer\tA\nX\n")
+    atmos.close()
+end
+
+

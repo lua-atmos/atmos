@@ -1,25 +1,40 @@
 local S = require "streams"
 
+-------------------------------------------------------------------------------
+
+local function fr_awaits (t)
+    return await(table.unpack(t.args))
+end
+
 function S.fr_awaits (...)
-    local args = { ... }
-    local f = function ()
-        return await(table.unpack(args))
+    local t = {
+        args = { ... },
+        f    = fr_awaits,
+    }
+    return setmetatable(t, S.mt)
+end
+
+-------------------------------------------------------------------------------
+
+local function fr_spawn (t)
+    if not t.ok then
+        t.ok = true
+        local x <close> = spawn(t.T, table.unpack(t.args))
+        return await(x)
     end
-    return setmetatable({f=f}, S.mt)
 end
 
 function S.fr_spawn (T, ...)
-    local args = { ... }
-    local ok = false
-    local f = function ()
-        if not ok then
-            ok = true
-            local t <close> = spawn(T, table.unpack(args))
-            return await(t)
-        end
-    end
-    return setmetatable({f=f}, S.mt)
+    local t = {
+        T    = T,
+        args = { ... },
+        ok   = false,
+        f    = fr_spawn,
+    }
+    return setmetatable(t, S.mt)
 end
+
+-------------------------------------------------------------------------------
 
 local N = 0
 
@@ -33,19 +48,26 @@ local function T (n, s)
     end
 end
 
-function S.par (s1, s2)
-    local n = N
-    N = N + 1
-    local t = spawn(function()
-        local t1 <close> = spawn(T, n, s1)
-        local t2 <close> = spawn(T, n, s2)
-        await(false)
-    end)
-    local f = function (t)
-        local _,v = await(n)
-        return v
-    end
-    return setmetatable({f=f}, S.mt)
+local function par (t)
+    local _,v = await(t.n)
+    return v
 end
+
+function S.par (s1, s2)
+    N = N + 1
+    local n = N
+    local t = {
+        n = n,
+        t = spawn(function()
+            local t1 <close> = spawn(T, n, s1)
+            local t2 <close> = spawn(T, n, s2)
+            await(false)
+        end),
+        f = par,
+    }
+    return setmetatable(t, S.mt)
+end
+
+-------------------------------------------------------------------------------
 
 return S
