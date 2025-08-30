@@ -705,6 +705,9 @@ local function emit (time, t, ...)
         if not ok then
             if coroutine.status(t._.th) == 'suspended' then
                 ok, err = coroutine.resume(t._.th, 'atm_error', err)
+                if ok then
+                    task_result(t, ok, err)
+                end
             end
             assertn(0, ok, err) -- TODO: error in defer?
         else

@@ -729,9 +729,9 @@ do
             return await(true)
         end)
         emit("true")
-        return print("ok")
+        out("ok")
     end
-    assertx(out(), "0\n1\n2\n3\n5\n6\n7\n")
+    assertx(out(), "ok\n")
     atmos.close()
 end
 
@@ -742,17 +742,50 @@ do
             local _ <close> = spawn(function ()
                 await(true)
                 local _ <close> = setmetatable({}, {__close=function ()
-                    print("1")
+                    out("1")
                 end})
                 emit_in("global", "")
             end);
             await(true)
-            print("0")
+            out("0")
         end)
         emit("")
-        print("2")
+        out("2")
     end
-    assertx(out(), "0\n1\n2\n3\n5\n6\n7\n")
+    assertx(out(), "0\n1\n2\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "abort 4")
+    do
+        spawn(true, function ()
+            par_or (
+                function ()
+                    await(false)
+                end,
+                function ()
+                    catch('atm-do', "X",
+                        function ()
+                            par_or(
+                                function ()
+                                    await(false)
+                                end,
+                                function ()
+                                    await("A")
+                                    throw('atm-do',"X")
+                                end
+                            )
+                        end
+                    )
+                    out("1")
+                end
+            )
+            out("2")
+        end)
+        emit("A")
+        assertx(out(), "1\n2\n")
+    end
     atmos.close()
 end
 
@@ -763,7 +796,7 @@ do
     local _,err = pcall(function ()
         spawn()
     end)
-    assertx(err, "invalid spawn : expected task prototype")
+    assertfx(err, "invalid spawn : expected task prototype")
 end
 
 do
@@ -774,5 +807,5 @@ do
     end)
     --assertfx(err, "task.lua:%d+: invalid spawn : expected function prototype")
     --assertfx(err, "task.lua:%d+: invalid spawn : transparent modifier mismatch")
-    assertx(err, "invalid spawn : transparent modifier mismatch")
+    assertfx(err, "invalid spawn : transparent modifier mismatch")
 end
