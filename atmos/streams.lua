@@ -45,15 +45,62 @@ local N = 0
 
 local function T (n, s)
     while true do
-        local v = s()
+print'antes'
+        local v = await'X' --s()
+print('depois', v)
         if v == nil then
+print'fim'
             return
         end
-        emit_in(2, n, v)
+print('emit', n, v)
+        --emit_in(2, n, v)
+        emit_in('global', n, v)
     end
 end
 
-local function par (t)
+local function TT (ss, n)
+    local ss <close> = ss
+    local ts <close> = tasks()
+    while true do
+        local s = ss()
+        if s == nil then
+            return
+        end
+print'spawn'
+        spawn_in(ts, T, n, s)
+    end
+end
+
+local function close (t)
+print'-=- CLOSE -=-'
+    t.t:__close()
+end
+
+-------------------------------------------------------------------------------
+
+local function xpar (t)
+print('await', t.n)
+    local n,v = await(t.n)
+    print(n,v)
+    return v
+end
+
+function S.xpar (ss)
+    N = N + 1
+    local n = N
+    local t = {
+        n = n,
+        t = spawn(TT, ss, n),
+        f = xpar,
+        close = close,
+    }
+    return setmetatable(t, S.mt)
+end
+
+-------------------------------------------------------------------------------
+
+--[[
+local function xpar (t)
     local x,v = await(_or_(t.n,t.t))
     if _is_(x, 'task') then
         return nil
@@ -61,22 +108,23 @@ local function par (t)
     return v
 end
 
-function S.par (s1, s2)
+function S.xpar (ss)
     N = N + 1
     local n = N
     local t = {
         n = n,
         t = spawn(function()
-            local t1 <close> = spawn(T, n, s1)
+            local ts <close> = spawn(T, n, s1)
             local t2 <close> = spawn(T, n, s2)
             await(false)
         end),
-        f = par,
+        f = xpar,
     }
     return setmetatable(t, S.mt)
 end
+]]
 
-function S.paror (s1, s2)
+function S.xparor (s1, s2)
     N = N + 1
     local n = N
     local t = {
@@ -86,7 +134,7 @@ function S.paror (s1, s2)
             local t2 <close> = spawn(T, n, s2)
             await(_or_(t1,t2))
         end),
-        f = par,
+        f = xpar,
     }
     return setmetatable(t, S.mt)
 end
