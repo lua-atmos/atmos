@@ -67,32 +67,31 @@ do
     local x = S.fr_awaits('X')
     local y = S.fr_awaits('Y')
     local _ <close> = spawn(function()
-        local xy = S.from(x,y):xpar()
+        local xy = S.from{x,y}:xpar()
         xy:to_each(function(it)
-            print(it)
+            out(it)
         end)
     end)
-print'>>>'
     emit 'X'
-print'<<<'
     emit 'Y'
     emit 'X'
-    print '-=- fim -=-'
     assertx(out(), "X\nY\nX\n")
     atmos.close()
 end
 
 do
     print("Testing...", "par 2")
-    local xy  = S.from(S.fr_awaits('X'):take(1), S.fr_awaits('Y'):take(1)):xseq()
-    local abc = S.from (
+    local xy = S.from {
+        S.fr_awaits('X'):take(1),
+        S.fr_awaits('Y'):take(1)
+    }:xseq()
+    local abc = S.from {
         S.fr_awaits('A'):take(1),
         S.fr_awaits('B'):take(2),
         S.fr_awaits('C'):take(1)
-    ):xseq()
+    }:xseq()
     spawn(function()
-        local s = xy:xpar(abc)
-        s:to_each(function(it)
+        local s = S.from{xy,abc}:xpar():to_each(function(it)
             out(it)
         end)
     end)
@@ -128,7 +127,7 @@ do
         watching ('X', function()
             local x = S.fr_spawns(T, 'A')
             local y = S.fr_spawns(T, 'B')
-            local xy = x:xpar(y)
+            local xy = S.from{x,y}:xpar()
             xy:take(1):to_each(function(it)
                 out(it)
             end)
@@ -143,27 +142,11 @@ do
 end
 
 do
-    print("Testing...", "par 4: tasks")
-    spawn(function()
-        S.from(clock{s=1}):map(function ()
-            S.from(clock{ms=100})
-                :zip(S.from())
-                :map(function (_,v) return v end)
-        end):xpar():print()
-    end)
-    emit 'B'
-    emit 'X'
-    emit 'A'
-    assertx(out(), "defer\tB\nB\ndefer\tA\nX\n")
-    atmos.close()
-end
-
-do
     print("Testing...", "paror 1")
     local x = S.fr_awaits('X'):take(1)
     local y = S.fr_awaits('Y'):take(1)
     local _ <close> = spawn(function()
-        local xy = x:xparor(y)
+        local xy = S.from{x,y}:xparor()
         xy:to_each(function(it)
             out(it)
         end)
@@ -187,7 +170,7 @@ do
     local _ <close> = spawn(function()
         local x = S.fr_spawns(T, 'A'):take(1)
         local y = S.fr_spawns(T, 'B'):take(1)
-        local xy = x:xparor(y)
+        local xy = S.from{x,y}:xparor()
         watching ('X', function()
             xy:to_each(function(it)
                 out(it)

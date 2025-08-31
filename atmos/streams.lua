@@ -45,53 +45,46 @@ local N = 0
 
 local function T (n, s)
     while true do
-print'antes'
-        local v = await'X' --s()
-print('depois', v)
+        local v = s()
         if v == nil then
-print'fim'
             return
         end
-print('emit', n, v)
-        --emit_in(2, n, v)
-        emit_in('global', n, v)
+        emit_in(3, n, v)
     end
 end
 
-local function TT (ss, n)
+local function TT (ts, ss, n)
     local ss <close> = ss
-    local ts <close> = tasks()
+    local ts <close> = ts
     while true do
         local s = ss()
         if s == nil then
-            return
+            await(false)
         end
-print'spawn'
         spawn_in(ts, T, n, s)
     end
 end
 
 local function close (t)
-print'-=- CLOSE -=-'
-    t.t:__close()
+    local _ <close> = t.t
 end
 
 -------------------------------------------------------------------------------
 
 local function xpar (t)
-print('await', t.n)
-    local n,v = await(t.n)
-    print(n,v)
+    local _,v = await(t.n)
     return v
 end
 
 function S.xpar (ss)
     N = N + 1
     local n = N
+    local ts = tasks()
     local t = {
-        n = n,
-        t = spawn(TT, ss, n),
-        f = xpar,
+        n  = n,
+        ts = ts,
+        t  = spawn(TT, ts, ss, n),
+        f  = xpar,
         close = close,
     }
     return setmetatable(t, S.mt)
@@ -99,42 +92,24 @@ end
 
 -------------------------------------------------------------------------------
 
---[[
-local function xpar (t)
-    local x,v = await(_or_(t.n,t.t))
-    if _is_(x, 'task') then
+local function xparor (t)
+    local x,v = await(_or_(t.n,t.ts))
+    if v == t.ts then
         return nil
     end
     return v
 end
 
-function S.xpar (ss)
+function S.xparor (ss)
     N = N + 1
     local n = N
+    local ts = tasks()
     local t = {
-        n = n,
-        t = spawn(function()
-            local ts <close> = spawn(T, n, s1)
-            local t2 <close> = spawn(T, n, s2)
-            await(false)
-        end),
-        f = xpar,
-    }
-    return setmetatable(t, S.mt)
-end
-]]
-
-function S.xparor (s1, s2)
-    N = N + 1
-    local n = N
-    local t = {
-        n = n,
-        t = spawn(function()
-            local t1 <close> = spawn(T, n, s1)
-            local t2 <close> = spawn(T, n, s2)
-            await(_or_(t1,t2))
-        end),
-        f = xpar,
+        n  = n,
+        ts = ts,
+        t  = spawn(TT, ts, ss, n),
+        f  = xparor,
+        close = close,
     }
     return setmetatable(t, S.mt)
 end
