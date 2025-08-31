@@ -25,20 +25,16 @@ end
 
 -------------------------------------------------------------------------------
 
-local function fr_spawn (t)
-    if not t.ok then
-        t.ok = true
-        local x <close> = spawn(t.T, table.unpack(t.args))
-        return await(x)
-    end
+local function fr_spawns (t)
+    local x <close> = spawn(t.T, table.unpack(t.args))
+    return await(x)
 end
 
-function S.fr_spawn (T, ...)
+function S.fr_spawns (T, ...)
     local t = {
         T    = T,
         args = { ... },
-        ok   = false,
-        f    = fr_spawn,
+        f    = fr_spawns,
     }
     return setmetatable(t, S.mt)
 end

@@ -34,7 +34,7 @@ do
         return 'ok'
     end
     spawn(function()
-        local v = S.fr_spawn(T):to_first()
+        local v = S.fr_spawns(T):to_first()
         out(v)
     end)
     emit('E')
@@ -52,7 +52,7 @@ do
     end
     spawn(function()
         watching('F', function()
-            local s = S.fr_spawn(T)
+            local s = S.fr_spawns(T)
             s:to_table()
             await(false)
         end)
@@ -119,8 +119,8 @@ do
     end
     local _ <close> = spawn(function()
         watching ('X', function()
-            local x = S.fr_spawn(T, 'A')
-            local y = S.fr_spawn(T, 'B')
+            local x = S.fr_spawns(T, 'A')
+            local y = S.fr_spawns(T, 'B')
             local xy = x:par(y)
             xy:take(1):to_each(function(it)
                 out(it)
@@ -162,8 +162,8 @@ do
         return await(x)
     end
     local _ <close> = spawn(function()
-        local x = S.fr_spawn(T, 'A'):take(1)
-        local y = S.fr_spawn(T, 'B'):take(1)
+        local x = S.fr_spawns(T, 'A'):take(1)
+        local y = S.fr_spawns(T, 'B'):take(1)
         local xy = x:paror(y)
         watching ('X', function()
             xy:to_each(function(it)
