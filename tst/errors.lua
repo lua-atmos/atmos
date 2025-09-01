@@ -266,3 +266,29 @@ do
         ==> attempt to perform arithmetic on a boolean value
     ]])
 end
+
+do
+    print("Testing...", "clock external error")
+    local out = exec [[
+        local _, err = pcall(function ()
+            call(function ()
+                require "atmos.env.clock"
+                local _ <close> = spawn(true, (function ()
+                    await(clock {h=0,min=0,s=0,ms=1 })
+                    emit("X")
+                end))
+                await("X")
+                throw("err")
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (call)
+         |  /usr/local/share/lua/5.4/atmos/env/clock/init.lua:10 (emit)
+         |  /tmp/err.lua:6 (emit) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:2 (task)
+         v  /tmp/err.lua:9 (throw) <- /tmp/err.lua:2 (task)
+        ==> err
+    ]])
+end

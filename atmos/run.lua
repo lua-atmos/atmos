@@ -112,14 +112,15 @@ end
 -------------------------------------------------------------------------------
 
 local function task_result (t, ok, err)
-    if t._.status == 'aborted' then
-        -- t aborted from outside
-        -- close now and continue normally
-        -- could not close before b/c t was running
-        -- TODO: lua5.5
-        coroutine.close(t._.th)
-    elseif ok then
+    if ok then
         -- no error: continue normally
+        if t._.status == 'aborted' then
+            -- t aborted from outside
+            -- close now and continue normally
+            -- could not close before b/c t was running
+            -- TODO: lua5.5
+            coroutine.close(t._.th)
+        end
     else
         coroutine.close(t._.th)
         error(err, 0)
