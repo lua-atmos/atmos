@@ -2,11 +2,11 @@ local S = require "streams"
 
 local from = S.from
 
-function S.from (v)
+function S.from (v, ...)
     if _is_(v, 'clock') then
-        return S.fr_awaits(v)
+        return S.fr_awaits(v, ...)
     end
-    return from(v)
+    return from(v, ...)
 end
 
 -------------------------------------------------------------------------------
