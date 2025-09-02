@@ -185,4 +185,40 @@ do
     atmos.close()
 end
 
+print "--- DEBOUNCE ---"
+
+do
+    print("Testing...", "debounce 1: task")
+    spawn(function()
+        while true do
+            local x = await(spawn(S.Debounce, 'X', 'Y'))
+            out(x.v)
+        end
+    end)
+    emit { tag='X', v=1 }
+    emit 'Y'
+    emit { tag='X', v=2 }
+    emit { tag='X', v=3 }
+    emit 'Y'
+    assertx(out(), "1\n3\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "debounce 2: stream")
+    spawn(function()
+        local x = S.fr_awaits 'X'
+        local y = S.fr_awaits 'Y'
+        x:debounce(y):to_each(function(it)
+            out(it.v)
+        end)
+    end)
+    emit { tag='X', v=1 }
+    emit 'Y'
+    emit { tag='X', v=2 }
+    emit { tag='X', v=3 }
+    emit 'Y'
+    assertx(out(), "1\n3\n")
+    atmos.close()
+end
 

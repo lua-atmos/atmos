@@ -1,3 +1,4 @@
+local S = require "atmos.streams"
 require "atmos.util"
 
 local run = {}
@@ -513,6 +514,8 @@ local function check_ret (awt, ...)
         elseif getmetatable(e) == meta_tasks then
             -- invert ts,t -> t,ts
             return true, select(2,...), select(1,...), select(3,...)
+        elseif S.is(e) then
+            return true, select(2,...)
         else
             return true, ...
         end
@@ -577,8 +580,10 @@ local function await_to_table (e, ...)
         else
             if e.tag == 'clock' then
                 e.cur = clock_to_ms(e)
+                T = e
+            else
+                T = { tag='_==_', e,... }
             end
-            T = e
         end
     elseif type(e) == 'function' then
         T = { tag='function', e,... }
