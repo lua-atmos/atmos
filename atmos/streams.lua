@@ -78,6 +78,38 @@ function S.debounce (src, ctl)
 end
 
 -------------------------------------------------------------------------------
+
+function S.Buffer (src, ctl)
+    local ret = {}
+    local e = await(src)
+    ret[#ret+1] = e
+    catch('X', function()
+        while true do
+            e = watching(src, function()    -- bounced
+                await(ctl)
+                throw 'X'                   -- debounced
+            end)
+            ret[#ret+1] = e
+        end
+    end)
+    return ret
+end
+
+function S.buffer (src, ctl)
+    src, ctl = src:emitter(), ctl:emitter()
+    local t = spawn(function()
+        local src <close> = src
+        local ctl <close> = ctl
+        S.xpar(S.from{src,ctl}):to()
+    end)
+    local deb = S.fr_spawns(S.Buffer, src, ctl)
+    deb.close = function ()
+        local _ <close> = t
+    end
+    return deb
+end
+
+-------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
 local N = 0

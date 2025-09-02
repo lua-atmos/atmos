@@ -222,3 +222,47 @@ do
     atmos.close()
 end
 
+
+print "--- BUFFER ---"
+
+do
+    print("Testing...", "buffer 1: task")
+    spawn(function()
+        while true do
+            local x = await(spawn(S.Buffer, 'X', 'Y'))
+            out(#x)
+            for _,t in ipairs(x) do
+                out(t.v)
+            end
+        end
+    end)
+    emit { tag='X', v=1 }
+    emit 'Y'
+    emit { tag='X', v=2 }
+    emit { tag='X', v=3 }
+    emit 'Y'
+    assertx(out(), "1\n1\n2\n2\n3\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "buffer 2: stream")
+    spawn(function()
+        local x = S.fr_awaits 'X'
+        local y = S.fr_awaits 'Y'
+        x:buffer(y):to_each(function(it)
+            out(#it)
+            for _,t in ipairs(it) do
+                out(t.v)
+            end
+        end)
+    end)
+    emit { tag='X', v=1 }
+    emit 'Y'
+    emit { tag='X', v=2 }
+    emit { tag='X', v=3 }
+    emit 'Y'
+    assertx(out(), "1\n1\n2\n2\n3\n")
+    atmos.close()
+end
+
