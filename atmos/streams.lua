@@ -44,17 +44,18 @@ end
 
 function S.emitter (s, as)
     local x
-    x = s:tap(function (v) emit_in(3, as or x, v) end)
+    x = s:tap(function (v) emit_in(3, as, v) end)
     return x
 end
 
 -------------------------------------------------------------------------------
 
-function S.Debounce (src, ctl)
+function S.Debounce (src, fctl)
     local e = await(src)
     catch('X', function()
         while true do
             e = watching(src, function()    -- bounced
+                local ctl --[[<close>]] = fctl()
                 await(ctl)
                 throw 'X'                   -- debounced
             end)
@@ -63,18 +64,14 @@ function S.Debounce (src, ctl)
     return e
 end
 
-function S.debounce (src, ctl)
-    src, ctl = src:emitter(), ctl:emitter()
-    local t = spawn(function()
-        local src <close> = src
-        local ctl <close> = ctl
-        S.xpar(S.from{src,ctl}):to()
-    end)
-    local deb = S.fr_spawns(S.Debounce, src, ctl)
-    deb.close = function ()
-        local _ <close> = t
+function S.debounce (src, fctl)
+    local ret = S.fr_spawns(S.Debounce, src, fctl)
+    local close = ret.close
+    ret.close = function ()
+        if close then close() end
+        local _ <close> = src
     end
-    return deb
+    return ret
 end
 
 -------------------------------------------------------------------------------

@@ -191,7 +191,7 @@ do
     print("Testing...", "debounce 1: task")
     spawn(function()
         while true do
-            local x = await(spawn(S.Debounce, 'X', 'Y'))
+            local x = await(spawn(S.Debounce, 'X', function() return 'Y' end))
             out(x.v)
         end
     end)
@@ -208,7 +208,7 @@ do
     print("Testing...", "debounce 2: stream")
     spawn(function()
         local x = S.fr_awaits 'X'
-        local y = S.fr_awaits 'Y'
+        local y = function () return S.fr_awaits 'Y' end
         x:debounce(y):to_each(function(it)
             out(it.v)
         end)
