@@ -229,7 +229,7 @@ do
     print("Testing...", "buffer 1: task")
     spawn(function()
         while true do
-            local x = await(spawn(S.Buffer, 'X', 'Y'))
+            local x = await(spawn(S.Buffer, 'X', function() return 'Y' end))
             out(#x)
             for _,t in ipairs(x) do
                 out(t.v)
@@ -249,7 +249,7 @@ do
     print("Testing...", "buffer 2: stream")
     spawn(function()
         local x = S.fr_awaits 'X'
-        local y = S.fr_awaits 'Y'
+        local y = function () return S.fr_awaits 'Y' end
         x:buffer(y):to_each(function(it)
             out(#it)
             for _,t in ipairs(it) do
@@ -258,11 +258,67 @@ do
         end)
     end)
     emit { tag='X', v=1 }
-    emit 'Y'
     emit { tag='X', v=2 }
+    emit 'Y'
+    emit 'Y'
     emit { tag='X', v=3 }
     emit 'Y'
-    assertx(out(), "1\n1\n2\n2\n3\n")
+    assertx(out(), "2\n1\n2\n0\n1\n3\n")
     atmos.close()
+    --   x   x   y    y  x   y
+    --         {x,x} {}     {x}
 end
 
+do
+    print("Testing...", "buffer 3: task debounce")
+    spawn(function()
+        while true do
+            local x = await (
+                spawn(S.Buffer, 'X', function()
+                    return spawn(S.Debounce, 'X', function()
+                        return 'Y'
+                    end)
+                end)
+            )
+            out(#x)
+            for _,t in ipairs(x) do
+                out(t.v)
+            end
+        end
+    end)
+    emit { tag='X', v=1 }
+    emit { tag='X', v=2 }
+    emit 'Y'
+    emit 'Y'
+    emit { tag='X', v=3 }
+    emit 'Y'
+    assertx(out(), "2\n1\n2\n1\n3\n")
+    atmos.close()
+    --   x   x   y    y  x   y
+    --         {x,x}        {x}
+end
+
+do
+    print("Testing...", "buffer 3: stream debounce")
+    spawn(function()
+        local x = S.fr_awaits 'X'
+        local y = S.fr_awaits 'Y'
+        local xy = function () return x:debounce(function() return S.fr_awaits'Y' end) end
+        x:buffer(xy):to_each(function(it)
+            out(#it)
+            for _,t in ipairs(it) do
+                out(t.v)
+            end
+        end)
+    end)
+    emit { tag='X', v=1 }
+    emit { tag='X', v=2 }
+    emit 'Y'
+    emit 'Y'
+    emit { tag='X', v=3 }
+    emit 'Y'
+    assertx(out(), "2\n1\n2\n1\n3\n")
+    atmos.close()
+    --   x   x   y    y  x   y
+    --         {x,x}        {x}
+end

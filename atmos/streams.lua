@@ -76,15 +76,18 @@ end
 
 -------------------------------------------------------------------------------
 
-function S.Buffer (src, ctl)
+function S.Buffer (src, fctl)
+    local ctl --[[<close>]] = fctl()
+    spawn(true, function()
+        await(ctl)
+        emit('e')
+    end)
     local ret = {}
-    local e = await(src)
-    ret[#ret+1] = e
     catch('X', function()
         while true do
-            e = watching(src, function()    -- bounced
-                await(ctl)
-                throw 'X'                   -- debounced
+            e = watching(src, function()    -- buffered
+                await('e')
+                throw 'X'                   -- debuffered
             end)
             ret[#ret+1] = e
         end
@@ -92,18 +95,14 @@ function S.Buffer (src, ctl)
     return ret
 end
 
-function S.buffer (src, ctl)
-    src, ctl = src:emitter(), ctl:emitter()
-    local t = spawn(function()
-        local src <close> = src
-        local ctl <close> = ctl
-        S.xpar(S.from{src,ctl}):to()
-    end)
-    local deb = S.fr_spawns(S.Buffer, src, ctl)
-    deb.close = function ()
-        local _ <close> = t
+function S.buffer (src, fctl)
+    local ret = S.fr_spawns(S.Buffer, src, fctl)
+    local close = ret.close
+    ret.close = function ()
+        if close then close() end
+        local _ <close> = src
     end
-    return deb
+    return ret
 end
 
 -------------------------------------------------------------------------------
