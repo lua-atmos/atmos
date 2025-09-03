@@ -229,7 +229,7 @@ do
     print("Testing...", "buffer 1: task")
     spawn(function()
         while true do
-            local x = await(spawn(S.Buffer, 'X', function() return 'Y' end))
+            local x = await(spawn(S.Buffer, 'X', 'Y'))
             out(#x)
             for _,t in ipairs(x) do
                 out(t.v)
@@ -249,7 +249,7 @@ do
     print("Testing...", "buffer 2: stream")
     spawn(function()
         local x = S.fr_awaits 'X'
-        local y = function () return S.fr_awaits 'Y' end
+        local y = S.fr_awaits 'Y'
         x:buffer(y):to_each(function(it)
             out(#it)
             for _,t in ipairs(it) do
@@ -274,11 +274,11 @@ do
     spawn(function()
         while true do
             local x = await (
-                spawn(S.Buffer, 'X', function()
-                    return spawn(S.Debounce, 'X', function()
+                spawn(S.Buffer, 'X',
+                    spawn(S.Debounce, 'X', function()
                         return 'Y'
                     end)
-                end)
+                )
             )
             out(#x)
             for _,t in ipairs(x) do
@@ -303,7 +303,7 @@ do
     spawn(function()
         local x = S.fr_awaits 'X'
         local y = S.fr_awaits 'Y'
-        local xy = function () return x:debounce(function() return S.fr_awaits'Y' end) end
+        local xy = x:debounce(function() return S.fr_awaits'Y' end)
         x:buffer(xy):to_each(function(it)
             out(#it)
             for _,t in ipairs(it) do
@@ -321,4 +321,34 @@ do
     atmos.close()
     --   x   x   y    y  x   y
     --         {x,x}        {x}
+end
+
+do
+    print("Testing...", "buffer 4: stream debounce - bug")
+
+    local N = 0
+    spawn(function()
+        local clicks = S.fr_awaits('click')
+        clicks
+            :buffer(clicks:debounce(function () return S.fr_awaits '250' end))
+            :map(function (t) return #t end)
+            :tap(function (n) print(n) ; N=n end)
+            :debounce(function () return S.fr_awaits '1000' end)
+            :tap(function () print'0' ; N=0 end)
+            :to()
+    end)
+
+fazer teste com 2x debounces em sequencia
+
+    assert(N == 0)
+    emit 'click'
+    emit '250'
+    assert(N == 1)
+    emit '250'
+
+    emit 'click'
+    emit '1000'
+    assert(N == 0)
+    emit '250'
+    assert(N == 1)
 end

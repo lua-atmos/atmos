@@ -54,6 +54,8 @@ function S.Debounce (src, fctl)
     local e = await(src)
     catch('X', function()
         while true do
+nao pode matar o src e esperar de novo
+mais parecido com o buffer que spawna por fora e gera evento pra dentro
             e = watching(src, function()    -- bounced
                 local ctl --[[<close>]] = fctl()
                 await(ctl)
@@ -76,11 +78,10 @@ end
 
 -------------------------------------------------------------------------------
 
-function S.Buffer (src, fctl)
-    local ctl --[[<close>]] = fctl()
+function S.Buffer (src, ctl)
+    local ctl --[[<close>]] = ctl
     spawn(true, function()
-        await(ctl)
-        emit('e')
+        ctl:emitter('e'):to()
     end)
     local ret = {}
     catch('X', function()
@@ -95,8 +96,8 @@ function S.Buffer (src, fctl)
     return ret
 end
 
-function S.buffer (src, fctl)
-    local ret = S.fr_spawns(S.Buffer, src, fctl)
+function S.buffer (src, ctl)
+    local ret = S.fr_spawns(S.Buffer, src, ctl)
     local close = ret.close
     ret.close = function ()
         if close then close() end
