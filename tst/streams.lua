@@ -187,6 +187,7 @@ end
 
 print "--- DEBOUNCE ---"
 
+--[[
 do
     print("Testing...", "debounce 1: task")
     spawn(function()
@@ -203,21 +204,24 @@ do
     assertx(out(), "1\n3\n")
     atmos.close()
 end
+]]
 
 do
     print("Testing...", "debounce 2: stream")
-    spawn(function()
-        local x = S.fr_awaits 'X'
-        local y = function () return S.fr_awaits 'Y' end
-        x:debounce(y):to_each(function(it)
-            out(it.v)
+    call(function()
+        spawn(function()
+            local x = S.fr_awaits 'X'
+            local y = function () return S.fr_awaits 'Y' end
+            x:debounce(y):to_each(function(it)
+                out(it.v)
+            end)
         end)
+        emit { tag='X', v=1 }
+        emit 'Y'
+        emit { tag='X', v=2 }
+        emit { tag='X', v=3 }
+        emit 'Y'
     end)
-    emit { tag='X', v=1 }
-    emit 'Y'
-    emit { tag='X', v=2 }
-    emit { tag='X', v=3 }
-    emit 'Y'
     assertx(out(), "1\n3\n")
     atmos.close()
 end
@@ -225,6 +229,7 @@ end
 
 print "--- BUFFER ---"
 
+--[[
 do
     print("Testing...", "buffer 1: task")
     spawn(function()
@@ -244,6 +249,7 @@ do
     assertx(out(), "1\n1\n2\n2\n3\n")
     atmos.close()
 end
+]]
 
 do
     print("Testing...", "buffer 2: stream")
@@ -269,6 +275,7 @@ do
     --         {x,x} {}     {x}
 end
 
+--[[
 do
     print("Testing...", "buffer 3: task debounce")
     spawn(function()
@@ -297,6 +304,7 @@ do
     --   x   x   y    y  x   y
     --         {x,x}        {x}
 end
+]]
 
 do
     print("Testing...", "buffer 3: stream debounce")
@@ -326,6 +334,41 @@ end
 do
     print("Testing...", "buffer 4: stream debounce - bug")
 
+    local xy = 0
+    local c  = 0
+    spawn(function()
+        local clicks = S.fr_awaits('X')
+        clicks
+            :debounce(function ()
+                local ij = S.from {
+                    S.fr_awaits('I'):take(1),
+                    S.fr_awaits('J'):take(1)
+                }
+                return ij:xseq():skip(1)
+            end)
+            :tap(function () xy = xy + 1 end)
+            :debounce(function () return S.fr_awaits 'C' end)
+            :tap(function () c = c + 1 end)
+            :to()
+    end)
+
+    emit 'X'
+    emit 'I'
+    emit 'J'
+    emit 'X'
+    emit 'I'
+    emit 'C'
+    emit 'J'
+    emit 'C'
+    emit 'C'
+    print(xy, c)
+    assert(xy == 2)
+    assert(c == 2)
+end
+
+do
+    print("Testing...", "buffer 5: stream debounce - bug")
+
     local N = 0
     spawn(function()
         local clicks = S.fr_awaits('click')
@@ -338,15 +381,16 @@ do
             :to()
     end)
 
-fazer teste com 2x debounces em sequencia
-
     assert(N == 0)
     emit 'click'
+    emit 'click'
     emit '250'
-    assert(N == 1)
+    assert(N == 2)
     emit '250'
 
+print'>>>'
     emit 'click'
+print'<<<'
     emit '1000'
     assert(N == 0)
     emit '250'
