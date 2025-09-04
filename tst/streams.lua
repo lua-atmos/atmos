@@ -361,7 +361,6 @@ do
     emit 'J'
     emit 'C'
     emit 'C'
-    print(xy, c)
     assert(xy == 2)
     assert(c == 2)
 end
@@ -375,9 +374,9 @@ do
         clicks
             :buffer(clicks:debounce(function () return S.fr_awaits '250' end))
             :map(function (t) return #t end)
-            :tap(function (n) print(n) ; N=n end)
+            :tap(function (n) N=n end)
             :debounce(function () return S.fr_awaits '1000' end)
-            :tap(function () print'0' ; N=0 end)
+            :tap(function () N=0 end)
             :to()
     end)
 
@@ -388,9 +387,7 @@ do
     assert(N == 2)
     emit '250'
 
-print'>>>'
     emit 'click'
-print'<<<'
     emit '1000'
     assert(N == 0)
     emit '250'

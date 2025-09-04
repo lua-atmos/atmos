@@ -57,16 +57,20 @@ end
 -------------------------------------------------------------------------------
 
 function S.Debounce (n, src, fctl)
-    local _ <close> = defer(function() print'close' end)
     while true do
-        local e = await(src)
+        local e = src()
         catch('X', function()
             while true do
-                e = watching(src, function()    -- bounced
-                    local ctl <close> = fctl()
-                    await(ctl)
-                    throw 'X'                   -- debounced
-                end)
+                e = par_or (
+                    function()
+                        return src()
+                    end,
+                    function()    -- bounced
+                        local ctl <close> = fctl()
+                        ctl()
+                        throw 'X'                   -- debounced
+                    end
+                )
             end
         end)
         emit_in(1, n, e)
@@ -101,10 +105,15 @@ function S.Buffer (n, src, ctl)
         local ret = {}
         catch('X', function()
             while true do
-                ret[#ret+1] = watching(src, function()  -- buffered
-                    await(ctl)
-                    throw 'X'                           -- released
-                end)
+                ret[#ret+1] = par_or (
+                    function ()
+                        return src()    -- buffered
+                    end,
+                    function()
+                        ctl()
+                        throw 'X'       -- released
+                    end
+                )
             end
         end)
         emit_in(1, n, ret)

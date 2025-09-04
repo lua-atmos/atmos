@@ -571,6 +571,7 @@ local function await_to_table (e, ...)
         if (getmetatable(e) == meta_task) or getmetatable(e) == meta_tasks then
             T = { tag='_==_', e,... }
         elseif S.is(e) then
+            error'TODO'
             T = { tag='_==_', spawn(function() return e() end),... }
         elseif e.tag=='_or_' or e.tag=='_and_' then
             T = e
