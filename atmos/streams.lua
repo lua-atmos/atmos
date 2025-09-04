@@ -58,12 +58,12 @@ end
 
 function S.Debounce (n, src, fctl)
     while true do
-        local e = src()
+        local e = await(src)
         catch('X', function()
             while true do
                 e = par_or (
                     function()
-                        return src()
+                        return await(src)
                     end,
                     function()    -- bounced
                         local ctl <close> = fctl()
@@ -107,11 +107,11 @@ function S.Buffer (n, src, ctl)
             while true do
                 ret[#ret+1] = par_or (
                     function ()
-                        return src()    -- buffered
+                        return await(src)   -- buffered
                     end,
                     function()
-                        ctl()
-                        throw 'X'       -- released
+                        await(ctl)
+                        throw 'X'           -- released
                     end
                 )
             end
