@@ -187,11 +187,12 @@ end
 
 print "--- DEBOUNCE ---"
 
+--[[
 do
     print("Testing...", "debounce 1: task")
     spawn(function()
         while true do
-            local x = await(spawn(S.Debounce, 'X', 'Y'))
+            local x = await(spawn(S.Debounce, 'X', function() return 'Y' end))
             out(x.v)
         end
     end)
@@ -203,21 +204,24 @@ do
     assertx(out(), "1\n3\n")
     atmos.close()
 end
+]]
 
 do
     print("Testing...", "debounce 2: stream")
-    spawn(function()
-        local x = S.fr_awaits 'X'
-        local y = S.fr_awaits 'Y'
-        x:debounce(y):to_each(function(it)
-            out(it.v)
+    call(function()
+        spawn(function()
+            local x = S.fr_awaits 'X'
+            local y = function () return S.fr_awaits 'Y' end
+            x:debounce(y):to_each(function(it)
+                out(it.v)
+            end)
         end)
+        emit { tag='X', v=1 }
+        emit 'Y'
+        emit { tag='X', v=2 }
+        emit { tag='X', v=3 }
+        emit 'Y'
     end)
-    emit { tag='X', v=1 }
-    emit 'Y'
-    emit { tag='X', v=2 }
-    emit { tag='X', v=3 }
-    emit 'Y'
     assertx(out(), "1\n3\n")
     atmos.close()
 end
@@ -225,6 +229,7 @@ end
 
 print "--- BUFFER ---"
 
+--[[
 do
     print("Testing...", "buffer 1: task")
     spawn(function()
@@ -244,6 +249,7 @@ do
     assertx(out(), "1\n1\n2\n2\n3\n")
     atmos.close()
 end
+]]
 
 do
     print("Testing...", "buffer 2: stream")
@@ -258,11 +264,132 @@ do
         end)
     end)
     emit { tag='X', v=1 }
-    emit 'Y'
     emit { tag='X', v=2 }
+    emit 'Y'
+    emit 'Y'
     emit { tag='X', v=3 }
     emit 'Y'
-    assertx(out(), "1\n1\n2\n2\n3\n")
+    assertx(out(), "2\n1\n2\n0\n1\n3\n")
     atmos.close()
+    --   x   x   y    y  x   y
+    --         {x,x} {}     {x}
 end
 
+--[[
+do
+    print("Testing...", "buffer 3: task debounce")
+    spawn(function()
+        while true do
+            local x = await (
+                spawn(S.Buffer, 'X',
+                    spawn(S.Debounce, 'X', function()
+                        return 'Y'
+                    end)
+                )
+            )
+            out(#x)
+            for _,t in ipairs(x) do
+                out(t.v)
+            end
+        end
+    end)
+    emit { tag='X', v=1 }
+    emit { tag='X', v=2 }
+    emit 'Y'
+    emit 'Y'
+    emit { tag='X', v=3 }
+    emit 'Y'
+    assertx(out(), "2\n1\n2\n1\n3\n")
+    atmos.close()
+    --   x   x   y    y  x   y
+    --         {x,x}        {x}
+end
+]]
+
+do
+    print("Testing...", "buffer 3: stream debounce")
+    spawn(function()
+        local x = S.fr_awaits 'X'
+        local y = S.fr_awaits 'Y'
+        local xy = x:debounce(function() return S.fr_awaits'Y' end)
+        x:buffer(xy):to_each(function(it)
+            out(#it)
+            for _,t in ipairs(it) do
+                out(t.v)
+            end
+        end)
+    end)
+    emit { tag='X', v=1 }
+    emit { tag='X', v=2 }
+    emit 'Y'
+    emit 'Y'
+    emit { tag='X', v=3 }
+    emit 'Y'
+    assertx(out(), "2\n1\n2\n1\n3\n")
+    atmos.close()
+    --   x   x   y    y  x   y
+    --         {x,x}        {x}
+end
+
+do
+    print("Testing...", "buffer 4: stream debounce - bug")
+
+    local xy = 0
+    local c  = 0
+    spawn(function()
+        local clicks = S.fr_awaits('X')
+        clicks
+            :debounce(function ()
+                local ij = S.from {
+                    S.fr_awaits('I'):take(1),
+                    S.fr_awaits('J'):take(1)
+                }
+                return ij:xseq():skip(1)
+            end)
+            :tap(function () xy = xy + 1 end)
+            :debounce(function () return S.fr_awaits 'C' end)
+            :tap(function () c = c + 1 end)
+            :to()
+    end)
+
+    emit 'X'
+    emit 'I'
+    emit 'J'
+    emit 'X'
+    emit 'I'
+    emit 'C'
+    emit 'J'
+    emit 'C'
+    emit 'C'
+    assert(xy == 2)
+    assert(c == 2)
+end
+
+do
+    print("Testing...", "buffer 5: stream debounce - bug")
+
+    local N = 0
+    spawn(function()
+        local clicks = S.fr_awaits('click')
+        clicks
+            :buffer(clicks:debounce(function () return S.fr_awaits '250' end))
+            :map(function (t) return #t end)
+            :tap(function (n) N=n end)
+            :debounce(function () return S.fr_awaits '1000' end)
+            :tap(function () N=0 end)
+            :to()
+    end)
+
+    assert(N == 0)
+    emit 'click'
+    emit 'click'
+    emit '250'
+    assert(N == 2)
+    emit '250'
+
+    emit 'click'
+    emit '1000'
+    assert(N == 0)
+    emit '250'
+    assert(N == 1)
+end

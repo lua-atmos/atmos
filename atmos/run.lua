@@ -514,8 +514,6 @@ local function check_ret (awt, ...)
         elseif getmetatable(e) == meta_tasks then
             -- invert ts,t -> t,ts
             return true, select(2,...), select(1,...), select(3,...)
-        elseif S.is(e) then
-            return true, select(2,...)
         else
             return true, ...
         end
@@ -572,6 +570,9 @@ local function await_to_table (e, ...)
     if type(e) == 'table' then
         if (getmetatable(e) == meta_task) or getmetatable(e) == meta_tasks then
             T = { tag='_==_', e,... }
+        elseif S.is(e) then
+            --error'TODO'
+            T = { tag='_==_', spawn(function() return e() end),... }
         elseif e.tag=='_or_' or e.tag=='_and_' then
             T = e
             for i,v in ipairs(T) do
@@ -597,10 +598,11 @@ local function await_to_table (e, ...)
 end
 
 function run.await (e, ...)
+    -- await(stream)
     -- await { tag='clock' }
     -- await(f)     -- f(...)
     -- await(true/false)
-    -- await(t)
+    -- await(task)
     -- await(...)
     -- await(a _and_ b)
 

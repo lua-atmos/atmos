@@ -1,5 +1,11 @@
 local S = require "streams"
 
+local n = 0
+local function N ()
+    n = n + 1
+    return 'atmos.streams.' .. n
+end
+
 local from = S.from
 
 function S.from (v, ...)
@@ -44,75 +50,98 @@ end
 
 function S.emitter (s, as)
     local x
-    x = s:tap(function (v) emit_in(3, as or x, v) end)
+    x = s:tap(function (v) emit_in(3, as, v) end)
     return x
 end
 
 -------------------------------------------------------------------------------
 
-function S.Debounce (src, ctl)
-    local e = await(src)
-    catch('X', function()
-        while true do
-            e = watching(src, function()    -- bounced
-                await(ctl)
-                throw 'X'                   -- debounced
-            end)
-        end
-    end)
-    return e
+function S.Debounce (n, src, fctl)
+    while true do
+        local e = await(src)
+        catch('X', function()
+            while true do
+                e = par_or (
+                    function()
+                        return await(src)
+                    end,
+                    function()    -- bounced
+                        local ctl <close> = fctl()
+                        ctl()
+                        throw 'X'                   -- debounced
+                    end
+                )
+            end
+        end)
+        emit_in(1, n, e)
+    end
 end
 
-function S.debounce (src, ctl)
-    src, ctl = src:emitter(), ctl:emitter()
-    local t = spawn(function()
-        local src <close> = src
-        local ctl <close> = ctl
-        S.xpar(S.from{src,ctl}):to()
-    end)
-    local deb = S.fr_spawns(S.Debounce, src, ctl)
-    deb.close = function ()
-        local _ <close> = t
-    end
-    return deb
+local function debounce (t)
+    local _,v = await(t.n)
+    return v
+end
+
+local function close (t)
+    local _ <close> = t.tsk
+end
+
+function S.debounce (src, fctl)
+    local n = N()
+    local t = {
+        n     = n,
+        tsk   = spawn(S.Debounce, n, src, fctl),
+        f     = debounce,
+        close = close,
+    }
+    return setmetatable(t, S.mt)
 end
 
 -------------------------------------------------------------------------------
 
-function S.Buffer (src, ctl)
-    local ret = {}
-    local e = await(src)
-    ret[#ret+1] = e
-    catch('X', function()
-        while true do
-            e = watching(src, function()    -- bounced
-                await(ctl)
-                throw 'X'                   -- debounced
-            end)
-            ret[#ret+1] = e
-        end
-    end)
-    return ret
+function S.Buffer (n, src, ctl)
+    local ctl <close> = ctl
+    while true do
+        local ret = {}
+        catch('X', function()
+            while true do
+                ret[#ret+1] = par_or (
+                    function ()
+                        return await(src)   -- buffered
+                    end,
+                    function()
+                        await(ctl)
+                        throw 'X'           -- released
+                    end
+                )
+            end
+        end)
+        emit_in(1, n, ret)
+    end
+end
+
+local function buffer (t)
+    local _,v = await(t.n)
+    return v
+end
+
+local function close (t)
+    local _ <close> = t.tsk
 end
 
 function S.buffer (src, ctl)
-    src, ctl = src:emitter(), ctl:emitter()
-    local t = spawn(function()
-        local src <close> = src
-        local ctl <close> = ctl
-        S.xpar(S.from{src,ctl}):to()
-    end)
-    local deb = S.fr_spawns(S.Buffer, src, ctl)
-    deb.close = function ()
-        local _ <close> = t
-    end
-    return deb
+    local n = N()
+    local t = {
+        n     = n,
+        tsk   = spawn(S.Buffer, n, src, ctl),
+        f     = buffer,
+        close = close,
+    }
+    return setmetatable(t, S.mt)
 end
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
-
-local N = 0
 
 local function T (n, s)
     while true do
@@ -124,20 +153,20 @@ local function T (n, s)
     end
 end
 
-local function TT (ts, ss, n)
+local function TT (n, tsks, ss)
     local ss <close> = ss
-    local ts <close> = ts
+    local tsks <close> = tsks
     while true do
         local s = ss()
         if s == nil then
             await(false)
         end
-        spawn_in(ts, T, n, s)
+        spawn_in(tsks, T, n, s)
     end
 end
 
 local function close (t)
-    local _ <close> = t.t
+    local _ <close> = t.tsk
 end
 
 -------------------------------------------------------------------------------
@@ -148,14 +177,13 @@ local function xpar (t)
 end
 
 function S.xpar (ss)
-    N = N + 1
-    local n = N
-    local ts = tasks()
+    local n = N()
+    local tsks = tasks()
     local t = {
-        n  = n,
-        ts = ts,
-        t  = spawn(TT, ts, ss, n),
-        f  = xpar,
+        n     = n,
+        tsks  = tsks,
+        tsk   = spawn(TT, n, tsks, ss),
+        f     = xpar,
         close = close,
     }
     return setmetatable(t, S.mt)
@@ -164,22 +192,21 @@ end
 -------------------------------------------------------------------------------
 
 local function xparor (t)
-    local x,v = await(_or_(t.n,t.ts))
-    if v == t.ts then
+    local x,v = await(_or_(t.n,t.tsks))
+    if v == t.tsks then
         return nil
     end
     return v
 end
 
 function S.xparor (ss)
-    N = N + 1
-    local n = N
-    local ts = tasks()
+    local n = N()
+    local tsks = tasks()
     local t = {
-        n  = n,
-        ts = ts,
-        t  = spawn(TT, ts, ss, n),
-        f  = xparor,
+        n     = n,
+        tsks  = tsks,
+        tsk   = spawn(TT, n, tsks, ss),
+        f     = xparor,
         close = close,
     }
     return setmetatable(t, S.mt)
