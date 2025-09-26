@@ -2,7 +2,7 @@
 
 [
     [Tasks & Events](#tasks--events) |
-    [Scheduling & Hierarchy](#scheduling--lexical-hierarchy) |
+    [Scheduling & Hierarchy](#lexical-scheduling--hierarchy) |
     [xxx] |
     [Environments](#environments) |
     [Pools](#task-pools) |
@@ -56,10 +56,10 @@ activation is now based on *reactive scheduling*.
 
 The reactive scheduler of Atmos is deterministic and cooperative:
 
-1. **deterministic:**
+1. `deterministic`:
     When multiple tasks spawn or awake concurrently, they activate in the order
     they appear in the source code.
-2. **cooperative:**
+2. `cooperative`:
     When a task spawns or awakes, it takes full control of the application and
     executes until it awaits or terminates.
 
@@ -68,7 +68,7 @@ Consider the code that spawns two tasks concurrently and await the same event
 
 <table>
 <tr><td>
-```
+<pre>
 print "1"
 spawn(function ()
     print "a1"
@@ -84,9 +84,9 @@ end)
 print "3"
 emit 'X'
 print "4"
-```
+</pre>
 </td><td>
-```
+<pre>
 -- Output:
 -- 1
 -- a1
@@ -96,7 +96,7 @@ print "4"
 -- a2
 -- b2
 -- 4
-```
+</pre>
 </td></tr>
 </table>
 
@@ -130,6 +130,14 @@ end)
 emit 'X'
 emit 'Y'
 ```
+
+
+
+
+
+
+
+
 
 The same rule extends to explicit blocks with the help of Lua `<close>`
 declarations:
