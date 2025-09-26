@@ -28,8 +28,8 @@ For a stable release, please switch to [`v0.2.1`][v0.2.1].
 
 Atmos is a programming library for [Lua][lua] that reconciles *[Structured
 Concurrency][sc]*, *[Event-Driven Programming][events]*, and
-*[Functional Streams][streams]*, extending classical structured programming with
-three main functionalities:
+*[Functional Streams][streams]*, extending classical structured programming
+with three main functionalities:
 
 - Structured Deterministic Concurrency:
     - A `task` primitive with deterministic scheduling provides predictable
@@ -44,10 +44,9 @@ three main functionalities:
 - Functional Streams (à la [ReactiveX][rx]):
     - Functional combinators for lazy (infinite) lists.
     - Interoperability with tasks & events:
-        streams can have tasks and awaits as sources,
-        streams can signal events (TODO), and
-        tasks can await streams (TODO).
-    - Proper finalization of stateful (task-based) streams.
+        tasks and events as streams, and
+        streams as events.
+    - Safe finalization of stateful (task-based) streams.
 
 Atmos is inspired by [synchronous programming languages][sync] like [Ceu][ceu]
 and [Esterel][esterel].
@@ -95,10 +94,11 @@ local S = require "atmos.streams"
 call(function ()
     local s1 = S.from(clock{s=5}):take(1)
     local s2 = S.from(clock{s=1})
-    s1:paror(s2)
-        :to_each(function()
+    S.paror(s1,s2)
+        :tap(function()
             print("Hello World!")
         end)
+        :to()
 end)
 ```
 
