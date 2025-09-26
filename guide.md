@@ -1,43 +1,172 @@
 # Guide
 
 [
-    [Tasks](#tasks) |
-    [Events](#events) |
-    [Scheduling](#deterministic-scheduling) |
+    [Tasks & Events](#tasks--events) |
+    [Scheduling & Hierarchy](#scheduling--lexical-hierarchy) |
+    [xxx] |
     [Environments](#environments) |
-    [Hierarchy](#lexical-task-hierarchy) |
     [Pools](#task-pools) |
     [Errors](#errors) |
     [Compounds](#compound-statements)
 ]
 
-# Tasks
+# Tasks & Events
 
-The basic unit of execution of Atmos is a task, which receives a Lua function
-as its body:
+A task is the basic unit of execution of Atmos.
+
+The `spawn` primitive starts a task from a function prototype:
 
 ```
-local T = task(function (<...>) -- task parameters
-    <...>                       -- task body
+function T (...)
+    ...
+end
+local t1 = spawn(T, ...)    -- starts `t1`
+local t2 = spawn(T, ...)    -- starts `t2`
+...                         -- t1 & t2 started and are now suspended
+```
+
+Tasks are based on Lua coroutines, meaning that they rely on cooperative
+scheduling with explicit suspension points.
+The key difference is that tasks can react to each other through events.
+
+The `await` primitive suspends a task until a matching event occurs:
+
+```
+function T (i)
+    await('X')
+    print("task " .. i .. " awakes from X")
+end
+```
+
+The `emit` primitive broadcasts an event, which awakes all suspended tasks with
+a matching `await`:
+
+```
+spawn(T, 1)
+spawn(T, 2)
+emit('X')
+    -- "task 1 awakes from X"
+    -- "task 2 awakes from X"
+```
+
+Note that explicit `await` suspension points are still required, but tasks
+activation is now based on *reactive scheduling*.
+
+# Lexical Scheduling & Hierarchy
+
+The reactive scheduler of Atmos is deterministic and cooperative:
+
+1. **deterministic:**
+    When multiple tasks spawn or awake concurrently, they activate in the order
+    they appear in the source code.
+2. **cooperative:**
+    When a task spawns or awakes, it takes full control of the application and
+    executes until it awaits or terminates.
+
+Consider the code that spawns two tasks concurrently and await the same event
+`X` as follows:
+
+<table>
+<tr><td>
+```
+print "1"
+spawn(function ()
+    print "a1"
+    await 'X'
+    print "a2"
 end)
-```
-
-The `task` primitive returns a prototype, which further calls to `spawn` can
-instantiate passing optional arguments:
-
-```
-local t1 = spawn(T, <...>)
-local t2 = spawn(T, <...>)
-```
-
-If a task prototype is spawned only once, its body can be passed directly to
-`spawn`:
-
-```
-local t = spawn(function ()
-    <...>   -- task body
+print "2"
+spawn(function ()
+    print "b1"
+    await 'X'
+    print "b2"
 end)
+print "3"
+emit 'X'
+print "4"
 ```
+</td><td>
+```
+-- Output:
+-- 1
+-- a1
+-- 2
+-- b1
+-- 3
+-- a2
+-- b2
+-- 4
+```
+</td></tr>
+</table>
+
+In the example, the scheduling behaves as follows:
+
+- Main application prints `1` and spawns the first task.
+- The first task takes control, prints `a1`, and suspends, returning the
+  control back to the main application.
+- The main application print `2` and spawns the second task.
+- The second task starts, prints `b1`, and suspends.
+- The main application prints `3`, and broadcasts `X`.
+- The first task awakes, prints `a2`, and suspends.
+- The second task awakes, prints `b2`, and suspends.
+- The main application prints `4`.
+
+Tasks form a hierarchy based on the source position in which they are spawned.
+Therefore, the lexical structure of the program determines the lifetime of
+tasks, which helps to reason about its control flow.
+
+In the next example, the outer task terminates and aborts the inner task,
+before the latter has the chance to awake:
+
+```
+spawn(function ()
+    spawn(function ()
+        await 'Y'   -- never awakes after 'X' occurs
+    end)
+    await 'X'       -- aborts the whole task hierarchy
+    print "never prints"
+end)
+emit 'X'
+emit 'Y'
+```
+
+The same rule extends to explicit blocks with the help of Lua `<close>`
+declarations:
+
+```
+spawn(function ()
+    <...>   -- some logic before the block
+    do
+        local _ <close> = spawn(function ()
+            await 'Y'   -- never awakes after 'X' occurs
+        end)
+        local _ <close> = spawn(function ()
+            await 'Z'   -- never awakes after 'X' occurs
+        end)
+        await 'X'       -- aborts the whole task hierarchy
+    end
+    <...>   -- some logic after the block
+end)
+emit 'X'
+emit 'Y'
+```
+
+In the example, we enclose particular tasks we want to live only within the
+explicit block.
+When the event `X` occurs, the block goes out of scope and automatically aborts
+all attached spawned tasks.
+
+Since Atmos is a pure-Lua library, note that the annotation `local _ <close> =`
+is necessary when bounding a `spawn` to a block.
+We can omit this annotation only when we want to attach the `spawn` to its
+enclosing task.
+
+
+
+
+
+
 
 ## Public Data
 
@@ -50,28 +179,6 @@ function T ()
 end
 local t = spawn(T)
 print(t.v)  -- 10
-```
-
-# Events
-
-The `await` primitive suspends a task until a matching event occurs:
-
-```
-local T = task (function (i)
-    await 'X'
-    print("task " .. i .. " awakes from X")
-end)
-```
-
-The `emit` primitive broadcasts an event, which awakes all suspended tasks with
-a matching `await`:
-
-```
-spawn(T, 1)
-spawn(T, 2)
-emit 'X'
--- "task 1 awakes from X"
--- "task 2 awakes from X"
 ```
 
 ## Task Toggling
@@ -89,55 +196,6 @@ emit 'X'    -- ignored
 toggle(t, true)
 emit 'X'    -- awakes
 ```
-
-# Deterministic Scheduling
-
-Tasks are based on Lua coroutines, and follows its run-to-completion semantics:
-When a task spawns or awakes, it takes full control of the application and
-executes until it awaits or terminates.
-
-Consider the code that spawns two tasks and await the same event `X` as
-follows:
-
-```
-print "1"
-spawn(function ()
-    print "a1"
-    await 'X'
-    print "a2"
-end)
-print "2"
-spawn(function ()
-    print "b1"
-    await 'X'
-    print "b2"
-end)
-print "3"
-emit 'X'
-print "4"
-
--- Output:
--- 1
--- a1
--- 2
--- b1
--- 3
--- a2
--- b2
--- 4
-```
-
-In the example, the scheduling behaves as follows:
-
-- Main application prints `1` and spawns the first task.
-- The first task takes control, prints `a1`, and suspends, returning the
-  control back to the main application.
-- The main application print `2` and spawns the second task.
-- The second task starts, prints `b1`, and suspends.
-- The main application prints `3`, and broadcasts `X`.
-- The first task awakes, prints `a2`, and suspends.
-- The second task awakes, prints `b2`, and suspends.
-- The main application prints `4`.
 
 # Environments
 
@@ -183,54 +241,6 @@ The standard distribution of Atmos provides the following environments:
     An environment that relies on [IUP][iup] ([iup-lua][iup-lua]) to provide
     graphical user interfaces (GUIs).
 -->
-
-# Lexical Task Hierarchy
-
-Tasks form a hierarchy based on the textual position in which they are spawned.
-Therefore, the lexical structure of the program determines the lifetime of
-tasks, which helps to reason about its control flow:
-
-```
-spawn(function ()
-    spawn(function ()
-        await 'Y'   -- never awakes after 'X' occurs
-    end)
-    await 'X'       -- aborts the whole task hierarchy
-end)
-emit 'X'
-emit 'Y'
-```
-
-The same rule extends to explicit blocks with the help of Lua `<close>`
-declarations:
-
-```
-spawn(function ()
-    <...>   -- some logic before the block
-    do
-        local _ <close> = spawn(function ()
-            await 'Y'   -- never awakes after 'X' occurs
-        end)
-        local _ <close> = spawn(function ()
-            await 'Z'   -- never awakes after 'X' occurs
-        end)
-        await 'X'       -- aborts the whole task hierarchy
-    end
-    <...>   -- some logic after the block
-end)
-emit 'X'
-emit 'Y'
-```
-
-In the example, we enclose particular tasks we want to live only within the
-explicit block.
-When the event `X` occurs, the block goes out of scope and automatically aborts
-all attached spawned tasks.
-
-Since Atmos is a pure-Lua library, note that the annotation `local _ <close> =`
-is necessary when bounding a `spawn` to a block.
-We can omit this annotation only when we want to attach the `spawn` to its
-enclosing task.
 
 ## Deferred Statements
 
