@@ -21,16 +21,8 @@ lua5.4 * # test each example
     - `sdl-rocks/`
         - `lua5.4 main.lua`
     - `iup-7guis/`
-        - `lua5.4 03-flight.lua`
+        - `lua5.4 *.lua`
         - `lua5.4 server.lua` + `lua5.4 01-counter-net.lua`
-
-```
-git branch              # should be in `main`
-git pull                # ensure newest `main`
-git branch v-NEW
-git checkout v-NEW
-git push --set-upstream origin v-NEW
-```
 
 - Docs
 
@@ -41,6 +33,8 @@ git difftool v-OLD       # examine all diffs
 - Branch
 
 ```
+git branch              # should be in `main`
+git pull                # ensure newest `main`
 git branch v-NEW
 git checkout v-NEW
 git push --set-upstream origin v-NEW

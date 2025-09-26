@@ -1,16 +1,14 @@
 # Atmos
 
-This is the unstable (probably broken) `main` branch towards `v0.3`.
+This is the unstable `main` branch.
 
-For a stable release, please switch to [`v0.2.1`][v0.2.1].
+For a stable release, please switch to [`v0.3`](https://github.com/lua-atmos/atmos/tree/v0.3).
 
 [
     [`v0.3`](https://github.com/lua-atmos/atmos/tree/v0.3) |
-    [`v0.2.1`][v0.2.1] |
+    [`v0.2.1`](https://github.com/lua-atmos/atmos/tree/v0.2.1) |
     [`v0.1`](https://github.com/lua-atmos/atmos/tree/v0.1)
 ]
-
-[v0.2.1]: https://github.com/lua-atmos/atmos/tree/v0.2.1
 
 <img src="atmos-logo.png" width="250" align="right">
 
