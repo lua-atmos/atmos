@@ -92,15 +92,21 @@ require "atmos.env.clock"
 local S = require "atmos.streams"
 
 call(function ()
-    local s1 = S.from(clock{s=5}):take(1)
-    local s2 = S.from(clock{s=1})
-    S.paror(s1,s2)
+    local s1 = S.from(clock{s=1})
         :tap(function()
             print("Hello World!")
         end)
-        :to()
+    local s2 = S.from(clock{s=5}):take(1)
+    S.paror(s1,s2):to()
 end)
 ```
+
+- `s1` is a periodic 1-second stream that prints the message on every
+  occurrence, through the `tap` combinator.
+- `s2` is a periodic 5-seconds stream that terminates after its first
+  occurrence, because of `take(1)`.
+- `S.paror` merges the streams, terminating when either of them terminate.
+- `to` is a sink that starts and exausts the full stream pipeline.
 
 # Install & Run
 
