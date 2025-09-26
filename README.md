@@ -1,5 +1,15 @@
 # Atmos
 
+***Structured Event-Driven Concurrency for Lua***
+
+[
+    [About](#about)                 |
+    [Install](#install)             |
+    [Hello World!](#hello-world)    |
+    [Documentation](#documentation) |
+    [Resources](#resources)
+]
+
 This is the unstable `main` branch.
 
 For a stable release, please switch to [`v0.3`](https://github.com/lua-atmos/atmos/tree/v0.3).
@@ -11,16 +21,6 @@ For a stable release, please switch to [`v0.3`](https://github.com/lua-atmos/atm
 ]
 
 <img src="atmos-logo.png" width="250" align="right">
-
-***Structured Event-Driven Concurrency for Lua***
-
-[
-    [About](#about)                 |
-    [Install](#install)             |
-    [Hello World!](#hello-world)    |
-    [Documentation](#documentation) |
-    [Resources](#resources)
-]
 
 # About
 
