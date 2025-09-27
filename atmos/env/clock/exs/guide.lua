@@ -1,4 +1,5 @@
 require "atmos.env.clock"
+local S = require "atmos.streams"
 
 call(function ()
 
@@ -70,8 +71,21 @@ call(function ()
     print "-=-=- 3.2 -=-=-"
     print("Counts 5 seconds:")
     for i=1,5 do
-        await(clock{s=1})
+        await(clock{ms=100})
         print("1 second...")
     end
     print("5 seconds elapsed.")
+
+    -- 4.1
+    spawn(function ()
+        S.fr_awaits('X')
+            :filter(function(x) return x.v%2 == 1 end)
+            :map(function(x) return x.v end)
+            :tap(print)
+            :to()
+    end)
+    for i=1, 10 do
+        await(clock{s=1})
+        emit { tag='X', v=i }
+    end
 end)

@@ -3,6 +3,7 @@
 [
     [Tasks & Events](#tasks--events) |
     [Scheduling & Hierarchy](#lexical-scheduling--hierarchy) |
+    [Data Streams](#functional-streams) |
     [External Environments](#external-environments) |
     [xxx] |
     [Pools](#task-pools) |
@@ -49,7 +50,7 @@ emit('X')
     -- "task 2 awakes from X"
 ```
 
-Note that explicit `await` suspension points are still required, but tasks
+Note that explicit `await` suspension points are still required, but task
 activation is now based on *reactive scheduling*.
 
 # Lexical Scheduling & Hierarchy
@@ -134,6 +135,79 @@ end)
 emit 'X'
 emit 'Y'
 ```
+
+# Data Streams
+
+Data streams represent incoming values over continuous time, which can be
+combined in a pipeline for real-time processing.
+Atmos extends the [f-streams][f-streams] library to interoperate with tasks
+and events.
+
+The next example creates a stream that awaits occurrences of event `X`:
+
+```
+spawn(function ()
+    S.fr_awaits('X')
+        :filter(function(x) return x.v%2 == 1 end)
+        :map(function(x) return x.v end)
+        :tap(print)
+        :to()
+end)
+for i=1, 10 do
+    await(clock{s=1})
+    emit { tag='X', v=i }   -- `X` events carrying `v`
+end
+```
+
+The example spawns a task for the awaiting stream source `S.fr_awaits('X')` to
+run concurrently with a loop that generates events `X` carrying field `v=i` on
+every second.
+The stream pipeline filters only odd occurrences of `v`, then maps to these
+values, and prints them.
+The call to sink `to()` activates the pipeline and starts to pull values from
+the stream source.
+The loop takes 10 seconds to emit `1,2,...,10`, while the stream takes 10
+seconds to print `1,3,...,9`.
+
+The full pipeline of the example is analogous to the awaiting loop as follows:
+
+```
+while true do
+    print(map(filter(await('X')))
+end
+```
+
+Tasks can also be stream sources, allowing to specify complex stateful streams:
+
+```
+function T ()
+    await('X')
+    await('Y')
+end
+spawn(function ()
+    S.fr_spawns(T)
+        :zip(S.from(1))
+
+        :filter(function(x) return x.v%2 == 1 end)
+        :map(function(x) return x.v end)
+        :tap(print)
+        :to()
+end)
+emit('X')
+emit('X')
+emit('Y')   -- 1
+emit('X')
+emit('Y')   -- 2
+emit('Y')
+```
+
+- Functional Streams (à la [ReactiveX][rx]):
+    - Functional combinators for lazy (infinite) lists.
+    - Interoperability with tasks & events:
+        tasks and events as streams, and
+        streams as events.
+
+[f-streams]: https://github.com/lua-atmos/f-streams/
 
 # External Environments
 
@@ -274,6 +348,8 @@ emit 'X'    -- awakes
 ```
 
 ## Deferred Statements
+
+    - Safe finalization of stateful (task-based) streams.
 
 A task can register deferred functions to execute when they terminate or
 abort within a task hierarchy:
