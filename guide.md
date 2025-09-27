@@ -11,6 +11,8 @@
     [Compounds](#compound-statements)
 ]
 
+<!-- 1 -->
+
 # Tasks & Events
 
 A task is the basic unit of execution of Atmos.
@@ -53,6 +55,8 @@ emit('X')
 Note that explicit `await` suspension points are still required, but task
 activation is now based on *reactive scheduling*.
 
+<!-- 2 -->
+
 # External Environments
 
 An environment is the external component that bridges input events from the
@@ -93,24 +97,7 @@ call(function ()
     print("5 seconds elapsed.")
 end)
 
-<!--
-The actual available events depend on the environment and should be documented
-appropriately.
-
-The standard distribution of Atmos provides the following environments:
-
-- [`atmos.env.clock`](atmos/env/clock/):
-    A simple pure-Lua environment that uses `os.clock` to issue timer events.
-- [`atmos.env.socket`](atmos/env/socket/):
-    An environment that relies on [luasocket][luasocket] to provide network
-    communication.
-- [`atmos.env.sdl`](atmos/env/sdl/):
-    An environment that relies on [lua-sdl2][luasdl] to provide window, mouse,
-    key, and timer events.
-- [`atmos.env.iup`](atmos/env/iup/):
-    An environment that relies on [IUP][iup] ([iup-lua][iup-lua]) to provide
-    graphical user interfaces (GUIs).
--->
+<!-- 3 -->
 
 # Lexical Scheduling & Hierarchy
 
@@ -194,6 +181,8 @@ end)
 emit 'X'
 emit 'Y'
 ```
+
+<!-- 4 -->
 
 # Data Streams
 
