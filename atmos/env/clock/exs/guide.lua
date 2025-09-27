@@ -3,7 +3,7 @@ local S = require "atmos.streams"
 
 call(function ()
 
-    -- Tasks & Events
+    -- 1. Tasks & Events
 
     -- 1.1
     do
@@ -30,11 +30,34 @@ call(function ()
             -- "task 2 awakes from X"
     end
 
-    -- Scheduling & Hierarchy
+    -- 2. External Environments
 
     -- 2.1
     do
         print "-=-=- 2.1 -=-=-"
+        spawn(function ()
+            await "X"       -- awakes when "x" emits "X"
+            print("terminates after X")
+        end)
+        emit "X"
+    end
+
+    -- 2.2
+    do
+        print "-=-=- 2.2 -=-=-"
+        print("Counts 5 seconds:")
+        for i=1,5 do
+            await(clock{ms=100})
+            print("1 second...")
+        end
+        print("5 seconds elapsed.")
+    end
+
+    -- 3. Scheduling & Hierarchy
+
+    -- 3.1
+    do
+        print "-=-=- 3.1 -=-=-"
         print "1"
         spawn(function ()
             print "a1"
@@ -52,9 +75,9 @@ call(function ()
         print "4"
     end
 
-    -- 2.2
+    -- 3.2
     do
-        print "-=-=- 2.2 -=-=-"
+        print "-=-=- 3.2 -=-=-"
         local _ <close> = spawn(function ()
             spawn(function ()
                 await 'Y'   -- never awakes after 'X' occurs
@@ -67,11 +90,11 @@ call(function ()
         emit 'Y'
     end
 
-    -- Data Streams
+    -- 4. Data Streams
 
-    -- 3.1
+    -- 4.1
     do
-        print "-=-=- 3.1 -=-=-"
+        print "-=-=- 4.1 -=-=-"
         local _ <close> = spawn(function ()
             S.fr_await('X')
                 :filter(function(x) return x.v%2 == 1 end)
@@ -85,9 +108,9 @@ call(function ()
         end
     end
 
-    -- 3.2
+    -- 4.2
     do
-        print "-=-=- 3.2 -=-=-"
+        print "-=-=- 4.2 -=-=-"
         function T ()
             await('X')
             await('Y')
@@ -106,29 +129,6 @@ call(function ()
         emit('X')
         emit('Y')   -- 2
         emit('Y')
-    end
-
-    -- External Environments
-
-    -- 4.1
-    do
-        print "-=-=- 4.1 -=-=-"
-        spawn(function ()
-            await "X"       -- awakes when "x" emits "X"
-            print("terminates after X")
-        end)
-        emit "X"
-    end
-
-    -- 4.2
-    do
-        print "-=-=- 4.2 -=-=-"
-        print("Counts 5 seconds:")
-        for i=1,5 do
-            await(clock{ms=100})
-            print("1 second...")
-        end
-        print("5 seconds elapsed.")
     end
 
 end)

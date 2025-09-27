@@ -2,9 +2,9 @@
 
 [
     [Tasks & Events](#tasks--events) |
+    [External Environments](#external-environments) |
     [Scheduling & Hierarchy](#lexical-scheduling--hierarchy) |
     [Data Streams](#functional-streams) |
-    [External Environments](#external-environments) |
     [xxx] |
     [Pools](#task-pools) |
     [Errors](#errors) |
@@ -52,6 +52,65 @@ emit('X')
 
 Note that explicit `await` suspension points are still required, but task
 activation is now based on *reactive scheduling*.
+
+# External Environments
+
+An environment is the external component that bridges input events from the
+real world into an Atmos application.
+These events can be timers, key presses, network packets, or other kinds of
+inputs, depending on the environment.
+
+The environment is loaded through `require` and relies on the `call` primitive
+to handle events:
+
+```
+require "x"         -- environment "x" with events of type "X"
+
+call(function ()
+    await "X"       -- awakes when "x" emits "X"
+    print("terminates after X")
+end)
+```
+
+The `call` receives a body and passes control of the Lua application to the
+environment.
+The environment internally executes a continuous loop that polls external
+events from the real world and forwards them  to Atmos through `emit` calls.
+The body becomes an anonymous task that, when terminates, returns the control
+of the environment back to the Lua application.
+
+The next example relies on the built-in [clock environment](atmos/env/clock/)
+to count 5 seconds:
+
+```
+require "atmos.env.clock"
+call(function ()
+    print("Counts 5 seconds:")
+    for i=1,5 do
+        await(clock{s=1})
+        print("1 second...")
+    end
+    print("5 seconds elapsed.")
+end)
+
+<!--
+The actual available events depend on the environment and should be documented
+appropriately.
+
+The standard distribution of Atmos provides the following environments:
+
+- [`atmos.env.clock`](atmos/env/clock/):
+    A simple pure-Lua environment that uses `os.clock` to issue timer events.
+- [`atmos.env.socket`](atmos/env/socket/):
+    An environment that relies on [luasocket][luasocket] to provide network
+    communication.
+- [`atmos.env.sdl`](atmos/env/sdl/):
+    An environment that relies on [lua-sdl2][luasdl] to provide window, mouse,
+    key, and timer events.
+- [`atmos.env.iup`](atmos/env/iup/):
+    An environment that relies on [IUP][iup] ([iup-lua][iup-lua]) to provide
+    graphical user interfaces (GUIs).
+-->
 
 # Lexical Scheduling & Hierarchy
 
@@ -209,70 +268,6 @@ mapped to only generate the numbers.
 The example takes the first two numbers and prints them.
 
 [f-streams]: https://github.com/lua-atmos/f-streams/
-
-# External Environments
-
-An environment is the external component that bridges input events from the
-real world into an Atmos application.
-These events can be timers, key presses, network packets, or other kinds of
-inputs, depending on the environment.
-
-The environment is loaded through `require` and relies on the `call` primitive
-to handle events:
-
-```
-require "x"         -- environment "x" with events of type "X"
-
-call(function ()
-    await "X"       -- awakes when "x" emits "X"
-    print("terminates after X")
-end)
-```
-
-The `call` receives a body and passes control of the Lua application to the
-environment.
-The environment internally executes a continuous loop that polls external
-events from the real world and forwards them  to Atmos through `emit` calls.
-The body becomes an anonymous task that, when terminates, returns the control
-of the environment back to the Lua application.
-
-The next example relies on the built-in [clock environment](atmos/env/clock/)
-to count 5 seconds:
-
-```
-require "atmos.env.clock"
-call(function ()
-    print("Counts 5 seconds:")
-    for i=1,5 do
-        await(clock{s=1})
-        print("1 second...")
-    end
-    print("5 seconds elapsed.")
-end)
-
-
-
-
-
-
-<!--
-The actual available events depend on the environment and should be documented
-appropriately.
-
-The standard distribution of Atmos provides the following environments:
-
-- [`atmos.env.clock`](atmos/env/clock/):
-    A simple pure-Lua environment that uses `os.clock` to issue timer events.
-- [`atmos.env.socket`](atmos/env/socket/):
-    An environment that relies on [luasocket][luasocket] to provide network
-    communication.
-- [`atmos.env.sdl`](atmos/env/sdl/):
-    An environment that relies on [lua-sdl2][luasdl] to provide window, mouse,
-    key, and timer events.
-- [`atmos.env.iup`](atmos/env/iup/):
-    An environment that relies on [IUP][iup] ([iup-lua][iup-lua]) to provide
-    graphical user interfaces (GUIs).
--->
 
 
 
