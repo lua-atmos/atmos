@@ -23,7 +23,7 @@ end
 
 local function fr_spawn (t)
     local x <close> = spawn(t.T, table.unpack(t.args))
-    return await(x)
+    return await(x) or false
 end
 
 function S.fr_await (...)

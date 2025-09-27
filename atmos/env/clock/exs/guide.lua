@@ -91,7 +91,6 @@ call(function ()
         function T ()
             await('X')
             await('Y')
-print'ok'
         end
         local _ <close> = spawn(function ()
             S.fr_await(T)                           -- XY, XY, ...

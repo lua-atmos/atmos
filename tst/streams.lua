@@ -26,6 +26,19 @@ end
 
 do
     print("Testing...", "task 1")
+    local function T ()
+        await('E')
+    end
+    spawn(function()
+        S.fr_await(T):tap(out):take(2):to()
+    end)
+    emit('E')
+    emit('E')
+    emit('E')
+    assertx(out(), "false\nfalse\n")
+    atmos.close()
+
+    print("Testing...", "task 2")
     local T = function ()
         local _ <close> = defer(function()
             out'defer'
