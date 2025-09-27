@@ -189,6 +189,8 @@ Toggles a task on and off.
     [await](#await)
 ]
 
+`TODO: event tag/payload`
+
 ### `emit (e, ...)`
 
 Emits an event.

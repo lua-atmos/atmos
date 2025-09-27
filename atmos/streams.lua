@@ -10,38 +10,37 @@ local from = S.from
 
 function S.from (v, ...)
     if _is_(v, 'clock') then
-        return S.fr_awaits(v, ...)
+        return S.fr_await(v, ...)
     end
     return from(v, ...)
 end
 
 -------------------------------------------------------------------------------
 
-local function fr_awaits (t)
+local function fr_await (t)
     return await(table.unpack(t.args))
 end
 
-function S.fr_awaits (...)
-    local t = {
-        args = { ... },
-        f    = fr_awaits,
-    }
-    return setmetatable(t, S.mt)
-end
-
--------------------------------------------------------------------------------
-
-local function fr_spawns (t)
+local function fr_spawn (t)
     local x <close> = spawn(t.T, table.unpack(t.args))
     return await(x)
 end
 
-function S.fr_spawns (T, ...)
-    local t = {
-        T    = T,
-        args = { ... },
-        f    = fr_spawns,
-    }
+function S.fr_await (...)
+    local T = select(1, ...)
+    local t
+    if type(T) == 'function' then
+        t = {
+            T    = T,
+            args = { select(2,...) },
+            f    = fr_spawn,
+        }
+    else
+        t = {
+            args = { ... },
+            f    = fr_await,
+        }
+    end
     return setmetatable(t, S.mt)
 end
 

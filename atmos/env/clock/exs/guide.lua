@@ -78,7 +78,7 @@ call(function ()
 
     -- 4.1
     spawn(function ()
-        S.fr_awaits('X')
+        S.fr_await('X')
             :filter(function(x) return x.v%2 == 1 end)
             :map(function(x) return x.v end)
             :tap(print)

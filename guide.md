@@ -147,19 +147,19 @@ The next example creates a stream that awaits occurrences of event `X`:
 
 ```
 spawn(function ()
-    S.fr_awaits('X')
-        :filter(function(x) return x.v%2 == 1 end)
-        :map(function(x) return x.v end)
+    S.fr_await('X')                                 -- X1, X2, ...
+        :filter(function(x) return x.v%2 == 1 end)  -- X1, X3, ...
+        :map(function(x) return x.v end)            -- 1, 3, ...
         :tap(print)
         :to()
 end)
 for i=1, 10 do
     await(clock{s=1})
-    emit { tag='X', v=i }   -- `X` events carrying `v`
+    emit { tag='X', v=i }   -- `X` events carrying `v=1`
 end
 ```
 
-The example spawns a task for the awaiting stream source `S.fr_awaits('X')` to
+The example spawns a task for the awaiting stream source `S.fr_await('X')` to
 run concurrently with a loop that generates events `X` carrying field `v=i` on
 every second.
 The stream pipeline filters only odd occurrences of `v`, then maps to these
@@ -177,7 +177,9 @@ while true do
 end
 ```
 
-Tasks can also be stream sources, allowing to specify complex stateful streams:
+Tasks can also be stream sources, allowing to specify stateful streams.
+The next example creates a stream that awaits occurrences of events `X` and `Y`
+in sequence:
 
 ```
 function T ()
@@ -185,11 +187,10 @@ function T ()
     await('Y')
 end
 spawn(function ()
-    S.fr_spawns(T)
-        :zip(S.from(1))
-
-        :filter(function(x) return x.v%2 == 1 end)
-        :map(function(x) return x.v end)
+    S.fr_spawns(T)                          -- XY, XY, ...
+        :zip(S.from(1))                     -- {XY,1}, {XY,2} , ...
+        :map(function (t) return t[2] end)  -- 1, 2, ...
+        :take(2)                            -- 1, 2
         :tap(print)
         :to()
 end)
@@ -200,6 +201,16 @@ emit('X')
 emit('Y')   -- 2
 emit('Y')
 ```
+
+In the example, `S.fr_spawns(T)` is a stream 
+run concurrently with a loop that generates events `X` carrying field `v=i` on
+every second.
+The stream pipeline filters only odd occurrences of `v`, then maps to these
+values, and prints them.
+The call to sink `to()` activates the pipeline and starts to pull values from
+the stream source.
+The loop takes 10 seconds to emit `1,2,...,10`, while the stream takes 10
+seconds to print `1,3,...,9`.
 
 - Functional Streams (à la [ReactiveX][rx]):
     - Functional combinators for lazy (infinite) lists.
