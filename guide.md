@@ -178,8 +178,8 @@ end
 ```
 
 Tasks can also be stream sources, allowing to specify stateful streams.
-The next example creates a stream that awaits occurrences of events `X` and `Y`
-in sequence:
+The next example creates a stream that awaits events `X` and `Y` in sequence
+packed inside a task:
 
 ```
 function T ()
@@ -187,7 +187,7 @@ function T ()
     await('Y')
 end
 spawn(function ()
-    S.fr_spawns(T)                          -- XY, XY, ...
+    S.fr_await(T)                           -- XY, XY, ...
         :zip(S.from(1))                     -- {XY,1}, {XY,2} , ...
         :map(function (t) return t[2] end)  -- 1, 2, ...
         :take(2)                            -- 1, 2
@@ -202,21 +202,11 @@ emit('Y')   -- 2
 emit('Y')
 ```
 
-In the example, `S.fr_spawns(T)` is a stream 
-run concurrently with a loop that generates events `X` carrying field `v=i` on
-every second.
-The stream pipeline filters only odd occurrences of `v`, then maps to these
-values, and prints them.
-The call to sink `to()` activates the pipeline and starts to pull values from
-the stream source.
-The loop takes 10 seconds to emit `1,2,...,10`, while the stream takes 10
-seconds to print `1,3,...,9`.
-
-- Functional Streams (à la [ReactiveX][rx]):
-    - Functional combinators for lazy (infinite) lists.
-    - Interoperability with tasks & events:
-        tasks and events as streams, and
-        streams as events.
+In the example, `S.fr_await(T)` is a stream of complete executions of task `T`.
+Therefore, each item is generated only after `X` and `Y` occur in sequence.
+The stream pipeline is zipped with an increasing sequence of numbers, and then
+mapped to only generate the numbers.
+The example takes the first two numbers and prints them.
 
 [f-streams]: https://github.com/lua-atmos/f-streams/
 
