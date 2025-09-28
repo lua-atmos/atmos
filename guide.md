@@ -4,11 +4,11 @@
     [Tasks & Events](#tasks--events) |
     [External Environments](#external-environments) |
     [Scheduling & Hierarchy](#lexical-scheduling--hierarchy) |
-    [Data Streams](#functional-streams) |
+    [Compound Statements](#compound-statements)
+    [Functional Streams](#functional-streams) |
     [xxx] |
     [Pools](#task-pools) |
     [Errors](#errors) |
-    [Compounds](#compound-statements)
 ]
 
 <!-- 1 -->
@@ -184,10 +184,50 @@ emit 'Y'
 
 <!-- 4 -->
 
-# Data Streams
+# Compound Statements
 
-Data streams represent incoming values over continuous time, which can be
-combined in a pipeline for real-time processing.
+Atmos provides many compound statements built on top of tasks as follows:
+
+- The `every` statement expands to a loop that awaits its first argument at the
+  beginning of each iteration:
+
+```
+every(clock{s=1}, function ()
+    print "1 second elapses"    -- prints this message every second
+end)
+```
+
+- The `watching` statement awaits the given body to terminate, or aborts if its
+  first argument occurs:
+
+```
+watching(clock{s=1}, function ()
+    await 'X'
+    print "X happens before 1s" -- prints this message unless 1 second elapses
+end)
+```
+
+- The `par`, `par_and`, `par_or` statements spawn multiple bodies and rejoin
+  after their bodies terminates as follows: `par` never rejoins, `par_and`
+  rejoins after all terminate, `par_or` rejoins after any terminates.
+
+```
+par_and(function ()
+    await 'X'
+end, function ()
+    await 'Y'
+end, function ()
+    await 'Z'
+end)
+print "X, Y, and Z occurred"
+```
+
+<!-- 5 -->
+
+# Functional Streams
+
+Functional data streams represent incoming values over continuous time, which
+can be combined in a pipeline for real-time processing.
 Atmos extends the [f-streams][f-streams] library to interoperate with tasks
 and events.
 
@@ -330,6 +370,23 @@ toggle(t, false)
 emit 'X'    -- ignored
 toggle(t, true)
 emit 'X'    -- awakes
+```
+
+- The `toggle` statement awaits the given body to terminate, while also
+  observing its first argument as a boolean event:
+  When receiving `false`, the body toggles off.
+  When receiving `true`, the body toggles on.
+
+```
+toggle('X', function ()
+    every(clock{s=1}, function ()
+        print "1s elapses"
+    end)
+end)
+emit('X', false)    -- body above toggles off
+<...>
+emit('X', true)     -- body above toggles on
+<...>
 ```
 
 ## Deferred Statements
@@ -493,60 +550,3 @@ line 8, before throwing the error in line 3:
  v  x.lua:3 (throw) <- x.lua:8 (task) <- x.lua:6 (tasks)
 ==> error
 ```
-
-# Compound Statements
-
-Atmos provides many compound statements built on top of tasks and awaits as
-follows:
-
-- The `every` statement expands to a loop that awaits its first argument at the
-  beginning of each iteration:
-
-```
-every(clock{s=1}, function ()
-    print "1 second elapses"    -- prints this message every second
-end)
-```
-
-- The `watching` statement awaits the given body to terminate, or aborts if its
-  first argument occurs:
-
-```
-watching(clock{s=1}, function ()
-    await 'X'
-    print "X happens before 1s" -- prints this message unless 1 second elapses
-end)
-```
-
-- The `par`, `par_and`, `par_or` statements spawn multiple bodies and rejoin
-  after their bodies terminates as follows: `par` never rejoins, `par_and`
-  rejoins after all terminate, `par_or` rejoins after any terminates.
-
-```
-par_and(function ()
-    await 'X'
-end, function ()
-    await 'Y'
-end, function ()
-    await 'Z'
-end)
-print "X, Y, and Z occurred"
-```
-
-- The `toggle` statement awaits the given body to terminate, while also
-  observing its first argument as a boolean event:
-  When receiving `false`, the body toggles off.
-  When receiving `true`, the body toggles on.
-
-```
-toggle('X', function ()
-    every(clock{s=1}, function ()
-        print "1s elapses"
-    end)
-end)
-emit('X', false)    -- body above toggles off
-<...>
-emit('X', true)     -- body above toggles on
-<...>
-```
-

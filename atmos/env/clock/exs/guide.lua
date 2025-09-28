@@ -90,11 +90,53 @@ call(function ()
         emit 'Y'
     end
 
-    -- 4. Data Streams
+    -- 4. Compound Statements
 
     -- 4.1
     do
         print "-=-=- 4.1 -=-=-"
+        watching(clock{s=1}, function()
+            every(clock{ms=100}, function ()
+                print "100 ms elapses"    -- prints this message every second
+            end)
+        end)
+    end
+
+    -- 4.2
+    do
+        print "-=-=- 4.2 -=-=-"
+        spawn(function()
+            watching(clock{s=1}, function ()
+                await 'X'
+                print "X happens before 1s" -- prints this message unless 1 second elapses
+            end)
+        end)
+        emit 'X'
+    end
+
+    -- 4.3
+    do
+        print "-=-=- 4.3 -=-=-"
+        spawn(function()
+            par_and(function ()
+                await 'X'
+            end, function ()
+                await 'Y'
+            end, function ()
+                await 'Z'
+            end)
+            print "X, Y, and Z occurred"
+        end)
+        emit 'X'
+        emit 'Z'
+        emit 'Y'
+    end
+
+    -- 5. Functional Streams
+
+    -- 5.1
+    do
+        print "-=-=- 5.1 -=-=-"
         local _ <close> = spawn(function ()
             S.fr_await('X')
                 :filter(function(x) return x.v%2 == 1 end)
@@ -108,9 +150,9 @@ call(function ()
         end
     end
 
-    -- 4.2
+    -- 5.2
     do
-        print "-=-=- 4.2 -=-=-"
+        print "-=-=- 5.2 -=-=-"
         function T ()
             await('X')
             await('Y')
