@@ -10,7 +10,7 @@ do
     emit 'E'
     emit 'E'
     spawn(function()
-        local t = s:take(2):to_table()
+        local t = s:take(2):table():to()
         out('ok')
         assert(#t==2 and t[1]=='E' and t[2]=='E')
     end)
@@ -53,7 +53,7 @@ do
     spawn(function()
         watching('F', function()
             local s = S.fr_spawns(T)
-            s:to_table()
+            s:table():to()
             await(false)
         end)
     end)
@@ -67,10 +67,21 @@ do
     local x = S.fr_awaits('X')
     local y = S.fr_awaits('Y')
     local _ <close> = spawn(function()
+        local xy = S.par(x,y)
+        xy:tap(out):to()
+    end)
+    emit 'X'
+    emit 'Y'
+    emit 'X'
+    assertx(out(), "X\nY\nX\n")
+    atmos.close()
+
+    print("Testing...", "xpar 1")
+    local x = S.fr_awaits('X')
+    local y = S.fr_awaits('Y')
+    local _ <close> = spawn(function()
         local xy = S.from{x,y}:xpar()
-        xy:to_each(function(it)
-            out(it)
-        end)
+        xy:tap(out):to()
     end)
     emit 'X'
     emit 'Y'
@@ -91,9 +102,41 @@ do
         S.fr_awaits('C'):take(1)
     }:xseq()
     spawn(function()
-        local s = S.from{xy,abc}:xpar():to_each(function(it)
-            out(it)
-        end)
+        local s = S.par(xy,abc):tap(out):to()
+    end)
+
+    emit 'Y'
+    emit 'X'    -- X
+    emit 'X'
+    emit 'A'    -- A
+    emit 'B'    -- B
+    emit 'A'
+    emit 'X'
+    emit 'Y'    -- Y
+    emit 'C'
+    emit 'Y'
+    emit 'A'
+    emit 'X'
+    emit 'B'    -- B
+    emit 'X'
+    emit 'C'    -- C
+    assertx(out(), "X\nA\nB\nY\nB\nC\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "xpar 2")
+    local xy = S.from {
+        S.fr_awaits('X'):take(1),
+        S.fr_awaits('Y'):take(1)
+    }:xseq()
+    local abc = S.from {
+        S.fr_awaits('A'):take(1),
+        S.fr_awaits('B'):take(2),
+        S.fr_awaits('C'):take(1)
+    }:xseq()
+    spawn(function()
+        local s = S.from{xy,abc}:xpar():tap(out):to()
     end)
 
     emit 'Y'
@@ -127,10 +170,32 @@ do
         watching ('X', function()
             local x = S.fr_spawns(T, 'A')
             local y = S.fr_spawns(T, 'B')
+            local xy = S.par(x,y):par()
+            xy:take(1):tap(out):to()
+        end)
+        out 'X'
+    end)
+    emit 'B'
+    emit 'X'
+    emit 'A'
+    assertx(out(), "defer\tB\nB\ndefer\tA\nX\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "xpar 3: defer")
+    function T (x)
+        local _ <close> = defer(function()
+            out('defer',x)
+        end)
+        return await(x)
+    end
+    local _ <close> = spawn(function()
+        watching ('X', function()
+            local x = S.fr_spawns(T, 'A')
+            local y = S.fr_spawns(T, 'B')
             local xy = S.from{x,y}:xpar()
-            xy:take(1):to_each(function(it)
-                out(it)
-            end)
+            xy:take(1):tap(out):to()
         end)
         out 'X'
     end)
@@ -146,10 +211,24 @@ do
     local x = S.fr_awaits('X'):take(1)
     local y = S.fr_awaits('Y'):take(1)
     local _ <close> = spawn(function()
+        local xy = S.paror(x,y)
+        xy:tap(out):to()
+        out 'fim'
+    end)
+    emit 'X'
+    emit 'Y'
+    emit 'X'
+    assertx(out(), "X\nfim\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "xparor 1")
+    local x = S.fr_awaits('X'):take(1)
+    local y = S.fr_awaits('Y'):take(1)
+    local _ <close> = spawn(function()
         local xy = S.from{x,y}:xparor()
-        xy:to_each(function(it)
-            out(it)
-        end)
+        xy:tap(out):to()
         out 'fim'
     end)
     emit 'X'
@@ -170,11 +249,33 @@ do
     local _ <close> = spawn(function()
         local x = S.fr_spawns(T, 'A'):take(1)
         local y = S.fr_spawns(T, 'B'):take(1)
+        local xy = S.paror(x,y)
+        watching ('X', function()
+            xy:tap(out):to()
+        end)
+        out 'X'
+    end)
+    emit 'B'
+    --emit 'X'
+    emit 'A'
+    assertx(out(), "defer\tB\nB\ndefer\tA\nX\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "xparor 2: defer")
+    function T (x)
+        local _ <close> = defer(function()
+            out('defer',x)
+        end)
+        return await(x)
+    end
+    local _ <close> = spawn(function()
+        local x = S.fr_spawns(T, 'A'):take(1)
+        local y = S.fr_spawns(T, 'B'):take(1)
         local xy = S.from{x,y}:xparor()
         watching ('X', function()
-            xy:to_each(function(it)
-                out(it)
-            end)
+            xy:tap(out):to()
         end)
         out 'X'
     end)
@@ -212,9 +313,9 @@ do
         spawn(function()
             local x = S.fr_awaits 'X'
             local y = function () return S.fr_awaits 'Y' end
-            x:debounce(y):to_each(function(it)
+            x:debounce(y):tap(function(it)
                 out(it.v)
-            end)
+            end):to()
         end)
         emit { tag='X', v=1 }
         emit 'Y'
@@ -256,12 +357,12 @@ do
     spawn(function()
         local x = S.fr_awaits 'X'
         local y = S.fr_awaits 'Y'
-        x:buffer(y):to_each(function(it)
+        x:buffer(y):tap(function(it)
             out(#it)
             for _,t in ipairs(it) do
                 out(t.v)
             end
-        end)
+        end):to()
     end)
     emit { tag='X', v=1 }
     emit { tag='X', v=2 }
@@ -312,12 +413,12 @@ do
         local x = S.fr_awaits 'X'
         local y = S.fr_awaits 'Y'
         local xy = x:debounce(function() return S.fr_awaits'Y' end)
-        x:buffer(xy):to_each(function(it)
+        x:buffer(xy):tap(function(it)
             out(#it)
             for _,t in ipairs(it) do
                 out(t.v)
             end
-        end)
+        end):to()
     end)
     emit { tag='X', v=1 }
     emit { tag='X', v=2 }

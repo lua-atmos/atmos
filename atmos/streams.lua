@@ -90,10 +90,10 @@ end
 function S.debounce (src, fctl)
     local n = N()
     local t = {
-        n     = n,
-        tsk   = spawn(S.Debounce, n, src, fctl),
-        f     = debounce,
-        close = close,
+        n   = n,
+        tsk = spawn(S.Debounce, n, src, fctl),
+        f   = debounce,
+        clo = close,
     }
     return setmetatable(t, S.mt)
 end
@@ -133,10 +133,10 @@ end
 function S.buffer (src, ctl)
     local n = N()
     local t = {
-        n     = n,
-        tsk   = spawn(S.Buffer, n, src, ctl),
-        f     = buffer,
-        close = close,
+        n   = n,
+        tsk = spawn(S.Buffer, n, src, ctl),
+        f   = buffer,
+        clo = close,
     }
     return setmetatable(t, S.mt)
 end
@@ -166,33 +166,53 @@ local function TT (n, tsks, ss)
     end
 end
 
-local function close (t)
+local function clo_tsk (t)
     local _ <close> = t.tsk
+end
+
+local function clo_tsks (t)
+    local _ <close> = t.tsks
 end
 
 -------------------------------------------------------------------------------
 
-local function xpar (t)
+local function par (t)
     local _,v = await(t.n)
     return v
+end
+
+function S.par (...)
+    local n = N()
+    local tsks = tasks()
+    for i=1, select('#',...) do
+        local s = select(i, ...)
+        spawn_in(tsks, T, n, s)
+    end
+    local t = {
+        n    = n,
+        tsks = tsks,
+        f    = par,
+        clo  = clo_tsks,
+    }
+    return setmetatable(t, S.mt)
 end
 
 function S.xpar (ss)
     local n = N()
     local tsks = tasks()
     local t = {
-        n     = n,
-        tsks  = tsks,
-        tsk   = spawn(TT, n, tsks, ss),
-        f     = xpar,
-        close = close,
+        n    = n,
+        tsks = tsks,
+        tsk  = spawn(TT, n, tsks, ss),
+        f    = par,
+        clo  = clo_tsk,
     }
     return setmetatable(t, S.mt)
 end
 
 -------------------------------------------------------------------------------
 
-local function xparor (t)
+local function paror (t)
     local x,v = await(_or_(t.n,t.tsks))
     if v == t.tsks then
         return nil
@@ -200,15 +220,31 @@ local function xparor (t)
     return v
 end
 
+function S.paror (...)
+    local n = N()
+    local tsks = tasks()
+    for i=1, select('#',...) do
+        local s = select(i, ...)
+        spawn_in(tsks, T, n, s)
+    end
+    local t = {
+        n    = n,
+        tsks = tsks,
+        f    = paror,
+        clo  = clo_tsks,
+    }
+    return setmetatable(t, S.mt)
+end
+
 function S.xparor (ss)
     local n = N()
     local tsks = tasks()
     local t = {
-        n     = n,
-        tsks  = tsks,
-        tsk   = spawn(TT, n, tsks, ss),
-        f     = xparor,
-        close = close,
+        n    = n,
+        tsks = tsks,
+        tsk  = spawn(TT, n, tsks, ss),
+        f    = paror,
+        clo  = clo_tsk,
     }
     return setmetatable(t, S.mt)
 end
