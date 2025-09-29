@@ -222,8 +222,8 @@ print "X, Y, and Z occurred"
 
 # Functional Streams
 
-Functional data streams represent incoming values over continuous time, which
-can be combined in a pipeline for real-time processing.
+Functional data streams represent incoming values over continuous time, and can
+be combined a pipeline for real-time processing.
 Atmos extends the [f-streams][f-streams] library to interoperate with tasks
 and events.
 
@@ -243,17 +243,18 @@ for i=1, 10 do
 end
 ```
 
-The example spawns a task for the awaiting stream source `S.fr_await('X')` to
-run concurrently with a loop that generates events `X` carrying field `v=i` on
-every second.
-The stream pipeline filters only odd occurrences of `v`, then maps to these
-values, and prints them.
-The call to sink `to()` activates the pipeline and starts to pull values from
-the stream source.
-The loop takes 10 seconds to emit `1,2,...,10`, while the stream takes 10
+The example spawns a dedicated task for the stream pipeline with source
+`S.fr_await('X')`, which runs concurrently with a loop that generates events
+`X` carrying field `v=i` on every second.
+The pipeline filters only odd occurrences of `v`, then maps to these values,
+and prints them.
+The call to sink `to()` activates the stream and starts to pull values from
+the source, making the task to await.
+The loop takes 10 seconds to emit `1,2,...,10`, whereas the stream takes 10
 seconds to print `1,3,...,9`.
 
-The full pipeline of the example is analogous to the awaiting loop as follows:
+The full stream pipeline of the example is analogous to the awaiting loop as
+follows:
 
 ```
 while true do
@@ -261,9 +262,9 @@ while true do
 end
 ```
 
-Tasks can also be stream sources, allowing to specify stateful streams.
-The next example creates a stream that awaits events `X` and `Y` in sequence
-packed inside a task:
+Atmos provides stateful streams by supporting tasks as stream sources.
+The next example creates a task stream that packs awaits to `X` and `Y` in
+sequence:
 
 ```
 function T ()
@@ -288,14 +289,17 @@ emit('Y')
 
 In the example, `S.fr_await(T)` is a stream of complete executions of task `T`.
 Therefore, each item is generated only after `X` and `Y` occur in sequence.
-The stream pipeline is zipped with an increasing sequence of numbers, and then
-mapped to only generate the numbers.
-The example takes the first two numbers and prints them.
+The pipeline is zipped with an increasing sequence of numbers, and then mapped
+to only generate the numbers.
+The example only takes the first two numbers, prints them, and terminates.
 
 [f-streams]: https://github.com/lua-atmos/f-streams/
 
+`TODO: Debounce`
 
+<!-- 6 -->
 
+# More about Tasks
 
 
 
