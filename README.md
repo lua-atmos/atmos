@@ -47,7 +47,7 @@ with three main functionalities:
         streams as events.
     - Safe finalization of stateful (task-based) streams.
 
-Atmos is inspired by [synchronous programming languages][sync] like [Ceu][ceu]
+Atmos is inspired by [synchronous programming languages][sync] like [Céu][ceu]
 and [Esterel][esterel].
 
 [lua]:          https://www.lua.org/
@@ -183,9 +183,9 @@ The standard distribution of Atmos provides the following environments:
     - [click-drag-cancel.lua](atmos/env/sdl/exs/click-drag-cancel.lua)
 - A simple but complete 2D game in Atmos:
     - https://github.com/lua-atmos/sdl-rocks/
-- Academic publications (Ceu):
+- Academic publications (Céu):
     - http://ceu-lang.org/chico/#ceu
-- Mailing list (Ceu):
+- Mailing list (Céu & Atmos):
     - https://groups.google.com/g/ceu-lang
 
 [toy]:  https://fsantanna.github.io/toy.html

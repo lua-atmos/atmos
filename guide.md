@@ -15,7 +15,7 @@
 
 # Tasks & Events
 
-A task is the basic unit of execution of Atmos.
+Tasks are the basic units of execution in Atmos.
 
 The `spawn` primitive starts a task from a function prototype:
 
@@ -25,7 +25,7 @@ function T (...)
 end
 local t1 = spawn(T, ...)    -- starts `t1`
 local t2 = spawn(T, ...)    -- starts `t2`
-...                         -- t1 & t2 started and are now suspended
+...                         -- t1 & t2 started and are now waiting
 ```
 
 Tasks are based on Lua coroutines, meaning that they rely on cooperative
@@ -37,23 +37,22 @@ The `await` primitive suspends a task until a matching event occurs:
 ```
 function T (i)
     await('X')
-    print("task " .. i .. " awakes from X")
+    print("task " .. i .. " awakes on X")
 end
 ```
 
-The `emit` primitive broadcasts an event, which awakes all suspended tasks with
-a matching `await`:
+The `emit` primitive broadcasts an event, awaking all tasks awaiting it:
 
 ```
 spawn(T, 1)
 spawn(T, 2)
 emit('X')
-    -- "task 1 awakes from X"
-    -- "task 2 awakes from X"
+    -- "task 1 awakes on X"
+    -- "task 2 awakes on X"
 ```
 
-Note that explicit `await` suspension points are still required, but task
-activation is now based on *reactive scheduling*.
+Although explicit suspension points are still required, Atmos supports
+*reactive scheduling* for tasks based on `await` and `emit` primitives.
 
 <!-- 2 -->
 
@@ -64,23 +63,22 @@ real world into an Atmos application.
 These events can be timers, key presses, network packets, or other kinds of
 inputs, depending on the environment.
 
-The environment is loaded through `require` and relies on the `call` primitive
-to handle events:
+The environment is loaded through `require` and depends on an outer `call`
+primitive to handle events:
 
 ```
-require "x"         -- environment "x" with events of type "X"
+require "x"         -- environment "x" with events X.A, X.B, ...
 
 call(function ()
-    await "X"       -- awakes when "x" emits "X"
-    print("terminates after X")
+    await "X.A"     -- awakes when "x" emits "X.A"
 end)
 ```
 
 The `call` receives a body and passes control of the Lua application to the
 environment.
 The environment internally executes a continuous loop that polls external
-events from the real world and forwards them  to Atmos through `emit` calls.
-The body becomes an anonymous task that, when terminates, returns the control
+events from the real world and forwards them to Atmos through `emit` calls.
+The call body is an anonymous task that, when terminates, returns the control
 of the environment back to the Lua application.
 
 The next example relies on the built-in [clock environment](atmos/env/clock/)
@@ -96,6 +94,7 @@ call(function ()
     end
     print("5 seconds elapsed.")
 end)
+```
 
 <!-- 3 -->
 
@@ -209,7 +208,7 @@ end)
 
 - The `par`, `par_and`, `par_or` statements spawn multiple bodies and rejoin
   after their bodies terminates as follows: `par` never rejoins, `par_and`
-  rejoins after all terminate, `par_or` rejoins after any terminates.
+  rejoins after all terminate, `par_or` rejoins after any terminates:
 
 ```
 par_and(function ()
