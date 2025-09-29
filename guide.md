@@ -1,15 +1,12 @@
 # Guide
 
-[
-    [Tasks & Events](#tasks--events) |
-    [External Environments](#external-environments) |
-    [Scheduling & Hierarchy](#lexical-scheduling--hierarchy) |
-    [Compound Statements](#compound-statements)
-    [Functional Streams](#functional-streams) |
-    [xxx] |
-    [Pools](#task-pools) |
-    [Errors](#errors) |
-]
+1. [Tasks & Events](#tasks--events)
+2. [External Environments](#external-environments)
+3. [Lexical Scheduling & Lexical Hierarchy](#lexical-scheduling--lexical-hierarchy)
+4. [Compound Statements](#compound-statements)
+5. [Functional Streams](#functional-streams)
+6. [More about Tasks](#more-about-tasks)
+7. [Errors](#errors)
 
 <!-- 1 -->
 
@@ -98,7 +95,7 @@ end)
 
 <!-- 3 -->
 
-# Lexical Scheduling & Hierarchy
+# Lexical Scheduling & Lexical Hierarchy
 
 ## Lexical Scheduling
 
@@ -153,7 +150,7 @@ In the example, the scheduling behaves as follows:
 - Main application prints `1` and spawns the first task.
 - The first task takes control, prints `a1`, and suspends, returning the
   control back to the main application.
-- The main application print `2` and spawns the second task.
+- The main application prints `2` and spawns the second task.
 - The second task starts, prints `b1`, and suspends.
 - The main application prints `3`, and broadcasts `X`.
 - The first task awakes, prints `a2`, and suspends.
@@ -166,8 +163,8 @@ Tasks form a hierarchy based on the source position in which they are spawned.
 Therefore, the lexical structure of the program determines the lifetime of
 tasks, which helps to reason about its control flow.
 
-In the next example, the outer task terminates and aborts the inner task,
-before the latter has the chance to awake:
+In the next example, the outer task terminates and aborts the inner task before
+it has the chance to awake:
 
 ```
 spawn(function ()
@@ -185,14 +182,14 @@ emit 'Y'
 
 # Compound Statements
 
-Atmos provides many compound statements built on top of tasks as follows:
+Atmos provides many compound statements built on top of tasks:
 
 - The `every` statement expands to a loop that awaits its first argument at the
   beginning of each iteration:
 
 ```
 every(clock{s=1}, function ()
-    print "1 second elapses"    -- prints this message every second
+    print "1 second elapses"    -- prints every second
 end)
 ```
 
@@ -202,12 +199,12 @@ end)
 ```
 watching(clock{s=1}, function ()
     await 'X'
-    print "X happens before 1s" -- prints this message unless 1 second elapses
+    print "X happens before 1s" -- prints unless 1 second elapses
 end)
 ```
 
 - The `par`, `par_and`, `par_or` statements spawn multiple bodies and rejoin
-  after their bodies terminates as follows: `par` never rejoins, `par_and`
+  after their bodies terminates: `par` never rejoins, `par_and`
   rejoins after all terminate, `par_or` rejoins after any terminates:
 
 ```
