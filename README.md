@@ -15,6 +15,7 @@ Please, switch to stable [`v0.3`](https://github.com/lua-atmos/atmos/tree/v0.3).
     [About](#about)                 |
     [Hello World!](#hello-world)    |
     [Install & Run](#install--run)  |
+    [Environments](#environments)   |
     [Documentation](#documentation) |
     [Resources](#resources)
 ]
@@ -146,11 +147,6 @@ Atmos depends on [f-streams][f-streams].
 
 [f-streams]: https://github.com/lua-atmos/f-streams/
 
-# Documentation
-
-- [Guide](guide.md)
-- [API](api.md)
-
 # Environments
 
 An environment is an external component that bridges input events from the real
@@ -174,6 +170,11 @@ The standard distribution of Atmos provides the following environments:
 [luasdl]:       https://github.com/Tangent128/luasdl2/
 [iup]:          https://www.tecgraf.puc-rio.br/iup/
 [iup-lua]:      https://www.tecgraf.puc-rio.br/iup/en/basic/index.html
+
+# Documentation
+
+- [Guide](guide.md)
+- [API](api.md)
 
 # Resources
 
