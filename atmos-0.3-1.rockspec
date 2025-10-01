@@ -31,7 +31,7 @@ description = {
             streams as events.
         - Safe finalization of stateful (task-based) streams.
 
-    Atmos is inspired by synchronous programming languages like Ceu
+    Atmos is inspired by synchronous programming languages like Céu
     and Esterel.
    ]],
    homepage = "https://github.com/lua-atmos/atmos",
