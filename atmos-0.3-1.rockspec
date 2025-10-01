@@ -38,7 +38,8 @@ description = {
    license = "MIT",
 }
 dependencies = {
-   "lua ~> 5.4", "f-streams",
+   "lua ~> 5.4",
+   "f-streams ~> 0.2",
 }
 build = {
    type = "builtin",
