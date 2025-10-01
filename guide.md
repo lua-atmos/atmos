@@ -176,6 +176,8 @@ emit 'X'
 emit 'Y'
 ```
 
+### 3.2.1. Deferred Statements
+
 A task can register deferred statements to execute when they terminate or abort
 within its hierarchy:
 
