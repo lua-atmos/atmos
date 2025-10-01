@@ -10,8 +10,8 @@
 
 [
     [About](#about)                 |
-    [Install](#install)             |
     [Hello World!](#hello-world)    |
+    [Install & Run](#install--run)  |
     [Documentation](#documentation) |
     [Resources](#resources)
 ]
@@ -39,7 +39,7 @@ with three main functionalities:
       lifecycle.
 - Event Signaling Mechanisms:
     - An `await` primitive suspends a task and wait for events.
-    - An `emit` primitive signal events and awake awaiting tasks.
+    - An `emit` primitive signals events and awake awaiting tasks.
 - Functional Streams (à la [ReactiveX][rx]):
     - Functional combinators for lazy (infinite) lists.
     - Interoperability with tasks & events:
