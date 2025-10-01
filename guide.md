@@ -1,12 +1,12 @@
 # Guide
 
-1. [Tasks & Events](#1--tasks--events)
-2. [External Environments](#2--external-environments)
-3. [Lexical Structure](#3--lexical-structure)
-4. [Compound Statements](#4--compound-statements)
-5. [Functional Streams](#5--functional-streams)
-6. [More about Tasks](#6--more-about-tasks)
-7. [Errors](#7--errors)
+1. [Tasks & Events](#1-tasks--events)
+2. [External Environments](#2-external-environments)
+3. [Lexical Structure](#3-lexical-structure)
+4. [Compound Statements](#4-compound-statements)
+5. [Functional Streams](#5-functional-streams)
+6. [More about Tasks](#6-more-about-tasks)
+7. [Errors](#7-errors)
 
 # 1. Tasks & Events
 
