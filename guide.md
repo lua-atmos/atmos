@@ -2,7 +2,7 @@
 
 1. [Tasks & Events](#tasks--events)
 2. [External Environments](#external-environments)
-3. [Lexical Scheduling & Lexical Hierarchy](#lexical-scheduling--lexical-hierarchy)
+3. [Lexical Structure](#lexical-structure)
 4. [Compound Statements](#compound-statements)
 5. [Functional Streams](#functional-streams)
 6. [More about Tasks](#more-about-tasks)
@@ -95,7 +95,11 @@ end)
 
 <!-- 3 -->
 
-# Lexical Scheduling & Lexical Hierarchy
+# Lexical Structure
+
+In Atmos, the lexical organization of tasks determines their lifetimes and also
+how they are scheduled, which helps to reason about programs more statically
+based on the source code.
 
 ## Lexical Scheduling
 
@@ -161,7 +165,7 @@ In the example, the scheduling behaves as follows:
 
 Tasks form a hierarchy based on the source position in which they are spawned.
 Therefore, the lexical structure of the program determines the lifetime of
-tasks, which helps to reason about its control flow.
+tasks.
 
 In the next example, the outer task terminates and aborts the inner task before
 it has the chance to awake:
@@ -366,40 +370,7 @@ local t = spawn(T)
 print(t.v)  -- 10
 ```
 
-## Task Toggling
-
-A task can be toggled off (and back to on) to remain alive but unresponsive
-(and back to responsive) to upcoming events:
-
-```
-local t = spawn (function ()
-    await 'X'
-    print "awakes from X"
-end)
-toggle(t, false)
-emit 'X'    -- ignored
-toggle(t, true)
-emit 'X'    -- awakes
-```
-
-- The `toggle` statement awaits the given body to terminate, while also
-  observing its first argument as a boolean event:
-  When receiving `false`, the body toggles off.
-  When receiving `true`, the body toggles on.
-
-```
-toggle('X', function ()
-    every(clock{s=1}, function ()
-        print "1s elapses"
-    end)
-end)
-emit('X', false)    -- body above toggles off
-<...>
-emit('X', true)     -- body above toggles on
-<...>
-```
-
-# Task Pools
+## Task Pools
 
 A task pool allows for multiple tasks to share a parent container in the task
 hierarchy.
@@ -439,6 +410,39 @@ end
 
 If we include this loop after the `await(clock{s=1})` in the previous example,
 it will print the task ids that did not awake.
+
+## Task Toggling
+
+A task can be toggled off (and back to on) to remain alive but unresponsive
+(and back to responsive) to upcoming events:
+
+```
+local t = spawn (function ()
+    await 'X'
+    print "awakes from X"
+end)
+toggle(t, false)
+emit 'X'    -- ignored
+toggle(t, true)
+emit 'X'    -- awakes
+```
+
+- The `toggle` statement awaits the given body to terminate, while also
+  observing its first argument as a boolean event:
+  When receiving `false`, the body toggles off.
+  When receiving `true`, the body toggles on.
+
+```
+toggle('X', function ()
+    every(clock{s=1}, function ()
+        print "1s elapses"
+    end)
+end)
+emit('X', false)    -- body above toggles off
+<...>
+emit('X', true)     -- body above toggles on
+<...>
+```
 
 # Errors
 
