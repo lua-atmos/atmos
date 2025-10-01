@@ -1,16 +1,14 @@
 # Guide
 
-1. [Tasks & Events](#tasks--events)
-2. [External Environments](#external-environments)
-3. [Lexical Structure](#lexical-structure)
-4. [Compound Statements](#compound-statements)
-5. [Functional Streams](#functional-streams)
-6. [More about Tasks](#more-about-tasks)
-7. [Errors](#errors)
+1. [Tasks & Events](#1--tasks--events)
+2. [External Environments](#2--external-environments)
+3. [Lexical Structure](#3--lexical-structure)
+4. [Compound Statements](#4--compound-statements)
+5. [Functional Streams](#5--functional-streams)
+6. [More about Tasks](#6--more-about-tasks)
+7. [Errors](#7--errors)
 
-<!-- 1 -->
-
-# Tasks & Events
+# 1. Tasks & Events
 
 Tasks are the basic units of execution in Atmos.
 
@@ -51,9 +49,7 @@ emit('X')
 Although explicit suspension points are still required, Atmos supports
 *reactive scheduling* for tasks based on `await` and `emit` primitives.
 
-<!-- 2 -->
-
-# External Environments
+# 2. External Environments
 
 An environment is the external component that bridges input events from the
 real world into an Atmos application.
@@ -93,15 +89,13 @@ call(function ()
 end)
 ```
 
-<!-- 3 -->
-
-# Lexical Structure
+# 3. Lexical Structure
 
 In Atmos, the lexical organization of tasks determines their lifetimes and also
 how they are scheduled, which helps to reason about programs more statically
 based on the source code.
 
-## Lexical Scheduling
+## 3.1. Lexical Scheduling
 
 The reactive scheduler of Atmos is deterministic and cooperative:
 
@@ -161,7 +155,7 @@ In the example, the scheduling behaves as follows:
 - The second task awakes, prints `b2`, and suspends.
 - The main application prints `4`.
 
-## Lexical Hierarchy
+## 3.2. Lexical Hierarchy
 
 Tasks form a hierarchy based on the source position in which they are spawned.
 Therefore, the lexical structure of the program determines the lifetime of
@@ -181,8 +175,6 @@ end)
 emit 'X'
 emit 'Y'
 ```
-
-### Abortion & Deferred Statements
 
 A task can register deferred statements to execute when they terminate or abort
 within its hierarchy:
@@ -232,9 +224,7 @@ to an explicit block.
 We can omit this annotation only when we want to attach the `spawn` to its
 enclosing task.
 
-<!-- 4 -->
-
-# Compound Statements
+# 4. Compound Statements
 
 Atmos provides many compound statements built on top of tasks:
 
@@ -272,9 +262,7 @@ end)
 print "X, Y, and Z occurred"
 ```
 
-<!-- 5 -->
-
-# Functional Streams
+# 5. Functional Streams
 
 Functional data streams represent incoming values over continuous time, and can
 be combined a pipeline for real-time processing.
@@ -353,11 +341,9 @@ The example only takes the first two numbers, prints them, and terminates.
 
 `TODO: Safe finalization of stateful (task-based) streams`
 
-<!-- 6 -->
+# 6. More about Tasks
 
-# More about Tasks
-
-## Public Data
+## 6.1. Public Data
 
 A task is a Lua table, and can hold public data fields as usual.
 It is also possible to self refer to the running task with a call to `task()`:
@@ -370,7 +356,7 @@ local t = spawn(T)
 print(t.v)  -- 10
 ```
 
-## Task Pools
+## 6.2. Task Pools
 
 A task pool allows for multiple tasks to share a parent container in the task
 hierarchy.
@@ -411,7 +397,7 @@ end
 If we include this loop after the `await(clock{s=1})` in the previous example,
 it will print the task ids that did not awake.
 
-## Task Toggling
+## 6.3. Task Toggling
 
 A task can be toggled off (and back to on) to remain alive but unresponsive
 (and back to responsive) to upcoming events:
@@ -444,7 +430,7 @@ emit('X', true)     -- body above toggles on
 <...>
 ```
 
-# Errors
+# 7. Errors
 
 Atmos provides `throw` and `catch` primitives to handle errors, which take in
 consideration task hierarchy, i.e., a parent task catches errors from child
@@ -479,7 +465,7 @@ Outside the task hierarchy, we `emit X`, which only awakes the nested task.
 Nevertheless, the error propagates up in the task hierarchy until it is caught
 by the top-level task, returning `false` and the error `Y`.
 
-## Bidimensional Stack Traces
+## 7.1. Bidimensional Stack Traces
 
 An error trace may cross multiple tasks from a series of emits and awaits,
 e.g.: an `emit` in one task awakes an `await` in another task, which may `emit`
