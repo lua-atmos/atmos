@@ -3,10 +3,13 @@
 ***Structured Event-Driven Concurrency for Lua***
 
 [
-    [`v0.3`](https://github.com/lua-atmos/atmos/tree/v0.3) |
-    [`v0.2.1`](https://github.com/lua-atmos/atmos/tree/v0.2.1) |
+    [`v0.3`](https://github.com/lua-atmos/atmos/tree/v0.3)      |
+    [`v0.2.1`](https://github.com/lua-atmos/atmos/tree/v0.2.1)  |
     [`v0.1`](https://github.com/lua-atmos/atmos/tree/v0.1)
 ]
+
+This is the unstable `main` branch.
+Please, switch to stable [`v0.3`](https://github.com/lua-atmos/atmos/tree/v0.3).
 
 [
     [About](#about)                 |
@@ -15,9 +18,6 @@
     [Documentation](#documentation) |
     [Resources](#resources)
 ]
-
-This is the unstable `main` branch.
-Please, switch to stable [`v0.3`](https://github.com/lua-atmos/atmos/tree/v0.3).
 
 <img src="atmos-logo.png" width="250" align="right">
 
