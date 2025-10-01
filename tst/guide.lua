@@ -83,11 +83,44 @@ call(function ()
                 await 'Y'   -- never awakes after 'X' occurs
                 print "never prints"
             end)
-            await 'X'       -- aborts the whole task hierarchy
+            await 'X'       -- awakes and aborts the whole task hierarchy
             print "awakes from X"
         end)
         emit 'X'
         emit 'Y'
+    end
+
+    -- 3.3
+    do
+        print "-=-=- 3.3 -=-=-"
+        spawn(function ()
+            spawn(function ()
+                local _ <close> = defer(function ()
+                    print "nested task aborted"
+                end)
+                await(false) -- never awakes
+            end)
+            -- will abort nested task
+        end)
+    end
+
+    -- 3.4
+    do
+        print "-=-=- 3.4 -=-=-"
+        print '1'
+        do
+            local _ <close> = spawn(function ()
+                local _ <close> = defer(function ()
+                    print 'x'
+                end)
+                await(false)
+            end)
+            local _ <close> = defer(function ()
+                print 'y'
+            end)
+        end
+        print '2'
+        -- 1, y, x, 2
     end
 
     -- 4. Compound Statements

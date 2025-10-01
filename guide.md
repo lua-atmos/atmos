@@ -170,13 +170,63 @@ it has the chance to awake:
 spawn(function ()
     spawn(function ()
         await 'Y'   -- never awakes after 'X' occurs
+        print "never prints"
     end)
-    await 'X'       -- aborts the whole task hierarchy
-    print "never prints"
+    await 'X'       -- awakes and aborts the whole task hierarchy
 end)
 emit 'X'
 emit 'Y'
 ```
+
+### Abortion & Deferred Statements
+
+A task can register deferred statements to execute when they terminate or abort
+within its hierarchy:
+
+```
+spawn(function ()
+    spawn(function ()
+        local _ <close> = defer(function ()
+            print "nested task aborted"
+        end)
+        await(false) -- never awakes
+    end)
+    -- will abort nested task
+end)
+```
+
+The nested spawned task never awakes, but executes its `defer` clause when
+its enclosing hierarchy terminates.
+
+Since Atmos is a pure-Lua library, note that the annotation `local _ <close> =`
+is necessary when bounding a `defer` to a lexical scope.
+
+Tasks and deferred statements can also be attached to the scope of explicit
+blocks:
+
+```
+do
+    local _ <close> = spawn(function ()
+        <...>   -- aborted with the enclosing `do`
+    end)
+    local _ <close> = defer(function ()
+        <...>   -- aborted with the enclosing `do`
+    end)
+    <...>
+end
+```
+
+In the example, we attach a `spawn` and a `defer` to an explicit block.
+When the block goes out of scope, it automatically aborts the task and executes
+the deferred statement.
+The aborted task may also have pending defers, which also execute immediately.
+The defers execute in the reverse order in which they appear in the source
+code.
+
+Note that the annotation `local _ <close> =` is also required to attach a task
+to an explicit block.
+We can omit this annotation only when we want to attach the `spawn` to its
+enclosing task.
 
 <!-- 4 -->
 
@@ -297,51 +347,11 @@ The example only takes the first two numbers, prints them, and terminates.
 
 `TODO: Debounce`
 
+`TODO: Safe finalization of stateful (task-based) streams`
+
 <!-- 6 -->
 
 # More about Tasks
-
-
-
-
-
-
-The same rule extends to explicit blocks with the help of Lua `<close>`
-declarations:
-
-```
-spawn(function ()
-    <...>   -- some logic before the block
-    do
-        local _ <close> = spawn(function ()
-            await 'Y'   -- never awakes after 'X' occurs
-        end)
-        local _ <close> = spawn(function ()
-            await 'Z'   -- never awakes after 'X' occurs
-        end)
-        await 'X'       -- aborts the whole task hierarchy
-    end
-    <...>   -- some logic after the block
-end)
-emit 'X'
-emit 'Y'
-```
-
-In the example, we enclose particular tasks we want to live only within the
-explicit block.
-When the event `X` occurs, the block goes out of scope and automatically aborts
-all attached spawned tasks.
-
-Since Atmos is a pure-Lua library, note that the annotation `local _ <close> =`
-is necessary when bounding a `spawn` to a block.
-We can omit this annotation only when we want to attach the `spawn` to its
-enclosing task.
-
-
-
-
-
-
 
 ## Public Data
 
@@ -387,52 +397,6 @@ emit('X', false)    -- body above toggles off
 <...>
 emit('X', true)     -- body above toggles on
 <...>
-```
-
-## Deferred Statements
-
-    - Safe finalization of stateful (task-based) streams.
-
-A task can register deferred functions to execute when they terminate or
-abort within a task hierarchy:
-
-```
-call(function ()
-    spawn(function ()
-        local _ <close> = defer(function ()
-            print "nested task aborted"
-        end)
-        await(false) -- never awakes
-    end)
-end)
--- "nested task aborted"
-```
-
-The nested spawned task never awakes, but executes its `defer` clause when
-its enclosing hierarchy terminates.
-
-Note that the annotation `local _ <close> =` is also required for deferred
-statements.
-
-Deferred statements also attach to the scope of explicit blocks:
-
-```
-print "1"
-do
-    print "2"
-    local _ <close> = defer(function ()
-        print "3"
-    end)
-    print "4"
-end
-print "5"
-
--- Output:
--- 1
--- 2
--- 4
--- 3
--- 5
 ```
 
 # Task Pools
