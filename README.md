@@ -16,10 +16,8 @@
     [Resources](#resources)
 ]
 
-<!--
 This is the unstable `main` branch.
 Please, switch to stable [`v0.3`](https://github.com/lua-atmos/atmos/tree/v0.3).
--->
 
 <img src="atmos-logo.png" width="250" align="right">
 
