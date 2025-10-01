@@ -339,9 +339,9 @@ The example only takes the first two numbers, prints them, and terminates.
 
 [f-streams]: https://github.com/lua-atmos/f-streams/
 
-`TODO: Debounce`
+`TODO: better task example (deb?)`
 
-`TODO: Safe finalization of stateful (task-based) streams`
+`TODO: safe finalization of stateful (task-based) streams`
 
 # 6. More about Tasks
 
@@ -360,8 +360,8 @@ print(t.v)  -- 10
 
 ## 6.2. Task Pools
 
-A task pool allows for multiple tasks to share a parent container in the task
-hierarchy.
+A task pool, created with `tasks` primitive, allows that multiple tasks share a
+parent container in the hierarchy.
 When the pool goes out of scope, all attached tasks are aborted.
 When a task terminates, it is automatically removed from the pool.
 
@@ -382,7 +382,7 @@ do
 end
 ```
 
-In the example, we first create a pool `ts` with the `tasks` primitive.
+In the example, we first create a pool `ts`.
 Then we use `spawn_in` to spawn and attach 10 tasks into the pool.
 Each task sleeps between `500ms` and `1500ms` before terminating.
 After `1s`, the `ts` block goes out of scope, aborting all tasks that did not
@@ -415,10 +415,10 @@ toggle(t, true)
 emit 'X'    -- awakes
 ```
 
-- The `toggle` statement awaits the given body to terminate, while also
-  observing its first argument as a boolean event:
-  When receiving `false`, the body toggles off.
-  When receiving `true`, the body toggles on.
+The `toggle` statement awaits the given body to terminate, while also observing
+its first argument as a boolean event:
+When receiving `false`, the body toggles off.
+When receiving `true`, the body toggles on.
 
 ```
 toggle('X', function ()

@@ -53,7 +53,7 @@ call(function ()
         print("5 seconds elapsed.")
     end
 
-    -- 3. Scheduling & Hierarchy
+    -- 3. Lexical Structure
 
     -- 3.1
     do
@@ -204,6 +204,70 @@ call(function ()
         emit('X')
         emit('Y')   -- 2
         emit('Y')
+    end
+
+    -- 6. More about Tasks
+
+    -- 6.1
+    do
+        print "-=-=- 6.1 -=-=-"
+        function T ()
+            task().v = 10
+        end
+        local t = spawn(T)
+        print(t.v)  -- 10
+    end
+
+    -- 6.2
+    do
+        print "-=-=- 6.2 -=-=-"
+        function T (id, ms)
+            task().id = id
+            print('start', id, ms)
+            await(clock{ms=ms})
+            print('stop', id, ms)
+        end
+        do
+            local ts <close> = tasks()
+            for i=1, 10 do
+                spawn_in(ts, T, i, math.random(500,1500))
+            end
+            await(clock{s=1})
+            for _,t in pairs(ts) do
+                print(t.id)
+            end
+        end
+    end
+
+    -- 6.3
+    do
+        print "-=-=- 6.3 -=-=-"
+        local t = spawn (function ()
+            await 'X'
+            print "awakes from X"
+        end)
+        toggle(t, false)
+        emit 'X'    -- ignored
+        toggle(t, true)
+        emit 'X'    -- awakes
+    end
+
+    -- 6.4
+    do
+        print "-=-=- 6.4 -=-=-"
+        spawn(function()
+            toggle('X', function ()
+                every(clock{ms=100}, function ()
+                    print "100ms elapses"
+                end)
+            end)
+        end)
+        print 'off'
+        emit('X', false)    -- body above toggles off
+        await(clock{s=1})
+        print 'on'
+        emit('X', true)     -- body above toggles on
+        await(clock{s=1})
     end
 
 end)
