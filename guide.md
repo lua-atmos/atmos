@@ -274,6 +274,7 @@ and events.
 The next example creates a stream that awaits occurrences of event `X`:
 
 ```
+local S = require "atmos.streams"
 spawn(function ()
     S.fr_await('X')                                 -- X1, X2, ...
         :filter(function(x) return x.v%2 == 1 end)  -- X1, X3, ...
@@ -337,7 +338,7 @@ The pipeline is zipped with an increasing sequence of numbers, and then mapped
 to only generate the numbers.
 The example only takes the first two numbers, prints them, and terminates.
 
-[f-streams]: https://github.com/lua-atmos/f-streams/
+[f-streams]: https://github.com/lua-atmos/f-streams/tree/v0.2
 
 `TODO: better task example (deb?)`
 

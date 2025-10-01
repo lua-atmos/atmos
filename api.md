@@ -1,14 +1,13 @@
 # API
 
-[
-    [Basic](#basic) |
-    [Tasks](#tasks) |
-    [Events](#events) |
-    [Errors](#errors) |
-    [Compounds](#compounds)
-]
+1. [Basic](#1-basic)
+2. [Tasks](#2-tasks)
+3. [Events](#3-events)
+4. [Errors](#4-errors)
+5. [Compounds](#5-compounds)
+6. [Streams](#6-streams)
 
-# Basic
+# 1. Basic
 
 [
     [call](#call-f) |
@@ -71,7 +70,7 @@ Returns the status of the given task.
     - `: string`
         | task status: 'running', 'suspended', 'normal', 'dead'
 
-# Tasks
+# 2. Tasks
 
 [
     [task(f)](#task-tra-f) |
@@ -181,7 +180,7 @@ Toggles a task on and off.
 - Returns:
     - `nil`
 
-# Events
+# 3. Events
 
 [
     [emit](#emit-e-) |
@@ -266,7 +265,7 @@ Expands to `{ tag='_and_', ... }`.
 
 Expands to `{ tag='_or_', ... }`.
 
-# Errors
+# 4. Errors
 
 [
     [catch](#catch-err-f) |
@@ -284,7 +283,7 @@ Expands to `{ tag='_or_', ... }`.
 
 `TODO`
 
-# Compounds
+# 5. Compounds
 
 [
     [every](#every--f) |
@@ -353,7 +352,7 @@ Meanwhile, toggles it on and off based on occurrences of the given event.
     - `...`
         | return values of the body
 
-## Parallels
+## 5.1. Parallels
 
 ### `par (...)`
 
@@ -384,3 +383,38 @@ Spawn the given bodies and terminate when any of them terminates.
         | tasks to spawn as functions
 - Returns:
     - `...`: return values of the terminating task
+
+# 6. Streams
+
+Basic documentation:
+
+- https://github.com/lua-atmos/f-streams/tree/v0.2
+
+Extensions:
+
+```
+local S = require "atmos.streams"
+```
+
+- Sources
+    - `S.fr_await(evt)`:
+        stream of events `evt`
+    - `S.fr_await(T)`:
+        stream of tasks `T`
+    - `S.from(clk)`:
+        stream of periodic `clk` events
+
+- Combinators
+    - `S.emitter(s,tgt,as)`:
+        emit each value of `s` as `as` in target `tgt` (optional)
+    - `S.par(...)`:
+        merges all streams `...` into a single stream
+    - `S.xpar(...)`:
+        merges all streams of streams `...` into a single stream
+    - `S.paror(...)`:
+        like `par` but terminates when any of the streams `...` terminates
+    - `S.xparor(...)`:
+        like `paror` but terminates when any of the streams returned in `...`
+        terminates
+
+`TODO: parand / xparand`
