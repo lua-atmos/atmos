@@ -37,8 +37,7 @@ local meta_tasks; meta_tasks = {
     __len = function (ts)
         return #ts._.dns
     end,
-    __ipairs = _ipairs,
-    __pairs  = _ipairs,
+    __pairs = _ipairs,
 }
 local meta_task = {
     __close = function (t)
