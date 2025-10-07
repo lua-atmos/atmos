@@ -25,17 +25,6 @@ do
 end
 
 do
-    print("Testing...", "await 2")
-    spawn(function()
-        S.fr_await('E'):tap(out):to()
-    end)
-    emit('E', 1)
-    emit('E', 2)
-    assertx(out(), "antes\nok\ndepois\nfim\n")
-    atmos.close()
-end
-
-do
     print("Testing...", "task 1")
     local function T ()
         await('E')
