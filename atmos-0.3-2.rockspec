@@ -1,5 +1,5 @@
 package = "atmos"
-version = "0.3-1"
+version = "0.3-2"
 source = {
    url = "git+https://github.com/lua-atmos/atmos",
    branch = "v0.3",
