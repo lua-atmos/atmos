@@ -3,6 +3,7 @@ local SDL = require "SDL"
 require "atmos.util"
 
 local M = {
+    now = 0,
     ren = nil,
 }
 
@@ -81,8 +82,8 @@ function M.step ()
         local cur = SDL.getTicks()
         if (cur - old) >= MS_PER_FRAME then
             old = cur
-            emit(clock{ms=MS_PER_FRAME})
-            emit('sdl.step', MS_PER_FRAME)
+            M.now = cur
+            emit('clock', MS_PER_FRAME, cur)
         end
     end
     if M.ren then

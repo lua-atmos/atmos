@@ -286,7 +286,7 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
          |  /tmp/err.lua:2 (call)
-         |  /usr/local/share/lua/5.4/atmos/env/clock/init.lua:10 (emit)
+         |  /usr/local/share/lua/5.4/atmos/env/clock/init.lua:12 (emit)
          |  /tmp/err.lua:6 (emit) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:2 (task)
          v  /tmp/err.lua:9 (throw) <- /tmp/err.lua:2 (task)
         ==> err
