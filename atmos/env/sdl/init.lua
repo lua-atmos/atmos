@@ -81,8 +81,9 @@ function M.step ()
         local cur = SDL.getTicks()
         if (cur - old) >= MS_PER_FRAME then
             old = cur
+            M.now = cur
             emit(clock{ms=MS_PER_FRAME})
-            emit('sdl.step', MS_PER_FRAME)
+            emit('sdl.step', MS_PER_FRAME, cur)
         end
     end
     if M.ren then
@@ -96,6 +97,7 @@ function M.step ()
 end
 
 M.env = {
+    now  = nil,
     ren  = nil,
     step = M.step,
 }
