@@ -7,7 +7,7 @@ local old = math.floor(os.clock() * 1000)
 function M.step ()
     local now = math.floor(os.clock() * 1000)
     if now > old then
-        emit(clock { ms=now-old })
+        emit('clock', (now-old), now)
         old = now
     end
 end

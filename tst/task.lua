@@ -129,7 +129,7 @@ do
         await(clock{h=1,min=1,s=1,ms=10})
         out("awake")
     end)
-    emit(clock{h=10})
+    emit('clock', 10*60*60*1000, 0)
     out("ok")
     assertx(out(), "awake\nok\n")
     atmos.close()
@@ -143,11 +143,11 @@ do
         end)
     end)
     emit 'A'
-    emit(clock{ms=500})
+    emit('clock', 500, 0)
     emit 'B'
-    emit(clock{ms=500})
+    emit('clock', 500, 0)
     emit 'C'
-    emit(clock{ms=500})
+    emit('clock', 500, 0)
     emit 'D'
     assertx(out(), "1s elapsed\n")
     atmos.close()
@@ -279,8 +279,8 @@ do
         local v,u = await(_or_('X',clock{s=1}))
         out(v,u)
     end)
-    emit(clock{ms=510})
-    emit(clock{ms=515})
+    emit('clock', 510)
+    emit('clock', 515)
     emit 'X'
     assertx(out(), "clock\t25\n")
     atmos.close()
@@ -348,8 +348,8 @@ do
         local v,u = await(_and_('X',clock{s=1}))
         out(v,u[2])
     end)
-    emit(clock{ms=510})
-    emit(clock{ms=515})
+    emit('clock', 510)
+    emit('clock', 515)
     emit 'X'
     assertx(out(), "X\t25\n")
     atmos.close()
@@ -370,9 +370,9 @@ do
         local v,u = await(_and_(_or_('X',clock{s=1}), _or_(ts,t)))
         out(v[2],u[1]==T,u[2]==ts)
     end)
-    emit(clock{ms=510})
+    emit('clock', 510)
     emit 'Z'
-    emit(clock{ms=515})
+    emit('clock', 515)
     assertx(out(), "25\ttrue\ttrue\n")
     atmos.close()
 end

@@ -465,7 +465,8 @@ end
 local function check_ret (awt, ...)
     -- awt = await pattern | ... = occurring event arguments
     local e = awt[1]
-    local mt = getmetatable(...)
+    local mta = getmetatable(awt)
+    local mte = getmetatable(...)
     if awt.tag == '_or_' then
         for _, x in ipairs(awt) do
             local vs = { check_ret(x, ...) }
@@ -491,8 +492,10 @@ local function check_ret (awt, ...)
             end
         end
         return true, table.unpack(ret)
-    elseif mt and mt.__atmos then
-        return mt.__atmos(awt, ...)
+    elseif mta and mta.__atmos then
+        return mta.__atmos(awt, ...)
+    elseif mte and mte.__atmos then
+        return mte.__atmos(awt, ...)
     elseif awt.tag == 'boolean' then
         if e == false then
             -- never awakes
@@ -554,10 +557,10 @@ local function clock_to_ms (clk)
 end
 
 local meta_clock; meta_clock = {
-    __atmos = function (awt, evt)
-        if getmetatable(awt) == meta_clock then
-            awt.cur = awt.cur - clock_to_ms(evt)
-            return (awt.cur <= 0), 'clock', -awt.cur
+    __atmos = function (awt, e, dt, now)
+        if e == 'clock' then
+            awt.cur = awt.cur - dt
+            return (awt.cur <= 0), 'clock', -awt.cur, now
         else
             return false
         end
