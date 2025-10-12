@@ -96,6 +96,22 @@ do
     atmos.close()
 end
 
+do
+    print("Testing...", "defer - error 1")
+    call(function ()
+        spawn(function ()
+            local _ <close> = defer(function ()
+                out("defer")
+                error('ok')
+            end)
+            await(false)
+        end)
+    end)
+    assertfx(err, "ok")
+    assertx(out(), "defer\n")
+    atmos.close()
+end
+
 print "--- THROW / CATCH ---"
 
 do
