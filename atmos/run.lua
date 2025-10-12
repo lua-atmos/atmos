@@ -557,13 +557,21 @@ local function clock_to_ms (clk)
 end
 
 local meta_clock; meta_clock = {
+    -- await(clock{ms=100})
+    -- vs
+    -- emit('clock',100)
+    -- emit(clock{ms=100})
     __atmos = function (awt, e, dt, now)
         if e == 'clock' then
             awt.cur = awt.cur - dt
             return (awt.cur <= 0), 'clock', -awt.cur, now
+        elseif getmetatable(e) == meta_clock then
+            awt.cur = awt.cur - clock_to_ms(e)
+            return (awt.cur <= 0), 'clock', -awt.cur, nil
         else
             return false
         end
+
     end
 }
 

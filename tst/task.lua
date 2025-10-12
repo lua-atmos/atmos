@@ -129,7 +129,7 @@ do
         await(clock{h=1,min=1,s=1,ms=10})
         out("awake")
     end)
-    emit('clock', 10*60*60*1000, 0)
+    emit(clock{h=10})
     out("ok")
     assertx(out(), "awake\nok\n")
     atmos.close()
@@ -137,6 +137,18 @@ end
 
 do
     print("Testing...", "await clock 2")
+    spawn(function ()
+        await(clock{h=1,min=1,s=1,ms=10})
+        out("awake")
+    end)
+    emit('clock', 10*60*60*1000, 0)
+    out("ok")
+    assertx(out(), "awake\nok\n")
+    atmos.close()
+end
+
+do
+    print("Testing...", "await clock 3")
     spawn(function ()
         every(clock{s=1}, function ()
             out("1s elapsed")
