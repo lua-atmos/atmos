@@ -561,13 +561,17 @@ local meta_clock; meta_clock = {
     -- vs
     -- emit('clock',100)
     -- emit(clock{ms=100})
-    __atmos = function (awt, e, dt, now)
-        if e == 'clock' then
-            awt.cur = awt.cur - dt
-            return (awt.cur <= 0), 'clock', -awt.cur, now
-        elseif getmetatable(e) == meta_clock then
-            awt.cur = awt.cur - clock_to_ms(e)
-            return (awt.cur <= 0), 'clock', -awt.cur, nil
+    __atmos = function (a, e, dt, now)
+        local ma = getmetatable(a)
+        local me = getmetatable(e)
+        if (ma == meta_clock) and (e=='clock' or me==meta_clock) then
+            if e == 'clock' then
+                a.cur = a.cur - dt
+                return (a.cur <= 0), 'clock', -a.cur, now
+            else
+                a.cur = a.cur - clock_to_ms(e)
+                return (a.cur <= 0), 'clock', -a.cur, nil
+            end
         else
             return false
         end
