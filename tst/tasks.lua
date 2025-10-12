@@ -206,22 +206,7 @@ end
 
 do
     print "TODO: error w/o throw"
-    print("Testing...", "error 1")
-    local _, err = pcall(function ()
-        call(function ()
-            local x = 1 + true
-        end)
-    end)
-    assertfx(trim(err), trim [[
-        ==> ERROR:
-         |  tasks.lua:%d+ %(call%)
-         v  tasks.lua:%d+ %(throw%)
-        ==> attempt to perform arithmetic on a boolean value
-    ]])
-end
-
-do
-    print("Testing...", "tasks 2")
+    print("Testing...", "error 2")
     local _, err = pcall(function ()
         call(function ()
             local x = 1 + true

@@ -46,7 +46,7 @@ local meta_task = {
         end
         local st = coroutine.status(t._.th)
         if st == 'suspended' then
-            coroutine.close(t._.th)
+            assert(coroutine.close(t._.th))
         elseif st ~= 'dead' then
             t._.status = 'aborted'
         end
@@ -119,10 +119,10 @@ local function task_result (t, ok, err)
             -- close now and continue normally
             -- could not close before b/c t was running
             -- TODO: lua5.5
-            coroutine.close(t._.th)
+            assert(coroutine.close(t._.th))
         end
     else
-        coroutine.close(t._.th)
+        coroutine.close(t._.th) -- TODO: assert fails "tasks.lua: error 2"
         error(err, 0)
     end
 
