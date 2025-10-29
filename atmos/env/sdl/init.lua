@@ -1,9 +1,19 @@
 local atmos = require "atmos"
-local SDL = require "SDL"
 require "atmos.util"
 
+local SDL = require "SDL"
+local IMG = require "SDL.image"
+local TTF = require "SDL.ttf"
+local MIX = require "SDL.mixer"
+
+assert(SDL.init())
+assert(IMG.init())
+assert(TTF.init())
+assert(MIX.init())
+MIX.openAudio(44100, SDL.audioFormat.S16, 2, 1024);
+
 local M = {
-    now = 0,
+    now = SDL.getTicks(),
     ren = nil,
 }
 
@@ -22,7 +32,7 @@ local meta = {
 }
 
 local MS_PER_FRAME = 40
-local old = SDL.getTicks() - MS_PER_FRAME
+local old = M.now - MS_PER_FRAME
 local ms = 0
 
 function M.point_vs_rect (p, r)
@@ -96,11 +106,13 @@ function M.step ()
     end
 end
 
-M.env = {
-    ren  = nil,
-    step = M.step,
-}
+function M.close ()
+    MIX.quit()
+    TTF.quit()
+    IMG.quit()
+    SDL.quit()
+end
 
-atmos.env(M.env)
+atmos.env(M)
 
 return M

@@ -1,15 +1,9 @@
-local SDL = require "SDL"
-local TTF = require "SDL.ttf"
 require "atmos"
 local sdl = require "atmos.env.sdl"
+local SDL = require "SDL"
+local TTF = require "SDL.ttf"
 
 local point_vs_rect = sdl.point_vs_rect
-
-assert(TTF.init())
-local _ <close> = defer(function ()
-    TTF.quit()
-    SDL.quit()
-end)
 
 WIN = assert(SDL.createWindow {
 	title  = "Lua-Atmos-SDL: Click, Drag, Cancel",

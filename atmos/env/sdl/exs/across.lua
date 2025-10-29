@@ -1,6 +1,6 @@
-local SDL = require "SDL"
 require "atmos"
 local env = require "atmos.env.sdl"
+local SDL = require "SDL"
 
 local PP  = env.pct_to_pos
 
