@@ -12,8 +12,11 @@ assert(TTF.init())
 assert(MIX.init())
 MIX.openAudio(44100, SDL.audioFormat.S16, 2, 1024);
 
+local MS_PER_FRAME = 40
+local MS = MS_PER_FRAME
+
 local M = {
-    now = SDL.getTicks(),
+    now = 0,
     ren = nil,
 }
 
@@ -30,10 +33,6 @@ local meta = {
         end
     end
 }
-
-local MS_PER_FRAME = 40
-local old = M.now - MS_PER_FRAME
-local ms = 0
 
 function M.point_vs_rect (p, r)
     return SDL.hasIntersection(r, { x=p.x, y=p.y, w=1, h=1 })
@@ -79,7 +78,18 @@ function M.play (wav)
 end
 
 function M.step ()
-    local e = SDL.waitEvent(ms)
+
+    local old = SDL.getTicks()
+    local e = SDL.waitEvent(MS)
+    local cur = SDL.getTicks()
+
+    MS = MS - (cur-old)
+    if MS <= 0 then
+        MS = MS_PER_FRAME + MS
+        M.now = cur
+        emit('clock', MS_PER_FRAME, M.now)
+    end
+
     if e then
         if (e.type==SDL.event.KeyDown or e.type==SDL.event.KeyUp) then
             e.name = SDL.getKeyName(e.keysym.sym)
@@ -87,13 +97,6 @@ function M.step ()
         emit(setmetatable(e, meta))
         if e.type == SDL.event.Quit then
             return true
-        end
-    else
-        local cur = SDL.getTicks()
-        if (cur - old) >= MS_PER_FRAME then
-            old = cur
-            M.now = cur
-            emit('clock', MS_PER_FRAME, cur)
         end
     end
     if M.ren then
