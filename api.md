@@ -54,8 +54,18 @@ end
 `TODO`
 
 - Parameters:
-    - `env: {step=function, loop=function, stop=function, close=function}`
-        | environment table with callback functions
+    - `e: { ...}`
+        | environment table with state fields and callback functions
+        - `step: function`
+            | called by [call](#call-f) continually in a loop until the body terminates
+        - `loop: function`
+            | substitutes the [call](#call-f) loop
+        - `stop: function`
+            | appended to the [call](#call-f) body
+        - `close: function`
+            | called by [call](#call-f) when the body terminates (or on any error)
+        - `now: number`
+            | number of elapsed milliseconds since the environment is loaded
 
 (This function is only used internally by environments.)
 
