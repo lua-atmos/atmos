@@ -46,8 +46,9 @@ emit('X')
     -- "task 2 awakes on X"
 ```
 
-Although explicit suspension points are still required, Atmos supports
-*reactive scheduling* for tasks based on `await` and `emit` primitives.
+Although explicit suspension points are still required, note that Atmos
+provides *reactive scheduling* for tasks based on `await` and `emit`
+primitives.
 
 # 2. External Environments
 
