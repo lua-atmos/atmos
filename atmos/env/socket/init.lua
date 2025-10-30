@@ -2,7 +2,9 @@ local atmos = require "atmos"
 
 local socket = require "socket"
 
-local M = {}
+local M = {
+    now = 0,
+}
 
 local rs = {}
 local ss = {}
@@ -77,10 +79,13 @@ function M.xrecv (tcp)
 end
 
 local old = socket.gettime()
+local fst = old
 
 function M.step (opts)
     local ms = (opts and opts.ms) or 0.1
     local r,s = socket.select(rs, ss, ms)
+    local now = socket.gettime()
+    M.now = (now - fst) * 1000
     for k in pairs(r) do
         if type(k) == 'userdata' then
             if not k:getpeername() then
@@ -110,9 +115,8 @@ function M.step (opts)
         end
     end
     if (not opts) or (opts.clock~=false) then
-        local now = socket.gettime()
         if now > old then
-            emit(clock { ms=(now-old)*1000 })
+            emit('clock', (now-old)*1000, M.now)
             old = now
         end
     end

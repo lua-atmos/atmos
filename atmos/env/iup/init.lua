@@ -58,17 +58,19 @@ end
 -------------------------------------------------------------------------------
 
 local M = {
+    now = 0,
 }
 
 M.env = {
     loop = function ()
         assert(iup.MainLoopLevel() == 0)
-        local timer = iup.timer{time=500}
+        local timer = iup.timer{time=100}
         function timer:action_cb()
             if M.env.idle then
                 M.env.idle()
             end
-            emit(clock{ms=500})
+            M.now = M.now + 100
+            emit('clock', 100, M.now)
             return iup.DEFAULT
         end
         timer.run = "YES"
