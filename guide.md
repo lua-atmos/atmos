@@ -437,7 +437,7 @@ emit('X', true)     -- body above toggles on
 # 7. Errors
 
 Atmos provides `throw` and `catch` primitives to handle errors, which take in
-consideration task hierarchy, i.e., a parent task catches errors from child
+consideration the task hierarchy, i.e., a parent task catches errors from child
 tasks.
 
 ```
