@@ -12,13 +12,13 @@ assert(TTF.init())
 assert(MIX.init())
 MIX.openAudio(44100, SDL.audioFormat.S16, 2, 1024);
 
-local MS_PER_FRAME = 40
-local MS = MS_PER_FRAME
-
 local M = {
+    mpf = 40,   -- 0: as fast as possible
     now = 0,
     ren = nil,
 }
+
+local MS = M.mpf
 
 local meta = {
     __atmos = function (awt, e)
@@ -83,11 +83,17 @@ function M.step ()
     local e = SDL.waitEvent(MS)
     local cur = SDL.getTicks()
 
-    MS = MS - (cur-old)
-    if MS <= 0 then
-        MS = MS_PER_FRAME + MS
+    if M.mpf == 0 then
+        local dt = (cur - M.now)
         M.now = cur
-        emit('clock', MS_PER_FRAME, M.now)
+        emit('clock', dt, M.now)
+    else
+        MS = MS - (cur-old)
+        if MS <= 0 then
+            MS = M.mpf + MS
+            M.now = cur
+            emit('clock', M.mpf, M.now)
+        end
     end
 
     if e then
