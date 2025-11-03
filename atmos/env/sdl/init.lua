@@ -13,7 +13,7 @@ assert(MIX.init())
 MIX.openAudio(44100, SDL.audioFormat.S16, 2, 1024);
 
 local M = {
-    mpf = 40,   -- 0: as fast as possible
+    mpf = 0, --40,   -- 0: as fast as possible
     now = 0,
     ren = nil,
 }
@@ -34,12 +34,22 @@ local meta = {
     end
 }
 
+function M.ints (inp)
+    local out = {}
+    for k,v in pairs(inp) do
+        if type(v) == 'number' then
+            out[k] = math.floor(v)
+        end
+    end
+    return out
+end
+
 function M.point_vs_rect (p, r)
-    return SDL.hasIntersection(r, { x=p.x, y=p.y, w=1, h=1 })
+    return SDL.hasIntersection(M.ints(r), M.ints{ x=p.x, y=p.y, w=1, h=1 })
 end
 
 function M.rect_vs_rect (r1, r2)
-    return SDL.hasIntersection(r1, r2)
+    return SDL.hasIntersection(M.ints(r1), M.ints(r2))
 end
 
 function M.evt_vs_key (e, key)
