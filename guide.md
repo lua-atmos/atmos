@@ -299,7 +299,7 @@ the source, making the task to await.
 The loop takes 10 seconds to emit `1,2,...,10`, whereas the stream takes 10
 seconds to print `1,3,...,9`.
 
-The full stream pipeline of the example is analogous to the awaiting loop as
+The full stream pipeline of the example is analogous to an awaiting loop as
 follows:
 
 ```
@@ -308,7 +308,7 @@ while true do
 end
 ```
 
-Atmos provides stateful streams by supporting tasks as stream sources.
+Atmos also provides stateful streams by supporting tasks as stream sources.
 The next example creates a task stream that packs awaits to `X` and `Y` in
 sequence:
 
