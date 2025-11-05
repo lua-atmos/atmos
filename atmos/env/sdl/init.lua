@@ -15,6 +15,7 @@ MIX.openAudio(44100, SDL.audioFormat.S16, 2, 1024);
 local M = {
     mpf = 0, --40,   -- 0: as fast as possible
     now = 0,
+    win = nil,
     ren = nil,
 }
 
@@ -33,6 +34,12 @@ local meta = {
         end
     end
 }
+
+function M.window (w)
+    M.win = assert(SDL.createWindow(w))
+    M.ren = assert(SDL.createRenderer(M.win,-1))
+    return M.win, M.ren
+end
 
 function M.ints (inp)
     local out = {}
