@@ -13,7 +13,7 @@ assert(MIX.init())
 MIX.openAudio(44100, SDL.audioFormat.S16, 2, 1024);
 
 local M = {
-    mpf = 0, --40,   -- 0: as fast as possible
+    mpf = 25,   -- 0: as fast as possible
     now = 0,
     win = nil,
     ren = nil,
@@ -65,7 +65,7 @@ function M.evt_vs_key (e, key)
 end
 
 function M.pct_to_pos (x, y, r)
-    local w,h = WIN:getSize()
+    local w,h = M.win:getSize()
     r = r or { x=w/2, y=h/2, w=w, h=h }
     return {
         x = math.floor((r.x-r.w/2) + (r.w*x/100)),
@@ -84,8 +84,8 @@ end
 
 function M.write (fnt, str, pos)
     local sfc = assert(fnt:renderUtf8(str, "blended", {r=255,g=255,b=255}))
-    local tex = assert(REN:createTextureFromSurface(sfc))
-    REN:copy(tex, nil, M.rect(pos, totable('w','h',sfc:getSize())))
+    local tex = assert(M.ren:createTextureFromSurface(sfc))
+    M.ren:copy(tex, nil, M.rect(pos, totable('w','h',sfc:getSize())))
 end
 
 local f
