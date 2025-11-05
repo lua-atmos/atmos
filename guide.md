@@ -304,7 +304,7 @@ follows:
 
 ```
 while true do
-    print(map(filter(await('X')))
+    print(map(filter(await('X'))))
 end
 ```
 
@@ -362,8 +362,8 @@ print(t.v)  -- 10
 
 ## 6.2. Task Pools
 
-A task pool, created with `tasks` primitive, allows that multiple tasks share a
-parent container in the hierarchy.
+A task pool, created with the `tasks` primitive, allows that multiple tasks
+share a parent container in the hierarchy.
 When the pool goes out of scope, all attached tasks are aborted.
 When a task terminates, it is automatically removed from the pool.
 
@@ -417,15 +417,19 @@ toggle(t, true)
 emit 'X'    -- awakes
 ```
 
-The `toggle` statement awaits the given body to terminate, while also observing
-its first argument as a boolean event:
+`TODO: explain`
+
+In addition, Atmos provides a `toggle` statement, which awaits the given body
+to terminate, while also observing its first argument as a boolean event:
 When receiving `false`, the body toggles off.
 When receiving `true`, the body toggles on.
 
 ```
-toggle('X', function ()
-    every(clock{s=1}, function ()
-        print "1s elapses"
+spawn(function()
+    toggle('X', function ()
+        every(clock{s=1}, function ()
+            print "1s elapses"
+        end)
     end)
 end)
 emit('X', false)    -- body above toggles off
@@ -437,7 +441,7 @@ emit('X', true)     -- body above toggles on
 # 7. Errors
 
 Atmos provides `throw` and `catch` primitives to handle errors, which take in
-consideration task hierarchy, i.e., a parent task catches errors from child
+consideration the task hierarchy, i.e., a parent task catches errors from child
 tasks.
 
 ```
