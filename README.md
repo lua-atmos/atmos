@@ -119,7 +119,7 @@ call(function ()
             print("Hello World!")
         end)
     local s2 = S.from(clock{s=5}):take(1)
-    S.paror(s1,s2):to() -- note that s2 comes before s1!
+    S.paror(s1,s2):to() -- note that s1 comes before s2!
 end)
 ```
 
