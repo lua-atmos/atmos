@@ -76,7 +76,7 @@ call(function ()
 end)
 ```
 
-We first the builtin `clock` environment, which provides timers to
+We first import the builtin `clock` environment, which provides timers to
 applications.
 The `call` primitive receives a function with the application logic in Atmos,
 as follows:
@@ -86,10 +86,13 @@ as follows:
 - Once the `watching` terminates, the `call` returns back to Lua.
 
 In Atmos, the lifetimes and schedules of tasks are determined by lexical 
-structure. Tasks that would awake "simultaneously" instead do so in order of
-appearance in the source code. Tasks that abort also abort their inner taks.
+structure.
+Tasks that would awake "simultaneously" instead do so in order of appearance in
+the source code.
+Tasks that abort also abort their inner taks.
 This enables reasoning about programs more statically based on the structure of
-the source code. Applying this to the above example:
+the source code.
+Applying this to the above example:
 
 - On the first, second, third, and fourth second, `every` awakes and prints
   `"Hello World!"`
@@ -114,8 +117,7 @@ call(function ()
             print("Hello World!")
         end)
     local s2 = S.from(clock{s=5}):take(1)
-    -- note that s2 comes before s1!
-    S.paror(s1,s2):to()
+    S.paror(s1,s2):to() -- note that s2 comes before s1!
 end)
 ```
 
