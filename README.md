@@ -85,6 +85,7 @@ as follows:
 - The `every` loop will execute its inner function every second.
 - Once the `watching` terminates, the `call` returns back to Lua.
 
+<!-- TODO: need to fix for 5 prints
 In Atmos, the lifetimes and schedules of tasks are determined by lexical 
 structure.
 Tasks that would awake "simultaneously" instead do so in order of appearance in
@@ -104,6 +105,7 @@ Applying this to the above example:
 
 See [the relevant section in the guide](guide.md#31-lexical-scheduling) for 
 other, more complex examples.
+-->
 
 Now, the same specification, but using streams:
 
