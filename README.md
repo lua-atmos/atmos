@@ -128,7 +128,11 @@ atmos
 │   │   └── init.lua
 │   ├── iup/
 │   │   ├── exs/
-│   │   │   ├── button-counter.lua
+│   │   │   └── button-counter.lua
+│   │   └── init.lua
+│   ├── pico/
+│   │   ├── exs/
+│   │   │   └── click-drag-cancel.lua
 │   │   └── init.lua
 │   ├── sdl/
 │   │   ├── exs/
@@ -164,12 +168,16 @@ The standard distribution of Atmos provides the following environments:
 - [`atmos.env.sdl`](atmos/env/sdl/):
     An environment that relies on [lua-sdl2][luasdl] to provide window, mouse,
     key, and timer events.
+- [`atmos.env.pico`](atmos/env/pico/):
+    An environment that relies on [pico-sdl-lua][pico-sdl-lua] as a simpler
+    alternative do SDL.
 - [`atmos.env.iup`](atmos/env/iup/):
     An environment that relies on [IUP][iup] ([iup-lua][iup-lua]) to provide
     graphical user interfaces (GUIs).
 
 [luasocket]:    https://lunarmodules.github.io/luasocket/
 [luasdl]:       https://github.com/Tangent128/luasdl2/
+[pico-sdl-lua]: https://github.com/fsantanna/pico-sdl/tree/main/lua
 [iup]:          https://www.tecgraf.puc-rio.br/iup/
 [iup-lua]:      https://www.tecgraf.puc-rio.br/iup/en/basic/index.html
 
@@ -181,9 +189,9 @@ The standard distribution of Atmos provides the following environments:
 # Resources
 
 - [A toy problem][toy]: Drag, Click, or Cancel
-    - [click-drag-cancel.lua](atmos/env/sdl/exs/click-drag-cancel.lua)
+    - [click-drag-cancel.lua](atmos/env/pico/exs/click-drag-cancel.lua)
 - A simple but complete 2D game in Atmos:
-    - https://github.com/lua-atmos/sdl-rocks/
+    - https://github.com/lua-atmos/pico-rocks/
 - Academic publications (Céu):
     - http://ceu-lang.org/chico/#ceu
 - Mailing list (Céu & Atmos):
