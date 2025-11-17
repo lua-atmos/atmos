@@ -5,17 +5,15 @@ local TTF = require "SDL.ttf"
 
 local point_vs_rect = sdl.point_vs_rect
 
-WIN = assert(SDL.createWindow {
+_,REN = sdl.window {
 	title  = "Lua-Atmos-SDL: Click, Drag, Cancel",
 	width  = 256,
 	height = 256,
     flags  = { SDL.flags.OpenGL },
-})
-REN = assert(SDL.createRenderer(WIN, -1))
+}
 
 FNT = assert(TTF.open("DejaVuSans.ttf", 20))
 
-sdl.ren = REN
 call(function ()
     local text = " "
     local rect = {x=256/2-20,y=256/2-20, w=40,h=40}
@@ -24,7 +22,7 @@ call(function ()
             REN:setDrawColor(0x000000)
             REN:clear()
             REN:setDrawColor(0xFFFFFF)
-            REN:fillRect(rect)
+            REN:fillRect(sdl.ints(rect))
             sdl.write(FNT, text, {x=256/2, y=200})
             REN:present()
         end)
