@@ -31,7 +31,7 @@ call(function ()
             par_or(function ()
                 await 'mouse.motion'
                 text = "... dragging ..."
-                await 'mouse.button.dn'
+                await 'mouse.button.up'
                 text = "!!! DRAGGED !!!"
             end, function ()
                 every('mouse.motion', function (e)
