@@ -1,6 +1,7 @@
 local atmos = require "atmos"
 local pico  = require "pico"
 
+pico.zet = pico.set     -- because of `set` keyword in Atmos
 pico.init(true)
 pico.set.expert(true)
 
