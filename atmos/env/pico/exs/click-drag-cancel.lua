@@ -1,4 +1,5 @@
 require "atmos"
+local x = require "atmos.x"
 local env  = require "atmos.env.pico"
 local pico = require "pico"
 
@@ -20,7 +21,7 @@ call(function ()
         local click = await('mouse.button.dn', function (e)
             return pico.vs.pos_rect(e, rect), e
         end)
-        local orig = {x=rect.x, y=rect.y, w=rect.w, h=rect.h}
+        local orig = x.copy(rect)
         text = "... clicking ..."
         par_or(function ()
             await('key.dn', 'Escape')

@@ -29,9 +29,9 @@ function M.tostring (v)
             end
             if tonumber(k) == i then
                 i = i + 1
-                vs = vs .. xtostring(x)
+                vs = vs .. M.tostring(x)
             else
-                vs = vs .. k .. '=' .. xtostring(x)
+                vs = vs .. k .. '=' .. M.tostring(x)
             end
             fst = false
         end
@@ -43,7 +43,7 @@ end
 function M.print (...)
     local ret = {}
     for i=1, select('#', ...) do
-        ret[#ret+1] = xtostring(select(i, ...))
+        ret[#ret+1] = M.tostring(select(i, ...))
     end
     print(table.unpack(ret))
 end
@@ -54,7 +54,7 @@ function M.copy (v)
     end
     local ret = {}
     for k,x in pairs(v) do
-        ret[k] = xcopy(x)
+        ret[k] = M.copy(x)
     end
     return ret
 end

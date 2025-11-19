@@ -1,4 +1,5 @@
 require "atmos"
+local x = require "atmos.x"
 local sdl = require "atmos.env.sdl"
 local SDL = require "SDL"
 local TTF = require "SDL.ttf"
@@ -31,7 +32,7 @@ call(function ()
         local click = await(SDL.event.MouseButtonDown, function (e)
             return point_vs_rect(e, rect), e
         end)
-        local orig = {x=rect.x, y=rect.y, w=rect.w, h=rect.h}
+        local orig = x.copy(rect)
         text = "... clicking ..."
         par_or(function ()
             await(SDL.event.KeyDown, 'Escape')
