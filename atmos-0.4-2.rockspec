@@ -1,5 +1,5 @@
 package = "atmos"
-version = "0.4-1"
+version = "0.4-2"
 source = {
    url = "git+https://github.com/lua-atmos/atmos",
    branch = "v0.4",
@@ -47,6 +47,7 @@ build = {
       ["atmos.init"] = "atmos/init.lua",
       ["atmos.run"] = "atmos/run.lua",
       ["atmos.util"] = "atmos/util.lua",
+      ["atmos.x"] = "atmos/x.lua",
       ["atmos.streams"] = "atmos/streams.lua",
       ["atmos.env.clock.init"] = "atmos/env/clock/init.lua",
       ["atmos.env.clock.exs.hello"] = "atmos/env/clock/exs/hello.lua",
