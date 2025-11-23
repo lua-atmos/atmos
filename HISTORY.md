@@ -1,3 +1,15 @@
+v0.4 (nov/25)
+-------------
+
+- Added module `atmos.x` (`copy`, `tostring`, `print`).
+- Modifed clock emit from `emit(clock{ms=10})` to `emit('clock',10)`.
+- Environments:
+    - Added `pico` environment.
+    - Added `env.now` to all environments.
+    - `sdl`:
+        - Removed `sdl.` prefix from all events.
+        - Added `env.window(...)` init api.
+
 v0.3 (oct/25)
 -------------
 

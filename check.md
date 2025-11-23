@@ -14,15 +14,21 @@ lua5.4 * # test each example
 ```
 
 - Projects
+    - `iup-7guis/`
+        - `lua5.4 *.lua`
+        - `lua5.4 server.lua` + `lua5.4 01-counter-net.lua`
+    - `pico-birds/`
+        - `lua5.4 birds-11.lua`
+    - `pico-rocks/`
+        - `lua5.4 main.lua`
     - `sdl-birds/`
         - `lua5.4 birds-11.lua`
     - `sdl-pingus/`
         - `lua5.4 main.lua`
     - `sdl-rocks/`
         - `lua5.4 main.lua`
-    - `iup-7guis/`
-        - `lua5.4 *.lua`
-        - `lua5.4 server.lua` + `lua5.4 01-counter-net.lua`
+    - TODO
+        - `pico-pingus`
 
 - Docs
 

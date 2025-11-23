@@ -6,7 +6,7 @@ pico.init(true)
 pico.set.expert(true)
 
 local M = {
-    mpf = 0, --40,   -- 0: as fast as possible
+    mpf = 25,   -- 0: as fast as possible
     now = 0,
     ren = nil,
 }

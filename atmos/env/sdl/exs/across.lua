@@ -4,13 +4,11 @@ local SDL = require "SDL"
 
 local PP  = env.pct_to_pos
 
-WIN = assert(SDL.createWindow {
+_,REN = env.window {
 	title  = "Lua-Atmos-SDL: Across",
 	width  = 100,
 	height = 100,
-    flags  = { SDL.flags.OpenGL },
-})
-local REN = assert(SDL.createRenderer(WIN,-1))
+}
 
 local pt1 = PP(0,0)
 local pt2 = PP(100,100)

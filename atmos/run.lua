@@ -575,7 +575,6 @@ local meta_clock; meta_clock = {
         else
             return false
         end
-
     end
 }
 
