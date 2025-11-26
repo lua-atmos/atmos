@@ -86,27 +86,26 @@ as follows:
 - The `every` loop will execute its inner function every second.
 - Once the `watching` terminates, the `call` returns back to Lua.
 
-<!-- TODO: need to fix for 5 prints
 In Atmos, the lifetimes and schedules of tasks are determined by lexical 
 structure.
 Tasks that would awake "simultaneously" instead do so in order of appearance in
 the source code.
-Tasks that abort also abort their inner taks.
 This enables reasoning about programs more statically based on the structure of
 the source code.
+Tasks that abort also abort their inner taks, which have a "last chance" to
+execute if applicable.
 Applying this to the above example:
 
 - On the first, second, third, and fourth second, `every` awakes and prints
   `"Hello World!"`
 - On the fifth second, `watching` and `every` are both scheduled to awake.
-- The `watching` task awakes first and aborts itself and its inner tasks.
-- Therefore, `every` is aborted before it awakes a fifth time.
+- The `every` awakes before the enclosing `watching`, printing `"Hello World!"`
+  for the fifth (and last) time.
 - Therefore, `call` returns after five seconds having printed `"Hello World!"`
-  four times.
+  five times.
 
 See [the relevant section in the guide](guide.md#31-lexical-scheduling) for 
 other, more complex examples.
--->
 
 Now, the same specification, but using streams:
 
