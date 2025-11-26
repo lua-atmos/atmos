@@ -19,6 +19,8 @@ local meta = {
             return false
         elseif _is_(e.tag, 'key') and type(awt[2])=='string' then
             return (awt[2] == e.key), e, e
+        elseif _is_(e.tag, 'mouse.button') and type(awt[2])=='string' then
+            return (awt[2] == e.but), e, e
         elseif type(awt[2]) == 'function' then
             return awt[2](e), e
         else

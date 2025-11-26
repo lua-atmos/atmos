@@ -27,6 +27,8 @@ local meta = {
             return false
         elseif (e.type==SDL.event.KeyDown or e.type==SDL.event.KeyUp) and type(awt[2])=='string' then
             return (awt[2] == e.name), e, e
+        elseif (e.type==SDL.event.MouseButtonDown or e.type==SDL.event.MouseButtonUp) and type(awt[2])=='string' then
+            return (awt[2] == e.but), e, e
         elseif type(awt[2]) == 'function' then
             return awt[2](e), e
         else
