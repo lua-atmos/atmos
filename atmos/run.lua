@@ -416,8 +416,18 @@ function run.spawn (dbg, up, tra, t, ...)
     if getmetatable(up) == meta_tasks then
         t.pin = true
     end
-    if up._.max and #up._.dns>=up._.max then
-        return nil
+    if up._.max then
+        local n = #up._.dns
+        if n >= up._.max then
+            for _,t in ipairs(up._.dns) do
+                if coroutine.status(t._.th) == 'dead' then
+                    n = n - 1
+                end
+            end
+            if n >= up._.max then
+                return nil
+            end
+        end
     end
     up._.dns[#up._.dns+1] = t
     t._.up = assert(t._.up==nil and up)
