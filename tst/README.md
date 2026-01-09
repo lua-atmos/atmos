@@ -1,3 +1,13 @@
+Assumes this directory structure:
+
+```
+.
+├── atmos
+│   ├── atmos
+│   └── tst     <-- we are here
+└── f-streams
+```
+
 ```bash
-UA_PATH="../../f-streams/?/init.lua;../?.lua;../?/init.lua;;" lua5.4 all.lua
+LUA_PATH="../../f-streams/?/init.lua;../?.lua;../?/init.lua;;" lua5.4 all.lua
 ```
