@@ -1,5 +1,10 @@
 # Atmos
 
+[![Tests][badge]][test]
+
+[badge]: https://github.com/lua-atmos/atmos/actions/workflows/test.yml/badge.svg
+[test]:  https://github.com/lua-atmos/atmos/actions/workflows/test.yml
+
 ***Structured Event-Driven Concurrency for Lua***
 
 [
