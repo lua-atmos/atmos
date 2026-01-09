@@ -60,6 +60,27 @@ do
 end
 
 do
+    print("Testing...", "tasks 5: limit: spawn after termination")
+    local n = 0
+    function T ()
+        await('x')
+        n = n + 1
+    end
+    local ts = tasks(1)
+    spawn(function()
+        local ok1 = spawn_in(ts, T)
+        await(ok1)
+        local ok2 = spawn_in(ts, T)
+        await(ok2)
+    end)
+    emit('x')
+    emit('x')
+    out(n)
+    assertx(out(), "2\n")
+    atmos.close()
+end
+
+do
     print("Testing...", "tasks 6: limit")
     function T (v)
         out(v)
@@ -95,7 +116,7 @@ do
 end
 
 do
-    print("Testing...", "tasks 8: pairs gc")
+    print("Testing...", "tasks 8: pairs gc: (now ok)")
     function T ()
         await(true)
         out 'ok'
@@ -104,12 +125,12 @@ do
     spawn_in(ts, T)
     for _, t in getmetatable(ts).__pairs(ts) do
         emit()                      -- kills t
-        local ok = spawn_in(ts, T)  -- failure b/c ts.ing>0
-        out(ok)
+        local ok = spawn_in(ts, T)  -- (no) failure b/c ts.ing>0
+        out(ok ~= nil)
     end
-    local ok = spawn_in(ts, T)      -- success b/c ts.ing=0
+    local ok = spawn_in(ts, T)      -- (no) success b/c ts.ing=0
     out(ok ~= nil)
-    assertx(out(), "ok\nnil\ntrue\n")
+    assertx(out(), "ok\ntrue\nfalse\n")
     atmos.close()
 end
 
