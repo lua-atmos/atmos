@@ -133,12 +133,12 @@ end)
 - `s2` is a periodic 5-seconds stream that terminates after its first
   occurrence, because of `take(1)`.
 - `S.paror` merges the streams, terminating when either of them terminate.
-- `to` is a sink that starts and exausts the full stream pipeline.
+- `to` is a sink that starts and exhausts the full stream pipeline.
 
 # Install & Run
 
 ```
-sudo luarocks install atmos --lua-version=5.4
+sudo luarocks install atmos 0.5 --lua-version=5.4
 lua5.4 <lua-path>/atmos/env/clock/exs/hello.lua
 ```
 
@@ -195,9 +195,11 @@ The standard distribution of Atmos provides the following environments:
 - [`atmos.env.sdl`](atmos/env/sdl/):
     An environment that relies on [lua-sdl2][luasdl] to provide window, mouse,
     key, and timer events.
+    - `sudo luarocks install lua-sdl2 2.0 --lua-version=5.4`
 - [`atmos.env.pico`](atmos/env/pico/):
     An environment that relies on [pico-sdl-lua][pico-sdl-lua] as a simpler
     alternative do SDL.
+    - `sudo luarocks install pico-sdl 0.2 --lua-version=5.4`
 - [`atmos.env.iup`](atmos/env/iup/):
     An environment that relies on [IUP][iup] ([iup-lua][iup-lua]) to provide
     graphical user interfaces (GUIs).

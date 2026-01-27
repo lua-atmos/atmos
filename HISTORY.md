@@ -1,3 +1,14 @@
+v0.5 (jan/26)
+-------------
+
+- Changes:
+    - Environments
+        - `lua-sdl2` `v2.0`
+        - `pico-sdl` `v0.2`
+- Bug fixes:
+    - tasks count ignores dead tasks
+    - pico env: function predicates, mouse buttons
+
 v0.4 (nov/25)
 -------------
 
