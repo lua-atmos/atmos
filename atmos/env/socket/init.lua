@@ -123,7 +123,6 @@ function M.step (opts)
 end
 
 M.env = {
-    init = M.init,
     step = M.step,
 }
 

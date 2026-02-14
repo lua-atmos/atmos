@@ -68,6 +68,7 @@ end
 timer.run = "YES"
 
 M.env = {
+    open = iup.Open,
     step = function ()
         if iup.LoopStepWait() == iup.CLOSE then
             return true

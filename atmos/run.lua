@@ -157,6 +157,7 @@ end
 -------------------------------------------------------------------------------
 
 local _env_ = {
+    open  = nil,
     step  = nil,
     close = nil,
 }
@@ -324,6 +325,9 @@ function run.call (body, ...)
             end
             run.close()
         end)
+        if _env_.open then
+            _env_.open()
+        end
         local t <close> = run.spawn(debug_getinfo(4), nil, false, body, ...)
         while true do
             if coroutine.status(t._.th) == 'dead' then
