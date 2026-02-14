@@ -158,8 +158,6 @@ end
 
 local _env_ = {
     step  = nil,
-    loop  = nil,
-    stop  = nil,
     close = nil,
 }
 
@@ -319,14 +317,6 @@ end
 
 function run.call (body, ...)
     assertn(2, type(body) == 'function', "invalid call : expected body function")
-    local body = function (...)
-        return (function (...)
-            if _env_.stop then
-                _env_.stop()
-            end
-            return ...
-        end)(body(...))
-    end
     return xcall(debug_getinfo(2), "call", function (...)
         local _ <close> = run.defer(function ()
             if _env_.close then
@@ -335,16 +325,12 @@ function run.call (body, ...)
             run.close()
         end)
         local t <close> = run.spawn(debug_getinfo(4), nil, false, body, ...)
-        if _env_.loop then
-            _env_.loop()
-        else
-            while true do
-                if coroutine.status(t._.th) == 'dead' then
-                    break
-                end
-                if _env_.step() then
-                    break
-                end
+        while true do
+            if coroutine.status(t._.th) == 'dead' then
+                break
+            end
+            if _env_.step() then
+                break
             end
         end
         return t.ret

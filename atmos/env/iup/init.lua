@@ -61,23 +61,23 @@ local M = {
     now = 0,
 }
 
+local timer = iup.timer{time=100}
+function timer:action_cb()
+    return iup.DEFAULT
+end
+timer.run = "YES"
+
 M.env = {
-    loop = function ()
-        assert(iup.MainLoopLevel() == 0)
-        local timer = iup.timer{time=100}
-        function timer:action_cb()
-            if M.env.idle then
-                M.env.idle()
-            end
-            M.now = M.now + 100
-            emit('clock', 100, M.now)
-            return iup.DEFAULT
+    step = function ()
+        if iup.LoopStepWait() == iup.CLOSE then
+            return true
         end
-        timer.run = "YES"
-        iup.MainLoop()
+        local now = math.floor(os.clock() * 1000)
+        if now > M.now then
+            emit('clock', now - M.now, now)
+            M.now = now
+        end
     end,
-    idle = nil,
-    stop = iup.ExitLoop,
     close = iup.Close,
 }
 
