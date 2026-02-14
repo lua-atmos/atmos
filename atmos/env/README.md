@@ -104,23 +104,29 @@ end)
 
 | Callback   | Description                                  |
 |------------|----------------------------------------------|
+| `open()`   | Initialize/re-initialize resources           |
 | `step()`   | Poll once for external events, emit them     |
 | `stop`     | Stop emitting events / exit loop             |
-| `close`    | Cleanup resources                            |
+| `close()`  | Cleanup resources                            |
+
+`open` and `close` are symmetric: `open` is called at the start of
+`run.call()`, `close` at the end. This allows multiple `run.call()`
+invocations within the same process -- each call re-initializes via
+`open` and tears down via `close`.
 
 `loop` and `start` are provided by the Lua bridge, not the environment
-table itself. The environment only needs `step`, `stop`, and `close`.
+table itself. The environment only needs `open`, `step`, `stop`, and `close`.
 
 ### Which environments use what
 
-| Environment        | `step` | `stop`  | `close` | User calls  |
-|--------------------|--------|---------|---------|-------------|
-| Clock              | yes    |         |         | `loop`      |
-| SDL                | yes    | yes     | yes     | `loop`      |
-| Pico               | yes    | yes     | yes     | `loop`      |
-| Socket             | yes    |         | yes     | `loop`      |
-| IUP                | yes    | yes     | yes     | `loop`      |
-| JS / Web (planned) |        |         | yes     | `start`     |
+| Environment        | `open` | `step` | `stop`  | `close` | User calls  |
+|--------------------|--------|--------|---------|---------|-------------|
+| Clock              |        | yes    |         |         | `loop`      |
+| SDL                | yes    | yes    | yes     | yes     | `loop`      |
+| Pico               | yes    | yes    | yes     | yes     | `loop`      |
+| Socket             |        | yes    |         |         | `loop`      |
+| IUP                | yes    | yes    | yes     | yes     | `loop`      |
+| JS / Web (planned) |        |        |         | yes     | `start`     |
 
 ### Timeout and efficiency
 
