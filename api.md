@@ -51,81 +51,21 @@ end
 
 ## `atmos.env (e)`
 
-Registers an environment that bridges external events into an Atmos application.
-
-An environment provides the control loop that drives a `call` body, polling
-external events (timers, key presses, network packets, etc.) and forwarding
-them to Atmos through `emit` calls.
+`TODO`
 
 - Parameters:
-    - `e: { ... }`
-        | environment table with callback functions and state fields
+    - `e: { ...}`
+        | environment table with state fields and callback functions
         - `step: function`
-            | called by [call](#call-f) continually in a loop until the body
-              terminates or `step` returns `true`
+            | called by [call](#call-f) continually in a loop until the body terminates
         - `loop: function`
-            | replaces the default [call](#call-f) loop entirely
+            | substitutes the [call](#call-f) loop
         - `stop: function`
-            | called when the [call](#call-f) body terminates normally, before
-              cleanup
+            | appended to the [call](#call-f) body
         - `close: function`
-            | called after the [call](#call-f) body terminates (or on any
-              error), for resource cleanup
+            | called by [call](#call-f) when the body terminates (or on any error)
         - `now: number`
-            | elapsed milliseconds since the environment was loaded
-
-An environment must provide either `step` or `loop` (not both):
-
-- **`step`-based**: The default [call](#call-f) loop calls `step()`
-  repeatedly. Each call should poll for external events and `emit` them.
-  Returning `true` from `step` signals the loop to exit.
-
-- **`loop`-based**: The `loop()` function replaces the default loop entirely.
-  This is used when an external framework provides its own main loop (e.g.,
-  GUI toolkits). The environment must call `stop()` from within the loop to
-  signal termination.
-
-### Lifecycle
-
-When [call](#call-f) executes with a registered environment, the lifecycle
-proceeds as follows:
-
-```
-call(body)
- 1. spawn body as a task
- 2. enter loop:
-    - if `loop` is set:  loop()
-    - if `step` is set:  while step()~=true and body is alive
- 3. body terminates:
-    - stop()   -- environment-specific shutdown (e.g., exit GUI loop)
- 4. after body terminates:
-    - close()  -- resource cleanup (e.g., quit SDL)
-    - run.close()  -- abort all remaining tasks
-```
-
-### Creating an Environment
-
-An environment is a Lua module that calls `atmos.env(e)` during `require`.
-It returns a module table with any additional API functions or state:
-
-```
-local atmos = require "atmos"
-local M = { now = 0 }
-
-function M.step ()
-    -- poll for external events
-    -- emit('clock', dt, now)
-    -- emit(other_events)
-    -- return true to signal exit
-end
-
-function M.close ()
-    -- cleanup resources
-end
-
-atmos.env(M)    -- M has `step` and `close` fields
-return M
-```
+            | number of elapsed milliseconds since the environment is loaded
 
 (This function is only used internally by environments.)
 
