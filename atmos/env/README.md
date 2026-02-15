@@ -63,7 +63,7 @@ The Lua env's job is to bridge the C API into one of two user-facing patterns:
 | SDL / Clock / Pico | `poll()`      | wraps in `while do poll(); tick() end`  | `loop(body)`   |
 | Socket             | `poll()`      | wraps in `while do poll(); tick() end`  | `loop(body)`   |
 | IUP                | `poll()` (*)  | wraps in `while do poll(); tick() end`  | `loop(body)`   |
-| JS / Web           | *(implicit)*  | registers callbacks, returns            | `start(body)`  |
+| JS / Web           | *(implicit)*  | JS host calls `tick()`, returns         | `start(body)`  |
 
 (*) IUP can use `iup.LoopStepWait()` which is `poll(inf)` --
 see "Why IUP uses step" below.
@@ -179,7 +179,7 @@ end)
 | Pico               | yes    | yes    | yes     | `loop`      |
 | Socket             |        | yes    |         | `loop`      |
 | IUP                | yes    | yes    | yes     | `loop`      |
-| JS / Web (planned) |        |        | yes     | `start`     |
+| JS / Web           |  yes   |        | yes     | `start`     |
 
 ### Timeout and efficiency
 
@@ -322,6 +322,7 @@ end
 | sdl    | yes     | yes       | set   | as secondary: `waitEvent(0)`, no clock, still emits draw/input |
 | pico   | yes     | yes       | set   | as secondary: `input.event(0)`, no clock, still emits draw/input |
 | iup    | yes     | yes       | set   | as secondary: `LoopStep()`, disable timer              |
+| js     | --      | --        | `nil` | browser env; single-env only, `start()` only           |
 
 ### `loop` vs `start`
 
