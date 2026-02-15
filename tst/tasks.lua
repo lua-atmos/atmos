@@ -217,7 +217,7 @@ do
     end)
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  tasks.lua:%d+ %(call%)
+         |  tasks.lua:%d+ %(loop%)
          |  tasks.lua:%d+ %(emit%) <%- tasks.lua:%d+ %(task%)
          |  tasks.lua:%d+ %(emit%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(task%)
          v  tasks.lua:%d+ %(throw%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(tasks%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(task%)
@@ -235,7 +235,7 @@ do
     end)
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  tasks.lua:%d+ %(call%)
+         |  tasks.lua:%d+ %(loop%)
          v  tasks.lua:%d+ %(throw%)
         ==> attempt to perform arithmetic on a boolean value
     ]])
