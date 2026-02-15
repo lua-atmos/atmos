@@ -17,6 +17,36 @@ Key facts:
 | JS bridge | `global.set(k,v)`, `global.get(k)`, `doString(code)` |
 | Async | `:await()` on JS Promises — **but cannot yield across a C-call boundary** |
 
+### JS → Lua data bridging
+
+Wasmoon has **two modes** for passing JS objects into Lua, controlled
+by `enableProxy` (default `true`):
+
+| Mode | How | `pairs()` | `table.*` | Live binding? |
+|------|-----|-----------|-----------|---------------|
+| **Proxy** (default) | JS object → userdata with `__index`/`__pairs` metamethods | yes | **no** | yes (bidirectional) |
+| **Table copy** (`enableProxy: false`) | JS object → deep-copied native Lua table | yes | yes | no (one-time snapshot) |
+
+The proxy is the default because two competing type extensions race on
+priority:
+
+- `TableTypeExtension` (priority 0) — deep-copies to native table
+- `ProxyTypeExtension` (priority 3) — wraps as proxied userdata
+
+Since 3 > 0, proxy wins.  You can opt out per value:
+
+```javascript
+import { decorate } from 'wasmoon'
+lua.global.set('evt', decorate(eventObj, { proxy: false }))  // → native Lua table
+```
+
+Or globally: `factory.createEngine({ enableProxy: false })`.
+
+**There is no public `createTable()` / `pushTable()` API.**  Table
+creation is internal to `TableTypeExtension.pushValue()`.  The
+`wasmoon-lua5.1` fork added a `LuaTable` proxy class, but it is not
+in the main wasmoon (Lua 5.4) package.
+
 ### The C-call boundary constraint
 
 When JS invokes a Lua callback (e.g. from `addEventListener` or
@@ -30,6 +60,52 @@ synchronously via `doString` or `global.get('fn')(args)`.
 
 This is exactly why `atmos.env.js` uses the **tick** pattern rather
 than registering Lua callbacks on DOM events.
+
+### How wasmoon users typically handle DOM events
+
+No library exists.  Three patterns appear in practice:
+
+**Pattern A — Expose `document`, call `addEventListener` from Lua:**
+
+```javascript
+lua.global.set('document', document)   // proxied userdata
+```
+```lua
+local btn = document:getElementById("myButton")
+btn:addEventListener("click", function(event)
+    print("clicked!")          -- works (synchronous)
+    -- await(something)        -- FAILS: C-call boundary
+end)
+```
+
+Works for fire-and-forget handlers.  Fails the moment the callback
+needs to `await`, which is the common case in Atmos.
+
+**Pattern B — JS-side helpers that call `doString`:**
+
+```javascript
+canvas.addEventListener('keydown', (ev) => {
+    lua.doString(`on_key("${ev.key}")`)
+})
+```
+```lua
+function on_key(k) emit('key', k) end
+```
+
+This is the pattern `atmos.env.js` uses — the event table is built in
+Lua (inside `doString`), so it is a real native table.  No proxy
+issues, no C-call boundary issues.
+
+**Pattern C — `global.get` + call retrieved function:**
+
+```javascript
+const tick = lua.global.get('tick')   // retrieve once
+function frame() { tick(Date.now()); requestAnimationFrame(frame) }
+```
+
+Slightly lower overhead than `doString` per call, but arguments are
+still subject to proxy rules (numbers and strings pass through
+cleanly; objects become proxied userdata).
 
 ---
 
@@ -240,21 +316,49 @@ window.addEventListener('beforeunload', () => {
 
 ## Preexisting mappings — what can we reuse?
 
+### Inside Atmos
+
 | Source | Reusable? | Notes |
 |--------|-----------|-------|
 | **PICO `__atmos`** | **yes — direct reuse** | Tag-based matching with `_is_()`, handles key/mouse.button string filtering. Copy as-is. |
 | **PICO event tags** | **yes — same names** | `'key'`, `'mouse.button'`, `'draw'`, `'quit'` are portable; add `'mouse.move'`, `'touch'`, `'resize'` for DOM. |
 | **SDL `__atmos`** | no | Relies on C enum constants (`SDL.event.KeyDown`), not string tags. |
 | **IUP `__atmos`** | no | Widget-centric (`self.atm`), not input-event-centric. |
-| **Fengari interop** | no | Different VM entirely (Lua 5.3, JS reimpl). Has `addEventListener` from Lua, but violates the C-call boundary constraint in wasmoon. |
-| **LOVE2D web ports** | no | Compile the full C++ engine to Wasm via Emscripten — not wasmoon. |
-| **Existing wasmoon projects** | no | No known project provides a DOM→Lua event mapping library. |
+
+### Outside Atmos
+
+| Source | Reusable? | Notes |
+|--------|-----------|-------|
+| **wasmoon `decorate`** | useful but not needed | `decorate(obj, {proxy:false})` gives native Lua tables, but Pattern B (`doString` building tables in Lua) avoids the proxy question entirely. |
+| **wasmoon `enableProxy`** | no | Global switch — too coarse; breaks other uses (e.g. exposing `document`). |
+| **Fengari interop** | no | Different VM (Lua 5.3, JS reimpl). Supports `addEventListener` from Lua, but yields fail in wasmoon. |
+| **LOVE2D web ports** | no | Full C++ engine compiled to Wasm — not wasmoon. |
+| **Existing wasmoon projects** | **none** | No known project provides a DOM→Lua event mapping. Searched: `hellpanderrr/lua-in-browser`, `zacharie410/lua-browser-dom-demo` (fengari), `volundmush/wasmoon-concurrency`, `JX3BOX/jx3-skill-parser`. |
+
+### Why Pattern B wins for Atmos
+
+The `doString` approach (Pattern B) is the right fit because:
+
+1. **No proxy issues.** The event table is constructed inside Lua —
+   it's a real `table`, not userdata.  `pairs()`, `table.*`, `#` all
+   work.  `setmetatable()` works (needed for `__atmos`).
+2. **No C-call boundary.** `doString` drives the Lua VM from JS — Lua
+   is the callee, not a callback.  The body can `emit()`, which
+   resumes coroutines via `coroutine.resume()`, which is legal.
+3. **Matches existing env pattern.** PICO/SDL build event tables in
+   Lua (`step()` → `emit(setmetatable(e, meta))`).  Pattern B is the
+   same thing — just triggered from JS instead of a C `poll()`.
+4. **Minimal marshalling overhead.** Event fields are primitives
+   (strings, numbers) that pass through the Wasm boundary cleanly.
+   No objects to proxy or deep-copy.
 
 **Conclusion:** The PICO environment's `__atmos` metamethod and tag
 taxonomy is directly reusable.  The JS env should adopt PICO's
 convention — string tags, `_is_()` matching, optional key/button
 string filters — and extend it with DOM-specific tags (`'mouse.move'`,
-`'touch'`, `'resize'`).
+`'touch'`, `'resize'`).  Event injection uses `doString` to build
+native Lua tables, avoiding wasmoon's proxy/table conversion
+entirely.
 
 ---
 
