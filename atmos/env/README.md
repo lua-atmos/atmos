@@ -100,35 +100,77 @@ start(function ()
 end)
 ```
 
-### Full environment table
+## Environment Table
 
-| Callback   | Description                                  |
-|------------|----------------------------------------------|
-| `open()`   | Initialize/re-initialize resources           |
-| `step()`   | Poll once for external events, emit them     |
-| `close()`  | Cleanup resources                            |
+Each environment registers a table with up to three callbacks:
 
-`open` and `close` are symmetric: `open` is called at the start of
-`loop`/`start`, `close` at the end. This allows multiple `loop()`
-invocations within the same process -- each call re-initializes via
-`open` and tears down via `close`.
+| Callback   | Description                                      |
+|------------|--------------------------------------------------|
+| `open()`   | Initialize / re-initialize resources             |
+| `step()`   | Poll once for external events, emit them         |
+| `close()`  | Release resources (called by `stop`)             |
 
-`loop` uses `step` to drive the event loop. `start` does not --
+### Lifecycle
+
+`open` and `close` are symmetric: `open` is called when an application
+starts (`loop` or `start`), `close` is called during teardown (`stop`).
+This allows multiple `loop()` invocations within the same process --
+each invocation re-initializes via `open` and tears down via `close`.
+
+Initialization code lives in `open`, not at `require` time.  The module
+file sets up the Lua-side structure; `open` initializes the C backend.
+
+```
+require       open        step...step      close
+  |             |             |               |
+  module        C init        event loop      C teardown
+  structure     (SDL.init,    (poll/emit)     (SDL.quit,
+  (metatables,  pico.init,                    pico.init(false),
+   env table)   iup.Open)                     iup.Close)
+```
+
+`loop` uses `step` to drive the event loop.  `start` does not --
 the environment itself drives events (e.g. JS browser callbacks).
 
 ### Teardown: `close` vs `stop`
 
-- `close()` kills all tasks (running their `<close>` handlers)
-- `stop()` does full teardown: `close()` first, then `_env_.close()`
+There are two levels of teardown:
 
-Tasks are closed before the environment so that task cleanup code
-(defers, `<close>` handlers) can still use environment resources.
+- **`close()`** -- kills all tasks, running their `<close>` handlers
+  (defers).  The environment is still alive at this point, so cleanup
+  code inside tasks can use environment resources (e.g. save state,
+  close windows).
 
-`loop` calls `stop()` automatically when the step loop exits.
-`start` does not -- the environment backend must call `stop()` at the
-appropriate time (e.g. JS `beforeunload` listener).
+- **`stop()`** -- full teardown: calls `close()` first (kill tasks),
+  then `_env_.close()` (release environment resources).
 
-### Which environments use what
+```lua
+function run.stop ()
+    run.close()          -- 1. kill tasks  (env still alive)
+    if _env_.close then
+        _env_.close()    -- 2. tear down env
+    end
+end
+```
+
+The ordering matters: tasks before environment, so that task cleanup
+can still use the environment.
+
+`loop` calls `stop()` automatically when the step loop exits (via a
+deferred `<close>` handler).
+
+`start` does **not** call `stop()` automatically -- the environment
+backend must arrange for it at the appropriate time.  For example, a
+JS environment would register a `beforeunload` listener:
+
+```lua
+-- inside a JS environment implementation
+window:addEventListener('beforeunload', function ()
+    atmos.stop()
+end)
+```
+
+### Which environments provide what
 
 | Environment        | `open` | `step` | `close` | User calls  |
 |--------------------|--------|--------|---------|-------------|
