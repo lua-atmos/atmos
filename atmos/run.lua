@@ -156,14 +156,26 @@ end
 ---------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
-local _env_ = {
-    open  = nil,
-    step  = nil,
-    close = nil,
-}
+local _envs_ = {}
 
 function run.env (e)
-    _env_ = e
+    if not e.mode then
+        -- no mode: legacy single-env, replaces all
+        _envs_ = { e }
+        return
+    end
+    _envs_[#_envs_+1] = e
+    if #_envs_ == 2 then
+        local first = _envs_[1]
+        assertn(2, first.mode and first.mode.primary,
+            "invalid env : primary mode not supported")
+        first.mode.current = 'primary'
+    end
+    if #_envs_ >= 2 then
+        assertn(2, e.mode and e.mode.secondary,
+            "invalid env : secondary mode not supported")
+        e.mode.current = 'secondary'
+    end
 end
 
 function run.close ()
@@ -172,8 +184,10 @@ end
 
 function run.stop ()
     run.close()
-    if _env_.close then
-        _env_.close()
+    for i=#_envs_, 1, -1 do
+        if _envs_[i].close then
+            _envs_[i].close()
+        end
     end
 end
 
@@ -329,15 +343,22 @@ function run.loop (body, ...)
         local _ <close> = run.defer(function ()
             run.stop()
         end)
-        if _env_.open then
-            _env_.open()
+        for _, env in ipairs(_envs_) do
+            if env.open then env.open() end
         end
         local t <close> = run.spawn(debug_getinfo(4), nil, false, body, ...)
         while true do
             if coroutine.status(t._.th) == 'dead' then
                 break
             end
-            if _env_.step() then
+            local quit = false
+            for _, env in ipairs(_envs_) do
+                if env.step() then
+                    quit = true
+                    break
+                end
+            end
+            if quit then
                 break
             end
         end
@@ -347,8 +368,8 @@ end
 
 function run.start (body, ...)
     assertn(2, type(body) == 'function', "invalid start : expected body function")
-    if _env_.open then
-        _env_.open()
+    for _, env in ipairs(_envs_) do
+        if env.open then env.open() end
     end
     run.spawn(debug_getinfo(2), nil, false, body, ...)
 end

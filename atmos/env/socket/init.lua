@@ -81,8 +81,9 @@ end
 local old = socket.gettime()
 local fst = old
 
-function M.step (opts)
-    local ms = (opts and opts.ms) or 0.1
+function M.step ()
+    local cur = M.env.mode and M.env.mode.current
+    local ms = (cur == 'secondary') and 0 or 0.1
     local r,s = socket.select(rs, ss, ms)
     local now = socket.gettime()
     M.now = (now - fst) * 1000
@@ -114,7 +115,7 @@ function M.step (opts)
             emit(k, 'send')
         end
     end
-    if (not opts) or (opts.clock~=false) then
+    if cur ~= 'secondary' then
         if now > old then
             emit('clock', (now-old)*1000, M.now)
             old = now
@@ -123,6 +124,7 @@ function M.step (opts)
 end
 
 M.env = {
+    mode = { primary=true, secondary=true },
     step = M.step,
 }
 

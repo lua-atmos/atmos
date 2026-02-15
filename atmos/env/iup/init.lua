@@ -63,16 +63,25 @@ local M = {
 
 local timer = iup.timer{time=100}
 function timer:action_cb()
-    M.now = M.now + 100
-    emit('clock', 100, M.now)
+    local cur = M.env.mode and M.env.mode.current
+    if cur ~= 'secondary' then
+        M.now = M.now + 100
+        emit('clock', 100, M.now)
+    end
     return iup.DEFAULT
 end
 timer.run = "YES"
 
 M.env = {
+    mode = { primary=true, secondary=true },
     open = iup.Open,
     step = function ()
-        return iup.LoopStepWait() == iup.CLOSE
+        local cur = M.env.mode and M.env.mode.current
+        if cur == 'secondary' then
+            return iup.LoopStep() == iup.CLOSE
+        else
+            return iup.LoopStepWait() == iup.CLOSE
+        end
     end,
     close = iup.Close,
 }
