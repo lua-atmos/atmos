@@ -322,7 +322,7 @@ end
 
 do
     print("Testing...", "debounce 2: stream")
-    call(function()
+    loop(function()
         spawn(function()
             local x = S.fr_await 'X'
             local y = function () return S.fr_await 'Y' end

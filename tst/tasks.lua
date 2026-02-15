@@ -199,7 +199,7 @@ do
             --error "OK"
             --throw "OK"
         end
-        call(function ()
+        loop(function ()
             spawn(function ()
                 local ts = tasks()
                 spawn(true,function ()
@@ -229,7 +229,7 @@ do
     print "TODO: error w/o throw"
     print("Testing...", "error 2")
     local _, err = pcall(function ()
-        call(function ()
+        loop(function ()
             local x = 1 + true
         end)
     end)

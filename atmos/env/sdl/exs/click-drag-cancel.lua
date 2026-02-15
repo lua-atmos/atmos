@@ -15,7 +15,7 @@ _,REN = sdl.window {
 
 FNT = assert(TTF.open("DejaVuSans.ttf", 20))
 
-call(function ()
+loop(function ()
     local text = " "
     local rect = {x=256/2-20,y=256/2-20, w=40,h=40}
     spawn(function ()

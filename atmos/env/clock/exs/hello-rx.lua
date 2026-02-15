@@ -1,7 +1,7 @@
 require "atmos.env.clock"
 local S = require "atmos.streams"
 
-call(function ()
+loop(function ()
     local s1 = S.from(clock{s=1})
         :tap(function()
             print("Hello World!")

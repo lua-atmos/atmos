@@ -89,13 +89,13 @@ identical.
 From the user's perspective, there are only two patterns:
 
 ```lua
--- loop: blocking, returns when body finishes
-atmos.sdl.loop(function (env)
+-- loop: blocking, runs step loop, returns when body finishes
+loop(function ()
     ...
 end)
 
--- start: non-blocking, returns immediately
-atmos.js.start(function (env)
+-- start: non-blocking, spawns body, returns immediately
+start(function ()
     ...
 end)
 ```
@@ -106,27 +106,26 @@ end)
 |------------|----------------------------------------------|
 | `open()`   | Initialize/re-initialize resources           |
 | `step()`   | Poll once for external events, emit them     |
-| `stop`     | Stop emitting events / exit loop             |
 | `close()`  | Cleanup resources                            |
 
 `open` and `close` are symmetric: `open` is called at the start of
-`run.call()`, `close` at the end. This allows multiple `run.call()`
+`loop`/`start`, `close` at the end. This allows multiple `loop()`
 invocations within the same process -- each call re-initializes via
 `open` and tears down via `close`.
 
-`loop` and `start` are provided by the Lua bridge, not the environment
-table itself. The environment only needs `open`, `step`, `stop`, and `close`.
+`loop` uses `step` to drive the event loop. `start` does not --
+the environment itself drives events (e.g. JS browser callbacks).
 
 ### Which environments use what
 
-| Environment        | `open` | `step` | `stop`  | `close` | User calls  |
-|--------------------|--------|--------|---------|---------|-------------|
-| Clock              |        | yes    |         |         | `loop`      |
-| SDL                | yes    | yes    | yes     | yes     | `loop`      |
-| Pico               | yes    | yes    | yes     | yes     | `loop`      |
-| Socket             |        | yes    |         |         | `loop`      |
-| IUP                | yes    | yes    | yes     | yes     | `loop`      |
-| JS / Web (planned) |        |        |         | yes     | `start`     |
+| Environment        | `open` | `step` | `close` | User calls  |
+|--------------------|--------|--------|---------|-------------|
+| Clock              |        | yes    |         | `loop`      |
+| SDL                | yes    | yes    | yes     | `loop`      |
+| Pico               | yes    | yes    | yes     | `loop`      |
+| Socket             |        | yes    |         | `loop`      |
+| IUP                | yes    | yes    | yes     | `loop`      |
+| JS / Web (planned) |        |        | yes     | `start`     |
 
 ### Timeout and efficiency
 
