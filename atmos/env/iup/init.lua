@@ -63,6 +63,8 @@ local M = {
 
 local timer = iup.timer{time=100}
 function timer:action_cb()
+    M.now = M.now + 100
+    emit('clock', 100, M.now)
     return iup.DEFAULT
 end
 timer.run = "YES"
@@ -70,14 +72,7 @@ timer.run = "YES"
 M.env = {
     open = iup.Open,
     step = function ()
-        if iup.LoopStepWait() == iup.CLOSE then
-            return true
-        end
-        local now = math.floor(os.clock() * 1000)
-        if now > M.now then
-            emit('clock', now - M.now, now)
-            M.now = now
-        end
+        return iup.LoopStepWait() == iup.CLOSE
     end,
     close = iup.Close,
 }
