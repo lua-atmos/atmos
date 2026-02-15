@@ -314,13 +314,23 @@ end
 
 ### Capabilities
 
-| env    | primary | secondary | notes                                                  |
-|--------|---------|-----------|--------------------------------------------------------|
-| clock  | yes     | yes       | non-blocking; as secondary skips clock emit            |
-| socket | yes     | yes       | as secondary: `select` with timeout=0, no clock        |
-| sdl    | yes     | yes       | as secondary: `waitEvent(0)`, no clock, still emits draw/input |
-| pico   | yes     | yes       | as secondary: `input.event(0)`, no clock, still emits draw/input |
-| iup    | yes     | yes       | as secondary: `LoopStep()`, disable timer              |
+| env    | primary | secondary | mode  | notes                                                  |
+|--------|---------|-----------|-------|--------------------------------------------------------|
+| clock  | --      | --        | `nil` | simple testing/pedagogical env; single-env only        |
+| socket | yes     | yes       | set   | as secondary: `select` with timeout=0, no clock        |
+| sdl    | yes     | yes       | set   | as secondary: `waitEvent(0)`, no clock, still emits draw/input |
+| pico   | yes     | yes       | set   | as secondary: `input.event(0)`, no clock, still emits draw/input |
+| iup    | yes     | yes       | set   | as secondary: `LoopStep()`, disable timer              |
+
+### `loop` vs `start` in multi-env
+
+Multi-env only works with `loop`-based environments.  The framework drives
+the step loop and can call each env's `step` in sequence.
+
+`start`-based environments (e.g. a future JS/browser env) have no step
+loop -- the external runtime drives events.  There is no place for the
+framework to call secondary steps.  Therefore `start`-based envs cannot
+participate in multi-env and should declare `mode = nil`.
 
 ### Example: IUP + socket
 
