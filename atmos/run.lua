@@ -159,7 +159,7 @@ end
 local _envs_ = {}
 
 function run.env (e)
-    if not e.mode then
+    if e.mode == nil then
         -- no mode: single-env only, cannot combine with others
         assertn(2, #_envs_ == 0,
             "invalid env : single-env only (mode not set)")
@@ -373,7 +373,7 @@ end
 function run.start (body, ...)
     assertn(2, type(body) == 'function', "invalid start : expected body function")
     assertn(2, #_envs_ == 1, "invalid start : expected single env")
-    assertn(2, not _envs_[1].mode, "invalid start : expected env with mode=nil")
+    assertn(2, _envs_[1].mode == nil, "invalid start : expected env with mode=nil")
     if _envs_[1].open then _envs_[1].open() end
     run.spawn(debug_getinfo(2), nil, false, body, ...)
 end
