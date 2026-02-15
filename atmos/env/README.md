@@ -318,8 +318,8 @@ end
 |--------|---------|-----------|--------------------------------------------------------|
 | clock  | yes     | yes       | non-blocking; as secondary skips clock emit            |
 | socket | yes     | yes       | as secondary: `select` with timeout=0, no clock        |
-| sdl    | yes     | no        | owns the render loop; uses `waitEvent` with timeout    |
-| pico   | yes     | no        | owns the render loop; uses `input.event` with timeout  |
+| sdl    | yes     | yes       | as secondary: `waitEvent(0)`, no clock, still emits draw/input |
+| pico   | yes     | yes       | as secondary: `input.event(0)`, no clock, still emits draw/input |
 | iup    | yes     | yes       | as secondary: `LoopStep()`, disable timer              |
 
 ### Example: IUP + socket
