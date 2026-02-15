@@ -98,7 +98,7 @@ end
 
 do
     print("Testing...", "defer - error 1")
-    local _,err = pcall(call, spawn, function ()
+    local _,err = pcall(loop, spawn, function ()
         local _ <close> = defer(function ()
             out("defer")
             error('ok')
@@ -321,7 +321,7 @@ do
     atmos.close()
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  others.lua:%d+ %(call%)
+         |  others.lua:%d+ %(loop%)
          v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%)
         ==> Z
     ]])
@@ -409,7 +409,7 @@ do
     atmos.close()
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  others.lua:%d+ %(call%)
+         |  others.lua:%d+ %(loop%)
          v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%)
         ==> X
     ]])
@@ -431,7 +431,7 @@ do
     atmos.close()
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  others.lua:%d+ %(call%)
+         |  others.lua:%d+ %(loop%)
          |  others.lua:%d+ %(emit%)
          v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%)
         ==> X
@@ -453,7 +453,7 @@ do
     atmos.close()
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  others.lua:%d+ %(call%)
+         |  others.lua:%d+ %(loop%)
          v  others.lua:%d+ %(throw%)
         ==> X
     ]])
@@ -482,7 +482,7 @@ do
     atmos.close()
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  others.lua:%d+ %(call%)
+         |  others.lua:%d+ %(loop%)
          |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%)
          v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
         ==> X, 10
@@ -508,7 +508,7 @@ do
     atmos.close()
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  others.lua:%d+ %(call%)
+         |  others.lua:%d+ %(loop%)
          |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%)
          v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
         ==> OK
@@ -537,7 +537,7 @@ do
     end)
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  others.lua:%d+ %(call%)
+         |  others.lua:%d+ %(loop%)
          |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%)
          |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
          v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
@@ -566,7 +566,7 @@ do
     end)
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  others.lua:%d+ %(call%)
+         |  others.lua:%d+ %(loop%)
          v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
         ==> X
     ]])

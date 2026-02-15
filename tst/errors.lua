@@ -25,7 +25,7 @@ do
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-         |  /tmp/err.lua:2 (call)
+         |  /tmp/err.lua:2 (loop)
          v  /tmp/err.lua:3 (throw)
         ==> OK
     ]])
@@ -43,7 +43,7 @@ do
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-         |  /tmp/err.lua:2 (call)
+         |  /tmp/err.lua:2 (loop)
          v  /tmp/err.lua:3 (throw)
         ==> attempt to perform arithmetic on a boolean value
     ]])
@@ -72,7 +72,7 @@ do
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-         |  /tmp/err.lua:2 (call)
+         |  /tmp/err.lua:2 (loop)
          |  /tmp/err.lua:13 (emit) <- /tmp/err.lua:2 (task)
          v  /tmp/err.lua:7 (throw) <- /tmp/err.lua:5 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
         ==> X, 10
@@ -100,7 +100,7 @@ do
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-         |  /tmp/err.lua:2 (call)
+         |  /tmp/err.lua:2 (loop)
          |  /tmp/err.lua:12 (emit) <- /tmp/err.lua:2 (task)
          v  /tmp/err.lua:8 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
         ==> OK
@@ -130,7 +130,7 @@ do
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-        |  /tmp/err.lua:1 (call)
+        |  /tmp/err.lua:1 (loop)
         |  /tmp/err.lua:15 (emit) <- /tmp/err.lua:1 (task)
         |  /tmp/err.lua:11 (emit) <- /tmp/err.lua:9 (task) <- /tmp/err.lua:2 (task) <- /tmp/err.lua:1 (task)
         v  /tmp/err.lua:7 (throw) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task) <- /tmp/err.lua:1 (task)
@@ -160,7 +160,7 @@ do
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-        |  /tmp/err.lua:7 (call)
+        |  /tmp/err.lua:7 (loop)
         v  /tmp/err.lua:3 (throw) <- /tmp/err.lua:2 (task) <- /tmp/err.lua:10 (task) <- /tmp/err.lua:8 (task) <- /tmp/err.lua:7 (task)
         ==> X
     ]])
@@ -199,7 +199,7 @@ do
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-        |  /tmp/err.lua:12 (call)
+        |  /tmp/err.lua:12 (loop)
         |  /tmp/err.lua:25 (emit) <- /tmp/err.lua:12 (task)
         |  /tmp/err.lua:21 (emit) <- /tmp/err.lua:19 (task) <- /tmp/err.lua:13 (task) <- /tmp/err.lua:12 (task)
         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:16 (task) <- /tmp/err.lua:14 (tasks) <- /tmp/err.lua:13 (task) <- /tmp/err.lua:12 (task)
@@ -220,7 +220,7 @@ do
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-        |  /tmp/err.lua:2 (call)
+        |  /tmp/err.lua:2 (loop)
         v  /tmp/err.lua:3 (throw)
         ==> attempt to perform arithmetic on a boolean value
     ]])
@@ -238,7 +238,7 @@ do
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-        |  /tmp/err.lua:2 (call)
+        |  /tmp/err.lua:2 (loop)
         v  /tmp/err.lua:3 (throw)
         ==> attempt to perform arithmetic on a boolean value
     ]])
@@ -260,7 +260,7 @@ do
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-         |  /tmp/err.lua:2 (call)
+         |  /tmp/err.lua:2 (loop)
          |  /tmp/err.lua:7 (emit) <- /tmp/err.lua:2 (task)
          v  /tmp/err.lua:5 (throw) <- /tmp/err.lua:2 (task)
         ==> attempt to perform arithmetic on a boolean value
@@ -285,7 +285,7 @@ do
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
-         |  /tmp/err.lua:2 (call)
+         |  /tmp/err.lua:2 (loop)
          |  ../atmos/env/clock/init.lua:12 (emit)
          |  /tmp/err.lua:6 (emit) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:2 (task)
          v  /tmp/err.lua:9 (throw) <- /tmp/err.lua:2 (task)

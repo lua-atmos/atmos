@@ -176,7 +176,7 @@ do
     end)
     assertfx(trim(err), trim [[
         ==> ERROR:
-         |  par.lua:%d+ %(call%)
+         |  par.lua:%d+ %(loop%)
          v  par.lua:%d+ %(throw%)
         ==> attempt to call a nil value %(global 'f'%)
     ]])
