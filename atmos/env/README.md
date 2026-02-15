@@ -234,8 +234,8 @@ mode = {
 }
 ```
 
-- `mode = nil` -- the env **cannot** participate in multi-env at all.
-  An assertion will fire if `atmos.env()` tries to assign it a role.
+- `mode = nil` -- the env can **only run alone**.  `atmos.env()` asserts
+  that no other env is registered (before or after).
 - `mode.primary = true` -- the env knows how to be primary (bounded step,
   clock generation).
 - `mode.secondary = true` -- the env knows how to be secondary (non-blocking
@@ -246,18 +246,19 @@ mode = {
 
 ### Assertions
 
-Checks happen only when the 2nd env is registered:
+1. **Single-env guard** -- if `mode` is `nil`, `atmos.env()` asserts that
+   `_envs_` is empty.  Fires if a `mode = nil` env is registered after
+   another, or if another env is registered after a `mode = nil` one.
+   Error: `"invalid env : single-env only (mode not set)"` /
+   `"invalid env : previous env is single-env only (mode not set)"`.
+2. **Primary** -- when the 2nd env is registered, the 1st must have
+   `mode.primary == true`.
+   Error: `"invalid env : primary mode not supported"`.
+3. **Secondary** -- the 2nd+ env must have `mode.secondary == true`.
+   Error: `"invalid env : secondary mode not supported"`.
 
-1. The 1st env must have `mode` with `mode.primary == true`.
-   Otherwise: `"invalid env : primary mode not supported"`.
-2. The 2nd+ env must have `mode` with `mode.secondary == true`.
-   Otherwise: `"invalid env : secondary mode not supported"`.
-
-If `mode` is `nil` on either side, the assertion fails -- the env was
-never designed for multi-env.
-
-No checks when only one env is registered.  An env with `mode = nil`
-works fine alone.
+An env with `mode = nil` works fine alone but asserts if combined
+with any other env.
 
 ### Primary contract
 

@@ -160,19 +160,23 @@ local _envs_ = {}
 
 function run.env (e)
     if not e.mode then
-        -- no mode: legacy single-env, replaces all
-        _envs_ = { e }
+        -- no mode: single-env only, cannot combine with others
+        assertn(2, #_envs_ == 0,
+            "invalid env : single-env only (mode not set)")
+        _envs_[1] = e
         return
     end
+    assertn(2, #_envs_ == 0 or _envs_[1].mode,
+        "invalid env : previous env is single-env only (mode not set)")
     _envs_[#_envs_+1] = e
     if #_envs_ == 2 then
         local first = _envs_[1]
-        assertn(2, first.mode and first.mode.primary,
+        assertn(2, first.mode.primary,
             "invalid env : primary mode not supported")
         first.mode.current = 'primary'
     end
     if #_envs_ >= 2 then
-        assertn(2, e.mode and e.mode.secondary,
+        assertn(2, e.mode.secondary,
             "invalid env : secondary mode not supported")
         e.mode.current = 'secondary'
     end
