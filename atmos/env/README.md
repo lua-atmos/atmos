@@ -196,3 +196,155 @@ sleeps:
 `loop` vs `start` is not about the C API. It is purely about whether the
 Lua bridge can run a while-loop or not. JS can't (no thread to block),
 everyone else can.
+
+## Multiple Environments
+
+An application may combine environments -- for example, IUP for the GUI
+and socket for network I/O.  When multiple environments are loaded, one
+becomes **primary** (drives the loop, generates clock events) and the
+others become **secondary** (non-blocking, no clock).
+
+### Registration order
+
+`atmos.env()` tracks calls:
+
+1. **1st call** -- the env is registered normally.  `mode.current` stays
+   `nil`.  The env behaves autonomously (single-env mode).
+2. **2nd call** -- triggers multi-env mode:
+   - The 1st env is retroactively set as **primary** (`mode.current = 'primary'`).
+   - The 2nd env is set as **secondary** (`mode.current = 'secondary'`).
+   - Capability assertions fire at this point (see below).
+3. **3rd+ calls** -- each new env is set as secondary.
+
+```lua
+require "atmos.env.iup"       -- 1st: registered, mode.current = nil
+require "atmos.env.socket"    -- 2nd: iup -> primary, socket -> secondary
+```
+
+### The `mode` table
+
+Each environment that supports multi-env declares a `mode` field on the
+table passed to `atmos.env()`:
+
+```lua
+mode = {
+    primary   = bool,    -- can this env act as primary?
+    secondary = bool,    -- can this env act as secondary?
+    current   = nil,     -- set by atmos.env(): nil | 'primary' | 'secondary'
+}
+```
+
+- `mode = nil` -- the env can **only run alone**.  `atmos.env()` asserts
+  that no other env is registered (before or after).
+- `mode.primary = true` -- the env knows how to be primary (bounded step,
+  clock generation).
+- `mode.secondary = true` -- the env knows how to be secondary (non-blocking
+  step, no clock).
+- `mode.current` -- **managed by `atmos.env()`**, never set by the module.
+  Initially `nil` (single-env, autonomous).  Set to `'primary'` or
+  `'secondary'` only when a 2nd env is registered.
+
+### Assertions
+
+1. **Single-env guard** -- if `mode` is `nil`, `atmos.env()` asserts that
+   `_envs_` is empty.  Fires if a `mode = nil` env is registered after
+   another, or if another env is registered after a `mode = nil` one.
+   Error: `"invalid env : single-env only (mode not set)"` /
+   `"invalid env : previous env is single-env only (mode not set)"`.
+2. **Primary** -- when the 2nd env is registered, the 1st must have
+   `mode.primary == true`.
+   Error: `"invalid env : primary mode not supported"`.
+3. **Secondary** -- the 2nd+ env must have `mode.secondary == true`.
+   Error: `"invalid env : secondary mode not supported"`.
+
+An env with `mode = nil` works fine alone but asserts if combined
+with any other env.
+
+### Primary contract
+
+A primary environment:
+
+- **Generates clock events** (`emit('clock', dt, now)`).
+- **May block in step**, but with a bounded timeout so that secondary envs
+  get time slices.
+
+When `mode.current == nil` (single-env), there are no constraints -- the
+env may block indefinitely.  The bounded-blocking constraint only applies
+when `mode.current == 'primary'`.
+
+### Secondary contract
+
+A secondary environment:
+
+- **Must not block**: step uses a non-blocking variant (e.g.
+  `socket.select` with timeout `0`, `iup.LoopStep()` instead of
+  `LoopStepWait()`).
+- **Must not generate clock events**: the primary owns the clock.
+- **Still emits its own domain events** (socket recv/send, GUI callbacks,
+  etc.).
+
+### Internal check
+
+Each env's `step` function checks `mode.current` and adjusts:
+
+```lua
+function M.step ()
+    local cur = M.mode and M.mode.current
+    if cur == 'secondary' then
+        -- non-blocking poll, no clock emit
+    elseif cur == 'primary' then
+        -- bounded blocking poll, emit clock
+    else
+        -- nil: single env, autonomous (may block, emits clock)
+    end
+end
+```
+
+### Loop with multiple envs
+
+The main loop calls all registered envs in order -- primary first
+(may block briefly), then secondaries (non-blocking):
+
+```
+while true do
+    for each env do
+        if env.step() then quit end
+    end
+end
+```
+
+### Capabilities
+
+| env    | primary | secondary | mode  | notes                                                  |
+|--------|---------|-----------|-------|--------------------------------------------------------|
+| clock  | --      | --        | `nil` | simple testing/pedagogical env; single-env only        |
+| socket | yes     | yes       | set   | as secondary: `select` with timeout=0, no clock        |
+| sdl    | yes     | yes       | set   | as secondary: `waitEvent(0)`, no clock, still emits draw/input |
+| pico   | yes     | yes       | set   | as secondary: `input.event(0)`, no clock, still emits draw/input |
+| iup    | yes     | yes       | set   | as secondary: `LoopStep()`, disable timer              |
+
+### `loop` vs `start`
+
+`start` requires a single env with `mode = nil`.  It asserts both
+conditions.  There is no step loop -- the external runtime drives events
+-- so multi-env is not possible.
+
+`loop` works with single or multiple envs.  When multiple envs are
+registered, the framework drives the step loop and calls each env's
+`step` in sequence.
+
+### Example: IUP + socket
+
+```lua
+require "atmos.env.iup"       -- primary: bounded blocking, clock via timer
+require "atmos.env.socket"    -- secondary: non-blocking select, no clock
+
+loop(function ()
+    -- IUP drives the loop timing
+    -- socket polls each iteration (instant)
+    -- clock events come from IUP's timer only
+end)
+```
+
+Previously this required manual env composition (see `iup/exs/iup-net.lua`).
+With `mode`, it works automatically.
