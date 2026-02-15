@@ -23,20 +23,21 @@ dlg = iup.dialog{iup.hbox{txt_count, btn_count; ngap = "10"}, title = "Counter",
 
 dlg:showxy( iup.CENTER, iup.CENTER )
 
+local opts = { clock=false }
 atmos.env = {
+    open = function ()
+        if env_iup.env.open then env_iup.env.open() end
+    end,
+    step = function ()
+        env_sok.step(opts)
+        return env_iup.env.step()
+    end,
     close = function ()
-        env_sok.env.close()
         env_iup.env.close()
     end,
-    loop = env_iup.loop,
 }
-    
-local opts = { clock=false }
-iup.SetIdle(function ()
-    env_sok.step(opts)
-end)
 
-atmos.call(function ()
+atmos.loop(function ()
     spawn(function ()
         every(clock{s=1}, function ()
             print'1s'

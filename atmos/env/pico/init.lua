@@ -2,14 +2,17 @@ local atmos = require "atmos"
 local pico  = require "pico"
 
 pico.zet = pico.set     -- because of `set` keyword in Atmos
-pico.init(true)
-pico.set.expert(true)
 
 local M = {
     mpf = 25,   -- 0: as fast as possible
     now = 0,
     ren = nil,
 }
+
+function M.open ()
+    pico.init(true)
+    pico.set.expert(true)
+end
 
 local MS = M.mpf
 

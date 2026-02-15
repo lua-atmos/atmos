@@ -17,7 +17,7 @@ do
     print("Testing...", "error 1")
     local out = exec [[
         local _, err = pcall(function ()
-            call(function ()
+            loop(function ()
                 error 'OK'
             end)
         end)
@@ -35,7 +35,7 @@ do
     print("Testing...", "error 2")
     local out = exec [[
         local _, err = pcall(function ()
-            call(function ()
+            loop(function ()
                 print(1 + true)
             end)
         end)
@@ -53,7 +53,7 @@ do
     print("Testing...", "throw 1")
     local out = exec [[
         local _, err = pcall(function ()
-            call(function ()
+            loop(function ()
                 spawn(function ()
                     local x,y,z = catch('Z', function ()
                         spawn (function ()
@@ -83,7 +83,7 @@ do
     print("Testing...", "throw 2")
     local out = exec [[
         local _, err = pcall(function ()
-            call(function ()
+            loop(function ()
                 spawn(function ()
                     spawn(function ()
                         await(spawn(function ()
@@ -110,7 +110,7 @@ end
 do
     print("Testing...", "throw 3")
     local out = exec [[
-        local _, err = pcall(function () call(function ()
+        local _, err = pcall(function () loop(function ()
             spawn(function ()
                 spawn(true,function ()
                     await(spawn(function ()
@@ -148,7 +148,7 @@ do
             end)
         end
 
-        call(function ()
+        loop(function ()
             spawn(function ()
                 local ok, err = catch('Y', function ()
                     spawn(T)
@@ -180,7 +180,7 @@ do
             --error "OK"
             --throw "OK"
         end
-        call(function ()
+        loop(function ()
             spawn(function ()
                 local ts = tasks()
                 spawn(true,function ()
@@ -212,7 +212,7 @@ do
     print("Testing...", "error 1")
     local out = exec [[
         local _, err = pcall(function ()
-            call(function ()
+            loop(function ()
                 local x = 1 + true
             end)
         end)
@@ -230,7 +230,7 @@ do
     print("Testing...", "tasks 2")
     local out = exec [[
         local _, err = pcall(function ()
-            call(function ()
+            loop(function ()
                 local x = 1 + true
             end)
         end)
@@ -248,7 +248,7 @@ do
     print("Testing...", "spawn termination")
     local out = exec [[
         local _, err = pcall(function ()
-            call(function ()
+            loop(function ()
                 spawn(function ()
                     await(spawn(function() await('X') end))
                     print(1+true)
@@ -271,7 +271,7 @@ do
     print("Testing...", "clock external error")
     local out = exec [[
         local _, err = pcall(function ()
-            call(function ()
+            loop(function ()
                 require "atmos.env.clock"
                 local _ <close> = spawn(true, (function ()
                     await(clock {h=0,min=0,s=0,ms=1 })

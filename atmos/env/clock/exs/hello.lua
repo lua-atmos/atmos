@@ -1,6 +1,6 @@
 local env = require "atmos.env.clock"
 
-call(function ()
+loop(function ()
     print("now", env.now)
     watching(clock{s=5}, function ()
         every(clock{ms=500}, function ()

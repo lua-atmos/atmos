@@ -708,7 +708,7 @@ print "--- ABORT ---"
 do
     print("Testing...", "abort 1")
     do
-        call(function ()
+        loop(function ()
             spawn(function ()
                 spawn(function ()
                     spawn(function ()

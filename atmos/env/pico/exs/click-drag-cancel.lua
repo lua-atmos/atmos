@@ -7,7 +7,7 @@ pico.set.title "Lua-Atmos-SDL: Click, Drag, Cancel"
 pico.set.size.window(256, 256)
 pico.set.font(nil, 20)
 
-call(function ()
+loop(function ()
     local text = ""
     local rect = {x=256/2,y=256/2, w=40,h=40}
     spawn(function ()

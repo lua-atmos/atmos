@@ -157,9 +157,8 @@ end
 -------------------------------------------------------------------------------
 
 local _env_ = {
+    open  = nil,
     step  = nil,
-    loop  = nil,
-    stop  = nil,
     close = nil,
 }
 
@@ -169,6 +168,13 @@ end
 
 function run.close ()
     meta_tasks.__close(TASKS)
+end
+
+function run.stop ()
+    run.close()
+    if _env_.close then
+        _env_.close()
+    end
 end
 
 function run.defer (f)
@@ -309,7 +315,7 @@ local function xcall (dbg, stk, f, ...)
                 })
             end
         end
-        if stk == "call" then
+        if stk == "loop" then
             err = flatten(err)
         end
         error(err, 0)
@@ -317,38 +323,34 @@ local function xcall (dbg, stk, f, ...)
     end)(pcall(f, ...))
 end
 
-function run.call (body, ...)
-    assertn(2, type(body) == 'function', "invalid call : expected body function")
-    local body = function (...)
-        return (function (...)
-            if _env_.stop then
-                _env_.stop()
-            end
-            return ...
-        end)(body(...))
-    end
-    return xcall(debug_getinfo(2), "call", function (...)
+function run.loop (body, ...)
+    assertn(2, type(body) == 'function', "invalid loop : expected body function")
+    return xcall(debug_getinfo(2), "loop", function (...)
         local _ <close> = run.defer(function ()
-            if _env_.close then
-                _env_.close()
-            end
-            run.close()
+            run.stop()
         end)
+        if _env_.open then
+            _env_.open()
+        end
         local t <close> = run.spawn(debug_getinfo(4), nil, false, body, ...)
-        if _env_.loop then
-            _env_.loop()
-        else
-            while true do
-                if coroutine.status(t._.th) == 'dead' then
-                    break
-                end
-                if _env_.step() then
-                    break
-                end
+        while true do
+            if coroutine.status(t._.th) == 'dead' then
+                break
+            end
+            if _env_.step() then
+                break
             end
         end
         return t.ret
     end, ...)
+end
+
+function run.start (body, ...)
+    assertn(2, type(body) == 'function', "invalid start : expected body function")
+    if _env_.open then
+        _env_.open()
+    end
+    run.spawn(debug_getinfo(2), nil, false, body, ...)
 end
 
 -------------------------------------------------------------------------------

@@ -161,7 +161,7 @@ end
 do
     print("Testing...", "par_or 6")
     local _,err = pcall(function ()
-        call(function ()
+        loop(function ()
             catch(true, function ()
                 par_or (
                     function ()

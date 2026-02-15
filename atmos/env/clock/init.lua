@@ -16,7 +16,6 @@ function M.step ()
 end
 
 M.env = {
-    init = M.init,
     step = M.step,
 }
 

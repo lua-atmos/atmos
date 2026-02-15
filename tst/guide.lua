@@ -1,7 +1,7 @@
 require "atmos.env.clock"
 local S = require "atmos.streams"
 
-call(function ()
+loop(function ()
 
     -- 1. Tasks & Events
 

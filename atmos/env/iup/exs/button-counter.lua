@@ -14,7 +14,7 @@ xdlg = iup.dialog {
 
 xdlg:showxy(iup.CENTER, iup.CENTER)
 
-call(function ()
+loop(function ()
     every(xbut,'action', function ()
         xtxt.value = xtxt.value + 1
     end)

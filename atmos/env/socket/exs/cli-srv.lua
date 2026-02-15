@@ -1,7 +1,7 @@
 local s = require "atmos.env.socket"
 local socket = require "socket"
 
-call(function ()
+loop(function ()
     local srv = assert(s.xtcp())
     assert(srv:bind("*", 0))
     s.xlisten(srv)

@@ -6,18 +6,20 @@ local IMG = require "SDL.image"
 local TTF = require "SDL.ttf"
 local MIX = require "SDL.mixer"
 
-assert(SDL.init())
-assert(IMG.init())
-assert(TTF.init())
-assert(MIX.init())
-MIX.openAudio(44100, SDL.audioFormat.S16, 2, 1024);
-
 local M = {
     mpf = 25,   -- 0: as fast as possible
     now = 0,
     win = nil,
     ren = nil,
 }
+
+function M.open ()
+    assert(SDL.init())
+    assert(IMG.init())
+    assert(TTF.init())
+    assert(MIX.init())
+    MIX.openAudio(44100, SDL.audioFormat.S16, 2, 1024)
+end
 
 local MS = M.mpf
 
