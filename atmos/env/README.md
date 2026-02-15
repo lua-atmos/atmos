@@ -323,15 +323,15 @@ end
 | pico   | yes     | yes       | set   | as secondary: `input.event(0)`, no clock, still emits draw/input |
 | iup    | yes     | yes       | set   | as secondary: `LoopStep()`, disable timer              |
 
-### `loop` vs `start` in multi-env
+### `loop` vs `start`
 
-Multi-env only works with `loop`-based environments.  The framework drives
-the step loop and can call each env's `step` in sequence.
+`start` requires a single env with `mode = nil`.  It asserts both
+conditions.  There is no step loop -- the external runtime drives events
+-- so multi-env is not possible.
 
-`start`-based environments (e.g. a future JS/browser env) have no step
-loop -- the external runtime drives events.  There is no place for the
-framework to call secondary steps.  Therefore `start`-based envs cannot
-participate in multi-env and should declare `mode = nil`.
+`loop` works with single or multiple envs.  When multiple envs are
+registered, the framework drives the step loop and calls each env's
+`step` in sequence.
 
 ### Example: IUP + socket
 

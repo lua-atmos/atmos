@@ -372,9 +372,9 @@ end
 
 function run.start (body, ...)
     assertn(2, type(body) == 'function', "invalid start : expected body function")
-    for _, env in ipairs(_envs_) do
-        if env.open then env.open() end
-    end
+    assertn(2, #_envs_ == 1, "invalid start : expected single env")
+    assertn(2, not _envs_[1].mode, "invalid start : expected env with mode=nil")
+    if _envs_[1].open then _envs_[1].open() end
     run.spawn(debug_getinfo(2), nil, false, body, ...)
 end
 
