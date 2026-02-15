@@ -192,6 +192,7 @@ function run.stop ()
         if _envs_[i].close then
             _envs_[i].close()
         end
+        _envs_[i] = nil
     end
 end
 
