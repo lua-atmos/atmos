@@ -3,6 +3,7 @@ local run = require "atmos.run"
 
 local atmos = {
     close  = run.close,
+    stop   = run.stop,
     loop   = run.loop,
     start  = run.start,
     status = run.status,
@@ -14,6 +15,7 @@ throw = run.throw
 catch = run.catch
 loop  = run.loop
 start = run.start
+stop  = run.stop
 
 defer = run.defer
 tasks = run.tasks

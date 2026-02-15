@@ -116,6 +116,18 @@ invocations within the same process -- each call re-initializes via
 `loop` uses `step` to drive the event loop. `start` does not --
 the environment itself drives events (e.g. JS browser callbacks).
 
+### Teardown: `close` vs `stop`
+
+- `close()` kills all tasks (running their `<close>` handlers)
+- `stop()` does full teardown: `close()` first, then `_env_.close()`
+
+Tasks are closed before the environment so that task cleanup code
+(defers, `<close>` handlers) can still use environment resources.
+
+`loop` calls `stop()` automatically when the step loop exits.
+`start` does not -- the environment backend must call `stop()` at the
+appropriate time (e.g. JS `beforeunload` listener).
+
 ### Which environments use what
 
 | Environment        | `open` | `step` | `close` | User calls  |

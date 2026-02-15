@@ -170,6 +170,13 @@ function run.close ()
     meta_tasks.__close(TASKS)
 end
 
+function run.stop ()
+    run.close()
+    if _env_.close then
+        _env_.close()
+    end
+end
+
 function run.defer (f)
     return setmetatable({f=f}, meta_defer)
 end
@@ -320,10 +327,7 @@ function run.loop (body, ...)
     assertn(2, type(body) == 'function', "invalid loop : expected body function")
     return xcall(debug_getinfo(2), "loop", function (...)
         local _ <close> = run.defer(function ()
-            if _env_.close then
-                _env_.close()
-            end
-            run.close()
+            run.stop()
         end)
         if _env_.open then
             _env_.open()
