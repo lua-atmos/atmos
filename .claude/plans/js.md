@@ -58,7 +58,7 @@ Consequence: **DOM event callbacks cannot use `await()` inside Lua.**
 The only safe path is to have JS collect events and push them into Lua
 synchronously via `doString` or `global.get('fn')(args)`.
 
-This is exactly why `atmos.env.js` uses the **tick** pattern rather
+This is exactly why `atmos.env.js` uses `doString` from JS rather
 than registering Lua callbacks on DOM events.
 
 ### How wasmoon users typically handle DOM events
@@ -109,201 +109,25 @@ cleanly; objects become proxied userdata).
 
 ---
 
-## Two implementations — convergence needed
+## Current design
 
-Two parallel sessions built two implementations of `atmos.env.js`.
-They must converge into a single canonical module in this repo
-(`lua-atmos/atmos`), used by the web repo (`atmos-lang/web`).
-
-### Implementation A — `lua-atmos/atmos` (this repo)
-
-Branch: `claude/atmos-js-environment-y5pPY`
-File: `atmos/env/js/init.lua` (36 lines)
+### `atmos/env/js/init.lua`
 
 ```lua
 local atmos = require "atmos"
 
 local M = {
     now = 0,
-    running = false,
 }
 
-function M.open ()
-    M.now = js_now()
-    M.running = true
-end
+-- JS_now() and JS_close() must be set by the JS host before start().
 
-function M.tick ()
-    local now = js_now()
-    local dt = now - M.now
-    if dt > 0 then
-        M.now = now
-        emit('clock', dt, now)
-    end
+function M.open ()
+    M.now = JS_now()
 end
 
 function M.close ()
-    M.running = false
-end
-
-M.env = {
-    open  = M.open,
-    close = M.close,
-}
-
-atmos.env(M.env)
-
-return M
-```
-
-**Design:**
-- JS host provides one global: `js_now() → number` (e.g. `Date.now()`)
-- Lua owns the delta computation (`M.tick()` calls `js_now()`)
-- JS calls `M.tick()` each frame via `doString` or `global.get`
-- `M.running` flag lets JS know when to stop the RAF/interval loop
-- No `step()` — JS drives; no `mode` — single-env only
-
-**What's good:**
-- Clean separation: Lua owns time logic, JS only provides a clock source
-- `M.running` is the lifecycle signal — JS polls it
-- Minimal contract (one global)
-
-**What's missing:**
-- No DOM events (`meta` / `M.event()` — proposed but not implemented)
-- No `_js_close_()` callback — JS must poll `M.running` instead of being notified
-- No working integration tested in a browser
-
-### Implementation B — `atmos-lang/web`
-
-Branch: `claude/atmos-js-binding-1pkuf`
-File: `web/try/atmos/env_js.lua` (inlined in build.sh)
-
-```lua
-local atmos = require "atmos"
-
-local M = {
-    now = 0,
-}
-
-function M.close()
-    if _js_close_ then
-        _js_close_()
-    end
-end
-
-M.env = {
-    close = M.close,
-}
-
-atmos.env(M.env)
-
-_atm_js_env_ = M
-
-return M
-```
-
-**Design:**
-- JS owns the delta computation entirely (in the `setInterval` callback)
-- JS calls `emit('clock', dt, now)` via `doString` each tick
-- JS also updates `_atm_js_env_.now` directly via `doString`
-- `_js_close_()` is a JS→Lua callback for cleanup notification
-- `_atm_done_` flag set by the `start()` wrapper for completion detection
-
-**JS-side integration (from build.sh):**
-```javascript
-// Before start:
-lua.global.set('_js_close_', () => { /* cleanup */ });
-
-// Start (non-blocking):
-await lua.doString(`
-    _atm_js_env_ = require("atmos.env.js")
-    start(function()
-        <user_code>
-        _atm_done_ = true
-    end)
-`);
-
-// Clock driver:
-let emitting = false;
-const interval = setInterval(() => {
-    if (emitting) return;  // guard against overlapping doString
-    emitting = true;
-    const now = Date.now();
-    const dt = now - lastTime;
-    lastTime = now;
-    lua.doString(`
-        _atm_js_env_.now = ${now}
-        emit('clock', ${dt}, ${now})
-    `);
-    emitting = false;
-    // Check completion:
-    if (lua.global.get('_atm_done_')) {
-        clearInterval(interval);
-        lua.doString('stop()');
-    }
-}, 16);
-```
-
-**What's good:**
-- Actually tested and working in the browser playground
-- `_js_close_()` callback for active cleanup notification
-- Concurrent-emit guard (`emitting` flag)
-- Completion detection via `_atm_done_` + `stop()`
-
-**What's missing:**
-- `M.now` is updated from JS via doString — Lua doesn't own its own state
-- No `M.tick()` — the delta logic is scattered in JS
-- Exposes internals via globals (`_atm_js_env_`, `_atm_done_`)
-- No DOM events
-
-### Convergence plan
-
-The canonical module should combine the best of both:
-
-| Aspect | Source | Decision |
-|--------|--------|----------|
-| Delta computation | Impl A | **Lua owns it** — `M.tick()` calls `js_now()` |
-| Close notification | Impl B | **`_js_close_()` callback** — active, not polling |
-| Running flag | Impl A | **`M.running`** — but also call `_js_close_()` |
-| Completion detection | Impl B | **`_atm_done_` pattern** — works with `start()` |
-| Emit guard | Impl B | **JS-side** — needed for async `setInterval` |
-| DOM events | Plan | **Phase 2** — `meta` + `M.event()` |
-
-JS env uses `start` (not `loop`) because:
-- `loop()` calls `env.step()` in a blocking while-loop — cannot block the browser
-- `start()` is for single-env with `mode=nil` — it opens the env, spawns the task, returns
-- JS drives the tick loop externally via `setInterval`
-
-Converged `atmos/env/js/init.lua`:
-
-```lua
-local atmos = require "atmos"
-
-local M = {
-    now = 0,
-    running = false,
-}
-
--- js_now() must be set by the JS host before calling start().
--- It returns the current time in milliseconds (e.g., Date.now()).
-
-function M.open ()
-    M.now = js_now()
-    M.running = true
-end
-
-function M.tick ()
-    local now = js_now()
-    local dt = now - M.now
-    if dt > 0 then
-        M.now = now
-        emit('clock', dt, now)
-    end
-end
-
-function M.close ()
-    M.running = false
-    _js_close_()
+    JS_close()
 end
 
 atmos.env(M)
@@ -311,46 +135,72 @@ atmos.env(M)
 return M
 ```
 
-Follows the same pattern as PICO: `M` is the env table passed
-directly to `atmos.env(M)`, with `open`/`close` as methods on `M`.
-No intermediate `M.env` wrapper.  No `step` — JS drives ticks
-externally.
+Design decisions:
+- **`start`-based, not `loop`-based** — `loop()` calls `env.step()` in
+  a blocking while-loop; can't block the browser.  `start()` opens the
+  env, spawns the task, returns.
+- **No `step()`** — `step` belongs to `loop`-based envs.  JS drives
+  the clock externally.
+- **JS sets `E.now` directly** — no Lua helper function needed; the JS
+  `setInterval` writes `E.now` and calls `emit('clock', dt, now)` via
+  `doString`.
+- **`JS_xxx` globals** — two globals injected by the JS host:
+  `JS_now()` (used in `open`) and `JS_close()` (used in `close`).
+- **No `M.running`** — no other env has it, nothing reads it.
+- Follows the PICO pattern: `M` is the env table passed directly to
+  `atmos.env(M)`, with `open`/`close` as methods on `M`.
 
-Changes from Impl A: adds `_js_close_()` in `close()`.
-Changes from Impl B: Lua owns delta via `M.tick()`/`js_now()`, no `_atm_js_env_` global.
-`_js_close_()` is called unconditionally — the JS host always provides it.
-
-The JS host setup:
+### JS-side clock driver (`run.js`)
 
 ```javascript
-lua.global.set('js_now', () => Date.now());
-lua.global.set('_js_close_', () => {
-    clearInterval(interval);
-});
+function startLoop (lua) {
+    let emitting = false;
+    const interval = setInterval(() => {
+        if (emitting) return;
+        emitting = true;
+        try {
+            const now = Date.now();
+            lua.doString(
+                `local E = require("atmos.env.js")`
+                + `\nlocal dt = ${now} - E.now`
+                + `\nif dt > 0 then`
+                + `\n    E.now = ${now}`
+                + `\n    emit('clock', dt, ${now})`
+                + `\nend`
+            );
+            if (lua.global.get('_atm_done_')) {
+                clearInterval(interval);
+                lua.doString('stop()');
+                status.textContent = 'Done.';
+            }
+        } finally {
+            emitting = false;
+        }
+    }, 16);
+    return interval;
+}
+```
+
+JS owns the clock entirely: computes dt, sets `E.now`, emits clock.
+The `emitting` guard prevents overlapping `doString` calls.
+Completion detected via `_atm_done_` flag + `stop()`.
+
+### JS host setup (e.g. `lua-atmos.js`)
+
+```javascript
+lua.global.set('JS_now', () => Date.now());
+
+let interval;
+lua.global.set('JS_close', () => clearInterval(interval));
 
 await lua.doString(
     'require("atmos.env.js")\n'
     + 'start(function()\n'
-    + '    <user_code>\n'
-    + '    _atm_done_ = true\n'
+    + code + '\n'
+    + '_atm_done_ = true\n'
     + 'end)'
 );
-
-// JS drives the tick loop
-let emitting = false;
-const interval = setInterval(() => {
-    if (emitting) return;
-    emitting = true;
-    try {
-        lua.doString('require("atmos.env.js").tick()');
-        if (lua.global.get('_atm_done_')) {
-            clearInterval(interval);
-            lua.doString('stop()');
-        }
-    } finally {
-        emitting = false;
-    }
-}, 16);
+interval = startLoop(lua);
 ```
 
 ---
@@ -485,13 +335,8 @@ For canvas-based apps, the JS host emits a `'draw'` event each frame
 canvas-backed buffer:
 
 ```javascript
-function frame() {
-    lua.doString('require("atmos.env.js").tick()');
-    lua.doString('require("atmos.env.js").event{ tag="draw" }');
-    if (lua.global.get('_js_running_')) {
-        requestAnimationFrame(frame);
-    }
-}
+// inside the setInterval / RAF callback, after clock emit:
+lua.doString('require("atmos.env.js").event{ tag="draw" }');
 ```
 
 ### Lifecycle: quit
@@ -519,7 +364,7 @@ a host that provides input events and a drawing surface**.
 | **Event shape** | Lua table with string `tag` field | Same — built inside Lua via `doString` |
 | **Matching** | `__atmos` metamethod + `_is_(e.tag, pattern)` | Same metamethod, same `_is_()` |
 | **Tags** | `'key'`, `'mouse.button'`, `'draw'`, `'quit'` | Same tags + `'key.up'`, `'mouse.move'`, `'touch'`, `'resize'` |
-| **Draw cycle** | `step()` emits `'draw'` after input | JS RAF emits `'draw'` after `tick()` |
+| **Draw cycle** | `step()` emits `'draw'` after input | JS RAF emits `'draw'` after clock |
 
 The difference is only in **who drives**: PICO's `step()` is called
 by the Lua `loop()`; JS events are pushed by the browser.  The event
@@ -543,8 +388,8 @@ end)
 - The tag namespace (`'key'`, `'mouse.button'`, `'draw'`, `'quit'`)
 
 **What JS does NOT reuse:**
-- `step()` — JS has no polling loop
-- Clock logic — JS uses `M.tick()` driven by `setInterval`/RAF
+- `step()` — JS has no polling loop; it's `start`-based
+- Clock logic — JS sets `E.now` directly and emits clock via `doString`
 - SDL-style C enums or IUP-style widget callbacks
 
 ### Why `doString` (not Lua callbacks) for DOM events
@@ -693,179 +538,9 @@ concatenates the right combination and inlines it into each HTML.
 | `lua-atmos.html` | `run.js` + `lua-atmos.js` |
 | `atmos.html` | `run.js` + `atmos.js` |
 
-#### `run.js` — shared core
-
-```javascript
-// run.js — shared utilities for all three tiers
-// Never used standalone; concatenated with a tier file by build.sh
-
-import { LuaFactory } from
-    'https://cdn.jsdelivr.net/npm/wasmoon@1.16.0/+esm';
-
-const output = document.getElementById('output');
-const status = document.getElementById('status');
-
-function getCode () {
-    const hash = location.hash.slice(1);
-    if (!hash) {
-        status.textContent = 'No program in URL.';
-        return null;
-    }
-    return atob(hash);
-}
-
-async function createEngine () {
-    const factory = new LuaFactory();
-    const lua = await factory.createEngine();
-    lua.global.set('print', (...args) => {
-        output.textContent += args.join('\t') + '\n';
-    });
-    return lua;
-}
-
-async function preloadModules (lua) {
-    const tags = document.querySelectorAll(
-        'script[type="text/lua"]'
-    );
-    for (const el of tags) {
-        lua.global.set('_mod_name_', el.dataset.module);
-        lua.global.set('_mod_src_', el.textContent);
-        await lua.doString(
-            'package.preload[_mod_name_]'
-            + ' = assert(load(_mod_src_,'
-            + ' "@" .. _mod_name_))'
-        );
-    }
-}
-
-function startTick (lua) {
-    let emitting = false;
-    const interval = setInterval(() => {
-        if (emitting) return;
-        emitting = true;
-        try {
-            lua.doString(
-                'require("atmos.env.js").tick()'
-            );
-            if (lua.global.get('_atm_done_')) {
-                clearInterval(interval);
-                lua.doString('stop()');
-                status.textContent = 'Done.';
-            }
-        } finally {
-            emitting = false;
-        }
-    }, 16);
-    return interval;
-}
-```
-
-#### `lua.js` — bare Lua
-
-```javascript
-// lua.js — bare Lua runner (no atmos)
-
-(async () => {
-    const code = getCode();
-    if (!code) return;
-
-    status.textContent = 'Loading...';
-    const lua = await createEngine();
-
-    status.textContent = 'Running...';
-    try {
-        await lua.doString(code);
-        status.textContent = 'Done.';
-    } catch (e) {
-        output.textContent += 'ERROR: ' + e.message + '\n';
-        status.textContent = 'Error.';
-    }
-})();
-```
-
-#### `lua-atmos.js` — Lua + atmos runtime
-
-```javascript
-// lua-atmos.js — Lua code running under atmos runtime
-
-(async () => {
-    const code = getCode();
-    if (!code) return;
-
-    status.textContent = 'Loading...';
-    const lua = await createEngine();
-    await preloadModules(lua);
-    lua.global.set('js_now', () => Date.now());
-
-    let interval;
-    lua.global.set('_js_close_', () => clearInterval(interval));
-
-    status.textContent = 'Running...';
-    try {
-        await lua.doString(
-            'require("atmos.env.js")\n'
-            + 'start(function()\n'
-            + code + '\n'
-            + '_atm_done_ = true\n'
-            + 'end)'
-        );
-        interval = startTick(lua);
-    } catch (e) {
-        output.textContent += 'ERROR: ' + e.message + '\n';
-        status.textContent = 'Error.';
-    }
-})();
-```
-
-#### `atmos.js` — Atmos language (.atm)
-
-```javascript
-// atmos.js — compile .atm source, then run under atmos runtime
-
-(async () => {
-    const code = getCode();
-    if (!code) return;
-
-    status.textContent = 'Loading...';
-    const lua = await createEngine();
-    await preloadModules(lua);
-    lua.global.set('js_now', () => Date.now());
-
-    let interval;
-    lua.global.set('_js_close_', () => clearInterval(interval));
-
-    status.textContent = 'Compiling...';
-    try {
-        await lua.doString(
-            'atmos = require "atmos"\n'
-            + 'X = require "atmos.x"\n'
-            + 'require "atmos.lang.exec"\n'
-            + 'require "atmos.lang.run"'
-        );
-
-        const wrapped =
-            '(func (...) { ' + code + '\n})(...)';
-        lua.global.set('_atm_src_', wrapped);
-        lua.global.set('_atm_file_', 'input.atm');
-
-        status.textContent = 'Running...';
-        await lua.doString(
-            'require("atmos.env.js")\n'
-            + 'local f, err = '
-            + 'atm_loadstring(_atm_src_, _atm_file_)\n'
-            + 'if not f then error(err) end\n'
-            + 'start(function()\n'
-            + '    f()\n'
-            + '    _atm_done_ = true\n'
-            + 'end)'
-        );
-        interval = startTick(lua);
-    } catch (e) {
-        output.textContent += 'ERROR: ' + e.message + '\n';
-        status.textContent = 'Error.';
-    }
-})();
-```
+The JS source files are checked in under `atmos/env/js/`.  See the
+files directly for current code — `run.js`, `lua.js`, `lua-atmos.js`,
+`atmos.js`.
 
 ### Generated HTML template
 
@@ -905,7 +580,7 @@ atmos.html                 -- generated (Atmos language)
 
 atmos/env/js/
 ├── init.lua               -- the canonical Lua module
-├── run.js                 -- shared JS core (engine, print, preload, tick)
+├── run.js                 -- shared JS core (engine, print, preload, clock loop)
 ├── lua.js                 -- bare Lua tier
 ├── lua-atmos.js           -- Lua + atmos runtime tier
 ├── atmos.js               -- Atmos language tier
@@ -969,21 +644,19 @@ The `env/README.md` table should be updated to include JS:
 
 ## Summary of phases
 
-### Phase 1 — Clock only (current)
-1. Create `atmos/env/js/init.lua` — converged canonical Lua module
-2. Create `build.sh` — generates three HTML files:
-   `lua.html`, `lua-atmos.html`, `atmos.html`
-   (mimics `atmos-lang/web/build.sh`: fetch modules, inline, CDN wasmoon)
-3. Create `run.sh` — helper to open browser with code in hash fragment
-4. Test: `bash build.sh && bash run.sh hello.lua` → prints output
+### Phase 1 — Clock only (done)
+1. `atmos/env/js/init.lua` — canonical Lua module (`open`/`close`, `M.now`)
+2. `build.sh` — generates `lua.html`, `lua-atmos.html`, `atmos.html`
+3. `run.sh` — helper to open browser with code in hash fragment
+4. JS owns clock: `startLoop` sets `E.now` and emits `'clock'` via `doString`
 
 ### Phase 2 — DOM events
 1. Add PICO-style `__atmos` metamethod and `M.event(e)` to `init.lua`
-2. Keep `M.tick()` for clock only (called from `requestAnimationFrame`)
+2. JS listeners build event tables and call `M.event()` via `doString`
 3. Document the JS-side wiring for each DOM event type
 4. Add an example (`atmos/env/js/exs/`) mirroring PICO patterns
 
 ### Phase 3 — Canvas / draw
-1. Add `'draw'` event emission from JS RAF loop
+1. Add `'draw'` event emission from JS RAF loop (after clock)
 2. Expose canvas 2D context to Lua (or provide a Lua drawing API)
 3. Example: simple animation loop with `every('draw', ...)`
