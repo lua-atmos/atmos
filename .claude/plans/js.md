@@ -553,20 +553,31 @@ Lua is the callee, not a callback.
 
 ## `build.sh` — fully static HTML generation
 
-Mimics `atmos-lang/web/build.sh`.  Generates a **self-contained HTML**
-with all atmos modules inlined.  Zero runtime fetches (except wasmoon
+Mimics `atmos-lang/web/build.sh`.  Generates **three self-contained
+HTML files** — one per tier.  Zero runtime fetches (except wasmoon
 from CDN).  Works from `file://`.
+
+### Three tiers
+
+| File             | Modules inlined            | Input   | Wrapping                |
+|------------------|----------------------------|---------|-------------------------|
+| `lua.html`       | none (bare wasmoon)        | `.lua`  | run directly            |
+| `lua-atmos.html` | atmos runtime              | `.lua`  | `start(function() … end)` + tick loop |
+| `atmos.html`     | atmos runtime + compiler   | `.atm`  | compile → `atmos.call(f)` |
+
+These are the canonical HTML runners.  Projects like `atmos-lang/web`
+copy them as-is — they never need to generate their own.
 
 ### User workflow
 
 ```
-1. bash build.sh                       # generate lua-atmos.html (once)
-2. User writes:  hello.lua
-3. User opens:   lua-atmos.html#<base64 of hello.lua>
+1. bash build.sh                          # generate all three (once)
+2. User writes:  hello.lua (or hello.atm)
+3. User opens:   lua-atmos.html#<base64>  (or atmos.html#<base64>)
                   (or uses: bash run.sh hello.lua)
 ```
 
-No server.  No HTML editing.  The `.lua` file is the only input.
+No server.  No HTML editing.  The source file is the only input.
 
 ### How user code reaches the HTML — hash fragment
 
@@ -595,8 +606,17 @@ A shell helper generates the URL:
 ```bash
 # run.sh hello.lua — opens browser with the program
 #!/bin/bash
-HTML="$(dirname "$0")/lua-atmos.html"
-CODE=$(base64 -w0 < "$1")
+FILE="$1"
+EXT="${FILE##*.}"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+
+case "$EXT" in
+    lua) HTML="$DIR/lua-atmos.html" ;;
+    atm) HTML="$DIR/atmos.html"     ;;
+    *)   echo "Unknown extension: .$EXT"; exit 1 ;;
+esac
+
+CODE=$(base64 -w0 < "$FILE")
 xdg-open "file://$HTML#$CODE" 2>/dev/null ||
 open "file://$HTML#$CODE" 2>/dev/null
 ```
@@ -606,10 +626,10 @@ open "file://$HTML#$CODE" 2>/dev/null
 Follows the exact same pattern as `atmos-lang/web/build.sh`:
 
 ```
- 1. Fetch atmos Lua modules from GitHub (raw URLs, version-tagged)
+ 1. Fetch Lua modules from GitHub (raw URLs, version-tagged)
  2. Inline each as <script type="text/lua" data-module="name">
- 3. Generate lua-atmos.html with:
-      - Inlined module tags
+ 3. Generate three HTML files, each with:
+      - Inlined module tags (none / runtime / runtime+compiler)
       - Wasmoon import from CDN (jsdelivr)
       - JS runtime logic (inline <script type="module">)
       - <pre id="output"> for text output
@@ -619,7 +639,84 @@ The JS runtime logic is **inlined in the generated HTML** — there is
 no separate `env/run.js` file.  This is the same approach as
 `atmos-lang/web/build.sh`.
 
-### Generated HTML structure
+### Module lists
+
+```bash
+# lua-atmos runtime modules
+LUA_ATMOS_MODULES=(
+    'streams         lua-atmos/f-streams  streams/init.lua'
+    'atmos           lua-atmos/atmos      atmos/init.lua'
+    'atmos.util      lua-atmos/atmos      atmos/util.lua'
+    'atmos.run       lua-atmos/atmos      atmos/run.lua'
+    'atmos.streams   lua-atmos/atmos      atmos/streams.lua'
+    'atmos.x         lua-atmos/atmos      atmos/x.lua'
+    'atmos.env.js    lua-atmos/atmos      atmos/env/js/init.lua'
+)
+
+# atmos-lang compiler modules (for atmos.html only)
+ATMOS_LANG_MODULES=(
+    'atmos.lang.global   atmos-lang/atmos  src/global.lua'
+    'atmos.lang.aux      atmos-lang/atmos  src/aux.lua'
+    'atmos.lang.lexer    atmos-lang/atmos  src/lexer.lua'
+    'atmos.lang.parser   atmos-lang/atmos  src/parser.lua'
+    'atmos.lang.prim     atmos-lang/atmos  src/prim.lua'
+    'atmos.lang.coder    atmos-lang/atmos  src/coder.lua'
+    'atmos.lang.tosource atmos-lang/atmos  src/tosource.lua'
+    'atmos.lang.exec     atmos-lang/atmos  src/exec.lua'
+    'atmos.lang.run      atmos-lang/atmos  src/run.lua'
+)
+```
+
+### Generated HTML — `lua.html` (bare Lua)
+
+```html
+<!DOCTYPE html>
+<html>
+<head><title>Lua</title></head>
+<body>
+    <pre id="output"></pre>
+    <span id="status"></span>
+
+    <!-- no module tags — bare Lua -->
+
+    <script type="module">
+    import { LuaFactory } from
+        'https://cdn.jsdelivr.net/npm/wasmoon@1.16.0/+esm';
+
+    const output = document.getElementById('output');
+    const status = document.getElementById('status');
+
+    const hash = location.hash.slice(1);
+    if (!hash) {
+        status.textContent = 'No program in URL.';
+        throw '';
+    }
+
+    status.textContent = 'Loading...';
+    const factory = new LuaFactory();
+    const lua = await factory.createEngine();
+
+    lua.global.set('print', (...args) => {
+        output.textContent += args.join('\t') + '\n';
+    });
+
+    status.textContent = 'Running...';
+    try {
+        const code = atob(hash);
+        await lua.doString(code);
+        status.textContent = 'Done.';
+    } catch (e) {
+        if (e !== '')
+            output.textContent +=
+                'ERROR: ' + e.message + '\n';
+        status.textContent = 'Error.';
+    }
+    </script>
+</body>
+</html>
+```
+
+### Generated HTML — `lua-atmos.html` (Lua + atmos runtime)
 
 ```html
 <!DOCTYPE html>
@@ -629,20 +726,19 @@ no separate `env/run.js` file.  This is the same approach as
     <pre id="output"></pre>
     <span id="status"></span>
 
-    <!-- atmos modules inlined by build.sh -->
+    <!-- atmos runtime modules inlined by build.sh -->
     <script type="text/lua" data-module="streams">
-    ... streams/init.lua content ...
+    ... streams/init.lua ...
     </script>
     <script type="text/lua" data-module="atmos">
-    ... atmos/init.lua content ...
+    ... atmos/init.lua ...
     </script>
-    <!-- ... more modules ... -->
+    <!-- ... more LUA_ATMOS_MODULES ... -->
 
     <script type="module">
     import { LuaFactory } from
         'https://cdn.jsdelivr.net/npm/wasmoon@1.16.0/+esm';
 
-    // Read inlined modules
     const LUA_MODULES = {};
     document.querySelectorAll(
         'script[type="text/lua"]'
@@ -653,24 +749,21 @@ no separate `env/run.js` file.  This is the same approach as
     const output = document.getElementById('output');
     const status = document.getElementById('status');
 
-    // Read user code from hash
     const hash = location.hash.slice(1);
     if (!hash) {
         status.textContent = 'No program in URL.';
-        // fall through — page is usable for later
+        throw '';
     }
 
     status.textContent = 'Loading...';
     const factory = new LuaFactory();
     const lua = await factory.createEngine();
 
-    // Console output → <pre>
     lua.global.set('print', (...args) => {
         output.textContent += args.join('\t') + '\n';
     });
     lua.global.set('js_now', () => Date.now());
 
-    // Register atmos modules as package.preload
     for (const [name, src] of Object.entries(LUA_MODULES)) {
         lua.global.set('_mod_name_', name);
         lua.global.set('_mod_src_', src);
@@ -681,17 +774,13 @@ no separate `env/run.js` file.  This is the same approach as
         );
     }
 
-    if (!hash) return;
-
     const code = atob(hash);
 
-    // Set up close callback
     let interval;
     lua.global.set('_js_close_', () => {
         clearInterval(interval);
     });
 
-    // Execute user code
     status.textContent = 'Running...';
     try {
         await lua.doString(
@@ -702,7 +791,6 @@ no separate `env/run.js` file.  This is the same approach as
             + 'end)'
         );
 
-        // Tick loop
         let emitting = false;
         interval = setInterval(() => {
             if (emitting) return;
@@ -722,7 +810,9 @@ no separate `env/run.js` file.  This is the same approach as
         }, 16);
 
     } catch (e) {
-        output.textContent += 'ERROR: ' + e.message + '\n';
+        if (e !== '')
+            output.textContent +=
+                'ERROR: ' + e.message + '\n';
         status.textContent = 'Error.';
     }
     </script>
@@ -730,33 +820,131 @@ no separate `env/run.js` file.  This is the same approach as
 </html>
 ```
 
-### Module list for `build.sh`
+### Generated HTML — `atmos.html` (Atmos language)
 
-Same modules as `atmos-lang/web/build.sh`, sourced from this repo:
+```html
+<!DOCTYPE html>
+<html>
+<head><title>Atmos</title></head>
+<body>
+    <pre id="output"></pre>
+    <span id="status"></span>
 
-```bash
-LUA_ATMOS_MODULES=(
-    'streams         lua-atmos/f-streams  streams/init.lua'
-    'atmos           lua-atmos/atmos      atmos/init.lua'
-    'atmos.util      lua-atmos/atmos      atmos/util.lua'
-    'atmos.run       lua-atmos/atmos      atmos/run.lua'
-    'atmos.streams   lua-atmos/atmos      atmos/streams.lua'
-    'atmos.x         lua-atmos/atmos      atmos/x.lua'
-    'atmos.env.js    lua-atmos/atmos      atmos/env/js/init.lua'
-)
+    <!-- atmos runtime modules -->
+    <!-- ... LUA_ATMOS_MODULES tags ... -->
+
+    <!-- atmos-lang compiler modules -->
+    <!-- ... ATMOS_LANG_MODULES tags ... -->
+
+    <script type="module">
+    import { LuaFactory } from
+        'https://cdn.jsdelivr.net/npm/wasmoon@1.16.0/+esm';
+
+    const LUA_MODULES = {};
+    document.querySelectorAll(
+        'script[type="text/lua"]'
+    ).forEach(el => {
+        LUA_MODULES[el.dataset.module] = el.textContent;
+    });
+
+    const output = document.getElementById('output');
+    const status = document.getElementById('status');
+
+    const hash = location.hash.slice(1);
+    if (!hash) {
+        status.textContent = 'No program in URL.';
+        throw '';
+    }
+
+    status.textContent = 'Loading...';
+    const factory = new LuaFactory();
+    const lua = await factory.createEngine();
+
+    lua.global.set('print', (...args) => {
+        output.textContent += args.join('\t') + '\n';
+    });
+    lua.global.set('js_now', () => Date.now());
+
+    for (const [name, src] of Object.entries(LUA_MODULES)) {
+        lua.global.set('_mod_name_', name);
+        lua.global.set('_mod_src_', src);
+        await lua.doString(
+            'package.preload[_mod_name_]'
+            + ' = assert(load(_mod_src_,'
+            + ' "@" .. _mod_name_))'
+        );
+    }
+
+    const atmSrc = atob(hash);
+
+    let interval;
+    lua.global.set('_js_close_', () => {
+        clearInterval(interval);
+    });
+
+    // Load compiler + runtime
+    status.textContent = 'Compiling...';
+    try {
+        await lua.doString(
+            'atmos = require "atmos"\n'
+            + 'X = require "atmos.x"\n'
+            + 'require "atmos.lang.exec"\n'
+            + 'require "atmos.lang.run"'
+        );
+
+        // Wrap and compile .atm source
+        const wrapped =
+            '(func (...) { ' + atmSrc + '\n})(...)';
+        lua.global.set('_atm_src_', wrapped);
+        lua.global.set('_atm_file_', 'input.atm');
+
+        status.textContent = 'Running...';
+        await lua.doString(
+            'local f, err = '
+            + 'atm_loadstring(_atm_src_, _atm_file_)\n'
+            + 'if not f then error(err) end\n'
+            + 'atmos.call(f)'
+        );
+
+        let emitting = false;
+        interval = setInterval(() => {
+            if (emitting) return;
+            emitting = true;
+            try {
+                lua.doString(
+                    'require("atmos.env.js").tick()'
+                );
+                if (lua.global.get('_atm_done_')) {
+                    clearInterval(interval);
+                    lua.doString('stop()');
+                    status.textContent = 'Done.';
+                }
+            } finally {
+                emitting = false;
+            }
+        }, 16);
+
+    } catch (e) {
+        if (e !== '')
+            output.textContent +=
+                'ERROR: ' + e.message + '\n';
+        status.textContent = 'Error.';
+    }
+    </script>
+</body>
+</html>
 ```
-
-Note: `atmos.env.clock` is replaced by `atmos.env.js` — the JS env
-provides the clock via `M.tick()` / `js_now()`.
 
 ---
 
 ## File structure
 
 ```
-build.sh                   -- generates lua-atmos.html (static)
+build.sh                   -- generates all three HTML files
 run.sh                     -- helper: opens browser with code in hash
-lua-atmos.html             -- generated (not checked in)
+lua.html                   -- generated (bare Lua)
+lua-atmos.html             -- generated (Lua + atmos runtime)
+atmos.html                 -- generated (Atmos language)
 
 atmos/env/js/
 ├── init.lua               -- the canonical Lua module
@@ -781,33 +969,27 @@ run.sh                        ← new (opens browser)
 
 The module is loaded the standard way: `require "atmos.env.js"`.
 
+Projects like `atmos-lang/web` copy the generated HTML files directly.
+They do not need their own `build.sh` — this repo is the source of
+truth for the runners.
+
 ---
 
-## Two repos — same build pattern
+## This repo generates, `atmos-lang/web` copies
 
-Both repos use `build.sh` to generate self-contained HTML:
-
-### This repo (`lua-atmos/atmos`) — raw Lua
-
-```
-bash build.sh                        # generates lua-atmos.html
-bash run.sh hello.lua                # opens lua-atmos.html#<base64>
-```
-
-- `build.sh` — fetches modules, generates `lua-atmos.html`
-- `run.sh` — encodes `.lua` → base64, opens browser
-- No compilation step — the input is already Lua
-
-### `atmos-lang/web` — Atmos language
+This repo (`lua-atmos/atmos`) is the **source of truth** for all
+three HTML runners:
 
 ```
-bash build.sh                        # generates web/try/atmos/index.html
-                                     #     and web/try/lua-atmos/index.html
+bash build.sh          # generates lua.html, lua-atmos.html, atmos.html
+bash run.sh hello.lua  # opens lua-atmos.html#<base64>
+bash run.sh hello.atm  # opens atmos.html#<base64>
 ```
 
-- Same `build.sh` pattern but adds compiler modules
-- Generates an IDE with `<textarea>` (different use case: playground)
-- The web playground is interactive; this repo's output is headless
+`atmos-lang/web` copies the generated HTML files into its tree
+(e.g. `web/try/lua-atmos.html`, `web/try/atmos.html`).  It no longer
+needs its own `build.sh` for generating runners — only for
+site-specific concerns (layout, navigation, etc.).
 
 The `env/README.md` table should be updated to include JS:
 
@@ -826,7 +1008,8 @@ The `env/README.md` table should be updated to include JS:
 
 ### Phase 1 — Clock only (current)
 1. Create `atmos/env/js/init.lua` — converged canonical Lua module
-2. Create `build.sh` — generates self-contained `lua-atmos.html`
+2. Create `build.sh` — generates three HTML files:
+   `lua.html`, `lua-atmos.html`, `atmos.html`
    (mimics `atmos-lang/web/build.sh`: fetch modules, inline, CDN wasmoon)
 3. Create `run.sh` — helper to open browser with code in hash fragment
 4. Test: `bash build.sh && bash run.sh hello.lua` → prints output
