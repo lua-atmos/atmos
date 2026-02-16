@@ -579,10 +579,11 @@ copy them as-is — they never need to generate their own.
 ### User workflow
 
 ```
-1. bash build.sh                          # generate all three (once)
+1. bash build.sh                                    # generate all three (once)
 2. User writes:  hello.lua (or hello.atm)
-3. User opens:   lua-atmos.html#<base64>  (or atmos.html#<base64>)
-                  (or uses: bash run.sh hello.lua)
+3. bash run.sh hello.lua                            # default: --mode=lua-atmos
+   bash run.sh --mode=lua hello.lua                 # bare Lua
+   bash run.sh --mode=atmos hello.atm               # Atmos language
 ```
 
 No server.  No HTML editing.  The source file is the only input.
@@ -612,17 +613,22 @@ const code = atob(hash);
 A shell helper generates the URL:
 
 ```bash
-# run.sh hello.lua — opens browser with the program
+# run.sh --mode=lua-atmos hello.lua
 #!/bin/bash
+MODE="lua-atmos"
+while [[ "$1" == --* ]]; do
+    case "$1" in
+        --mode=*) MODE="${1#--mode=}" ; shift ;;
+        *)        echo "Unknown option: $1"; exit 1 ;;
+    esac
+done
 FILE="$1"
-EXT="${FILE##*.}"
 DIR="$(cd "$(dirname "$0")" && pwd)"
+HTML="$DIR/$MODE.html"
 
-case "$EXT" in
-    lua) HTML="$DIR/lua-atmos.html" ;;
-    atm) HTML="$DIR/atmos.html"     ;;
-    *)   echo "Unknown extension: .$EXT"; exit 1 ;;
-esac
+if [ ! -f "$HTML" ]; then
+    echo "No such runner: $HTML"; exit 1
+fi
 
 CODE=$(base64 -w0 < "$FILE")
 xdg-open "file://$HTML#$CODE" 2>/dev/null ||
