@@ -24,21 +24,21 @@ function task (tra, ...)
     if tra == nil then
         return run.me()
     elseif type(tra) == 'boolean' then
-        return run.task(debug_getinfo(2), tra, ...)
+        return run.task(debug.getinfo(2), tra, ...)
     else
-        return run.task(debug_getinfo(2), false, tra, ...)
+        return run.task(debug.getinfo(2), false, tra, ...)
     end
 end
 
 function spawn_in (up, t, ...)
-    return run.spawn(debug_getinfo(2), up, false, t, ...)
+    return run.spawn(debug.getinfo(2), up, false, t, ...)
 end
 
 function spawn (tra, t, ...)
     if type(tra) == 'boolean' then
-        return run.spawn(debug_getinfo(2), nil, tra, t, ...)
+        return run.spawn(debug.getinfo(2), nil, tra, t, ...)
     else
-        return run.spawn(debug_getinfo(2), nil, false, tra, t, ...)
+        return run.spawn(debug.getinfo(2), nil, false, tra, t, ...)
     end
 end
 
