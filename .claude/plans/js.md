@@ -697,8 +697,47 @@ lua-atmos.html                            ← new (HTML runner)
 ```
 
 The module is loaded the standard way: `require "atmos.env.js"`.
-The `atmos-lang/web` repo can either use `env/run.js` directly
-or adapt it — this repo is the single source of truth.
+
+---
+
+## Two HTML runners — two repos
+
+There are two layers, each with its own HTML + JS:
+
+### This repo (`lua-atmos/atmos`) — raw Lua
+
+```
+lua-atmos.html?lua=hello.lua
+    └── env/run.js
+            └── wasmoon → execute hello.lua directly
+```
+
+- `lua-atmos.html` — generic HTML runner
+- `env/run.js` — boots wasmoon, loads atmos modules, runs `.lua`
+- No compilation step — the input is already Lua
+
+### `atmos-lang/web` — Atmos language
+
+```
+atmos.html?atm=hello.atm
+    └── atmos.js
+            ├── compile hello.atm → Lua
+            └── run.js  (reused from lua-atmos/atmos)
+                    └── wasmoon → execute compiled Lua
+```
+
+- `atmos.html` — HTML runner for `.atm` files
+- `atmos.js` — loads the Atmos compiler, compiles `.atm` → Lua,
+  then delegates to `run.js` for execution
+- `run.js` is reused as-is (imported or bundled) — single source of truth
+
+The separation means:
+- **`env/run.js`** knows nothing about Atmos-the-language — it only
+  runs Lua.  This keeps it simple and testable.
+- **`atmos.js`** adds the compilation step on top.  It's the only
+  file that knows about `.atm` syntax.
+- Users who write raw Lua use `lua-atmos.html` directly.
+- Users who write Atmos use `atmos.html`, which compiles then runs.
 
 The `env/README.md` table should be updated to include JS:
 
