@@ -161,7 +161,7 @@ function startLoop (lua) {
         try {
             const now = Date.now();
             lua.doString(
-                `local E = require("atmos.env.js")`
+                `local E = _atm_E_`
                 + `\nlocal dt = ${now} - E.now`
                 + `\nif dt > 0 then`
                 + `\n    E.now = ${now}`
@@ -194,7 +194,7 @@ let interval;
 lua.global.set('JS_close', () => clearInterval(interval));
 
 await lua.doString(
-    'require("atmos.env.js")\n'
+    '_atm_E_ = require("atmos.env.js")\n'
     + 'start(function()\n'
     + code + '\n'
     + '_atm_done_ = true\n'
@@ -297,14 +297,14 @@ On the JS side, each DOM listener builds a plain table and calls
 ```javascript
 canvas.addEventListener('keydown', (ev) => {
     lua.doString(`
-        require("atmos.env.js").event{ tag='key', key='${ev.key}' }
+        _atm_E_.event{ tag='key', key='${ev.key}' }
     `);
 });
 
 canvas.addEventListener('mousedown', (ev) => {
     const but = ['left','middle','right'][ev.button] or ev.button;
     lua.doString(`
-        require("atmos.env.js").event{
+        _atm_E_.event{
             tag='mouse.button', but='${but}', x=${ev.offsetX}, y=${ev.offsetY}
         }
     `);
@@ -336,7 +336,7 @@ canvas-backed buffer:
 
 ```javascript
 // inside the setInterval / RAF callback, after clock emit:
-lua.doString('require("atmos.env.js").event{ tag="draw" }');
+lua.doString('_atm_E_.event{ tag="draw" }');
 ```
 
 ### Lifecycle: quit
@@ -345,7 +345,7 @@ Browser "quit" is `beforeunload` or `visibilitychange`:
 
 ```javascript
 window.addEventListener('beforeunload', () => {
-    lua.doString('require("atmos.env.js").event{ tag="quit" }');
+    lua.doString('_atm_E_.event{ tag="quit" }');
 });
 ```
 

@@ -28,7 +28,7 @@
 
         status.textContent = 'Running...';
         await lua.doString(
-            'require("atmos.env.js")\n'
+            '_atm_E_ = require("atmos.env.js")\n'
             + 'local f, err = '
             + 'atm_loadstring(_atm_src_, _atm_file_)\n'
             + 'if not f then error(err) end\n'

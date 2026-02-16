@@ -48,7 +48,7 @@ function startLoop (lua) {
         try {
             const now = Date.now();
             lua.doString(
-                `local E = require("atmos.env.js")`
+                `local E = _atm_E_`
                 + `\nlocal dt = ${now} - E.now`
                 + `\nif dt > 0 then`
                 + `\n    E.now = ${now}`
