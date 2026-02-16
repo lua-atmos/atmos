@@ -179,7 +179,7 @@ end)
 | Pico               | yes    | yes    | yes     | `loop`      |
 | Socket             |        | yes    |         | `loop`      |
 | IUP                | yes    | yes    | yes     | `loop`      |
-| JS / Web (planned) |        |        | yes     | `start`     |
+| JS / Web           | yes    |        | yes     | `start`     |
 
 ### Timeout and efficiency
 
@@ -322,6 +322,7 @@ end
 | sdl    | yes     | yes       | set   | as secondary: `waitEvent(0)`, no clock, still emits draw/input |
 | pico   | yes     | yes       | set   | as secondary: `input.event(0)`, no clock, still emits draw/input |
 | iup    | yes     | yes       | set   | as secondary: `LoopStep()`, disable timer              |
+| js     | --      | --        | `nil` | browser env; single-env only, uses `start`             |
 
 ### `loop` vs `start`
 

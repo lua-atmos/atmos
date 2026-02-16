@@ -167,9 +167,11 @@ atmos
 │   │   │   ├── click-drag-cancel.lua
 │   │   │   └── DejaVuSans.ttf
 │   │   └── init.lua
-│   └── socket/
-│       ├── exs/
-│       │   └── cli-srv.lua
+│   ├── socket/
+│   │   ├── exs/
+│   │   │   └── cli-srv.lua
+│   │   └── init.lua
+│   └── js/
 │       └── init.lua
 ├── init.lua
 ├── run.lua
@@ -204,12 +206,16 @@ The standard distribution of Atmos provides the following environments:
 - [`atmos.env.iup`](atmos/env/iup/):
     An environment that relies on [IUP][iup] ([iup-lua][iup-lua]) to provide
     graphical user interfaces (GUIs).
+- [`atmos.env.js`](atmos/env/js/):
+    An environment for running Atmos in the browser via
+    [wasmoon][wasmoon] (Lua 5.4 compiled to WebAssembly).
 
 [luasocket]:    https://lunarmodules.github.io/luasocket/
 [luasdl]:       https://github.com/Tangent128/luasdl2/
 [pico-sdl-lua]: https://github.com/fsantanna/pico-sdl/tree/main/lua
 [iup]:          https://www.tecgraf.puc-rio.br/iup/
 [iup-lua]:      https://www.tecgraf.puc-rio.br/iup/en/basic/index.html
+[wasmoon]:      https://github.com/ceifa/wasmoon
 
 # Documentation
 
