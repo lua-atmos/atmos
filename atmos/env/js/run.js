@@ -40,14 +40,15 @@ async function preloadModules (lua) {
     }
 }
 
-function startStep (lua) {
+function startLoop (lua) {
     let emitting = false;
+    const env = 'require("atmos.env.js")';
     const interval = setInterval(() => {
         if (emitting) return;
         emitting = true;
         try {
             lua.doString(
-                'require("atmos.env.js").step()'
+                `${env}.clock(${Date.now()})`
             );
             if (lua.global.get('_atm_done_')) {
                 clearInterval(interval);

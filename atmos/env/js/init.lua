@@ -12,8 +12,7 @@ function M.open ()
     M.running = true
 end
 
-function M.step ()
-    local now = JS_now()
+function M.clock (now)
     local dt = now - M.now
     if dt > 0 then
         M.now = now

@@ -37,7 +37,7 @@
             + '    _atm_done_ = true\n'
             + 'end)'
         );
-        interval = startStep(lua);
+        interval = startLoop(lua);
     } catch (e) {
         output.textContent += 'ERROR: ' + e.message + '\n';
         status.textContent = 'Error.';
