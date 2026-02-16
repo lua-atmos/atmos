@@ -258,19 +258,21 @@ const interval = setInterval(() => {
 
 ### Convergence plan
 
-The canonical module should combine the best of both, but using
-`loop`/`step` like all other envs (not `start`/`setInterval`):
+The canonical module should combine the best of both:
 
 | Aspect | Source | Decision |
 |--------|--------|----------|
-| Delta computation | Impl A | **Lua owns it** — `step()` calls `js_now()` |
-| Step function | New | **`M.step()`** — called by `loop()`, yields to browser via `js_step():await()` |
-| Close | Impl A | **`M.close()`** — standard env lifecycle |
+| Delta computation | Impl A | **Lua owns it** — `M.tick()` calls `js_now()` |
+| Close notification | Impl B | **`_js_close_()` callback** — active, not polling |
+| Running flag | Impl A | **`M.running`** — but also call `_js_close_()` |
+| Completion detection | Impl B | **`_atm_done_` pattern** — works with `start()` |
+| Emit guard | Impl B | **JS-side** — needed for async `setInterval` |
 | DOM events | Plan | **Phase 2** — `meta` + `M.event()` |
 
-No `_js_close_`, no `_atm_done_`, no `setInterval`.  The `loop()`
-function in `run.lua` drives everything — `step()` yields control
-to the browser each frame via a JS promise.
+JS env uses `start` (not `loop`) because:
+- `loop()` calls `env.step()` in a blocking while-loop — cannot block the browser
+- `start()` is for single-env with `mode=nil` — it opens the env, spawns the task, returns
+- JS drives the tick loop externally via `setInterval`
 
 Converged `atmos/env/js/init.lua`:
 
@@ -279,18 +281,18 @@ local atmos = require "atmos"
 
 local M = {
     now = 0,
+    running = false,
 }
 
--- JS host must set these globals before loop():
---   js_now()  → number  (Date.now())
---   js_step() → promise (resolves on next frame, ~16ms)
+-- js_now() must be set by the JS host before calling start().
+-- It returns the current time in milliseconds (e.g., Date.now()).
 
 function M.open ()
     M.now = js_now()
+    M.running = true
 end
 
-function M.step ()
-    js_step():await()     -- yield to browser event loop
+function M.tick ()
     local now = js_now()
     local dt = now - M.now
     if dt > 0 then
@@ -300,6 +302,8 @@ function M.step ()
 end
 
 function M.close ()
+    M.running = false
+    _js_close_()
 end
 
 atmos.env(M)
@@ -307,31 +311,46 @@ atmos.env(M)
 return M
 ```
 
-Follows the same pattern as PICO/SDL: `M` is the env table passed
-directly to `atmos.env(M)`, with `open`/`step`/`close` as methods.
-`loop()` calls `step()` repeatedly until the body task is dead.
+Follows the same pattern as PICO: `M` is the env table passed
+directly to `atmos.env(M)`, with `open`/`close` as methods on `M`.
+No intermediate `M.env` wrapper.  No `step` — JS drives ticks
+externally.
 
-`step()` uses wasmoon's `:await()` to yield from Lua back to the
-browser event loop.  `js_step()` returns a JS Promise that resolves
-after ~16ms (via `setTimeout` or `requestAnimationFrame`).  This is
-what prevents the `while true` loop in `run.loop` from blocking the
-browser.
+Changes from Impl A: adds `_js_close_()` in `close()`.
+Changes from Impl B: Lua owns delta via `M.tick()`/`js_now()`, no `_atm_js_env_` global.
+`_js_close_()` is called unconditionally — the JS host always provides it.
 
-The JS host setup is minimal — just two globals:
+The JS host setup:
 
 ```javascript
 lua.global.set('js_now', () => Date.now());
-lua.global.set('js_step', () =>
-    new Promise(r => setTimeout(r, 16))
-);
+lua.global.set('_js_close_', () => {
+    clearInterval(interval);
+});
 
 await lua.doString(
     'require("atmos.env.js")\n'
-    + 'loop(function()\n'
+    + 'start(function()\n'
     + '    <user_code>\n'
+    + '    _atm_done_ = true\n'
     + 'end)'
 );
-// loop() returns when body task is dead — Done.
+
+// JS drives the tick loop
+let emitting = false;
+const interval = setInterval(() => {
+    if (emitting) return;
+    emitting = true;
+    try {
+        lua.doString('require("atmos.env.js").tick()');
+        if (lua.global.get('_atm_done_')) {
+            clearInterval(interval);
+            lua.doString('stop()');
+        }
+    } finally {
+        emitting = false;
+    }
+}, 16);
 ```
 
 ---
@@ -551,8 +570,8 @@ from CDN).  Works from `file://`.
 | File             | Modules inlined            | Input   | Wrapping                |
 |------------------|----------------------------|---------|-------------------------|
 | `lua.html`       | none (bare wasmoon)        | `.lua`  | run directly            |
-| `lua-atmos.html` | atmos runtime              | `.lua`  | `loop(function() … end)` |
-| `atmos.html`     | atmos runtime + compiler   | `.atm`  | compile → `atmos.call(f)` via `loop` |
+| `lua-atmos.html` | atmos runtime              | `.lua`  | `start(function() … end)` + tick loop |
+| `atmos.html`     | atmos runtime + compiler   | `.atm`  | compile → `loop(f)` via `start` |
 
 These are the canonical HTML runners.  Projects like `atmos-lang/web`
 copy them as-is — they never need to generate their own.
@@ -752,9 +771,6 @@ ATMOS_LANG_MODULES=(
         output.textContent += args.join('\t') + '\n';
     });
     lua.global.set('js_now', () => Date.now());
-    lua.global.set('js_step', () =>
-        new Promise(r => setTimeout(r, 16))
-    );
 
     for (const [name, src] of Object.entries(LUA_MODULES)) {
         lua.global.set('_mod_name_', name);
@@ -768,17 +784,39 @@ ATMOS_LANG_MODULES=(
 
     const code = atob(hash);
 
-    // loop() drives step() internally — no setInterval needed.
-    // step() yields to the browser via js_step() promise.
+    let interval;
+    lua.global.set('_js_close_', () => {
+        clearInterval(interval);
+    });
+
     status.textContent = 'Running...';
     try {
         await lua.doString(
             'require("atmos.env.js")\n'
-            + 'loop(function()\n'
+            + 'start(function()\n'
             + code + '\n'
+            + '_atm_done_ = true\n'
             + 'end)'
         );
-        status.textContent = 'Done.';
+
+        // JS drives tick loop via setInterval
+        let emitting = false;
+        interval = setInterval(() => {
+            if (emitting) return;
+            emitting = true;
+            try {
+                lua.doString(
+                    'require("atmos.env.js").tick()'
+                );
+                if (lua.global.get('_atm_done_')) {
+                    clearInterval(interval);
+                    lua.doString('stop()');
+                    status.textContent = 'Done.';
+                }
+            } finally {
+                emitting = false;
+            }
+        }, 16);
 
     } catch (e) {
         if (e !== '')
@@ -835,9 +873,6 @@ ATMOS_LANG_MODULES=(
         output.textContent += args.join('\t') + '\n';
     });
     lua.global.set('js_now', () => Date.now());
-    lua.global.set('js_step', () =>
-        new Promise(r => setTimeout(r, 16))
-    );
 
     for (const [name, src] of Object.entries(LUA_MODULES)) {
         lua.global.set('_mod_name_', name);
@@ -850,6 +885,11 @@ ATMOS_LANG_MODULES=(
     }
 
     const atmSrc = atob(hash);
+
+    let interval;
+    lua.global.set('_js_close_', () => {
+        clearInterval(interval);
+    });
 
     // Load compiler + runtime
     status.textContent = 'Compiling...';
@@ -873,11 +913,30 @@ ATMOS_LANG_MODULES=(
             + 'local f, err = '
             + 'atm_loadstring(_atm_src_, _atm_file_)\n'
             + 'if not f then error(err) end\n'
-            + 'loop(function()\n'
-            + '    atmos.call(f)\n'
+            + 'start(function()\n'
+            + '    loop(f)\n'
+            + '    _atm_done_ = true\n'
             + 'end)'
         );
-        status.textContent = 'Done.';
+
+        // JS drives tick loop via setInterval
+        let emitting = false;
+        interval = setInterval(() => {
+            if (emitting) return;
+            emitting = true;
+            try {
+                lua.doString(
+                    'require("atmos.env.js").tick()'
+                );
+                if (lua.global.get('_atm_done_')) {
+                    clearInterval(interval);
+                    lua.doString('stop()');
+                    status.textContent = 'Done.';
+                }
+            } finally {
+                emitting = false;
+            }
+        }, 16);
 
     } catch (e) {
         if (e !== '')
@@ -955,7 +1014,7 @@ The `env/README.md` table should be updated to include JS:
 | Pico               | yes    | yes    | yes     | `loop`      |
 | Socket             |        | yes    |         | `loop`      |
 | IUP                | yes    | yes    | yes     | `loop`      |
-| JS / Web           | yes    | yes    | yes     | `loop`      |
+| JS / Web           | yes    |        | yes     | `start`     |
 
 ---
 
