@@ -7,10 +7,10 @@
     status.textContent = 'Loading...';
     const lua = await createEngine();
     await preloadModules(lua);
-    lua.global.set('js_now', () => Date.now());
+    lua.global.set('JS_now', () => Date.now());
 
     let interval;
-    lua.global.set('_js_close_', () => clearInterval(interval));
+    lua.global.set('JS_close', () => clearInterval(interval));
 
     status.textContent = 'Running...';
     try {
@@ -21,7 +21,7 @@
             + '_atm_done_ = true\n'
             + 'end)'
         );
-        interval = startTick(lua);
+        interval = startStep(lua);
     } catch (e) {
         output.textContent += 'ERROR: ' + e.message + '\n';
         status.textContent = 'Error.';

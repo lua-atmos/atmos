@@ -40,14 +40,14 @@ async function preloadModules (lua) {
     }
 }
 
-function startTick (lua) {
+function startStep (lua) {
     let emitting = false;
     const interval = setInterval(() => {
         if (emitting) return;
         emitting = true;
         try {
             lua.doString(
-                'require("atmos.env.js").tick()'
+                'require("atmos.env.js").step()'
             );
             if (lua.global.get('_atm_done_')) {
                 clearInterval(interval);

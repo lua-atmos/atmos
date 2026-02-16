@@ -5,16 +5,15 @@ local M = {
     running = false,
 }
 
--- js_now() must be set by the JS host before calling start().
--- It returns the current time in milliseconds (e.g., Date.now()).
+-- JS_now() and JS_close() must be set by the JS host before start().
 
 function M.open ()
-    M.now = js_now()
+    M.now = JS_now()
     M.running = true
 end
 
-function M.tick ()
-    local now = js_now()
+function M.step ()
+    local now = JS_now()
     local dt = now - M.now
     if dt > 0 then
         M.now = now
@@ -24,7 +23,7 @@ end
 
 function M.close ()
     M.running = false
-    _js_close_()
+    JS_close()
 end
 
 atmos.env(M)
