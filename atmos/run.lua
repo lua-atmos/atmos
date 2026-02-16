@@ -370,7 +370,7 @@ function run.start (body, ...)
 end
 
 function run.stop ()
-    meta_tasks.__close(TASKS)
+    run.close()
     for i=#_envs_, 1, -1 do
         if _envs_[i].close then
             _envs_[i].close()
