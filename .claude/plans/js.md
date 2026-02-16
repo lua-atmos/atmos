@@ -298,23 +298,21 @@ end
 
 function M.close ()
     M.running = false
-    if _js_close_ then
-        _js_close_()
-    end
+    _js_close_()
 end
 
-M.env = {
-    open  = M.open,
-    close = M.close,
-}
-
-atmos.env(M.env)
+atmos.env(M)
 
 return M
 ```
 
+Follows the same pattern as PICO: `M` is the env table passed
+directly to `atmos.env(M)`, with `open`/`close` as methods on `M`.
+No intermediate `M.env` wrapper.
+
 Changes from Impl A: adds `_js_close_()` in `close()`.
 Changes from Impl B: Lua owns delta via `M.tick()`/`js_now()`, no `_atm_js_env_` global.
+`_js_close_()` is called unconditionally — the JS host always provides it.
 
 The web repo should then use this module directly (fetched from GitHub
 like all other atmos modules), and its JS driver becomes:
@@ -500,59 +498,116 @@ window.addEventListener('beforeunload', () => {
 
 ---
 
-## Preexisting mappings — what can we reuse?
+## Relationship with PICO
 
-### Inside Atmos
+The JS environment reuses PICO's event model because PICO and JS
+share the same architectural position: both are **thin wrappers over
+a host that provides input events and a drawing surface**.
 
-| Source | Reusable? | Notes |
-|--------|-----------|-------|
-| **PICO `__atmos`** | **yes — direct reuse** | Tag-based matching with `_is_()`, handles key/mouse.button string filtering. Copy as-is. |
-| **PICO event tags** | **yes — same names** | `'key'`, `'mouse.button'`, `'draw'`, `'quit'` are portable; add `'mouse.move'`, `'touch'`, `'resize'` for DOM. |
-| **SDL `__atmos`** | no | Relies on C enum constants (`SDL.event.KeyDown`), not string tags. |
-| **IUP `__atmos`** | no | Widget-centric (`self.atm`), not input-event-centric. |
+| | PICO | JS |
+|---|---|---|
+| **Host** | pico-sdl (C library) | Browser (DOM + Canvas) |
+| **Event source** | `pico.input.event()` returns `{tag=..., ...}` | JS `addEventListener` captures `{tag=..., ...}` |
+| **Event shape** | Lua table with string `tag` field | Same — built inside Lua via `doString` |
+| **Matching** | `__atmos` metamethod + `_is_(e.tag, pattern)` | Same metamethod, same `_is_()` |
+| **Tags** | `'key'`, `'mouse.button'`, `'draw'`, `'quit'` | Same tags + `'key.up'`, `'mouse.move'`, `'touch'`, `'resize'` |
+| **Draw cycle** | `step()` emits `'draw'` after input | JS RAF emits `'draw'` after `tick()` |
 
-### Outside Atmos
+The difference is only in **who drives**: PICO's `step()` is called
+by the Lua `loop()`; JS events are pushed by the browser.  The event
+tables, metamethods, and tag names are identical.
 
-| Source | Reusable? | Notes |
-|--------|-----------|-------|
-| **wasmoon `decorate`** | useful but not needed | `decorate(obj, {proxy:false})` gives native Lua tables, but Pattern B (`doString` building tables in Lua) avoids the proxy question entirely. |
-| **wasmoon `enableProxy`** | no | Global switch — too coarse; breaks other uses (e.g. exposing `document`). |
-| **Fengari interop** | no | Different VM (Lua 5.3, JS reimpl). Supports `addEventListener` from Lua, but yields fail in wasmoon. |
-| **LOVE2D web ports** | no | Full C++ engine compiled to Wasm — not wasmoon. |
-| **Existing wasmoon projects** | **none** | No known project provides a DOM→Lua event mapping. |
+This means user code written for PICO events works unchanged on JS:
 
-### Why Pattern B wins for Atmos
+```lua
+-- works on both PICO and JS
+every('key', function (_, e)
+    print(e.key)
+end)
+every('mouse.button', 'left', function (_, e)
+    print(e.x, e.y)
+end)
+```
 
-The `doString` approach (Pattern B) is the right fit because:
+**What JS reuses from PICO (copy as-is):**
+- The `meta` table with `__atmos` metamethod
+- The `_is_()`-based tag matching logic
+- The tag namespace (`'key'`, `'mouse.button'`, `'draw'`, `'quit'`)
 
-1. **No proxy issues.** The event table is constructed inside Lua —
-   it's a real `table`, not userdata.  `pairs()`, `table.*`, `#` all
-   work.  `setmetatable()` works (needed for `__atmos`).
-2. **No C-call boundary.** `doString` drives the Lua VM from JS — Lua
-   is the callee, not a callback.  The body can `emit()`, which
-   resumes coroutines via `coroutine.resume()`, which is legal.
-3. **Matches existing env pattern.** PICO/SDL build event tables in
-   Lua (`step()` → `emit(setmetatable(e, meta))`).  Pattern B is the
-   same thing — just triggered from JS instead of a C `poll()`.
-4. **Minimal marshalling overhead.** Event fields are primitives
-   (strings, numbers) that pass through the Wasm boundary cleanly.
-   No objects to proxy or deep-copy.
+**What JS does NOT reuse:**
+- `step()` — JS has no polling loop
+- Clock logic — JS uses `M.tick()` driven by `setInterval`/RAF
+- SDL-style C enums or IUP-style widget callbacks
+
+### Why `doString` (not Lua callbacks) for DOM events
+
+The `doString` approach is required because of wasmoon's C-call
+boundary constraint: Lua callbacks invoked from JS cannot
+`coroutine.yield()`, which means they cannot `await()`.
+
+Using `doString`, the event table is built inside Lua (real `table`,
+not proxy userdata), and `emit()` resumes coroutines legally since
+Lua is the callee, not a callback.
+
+---
+
+## File structure
+
+The JS environment follows the same `atmos/env/` hierarchy as all
+other environments:
+
+```
+atmos/env/js/
+├── README.md          -- env docs (like pico/README.md)
+├── init.lua           -- the canonical module
+└── exs/               -- examples
+    └── ...
+```
+
+This mirrors the existing layout:
+
+```
+atmos/env/
+├── clock/  init.lua  README.md  exs/
+├── sdl/    init.lua  README.md  exs/
+├── pico/   init.lua  README.md  exs/
+├── socket/ init.lua  README.md  exs/
+├── iup/    init.lua  README.md  exs/
+└── js/     init.lua  README.md  exs/    ← new
+```
+
+The module is loaded the standard way: `require "atmos.env.js"`.
+The `atmos-lang/web` repo fetches it from this repo (same as all
+other atmos modules) — no inlined copy.
+
+The `env/README.md` table should be updated to include JS:
+
+| Environment        | `open` | `step` | `close` | User calls  |
+|--------------------|--------|--------|---------|-------------|
+| Clock              |        | yes    |         | `loop`      |
+| SDL                | yes    | yes    | yes     | `loop`      |
+| Pico               | yes    | yes    | yes     | `loop`      |
+| Socket             |        | yes    |         | `loop`      |
+| IUP                | yes    | yes    | yes     | `loop`      |
+| JS / Web           | yes    |        | yes     | `start`     |
 
 ---
 
 ## Summary of phases
 
 ### Phase 1 — Clock only (current)
-1. Converge the two implementations into canonical `atmos/env/js/init.lua`
-2. Update `atmos-lang/web` to use the canonical module from this repo
-3. Ensure the web playground works with `start()` + JS-driven `tick()`
+1. Create `atmos/env/js/init.lua` — converged canonical module
+2. Create `atmos/env/js/README.md`
+3. Update `atmos/env/README.md` — add JS to the environment table
+4. Update `README.md` — add JS to the Environments section
+5. Update `atmos-lang/web` to use the canonical module from this repo
+6. Ensure the web playground works with `start()` + JS-driven `tick()`
 
 ### Phase 2 — DOM events
-1. Add PICO-style `__atmos` metamethod to `init.lua`
-2. Add `M.event(e)` — JS host calls this to inject DOM events
-3. Keep `M.tick()` for clock only (called from `requestAnimationFrame`)
-4. Document the JS-side wiring for each DOM event type
-5. Add an example (`exs/js/click.lua`) mirroring PICO patterns
+1. Add PICO-style `__atmos` metamethod and `M.event(e)` to `init.lua`
+2. Keep `M.tick()` for clock only (called from `requestAnimationFrame`)
+3. Document the JS-side wiring for each DOM event type
+4. Add an example (`atmos/env/js/exs/`) mirroring PICO patterns
 
 ### Phase 3 — Canvas / draw
 1. Add `'draw'` event emission from JS RAF loop
