@@ -42,13 +42,18 @@ async function preloadModules (lua) {
 
 function startLoop (lua) {
     let emitting = false;
-    const env = 'require("atmos.env.js")';
     const interval = setInterval(() => {
         if (emitting) return;
         emitting = true;
         try {
+            const now = Date.now();
             lua.doString(
-                `${env}.clock(${Date.now()})`
+                `local E = require("atmos.env.js")`
+                + `\nlocal dt = ${now} - E.now`
+                + `\nif dt > 0 then`
+                + `\n    E.now = ${now}`
+                + `\n    emit('clock', dt, ${now})`
+                + `\nend`
             );
             if (lua.global.get('_atm_done_')) {
                 clearInterval(interval);

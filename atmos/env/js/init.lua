@@ -12,14 +12,6 @@ function M.open ()
     M.running = true
 end
 
-function M.clock (now)
-    local dt = now - M.now
-    if dt > 0 then
-        M.now = now
-        emit('clock', dt, now)
-    end
-end
-
 function M.close ()
     M.running = false
     JS_close()
