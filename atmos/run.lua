@@ -186,15 +186,6 @@ function run.close ()
     meta_tasks.__close(TASKS)
 end
 
-function run.stop ()
-    run.close()
-    for i=#_envs_, 1, -1 do
-        if _envs_[i].close then
-            _envs_[i].close()
-        end
-    end
-end
-
 function run.defer (f)
     return setmetatable({f=f}, meta_defer)
 end
@@ -376,6 +367,16 @@ function run.start (body, ...)
     assertn(2, _envs_[1].mode == nil, "invalid start : expected env with mode=nil")
     if _envs_[1].open then _envs_[1].open() end
     run.spawn(debug_getinfo(2), nil, false, body, ...)
+end
+
+function run.stop ()
+    run.close()
+    for i=#_envs_, 1, -1 do
+        if _envs_[i].close then
+            _envs_[i].close()
+        end
+        _envs_[i] = nil
+    end
 end
 
 -------------------------------------------------------------------------------
