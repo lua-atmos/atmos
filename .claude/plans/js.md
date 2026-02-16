@@ -571,7 +571,7 @@ from CDN).  Works from `file://`.
 |------------------|----------------------------|---------|-------------------------|
 | `lua.html`       | none (bare wasmoon)        | `.lua`  | run directly            |
 | `lua-atmos.html` | atmos runtime              | `.lua`  | `start(function() … end)` + tick loop |
-| `atmos.html`     | atmos runtime + compiler   | `.atm`  | compile → `loop(f)` via `start` |
+| `atmos.html`     | atmos runtime + compiler   | `.atm`  | compile → `f()` via `start` |
 
 These are the canonical HTML runners.  Projects like `atmos-lang/web`
 copy them as-is — they never need to generate their own.
@@ -914,7 +914,7 @@ ATMOS_LANG_MODULES=(
             + 'atm_loadstring(_atm_src_, _atm_file_)\n'
             + 'if not f then error(err) end\n'
             + 'start(function()\n'
-            + '    loop(f)\n'
+            + '    f()\n'
             + '    _atm_done_ = true\n'
             + 'end)'
         );
