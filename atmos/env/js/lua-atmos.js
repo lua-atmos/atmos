@@ -15,7 +15,7 @@
     status.textContent = 'Running...';
     try {
         await lua.doString(
-            '_atm_E_ = require("atmos.env.js")\n'
+            'JS_env = require("atmos.env.js")\n'
             + 'start(function()\n'
             + code + '\n'
             + '_atm_done_ = true\n'
