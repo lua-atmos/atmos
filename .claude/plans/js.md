@@ -161,14 +161,14 @@ function startLoop (lua) {
         try {
             const now = Date.now();
             lua.doString(
-                `local E = require("atmos.env.js")`
+                `local E = JS_env`
                 + `\nlocal dt = ${now} - E.now`
                 + `\nif dt > 0 then`
                 + `\n    E.now = ${now}`
                 + `\n    emit('clock', dt, ${now})`
                 + `\nend`
             );
-            if (lua.global.get('_atm_done_')) {
+            if (lua.global.get('JS_done')) {
                 clearInterval(interval);
                 lua.doString('stop()');
                 status.textContent = 'Done.';
@@ -183,7 +183,7 @@ function startLoop (lua) {
 
 JS owns the clock entirely: computes dt, sets `E.now`, emits clock.
 The `emitting` guard prevents overlapping `doString` calls.
-Completion detected via `_atm_done_` flag + `stop()`.
+Completion detected via `JS_done` flag + `stop()`.
 
 ### JS host setup (e.g. `lua-atmos.js`)
 
@@ -194,10 +194,10 @@ let interval;
 lua.global.set('JS_close', () => clearInterval(interval));
 
 await lua.doString(
-    'require("atmos.env.js")\n'
+    'JS_env = require("atmos.env.js")\n'
     + 'start(function()\n'
     + code + '\n'
-    + '_atm_done_ = true\n'
+    + 'JS_done = true\n'
     + 'end)'
 );
 interval = startLoop(lua);
@@ -297,14 +297,14 @@ On the JS side, each DOM listener builds a plain table and calls
 ```javascript
 canvas.addEventListener('keydown', (ev) => {
     lua.doString(`
-        require("atmos.env.js").event{ tag='key', key='${ev.key}' }
+        JS_env.event{ tag='key', key='${ev.key}' }
     `);
 });
 
 canvas.addEventListener('mousedown', (ev) => {
     const but = ['left','middle','right'][ev.button] or ev.button;
     lua.doString(`
-        require("atmos.env.js").event{
+        JS_env.event{
             tag='mouse.button', but='${but}', x=${ev.offsetX}, y=${ev.offsetY}
         }
     `);
@@ -336,7 +336,7 @@ canvas-backed buffer:
 
 ```javascript
 // inside the setInterval / RAF callback, after clock emit:
-lua.doString('require("atmos.env.js").event{ tag="draw" }');
+lua.doString('JS_env.event{ tag="draw" }');
 ```
 
 ### Lifecycle: quit
@@ -345,7 +345,7 @@ Browser "quit" is `beforeunload` or `visibilitychange`:
 
 ```javascript
 window.addEventListener('beforeunload', () => {
-    lua.doString('require("atmos.env.js").event{ tag="quit" }');
+    lua.doString('JS_env.event{ tag="quit" }');
 });
 ```
 
