@@ -168,7 +168,7 @@ function startLoop (lua) {
                 + `\n    emit('clock', dt, ${now})`
                 + `\nend`
             );
-            if (lua.global.get('_atm_done_')) {
+            if (lua.global.get('JS_done')) {
                 clearInterval(interval);
                 lua.doString('stop()');
                 status.textContent = 'Done.';
@@ -183,7 +183,7 @@ function startLoop (lua) {
 
 JS owns the clock entirely: computes dt, sets `E.now`, emits clock.
 The `emitting` guard prevents overlapping `doString` calls.
-Completion detected via `_atm_done_` flag + `stop()`.
+Completion detected via `JS_done` flag + `stop()`.
 
 ### JS host setup (e.g. `lua-atmos.js`)
 
@@ -197,7 +197,7 @@ await lua.doString(
     'JS_env = require("atmos.env.js")\n'
     + 'start(function()\n'
     + code + '\n'
-    + '_atm_done_ = true\n'
+    + 'JS_done = true\n'
     + 'end)'
 );
 interval = startLoop(lua);

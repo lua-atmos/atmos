@@ -23,18 +23,18 @@
 
         const wrapped =
             '(func (...) { ' + code + '\n})(...)';
-        lua.global.set('_atm_src_', wrapped);
-        lua.global.set('_atm_file_', 'input.atm');
+        lua.global.set('JS_src', wrapped);
+        lua.global.set('JS_file', 'input.atm');
 
         status.textContent = 'Running...';
         await lua.doString(
             'JS_env = require("atmos.env.js")\n'
             + 'local f, err = '
-            + 'atm_loadstring(_atm_src_, _atm_file_)\n'
+            + 'JS_loadstring(JS_src, JS_file)\n'
             + 'if not f then error(err) end\n'
             + 'start(function()\n'
             + '    f()\n'
-            + '    _atm_done_ = true\n'
+            + '    JS_done = true\n'
             + 'end)'
         );
         interval = startLoop(lua);

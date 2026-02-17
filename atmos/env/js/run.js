@@ -30,12 +30,12 @@ async function preloadModules (lua) {
         'script[type="text/lua"]'
     );
     for (const el of tags) {
-        lua.global.set('_mod_name_', el.dataset.module);
-        lua.global.set('_mod_src_', el.textContent);
+        lua.global.set('JS_mod_name', el.dataset.module);
+        lua.global.set('JS_mod_src', el.textContent);
         await lua.doString(
-            'package.preload[_mod_name_]'
-            + ' = assert(load(_mod_src_,'
-            + ' "@" .. _mod_name_))'
+            'package.preload[JS_mod_name]'
+            + ' = assert(load(JS_mod_src,'
+            + ' "@" .. JS_mod_name))'
         );
     }
 }
@@ -55,7 +55,7 @@ function startLoop (lua) {
                 + `\n    emit('clock', dt, ${now})`
                 + `\nend`
             );
-            if (lua.global.get('_atm_done_')) {
+            if (lua.global.get('JS_done')) {
                 clearInterval(interval);
                 lua.doString('stop()');
                 status.textContent = 'Done.';
