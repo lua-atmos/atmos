@@ -21,3 +21,12 @@ jobs:
         sudo apt-get install -y lua5.4
     - name: Run tests
       run: cd tst && LUA_PATH="../f-streams/?/init.lua;../?.lua;../?/init.lua;;" lua5.4 all.lua
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check HTML is up to date
+      run: |
+        bash atmos/env/js/build.sh
+        git diff --exit-code atmos/env/js/lua.html atmos/env/js/lua-atmos.html atmos/env/js/atmos.html
