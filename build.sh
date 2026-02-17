@@ -7,9 +7,9 @@ OUT_DIR="$DIR"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
+VERSION="v0.5"
+
 GITHUB_RAW="https://raw.githubusercontent.com"
-# TODO: pin to a release tag instead of main
-BRANCH="main"
 
 # --- Module lists ---
 
@@ -39,7 +39,7 @@ ATMOS_LANG_MODULES=(
 
 fetch_module () {
     local name="$1" repo="$2" path="$3"
-    local url="$GITHUB_RAW/$repo/$BRANCH/$path"
+    local url="$GITHUB_RAW/$repo/$VERSION/$path"
     local dest="$TMP/$name.lua"
     echo "  fetch $name ($repo/$path)"
     curl -fsSL "$url" -o "$dest"
@@ -56,7 +56,7 @@ module_tag () {
 generate_html () {
     local title="$1" module_tags="$2" js_files="$3" out="$4"
 
-    local js_code=""
+    local js_code="// lua-atmos $VERSION"$'\n'
     for f in $js_files; do
         js_code+="$(cat "$f")"$'\n'
     done
