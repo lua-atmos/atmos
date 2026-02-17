@@ -6,7 +6,7 @@
 
     status.textContent = 'Loading...';
     const lua = await createEngine();
-    await preloadModules(lua);
+    await fetchModules(lua, [...RUNTIME_MODULES, ...COMPILER_MODULES]);
     lua.global.set('JS_now', () => Date.now());
 
     let interval;
