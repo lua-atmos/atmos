@@ -2,7 +2,7 @@
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
-JS_DIR="$DIR/atmos/env/js"
+JS_DIR="$DIR"
 OUT_DIR="$DIR"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
