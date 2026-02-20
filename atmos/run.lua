@@ -218,7 +218,7 @@ local function tothrow (dbg, ...)
 end
 
 function run.throw (...)
-    return error(tothrow(debug_getinfo(2),...))
+    return error(tothrow(debug.getinfo(2),...))
 end
 
 function run.catch (...)
@@ -333,15 +333,19 @@ local function xcall (dbg, stk, f, ...)
 end
 
 function run.loop (body, ...)
-    assertn(2, type(body) == 'function', "invalid loop : expected body function")
-    return xcall(debug_getinfo(2), "loop", function (...)
+    assertn(2, type(body) == 'function',
+        "invalid loop : expected body function")
+    local body = function (...)
+        return (function (...) return ... end)(body(...))
+    end
+    return xcall(debug.getinfo(2), "loop", function (...)
         local _ <close> = run.defer(function ()
             run.stop()
         end)
         for _, env in ipairs(_envs_) do
             if env.open then env.open() end
         end
-        local t <close> = run.spawn(debug_getinfo(4), nil, false, body, ...)
+        local t <close> = run.spawn(debug.getinfo(4), nil, false, body, ...)
         while true do
             if coroutine.status(t._.th) == 'dead' then
                 break
@@ -362,11 +366,17 @@ function run.loop (body, ...)
 end
 
 function run.start (body, ...)
-    assertn(2, type(body) == 'function', "invalid start : expected body function")
-    assertn(2, #_envs_ == 1, "invalid start : expected single env")
-    assertn(2, _envs_[1].mode == nil, "invalid start : expected env with mode=nil")
+    assertn(2, type(body) == 'function',
+        "invalid start : expected body function")
+    local body = function (...)
+        return (function (...) return ... end)(body(...))
+    end
+    assertn(2, #_envs_ == 1,
+        "invalid start : expected single env")
+    assertn(2, _envs_[1].mode == nil,
+        "invalid start : expected env with mode=nil")
     if _envs_[1].open then _envs_[1].open() end
-    run.spawn(debug_getinfo(2), nil, false, body, ...)
+    run.spawn(debug.getinfo(2), nil, false, body, ...)
 end
 
 function run.stop ()
@@ -385,7 +395,7 @@ function run.tasks (max)
     local n = max and tonumber(max) or nil
     assertn(2, (not max) or n, "invalid tasks limit : expected number")
     local up = run.me(true) or TASKS
-    local dbg = debug_getinfo(2)
+    local dbg = debug.getinfo(2)
     local ts = {
         _ = {
             up  = up,
@@ -783,7 +793,7 @@ end
 function run.emit (stk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
-    local ret = xcall(debug_getinfo(2), stk and "emit", emit, time, fto(run.me(false),to), e, ...)
+    local ret = xcall(debug.getinfo(2), stk and "emit", emit, time, fto(run.me(false),to), e, ...)
     local me = run.me(true)
     if me and me._.status=='aborted' then
         -- TODO: lua5.5
@@ -799,8 +809,8 @@ function run.toggle (t, on)
         local e, f = t, on
         assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
         do
-            local t <close> = run.spawn(debug_getinfo(2), nil, true, f)
-            local _ <close> = run.spawn(debug_getinfo(2), nil, true, function ()
+            local t <close> = run.spawn(debug.getinfo(2), nil, true, f)
+            local _ <close> = run.spawn(debug.getinfo(2), nil, true, function ()
                 while true do
                     run.await(e, false)
                     run.toggle(t, false)
@@ -850,7 +860,7 @@ function run.par (...)
     local ts <close> = setmetatable({}, meta_par)
     for i,f in ipairs(fs) do
         assertn(2, type(f) == 'function', "invalid par : expected task prototype")
-        ts[i] = run.spawn(debug_getinfo(2), nil, true, select(i,...))
+        ts[i] = run.spawn(debug.getinfo(2), nil, true, select(i,...))
     end
     run.await(false)
 end
@@ -861,7 +871,7 @@ function run.par_or (...)
     local ts <close> = setmetatable({}, meta_par)
     for i,f in ipairs(fs) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = run.spawn(debug_getinfo(2), nil, true, f)
+        ts[i] = run.spawn(debug.getinfo(2), nil, true, f)
     end
     return run.await(run._or_(table.unpack(ts)))
 end
@@ -872,7 +882,7 @@ function run.par_and (...)
     local ts <close> = setmetatable({}, meta_par)
     for i,f in ipairs(fs) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = run.spawn(debug_getinfo(2), nil, true, f)
+        ts[i] = run.spawn(debug.getinfo(2), nil, true, f)
     end
     return run.await(run._and_(table.unpack(ts)))
 end
@@ -882,7 +892,7 @@ function run.watching (...)
     local t = { ... }
     local f = table.remove(t, #t)
     assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
-    local spw <close> = run.spawn(debug_getinfo(2), nil, true, f)
+    local spw <close> = run.spawn(debug.getinfo(2), nil, true, f)
     return run.await(run._or_({table.unpack(t)}, spw))
 end
 
