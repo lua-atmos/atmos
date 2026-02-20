@@ -1,7 +1,7 @@
 local S = require "atmos.streams"
 require "atmos.util"
 
-local run = {}
+local M = {}
 
 local task_gc
 
@@ -79,12 +79,12 @@ local function _me_ (tra, t)
     end
 end
 
-function run.me (tra)
+function M.me (tra)
     local th = coroutine.running()
     return th and TASKS._.cache[th] and _me_(tra, TASKS._.cache[th])
 end
 
-function run.is (v, x)
+function M.is (v, x)
     if v == x then
         return true
     end
@@ -105,7 +105,7 @@ function run.is (v, x)
     end
 end
 
-function run.status (t)
+function M.status (t)
     return coroutine.status(t._.th)
 end
 
@@ -131,10 +131,10 @@ local function task_result (t, ok, err)
         t._.up._.gc = true
         --if t._.status ~= 'aborted' then
             local up = _me_(false, t._.up)
-            run.emit(false, up, t)
+            M.emit(false, up, t)
             if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
                 local up = _me_(false, t._.up._.up)
-                run.emit(false, up, t._.up, t)
+                M.emit(false, up, t._.up, t)
             end
         --end
         meta_task.__close(t)
@@ -158,7 +158,7 @@ end
 
 local _envs_ = {}
 
-function run.env (e)
+function M.env (e)
     if e.mode == nil then
         -- no mode: single-env only, cannot combine with others
         assertn(2, #_envs_ == 0,
@@ -182,11 +182,11 @@ function run.env (e)
     end
 end
 
-function run.close ()
+function M.close ()
     meta_tasks.__close(TASKS)
 end
 
-function run.defer (f)
+function M.defer (f)
     return setmetatable({f=f}, meta_defer)
 end
 
@@ -194,7 +194,7 @@ local meta_throw = {}
 
 local function trace ()
     local ret = {}
-    local x = run.me(true)
+    local x = M.me(true)
     while x and x~=TASKS do
         ret[#ret+1] = {
             msg = (getmetatable(x)==meta_task and 'task') or 'tasks',
@@ -217,11 +217,11 @@ local function tothrow (dbg, ...)
     return setmetatable(err, meta_throw)
 end
 
-function run.throw (...)
+function M.throw (...)
     return error(tothrow(debug.getinfo(2),...))
 end
 
-function run.catch (...)
+function M.catch (...)
     local cnd = { ... }
     local blk = table.remove(cnd, #cnd)
     return (function (ok, err, ...)
@@ -244,7 +244,7 @@ function run.catch (...)
                 end)(X(table.unpack(err)))
             else
                 for i=1, #cnd do
-                    if not run.is(err[i],cnd[i]) then
+                    if not M.is(err[i],cnd[i]) then
                         error(err, 0)
                     end
                 end
@@ -332,20 +332,20 @@ local function xcall (dbg, stk, f, ...)
     end)(pcall(f, ...))
 end
 
-function run.loop (body, ...)
+function M.loop (body, ...)
     assertn(2, type(body) == 'function',
         "invalid loop : expected body function")
     local body = function (...)
         return (function (...) return ... end)(body(...))
     end
     return xcall(debug.getinfo(2), "loop", function (...)
-        local _ <close> = run.defer(function ()
-            run.stop()
+        local _ <close> = M.defer(function ()
+            M.stop()
         end)
         for _, env in ipairs(_envs_) do
             if env.open then env.open() end
         end
-        local t <close> = run.spawn(debug.getinfo(4), nil, false, body, ...)
+        local t <close> = M.spawn(debug.getinfo(4), nil, false, body, ...)
         while true do
             if coroutine.status(t._.th) == 'dead' then
                 break
@@ -365,7 +365,7 @@ function run.loop (body, ...)
     end, ...)
 end
 
-function run.start (body, ...)
+function M.start (body, ...)
     assertn(2, type(body) == 'function',
         "invalid start : expected body function")
     local body = function (...)
@@ -376,11 +376,11 @@ function run.start (body, ...)
     assertn(2, _envs_[1].mode == nil,
         "invalid start : expected env with mode=nil")
     if _envs_[1].open then _envs_[1].open() end
-    run.spawn(debug.getinfo(2), nil, false, body, ...)
+    M.spawn(debug.getinfo(2), nil, false, body, ...)
 end
 
-function run.stop ()
-    run.close()
+function M.stop ()
+    M.close()
     for i=#_envs_, 1, -1 do
         if _envs_[i].close then
             _envs_[i].close()
@@ -391,10 +391,10 @@ end
 
 -------------------------------------------------------------------------------
 
-function run.tasks (max)
+function M.tasks (max)
     local n = max and tonumber(max) or nil
     assertn(2, (not max) or n, "invalid tasks limit : expected number")
-    local up = run.me(true) or TASKS
+    local up = M.me(true) or TASKS
     local dbg = debug.getinfo(2)
     local ts = {
         _ = {
@@ -413,7 +413,7 @@ function run.tasks (max)
     return ts
 end
 
-function run.task (dbg, tra, f)
+function M.task (dbg, tra, f)
     assertn(3, type(f)=='function', "invalid task : expected function")
     local t = {
         _ = {
@@ -438,19 +438,19 @@ function run.task (dbg, tra, f)
     return t
 end
 
-function run.spawn (dbg, up, tra, t, ...)
+function M.spawn (dbg, up, tra, t, ...)
     if type(t) == 'function' then
-        t = run.task(dbg, tra, t)
+        t = M.task(dbg, tra, t)
         if t == nil then
             return nil
         else
-            return run.spawn(dbg, up, tra, t, ...)
+            return M.spawn(dbg, up, tra, t, ...)
         end
     end
     assertn(2, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
     assertn(2, t._.tra == tra, "invalid spawn : transparent modifier mismatch")
 
-    up = up or run.me(true) or TASKS
+    up = up or M.me(true) or TASKS
     if getmetatable(up) == meta_tasks then
         t.pin = true
     end
@@ -582,7 +582,7 @@ local function check_ret (awt, ...)
 end
 
 local function awake (err, ...)
-    local me = assert(run.me(true))
+    local me = assert(M.me(true))
     if err then
         error((...), 0)
     else
@@ -658,7 +658,7 @@ local function await_to_table (e, ...)
     return T
 end
 
-function run.await (e, ...)
+function M.await (e, ...)
     -- await(stream)
     -- await { tag='clock' }
     -- await(f)     -- f(...)
@@ -667,7 +667,7 @@ function run.await (e, ...)
     -- await(...)
     -- await(a _and_ b)
 
-    local t = run.me(true)
+    local t = M.me(true)
     assertn(2, t, "invalid await : expected enclosing task", 2)
     assertn(2, e~=nil, "invalid await : expected event", 2)
 
@@ -681,13 +681,13 @@ function run.await (e, ...)
     return awake(coroutine.yield())
 end
 
-function run.clock (t)
+function M.clock (t)
     assertn(2, type(t)=='table', "invalid clock : expected table")
     t.tag = 'clock'
     return setmetatable(t, meta_clock)
 end
 
-function run._or_ (...)
+function M._or_ (...)
     local t = {
         tag = '_or_',
         ...
@@ -704,7 +704,7 @@ function run._or_ (...)
     return t
 end
 
-function run._and_ (...)
+function M._and_ (...)
     local t = {
         tag = '_and_',
         ...
@@ -790,11 +790,11 @@ local function emit (time, t, ...)
     end
 end
 
-function run.emit (stk, to, e, ...)
+function M.emit (stk, to, e, ...)
     TIME = TIME + 1
     local time = TIME
-    local ret = xcall(debug.getinfo(2), stk and "emit", emit, time, fto(run.me(false),to), e, ...)
-    local me = run.me(true)
+    local ret = xcall(debug.getinfo(2), stk and "emit", emit, time, fto(M.me(false),to), e, ...)
+    local me = M.me(true)
     if me and me._.status=='aborted' then
         -- TODO: lua5.5
         coroutine.yield()   -- wait to be closed from outside
@@ -804,21 +804,21 @@ end
 
 -------------------------------------------------------------------------------
 
-function run.toggle (t, on)
+function M.toggle (t, on)
     if type(t) == 'string' then
         local e, f = t, on
         assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
         do
-            local t <close> = run.spawn(debug.getinfo(2), nil, true, f)
-            local _ <close> = run.spawn(debug.getinfo(2), nil, true, function ()
+            local t <close> = M.spawn(debug.getinfo(2), nil, true, f)
+            local _ <close> = M.spawn(debug.getinfo(2), nil, true, function ()
                 while true do
-                    run.await(e, false)
-                    run.toggle(t, false)
-                    run.await(e, true)
-                    run.toggle(t, true)
+                    M.await(e, false)
+                    M.toggle(t, false)
+                    M.await(e, true)
+                    M.toggle(t, true)
                 end
             end)
-            return run.await(t)
+            return M.await(t)
         end
     end
 
@@ -837,12 +837,12 @@ end
 
 -------------------------------------------------------------------------------
 
-function run.every (...)
-    assertn(2, run.me(true), "invalid every : expected enclosing task")
+function M.every (...)
+    assertn(2, M.me(true), "invalid every : expected enclosing task")
     local t = { ... }
     local blk = table.remove(t, #t)
     while true do
-        blk(run.await(table.unpack(t)))
+        blk(M.await(table.unpack(t)))
     end
 end
 
@@ -854,46 +854,46 @@ local meta_par = {
     end
 }
 
-function run.par (...)
-    assertn(2, run.me(true), "invalid par : expected enclosing task")
+function M.par (...)
+    assertn(2, M.me(true), "invalid par : expected enclosing task")
     local fs = { ... }
     local ts <close> = setmetatable({}, meta_par)
     for i,f in ipairs(fs) do
         assertn(2, type(f) == 'function', "invalid par : expected task prototype")
-        ts[i] = run.spawn(debug.getinfo(2), nil, true, select(i,...))
+        ts[i] = M.spawn(debug.getinfo(2), nil, true, select(i,...))
     end
-    run.await(false)
+    M.await(false)
 end
 
-function run.par_or (...)
-    assertn(2, run.me(true), "invalid par_or : expected enclosing task")
+function M.par_or (...)
+    assertn(2, M.me(true), "invalid par_or : expected enclosing task")
     local fs = { ... }
     local ts <close> = setmetatable({}, meta_par)
     for i,f in ipairs(fs) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = run.spawn(debug.getinfo(2), nil, true, f)
+        ts[i] = M.spawn(debug.getinfo(2), nil, true, f)
     end
-    return run.await(run._or_(table.unpack(ts)))
+    return M.await(M._or_(table.unpack(ts)))
 end
 
-function run.par_and (...)
-    assertn(2, run.me(true), "invalid par_or : expected enclosing task")
+function M.par_and (...)
+    assertn(2, M.me(true), "invalid par_or : expected enclosing task")
     local fs = { ... }
     local ts <close> = setmetatable({}, meta_par)
     for i,f in ipairs(fs) do
         assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = run.spawn(debug.getinfo(2), nil, true, f)
+        ts[i] = M.spawn(debug.getinfo(2), nil, true, f)
     end
-    return run.await(run._and_(table.unpack(ts)))
+    return M.await(M._and_(table.unpack(ts)))
 end
 
-function run.watching (...)
-    assertn(2, run.me(true), "invalid watching : expected enclosing task")
+function M.watching (...)
+    assertn(2, M.me(true), "invalid watching : expected enclosing task")
     local t = { ... }
     local f = table.remove(t, #t)
     assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
-    local spw <close> = run.spawn(debug.getinfo(2), nil, true, f)
-    return run.await(run._or_({table.unpack(t)}, spw))
+    local spw <close> = M.spawn(debug.getinfo(2), nil, true, f)
+    return M.await(M._or_({table.unpack(t)}, spw))
 end
 
-return run
+return M
