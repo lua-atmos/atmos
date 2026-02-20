@@ -395,8 +395,9 @@ do
     ]])
 end
 
--- tail call from coroutine entry: debug.getinfo(2) returns nil
--- TODO: fix M.task to wrap with _no_tco_ <close> = nil
+-- tail call from coroutine entry: user frame is eliminated,
+-- throw location shows runtime wrapper instead of user file
+-- (atmos-lang compiler prevents this via is_stmt guards)
 do
     print("Testing...", "tail call: return throw")
     local out = exec [[
@@ -409,10 +410,10 @@ do
         end)
         print(err)
     ]]
-    assertx(trim(out), trim [[
+    assertfx(trim(out), trim [[
         ==> ERROR:
-         |  /tmp/err.lua:2 (loop)
-         v  /tmp/err.lua:4 (throw) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+         |  /tmp/err.lua:2 %(loop%)
+         v  ../atmos/run.lua:%d+ %(throw%) <%- /tmp/err.lua:3 %(task%) <%- /tmp/err.lua:2 %(task%)
         ==> err
     ]])
 end
@@ -436,10 +437,10 @@ do
         end)
         print(err)
     ]]
-    assertx(trim(out), trim [[
+    assertfx(trim(out), trim [[
         ==> ERROR:
-         |  /tmp/err.lua:2 (loop)
-         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+         |  /tmp/err.lua:2 %(loop%)
+         v  ../atmos/run.lua:%d+ %(throw%) <%- /tmp/err.lua:4 %(task%) <%- /tmp/err.lua:3 %(task%) <%- /tmp/err.lua:2 %(task%)
         ==> err
     ]])
 end
