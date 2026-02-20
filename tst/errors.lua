@@ -292,3 +292,105 @@ do
         ==> err
     ]])
 end
+
+do
+    print("Testing...", "par_or error")
+    local out = exec [[
+        local _, err = pcall(function ()
+            loop(function ()
+                spawn(function ()
+                    par_or(
+                        function ()
+                            throw('err')
+                        end,
+                        function ()
+                            await(false)
+                        end
+                    )
+                end)
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (loop)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+        ==> err
+    ]])
+end
+
+do
+    print("Testing...", "par_and error")
+    local out = exec [[
+        local _, err = pcall(function ()
+            loop(function ()
+                spawn(function ()
+                    par_and(
+                        function ()
+                            throw('err')
+                        end,
+                        function ()
+                            await(false)
+                        end
+                    )
+                end)
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (loop)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+        ==> err
+    ]])
+end
+
+do
+    print("Testing...", "watching error")
+    local out = exec [[
+        local _, err = pcall(function ()
+            loop(function ()
+                spawn(function ()
+                    watching(true,
+                        function ()
+                            throw('err')
+                        end
+                    )
+                end)
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (loop)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+        ==> err
+    ]])
+end
+
+do
+    print("Testing...", "toggle error")
+    local out = exec [[
+        local _, err = pcall(function ()
+            loop(function ()
+                spawn(function ()
+                    toggle('X',
+                        function ()
+                            throw('err')
+                        end
+                    )
+                end)
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (loop)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+        ==> err
+    ]])
+end
