@@ -335,10 +335,6 @@ end
 function M.loop (body, ...)
     assertn(2, type(body) == 'function',
         "invalid loop : expected body function")
-    local body = function (...)
-        local _no_tco_ <close> = nil
-        return body(...)
-    end
     return xcall(debug.getinfo(2), "loop", function (...)
         local _ <close> = M.defer(function ()
             M.stop()
@@ -369,10 +365,6 @@ end
 function M.start (body, ...)
     assertn(2, type(body) == 'function',
         "invalid start : expected body function")
-    local body = function (...)
-        local _no_tco_ <close> = nil
-        return body(...)
-    end
     assertn(2, #_envs_ == 1,
         "invalid start : expected single env")
     assertn(2, _envs_[1].mode == nil,
@@ -417,6 +409,10 @@ end
 
 function M.task (dbg, tra, f)
     assertn(3, type(f)=='function', "invalid task : expected function")
+    local f = function (...)
+        local _no_tco_ <close> = nil
+        return f(...)
+    end
     local t = {
         _ = {
             up  = nil,
