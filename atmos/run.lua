@@ -811,6 +811,7 @@ function M.toggle (t, on)
         local e, f = t, on
         assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
         do
+            local _no_tco_ <close> = nil
             local t <close> = M.spawn(debug.getinfo(2), nil, true, f)
             local _ <close> = M.spawn(debug.getinfo(2), nil, true, function ()
                 while true do
@@ -869,6 +870,7 @@ end
 
 function M.par_or (...)
     assertn(2, M.me(true), "invalid par_or : expected enclosing task")
+    local _no_tco_ <close> = nil
     local fs = { ... }
     local ts <close> = setmetatable({}, meta_par)
     for i,f in ipairs(fs) do
@@ -880,6 +882,7 @@ end
 
 function M.par_and (...)
     assertn(2, M.me(true), "invalid par_or : expected enclosing task")
+    local _no_tco_ <close> = nil
     local fs = { ... }
     local ts <close> = setmetatable({}, meta_par)
     for i,f in ipairs(fs) do
@@ -891,6 +894,7 @@ end
 
 function M.watching (...)
     assertn(2, M.me(true), "invalid watching : expected enclosing task")
+    local _no_tco_ <close> = nil
     local t = { ... }
     local f = table.remove(t, #t)
     assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
