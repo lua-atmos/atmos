@@ -292,3 +292,155 @@ do
         ==> err
     ]])
 end
+
+do
+    print("Testing...", "par_or error")
+    local out = exec [[
+        local _, err = pcall(function ()
+            loop(function ()
+                spawn(function ()
+                    par_or(
+                        function ()
+                            throw('err')
+                        end,
+                        function ()
+                            await(false)
+                        end
+                    )
+                end)
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (loop)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+        ==> err
+    ]])
+end
+
+do
+    print("Testing...", "par_and error")
+    local out = exec [[
+        local _, err = pcall(function ()
+            loop(function ()
+                spawn(function ()
+                    par_and(
+                        function ()
+                            throw('err')
+                        end,
+                        function ()
+                            await(false)
+                        end
+                    )
+                end)
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (loop)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+        ==> err
+    ]])
+end
+
+do
+    print("Testing...", "watching error")
+    local out = exec [[
+        local _, err = pcall(function ()
+            loop(function ()
+                spawn(function ()
+                    watching(true,
+                        function ()
+                            throw('err')
+                        end
+                    )
+                end)
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (loop)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+        ==> err
+    ]])
+end
+
+do
+    print("Testing...", "toggle error")
+    local out = exec [[
+        local _, err = pcall(function ()
+            loop(function ()
+                spawn(function ()
+                    toggle('X',
+                        function ()
+                            throw('err')
+                        end
+                    )
+                end)
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 (loop)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+        ==> err
+    ]])
+end
+
+-- tail call from coroutine entry: user frame is eliminated,
+-- throw location shows runtime wrapper instead of user file
+-- (atmos-lang compiler prevents this via is_stmt guards)
+do
+    print("Testing...", "tail call: return throw")
+    local out = exec [[
+        local _, err = pcall(function ()
+            loop(function ()
+                spawn(function ()
+                    return throw('err')
+                end)
+            end)
+        end)
+        print(err)
+    ]]
+    assertfx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 %(loop%)
+         v  ../atmos/run.lua:%d+ %(throw%) <%- /tmp/err.lua:3 %(task%) <%- /tmp/err.lua:2 %(task%)
+        ==> err
+    ]])
+end
+
+do
+    print("Testing...", "tail call: return throw from par_or")
+    local out = exec [[
+        local _, err = pcall(function ()
+            loop(function ()
+                spawn(function ()
+                    par_or(
+                        function ()
+                            return throw('err')
+                        end,
+                        function ()
+                            await(false)
+                        end
+                    )
+                end)
+            end)
+        end)
+        print(err)
+    ]]
+    assertfx(trim(out), trim [[
+        ==> ERROR:
+         |  /tmp/err.lua:2 %(loop%)
+         v  ../atmos/run.lua:%d+ %(throw%) <%- /tmp/err.lua:4 %(task%) <%- /tmp/err.lua:3 %(task%) <%- /tmp/err.lua:2 %(task%)
+        ==> err
+    ]])
+end
