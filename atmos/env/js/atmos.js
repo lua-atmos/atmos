@@ -30,7 +30,7 @@
         await lua.doString(
             'JS_env = require("atmos.env.js")\n'
             + 'local f, err = '
-            + 'JS_loadstring(JS_src, JS_file)\n'
+            + 'atm_loadstring(JS_src, JS_file)\n'
             + 'if not f then error(err) end\n'
             + 'start(function()\n'
             + '    f()\n'

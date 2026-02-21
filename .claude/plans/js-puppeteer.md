@@ -1,67 +1,25 @@
 # Plan: js-puppeteer
 
-## Goal
-
-Add Puppeteer-based CI tests that verify the three HTML tiers
-(`lua.html`, `lua-atmos.html`, `atmos.html`) actually run Lua
-code correctly in a headless Chrome browser.
-
 ## Context
 
-- The HTML files are self-contained: they import wasmoon from
-  CDN and embed Lua modules as `<script type="text/lua">` tags
-- Code is passed via the URL hash as base64
-- `#output` (`<pre>`) captures print() output
-- `#status` (`<span>`) shows lifecycle: Loading/Running/Done/Error
-- `lua-atmos.html` and `atmos.html` use an event loop
-  (`startLoop`) that sets `JS_done = true` when finished
-- CI already has a `build` job that runs `build.sh` and checks
-  HTML is up to date
+The three HTML tiers (`lua.html`, `lua-atmos.html`, `atmos.html`)
+are the main user-facing artifacts for running Lua/atmos code in
+the browser. Currently there are no automated tests verifying
+they actually work. This plan adds Puppeteer-based CI tests that
+open each HTML file in headless Chrome and assert correct output.
 
 ## Approach
 
-Use Puppeteer with a **local HTTP server** (not `file://`) to
-avoid browser sandbox issues with non-standard paths. The CI
-runner uses standard paths so `file://` would work, but a tiny
-`http-server` is more portable and avoids the CDN ES module
-import issue that `file://` can trigger.
+- **No HTTP server** — open HTML files via `file://` protocol
+- **Plain assert** — no test framework, just `assert` +
+  `process.exit(1)` (matches Lua test style)
+- **Puppeteer flag** `--allow-file-access-from-files` to allow
+  the CDN ES module import from `file://` pages
+- **Error test** — also test invalid code → status "Error."
 
 ## Files to create/modify
 
-### 1. `atmos/env/js/test/test.mjs`
-
-Single test script using Puppeteer (no test framework needed —
-just assert + process.exit(1) on failure).
-
-```
-- spin up a static HTTP server on atmos/env/js/ (use `sirv`
-  or Node's built-in http + fs)
-- for each tier, open the HTML with a test program in the hash
-- wait for #status to settle (not "Loading..."/"Running..."
-  /"Compiling...")
-- assert #status === "Done." and #output matches expected
-- exit 0 on success, 1 on failure
-```
-
-**Test cases:**
-
-| Tier           | Input (Lua/Atmos)                 | Expected output |
-|----------------|-----------------------------------|-----------------|
-| `lua.html`     | `print("hello")`                  | `hello\n`       |
-| `lua-atmos.html` | `print("hello")`               | `hello\n`       |
-| `atmos.html`   | `print("hello")`                  | `hello\n`       |
-
-Notes:
-- `lua-atmos` and `atmos` wrap user code in `start()`, so
-  they go through the event loop before setting JS_done
-- The event loop ticks at 16ms; use a generous timeout
-  (e.g. 30s) for CI cold starts (wasmoon WASM download)
-- Use Node's built-in `http` module + `fs` to serve files
-  (no extra deps beyond puppeteer)
-
-### 2. `atmos/env/js/test/package.json`
-
-Minimal package.json for the test directory:
+### 1. `atmos/env/js/test/package.json` (new)
 
 ```json
 {
@@ -76,9 +34,43 @@ Minimal package.json for the test directory:
 }
 ```
 
-### 3. `.github/workflows/test.yml`
+### 2. `atmos/env/js/test/test.mjs` (new)
 
-Add a new job `js-test` alongside existing `test` and `build`:
+```
+- Launch Puppeteer with --allow-file-access-from-files
+- Resolve absolute file:// path to each HTML
+- For each tier:
+    - Happy path: pass btoa('print("hello")') in hash
+    - Wait for #status !== "Loading..."/"Running..."/"Compiling..."
+      (poll every 100ms, timeout 30s)
+    - Assert #status === "Done." and #output === "hello\n"
+    - Error path: pass btoa('invalid!!!lua') in hash
+    - Assert #status === "Error."
+- Close browser, exit 0 on success / 1 on failure
+```
+
+Test cases:
+
+| Tier             | Input (base64'd)      | Expected status | Expected output |
+|------------------|-----------------------|-----------------|-----------------|
+| lua.html         | `print("hello")`      | "Done."         | "hello\n"       |
+| lua-atmos.html   | `print("hello")`      | "Done."         | "hello\n"       |
+| atmos.html       | `print("hello")`      | "Done."         | "hello\n"       |
+| lua.html         | `invalid!!!lua`       | "Error."        | (contains ERROR) |
+| lua-atmos.html   | `invalid!!!lua`       | "Error."        | (contains ERROR) |
+| atmos.html       | `invalid!!!lua`       | "Error."        | (contains ERROR) |
+
+Notes:
+- lua-atmos.html wraps code in `start(function() <code>
+  JS_done=true end)` — raw Lua works
+- atmos.html wraps code in `(func (...) { <code> })(...)` then
+  compiles — `print("hello")` is valid atmos-lang
+- For error test on atmos.html, the invalid syntax should fail
+  at the compilation step
+
+### 3. `.github/workflows/test.yml` (modify)
+
+Add `js-test` job (independent, parallel with existing jobs):
 
 ```yaml
 js-test:
@@ -88,30 +80,42 @@ js-test:
     - uses: actions/setup-node@v4
       with:
         node-version: 22
+    - name: Cache Puppeteer browsers
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/puppeteer
+        key: puppeteer-${{ runner.os }}-${{ hashFiles('atmos/env/js/test/package.json') }}
     - name: Install dependencies
       run: cd atmos/env/js/test && npm ci
     - name: Run Puppeteer tests
       run: cd atmos/env/js/test && npm test
 ```
 
-Puppeteer on CI:
-- `puppeteer` npm package downloads its own Chromium
-- Ubuntu runners have the required shared libs
-- If not, add `npx puppeteer browsers install chrome`
-  or install deps with `npx puppeteer install --with-deps`
-
 ## Implementation order
 
 1. Create `atmos/env/js/test/package.json`
 2. Create `atmos/env/js/test/test.mjs`
-3. Update `.github/workflows/test.yml` with `js-test` job
-4. Test locally: `cd atmos/env/js/test && npm install && npm test`
-5. Commit, push, verify CI
+3. Add `js-test` job to `.github/workflows/test.yml`
+4. Local testing (user runs manually)
+5. Commit & push (after user approval)
+
+## Verification
+
+1. `cd atmos/env/js/test && npm install && npm test`
+2. All 6 test cases should pass (3 happy + 3 error)
+3. CI should show green for the new `js-test` job
 
 ## Status
 
-- [ ] Create test/package.json
-- [ ] Create test/test.mjs
-- [ ] Update CI workflow
-- [ ] Test locally
+- [x] Create test/package.json
+- [x] Create test/test.mjs
+- [x] Update CI workflow
+- [x] Test locally — all 6/6 pass
 - [ ] Commit & push
+
+## Bonus fix
+
+- [x] Fixed bug in `atmos/env/js/atmos.js:33`:
+  `JS_loadstring` → `atm_loadstring` (function was
+  never defined, test caught it)
+- [x] Rebuilt `atmos.html` via `build.sh`
