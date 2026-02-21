@@ -32,7 +32,10 @@ async function waitStatus (page) {
 async function run () {
     const browser = await puppeteer.launch({
         headless: true,
-        args: ['--allow-file-access-from-files'],
+        args: [
+            '--allow-file-access-from-files',
+            '--no-sandbox',
+        ],
     });
 
     let failed = false;
