@@ -1,0 +1,4363 @@
+<!DOCTYPE html>
+<html>
+<head><title>Atmos</title></head>
+<body>
+    <pre id="output"></pre>
+    <span id="status"></span>
+
+    <script type="text/lua" data-module="streams">
+local M = {}
+
+M.mt = {
+    __call  = function (t) return t:f() end,
+    __close = function (t) if t.clo then t:clo() end end,
+    __index = M,
+}
+
+function M.is (s)
+    return (getmetatable(s) == M.mt)
+end
+
+local function close_s (t)
+    local _ <close> = t.s
+end
+
+-------------------------------------------------------------------------------
+-- SOURCES
+-------------------------------------------------------------------------------
+
+function M.from (v, ...)
+    local multi = (select('#',...) > 0)
+    if multi then
+        assert(type(v)=='number' or M.is(v))
+    end
+
+    if v==nil or type(v)=='number' then
+        return M.fr_range(v, ...)
+    elseif M.is(v) then
+        return M.fr_streams(v, ...)
+    elseif type(v) == 'table' then
+        return M.fr_table(v)
+    elseif type(v) == 'function' then
+        return M.fr_function(v)
+    elseif type(v) == 'coroutine' then
+        return M.fr_coroutine(v)
+    else
+        return M.fr_const(v)
+    end
+end
+
+-------------------------------------------------------------------------------
+
+local function fr_const (t)
+    return t.v
+end
+
+function M.fr_const (v)
+    local t = {
+        v = v,
+        f = fr_const,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+local function fr_coroutine (t)
+    return (function (ok, ...)
+        assert(ok)
+        if (... == nil) then
+            return nil
+        end
+        return ...
+    end)(coroutine.resume(t.co))
+end
+
+local function close (t)
+    coroutine.close(t.co)
+end
+
+function M.fr_coroutine (co)
+    local t = {
+        co  = co,
+        f   = fr_coroutine,
+        clo = close,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+function M.fr_counter (i)
+    return M.fr_range(i)
+end
+
+-------------------------------------------------------------------------------
+
+function M.fr_function (f)
+    local t = {
+        f = f,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+local function fr_range (t)
+    if t.b and t.a>t.b then
+        return nil
+    end
+    local v = t.a
+    t.a = t.a + 1
+    return v
+end
+
+function M.fr_range (a, b)
+    local t = {
+        a = a or 1,
+        b = b,
+        f = fr_range,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+function M.fr_streams (...)
+    local n = select('#', ...)
+    assert(n >= 2)
+    local s = select(1, ...)
+    for i=2, n do
+        s = s:seq(select(i, ...))
+    end
+    return s
+end
+
+-------------------------------------------------------------------------------
+
+local function fr_table (t)
+    if t.i > #t.t then
+        return nil
+    end
+    local v = t.t[t.i]
+    t.i = t.i + 1
+    return v
+end
+
+function M.fr_table (t)
+    local t = {
+        t = t,
+        i = 1,
+        f = fr_table,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+-- COMBINATORS
+-------------------------------------------------------------------------------
+
+local function empty (t)
+    return nil
+end
+
+function M.empty ()
+    local t = {
+        f = empty,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+local function acc0 (t)
+    if t.done then
+        return nil
+    end
+    local cur = t.cur
+    local v = t.s()
+    if v == nil then
+        t.done = true
+    else
+        t.cur = t.g(t.cur, v)
+    end
+    return cur
+end
+
+function M.acc0 (s, z, g)
+    local t = {
+        s    = s,
+        g    = g,
+        cur  = z,
+        done = false,
+        f    = acc0,
+        clo  = close_s,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+local function acc1 (t)
+    local v = t.s()
+    if v == nil then
+        return nil
+    end
+    t.cur = t.g(t.cur, v)
+    return t.cur
+end
+
+function M.acc1 (s, g)
+    local t = {
+        s   = s,
+        g   = g,
+        cur = nil,
+        f   = acc1,
+        clo = close_s,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+local function filter (t)
+    while true do
+        local v = t.s()
+        if v == nil then
+            return nil
+        end
+        if t.g(v) then
+            return v
+        end
+    end
+end
+
+function M.filter (s, g)
+    local t = {
+        s   = s,
+        g   = g,
+        f   = filter,
+        clo = close_s,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+local function skip (t)
+    while t.n > 0 do
+        if t.s() == nil then
+            return nil
+        end
+        t.n = t.n - 1
+    end
+    return t.s()
+end
+
+function M.skip (s, n)
+    local t = {
+        s   = s,
+        n   = n or 1,
+        f   = skip,
+        clo = close_s,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+local function seq (t)
+    local v = t.cur()
+    if v == nil then
+        if t.nxt == nil then
+            return nil
+        end
+        t.cur = t.nxt
+        t.nxt = nil
+        v = t.cur()
+    end
+    return v
+end
+
+local function close (t)
+    local _ <close> = t.cur
+    local _ <close> = t.nxt
+end
+
+function M.seq (s1, s2)
+    local t = {
+        cur = s1,
+        nxt = s2,
+        f   = seq,
+        clo = close,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+local function take (t)
+    if t.i >= t.n then
+        return nil
+    end
+    t.i = t.i + 1
+    return t.s()
+end
+
+function M.take (s, n)
+    local t = {
+        s   = s,
+        i   = 0,
+        n   = n,
+        f   = take,
+        clo = close_s,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+local function tee2 (t)
+    if #t.q1 == 0 then
+        local v = t.s()
+        if v ~= nil then
+            table.insert(t.q1, v)
+            table.insert(t.q2, v)
+        end
+    end
+    if #t.q1 <= 0 then
+        return nil
+    end
+    return table.remove(t.q1, 1)
+end
+
+function M.tee2 (s)
+    local q1, q2 = {}, {}
+    local t1 = {
+        s   = s,
+        q1  = q1,
+        q2  = q2,
+        f   = tee2,
+        clo = close_s,
+    }
+    local t2 = {
+        s   = s,
+        q1  = q2,
+        q2  = q1,
+        f   = tee2,
+        clo = close_s,
+    }
+    t1 = setmetatable(t1, M.mt)
+    t2 = setmetatable(t2, M.mt)
+    return t1, t2
+end
+
+function M.tee (s, n, ...)
+    local fs = { n, ... }
+    if n == nil then
+        n = 2
+        fs = nil
+    elseif type(n) == 'number' then
+        fs = nil
+        assert(select('#',...) == 0)
+    else
+        n = #fs
+        for _,f in ipairs(fs) do
+            assert(type(f) == 'function')
+        end
+    end
+    assert(n >= 1)
+    local ss = { s }
+    for i=2, n do
+        local s1,s2 = M.tee2(ss[#ss])
+        ss[#ss] = nil
+        ss[#ss+1] = s1
+        ss[#ss+1] = s2
+    end
+
+    if fs then
+        for i,f in ipairs(fs) do
+            ss[i] = f(ss[i])
+        end
+    end
+
+    return table.unpack(ss)
+end
+
+-------------------------------------------------------------------------------
+
+local function zip (t)
+    local vs = {}
+    for i,s in ipairs(t.ss) do
+        local v = s()
+        if v == nil then
+            return nil
+        end
+        vs[i] = v
+    end
+    return vs
+end
+
+local function close (t)
+    for _, s in ipairs(t.ss) do
+        local _ <close> = s
+    end
+end
+
+function M.zip (...)
+    local t = {
+        ss  = {...},
+        f   = zip,
+        clo = close,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+
+function M.map (s, f)
+    return M.acc1(s, function (_, v) return f(v) end)
+end
+
+function M.mapi (s, f)
+    local i = 0
+    return s:map(function (v)
+        i = i + 1
+        return f(i, v)
+    end)
+end
+
+function M.max (s)
+    return M.acc0(s, -math.huge, function(a,x) return math.max(a,x) end)
+end
+
+function M.min (s)
+    return M.acc0(s, math.huge, function(a,x) return math.min(a,x) end)
+end
+
+function M.sum (s)
+    return M.acc0(s, 0, function(a,x) return a+x end)
+end
+
+function M.table (s)
+    return M.acc0(s, {}, function(a,v) a[#a+1]=v ; return a end)
+end
+
+function M.tap (s, f)
+    return M.acc1(s, function (_, v)
+        f(v)
+        return v
+    end)
+end
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+local function xseq (t)
+    if t.s == false then
+        t.s = t.ss()
+    end
+    if t.s == nil then
+        return nil
+    end
+    local v = t.s()
+    while v == nil do
+        t.s = t.ss()
+        if t.s == nil then
+            return nil
+        end
+        v = t.s()
+    end
+    return v
+end
+
+function M.xseq (ss)
+    local t = {
+        ss  = ss,
+        s   = false,
+        f   = xseq,
+        clo = close_s,
+    }
+    return setmetatable(t, M.mt)
+end
+
+-------------------------------------------------------------------------------
+-- SINKS
+-------------------------------------------------------------------------------
+
+function M.to_last (s)
+    local s <close> = s
+    local v = nil
+    local x = s()
+    while true do
+        if x == nil then
+            return v
+        end
+        v = x
+        x = s()
+    end
+end
+
+M.to = M.to_last
+
+function M.to_first (s)
+    return s()
+end
+
+-------------------------------------------------------------------------------
+
+do
+    function M.to_any (s, f)
+        return (s:filter(f):to_first() ~= nil)
+    end
+
+    function M.to_some (s, f)
+        return (s:filter(f):skip(1):to_first() ~= nil)
+    end
+
+    function M.to_all (s, f)
+        return not (s:to_any(function(x) return not f(x) end))
+    end
+
+    function M.to_none (s, p)
+        return not s:to_any(p)
+    end
+end
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+--[===[
+function M.fr_const (v)
+    return M.fr_consts(v):take(1)
+end
+
+local function distinct (t)
+    local v = t.s()
+    while true do
+        if v == nil then
+            return nil
+        elseif not t.seen[v] then
+            t.seen[v] = true
+            return v
+        end
+        v = t.s()
+    end
+end
+
+function M.distinct (s)
+    local t = {
+        s = s,
+        seen = {},
+        f = distinct,
+    }
+    return setmetatable(t, M.mt)
+end
+
+local function loop (t)
+    local v = t.s()
+    if v == nil then
+        t.s = t.fs()
+        v = t.s()
+    end
+    return v
+end
+
+function M.loop (fs)
+    local t = {
+        fs = fs,
+        s  = fs(),
+        f  = loop,
+    }
+    return setmetatable(t, M.mt)
+end
+
+function M.to_vector (s)
+    return M.to_table(s)
+end
+
+local function tuple (t)
+    return (function (...)
+        if ... == nil then
+            return nil
+        end
+        return { tag=t.tag, ... }
+    end)(t.s())
+end
+
+function M.tuple (s, tag)
+    local t = {
+        s   = s,
+        tag = tag,
+        f   = tuple,
+    }
+    return setmetatable(t, M.mt)
+end
+
+function M.mul (s)
+    return M.acc0(s, 1, function(a,x) return a*x end)
+end
+
+function M.sort (s, f)
+    return s:map(function (t)
+        table.sort(t, f)    -- TODO: insertion sort
+        return t
+    end)
+end
+
+function M.skip (s, n)
+    return s:mapi(function(i, v)
+        if i > n then
+            return M.fr_consts(v):take(1)
+        else
+            return M.empty()
+        end
+    end):xseq()
+end
+]===]
+
+return M
+
+    </script>
+    <script type="text/lua" data-module="atmos">
+require "atmos.util"
+local run = require "atmos.run"
+
+local atmos = {
+    close  = run.close,
+    stop   = run.stop,
+    loop   = run.loop,
+    start  = run.start,
+    status = run.status,
+    env    = run.env,
+}
+
+_is_  = run.is
+throw = run.throw
+catch = run.catch
+loop  = run.loop
+start = run.start
+stop  = run.stop
+
+defer = run.defer
+tasks = run.tasks
+
+function task (tra, ...)
+    if tra == nil then
+        return run.me()
+    elseif type(tra) == 'boolean' then
+        return run.task(debug.getinfo(2), tra, ...)
+    else
+        return run.task(debug.getinfo(2), false, tra, ...)
+    end
+end
+
+function spawn_in (up, t, ...)
+    return run.spawn(debug.getinfo(2), up, false, t, ...)
+end
+
+function spawn (tra, t, ...)
+    if type(tra) == 'boolean' then
+        return run.spawn(debug.getinfo(2), nil, tra, t, ...)
+    else
+        return run.spawn(debug.getinfo(2), nil, false, tra, t, ...)
+    end
+end
+
+function emit_in (to, e, ...)
+    return run.emit(true, to, e, ...)
+end
+
+function emit (e, ...)
+    return run.emit(true, nil, e, ...)
+end
+
+await    = run.await
+clock    = run.clock
+_or_     = run._or_
+_and_    = run._and_
+toggle   = run.toggle
+every    = run.every
+par      = run.par
+par_or   = run.par_or
+par_and  = run.par_and
+watching = run.watching
+
+return atmos
+
+    </script>
+    <script type="text/lua" data-module="atmos.util">
+function trim (s)
+    return (s:gsub("^%s*",""):gsub("\n%s*","\n"):gsub("%s*$",""))
+end
+
+function assertn (n, cnd, err)
+    if n > 0 then
+        n = n + 1
+    end
+    if not cnd then
+        error(err, n)
+    end
+    return cnd
+end
+
+function totable (...)
+    local t = {}
+    local n = select('#',...) / 2
+    assert((n*2) == select('#',...))
+    for i=1, n do
+        t[select(i,...)] = select(i+n,...)
+    end
+    return t
+end
+
+    </script>
+    <script type="text/lua" data-module="atmos.run">
+local S = require "atmos.streams"
+require "atmos.util"
+
+local M = {}
+
+local task_gc
+
+local meta_defer = {
+    __close = function (t) t.f() end
+}
+
+local function _next (s, i)
+    if i == s.max then
+        return nil
+    else
+        i = i + 1
+        return i, s.ts._.dns[i]
+    end
+end
+local function _ipairs (ts)
+    ts._.ing = ts._.ing + 1
+    local close = setmetatable({}, {
+        __close = function ()
+            ts._.ing = ts._.ing - 1
+            task_gc(ts)
+        end
+    })
+    return _next, {ts=ts,max=#ts._.dns}, 0, close
+end
+
+local meta_tasks; meta_tasks = {
+    __close = function (ts)
+        for _,dn in ipairs(ts._.dns) do
+            getmetatable(dn).__close(dn)
+        end
+    end,
+    __len = function (ts)
+        return #ts._.dns
+    end,
+    __pairs = _ipairs,
+}
+local meta_task = {
+    __close = function (t)
+        for _,dn in ipairs(t._.dns) do
+            getmetatable(dn).__close(dn)
+        end
+        local st = coroutine.status(t._.th)
+        if st == 'suspended' then
+            assert(coroutine.close(t._.th))
+        elseif st ~= 'dead' then
+            t._.status = 'aborted'
+        end
+    end
+}
+
+local TIME = 1
+
+local TASKS = setmetatable({
+    _ = {
+        up  = nil,
+        dns = {},
+        pin = true,
+        ing = 0,
+        gc  = false,
+        max = nil,
+        cache = setmetatable({}, {__mode='k'}),
+    }
+}, meta_tasks)
+
+-------------------------------------------------------------------------------
+
+local function _me_ (tra, t)
+    if t == TASKS then
+        return nil
+    elseif (getmetatable(t) == meta_tasks) or ((not tra) and t._.tra) then
+        return _me_(tra, t._.up)
+    else
+        return t
+    end
+end
+
+function M.me (tra)
+    local th = coroutine.running()
+    return th and TASKS._.cache[th] and _me_(tra, TASKS._.cache[th])
+end
+
+function M.is (v, x)
+    if v == x then
+        return true
+    end
+    local tp = type(v)
+    local mt = getmetatable(v)
+    if tp == x then
+        return true
+    elseif tp=='string' and type(x)=='string' then
+        return (string.find(v, '^'..x..'%.') == 1)
+    elseif mt==meta_task and x=='task' then
+        return true
+    elseif mt==meta_tasks and x=='tasks' then
+        return true
+    elseif tp=='table' and type(x)=='string' then
+        return (string.find(v.tag or '', '^'..x) == 1)
+    else
+        return false
+    end
+end
+
+function M.status (t)
+    return coroutine.status(t._.th)
+end
+
+-------------------------------------------------------------------------------
+
+local function task_result (t, ok, err)
+    if ok then
+        -- no error: continue normally
+        if t._.status == 'aborted' then
+            -- t aborted from outside
+            -- close now and continue normally
+            -- could not close before b/c t was running
+            -- TODO: lua5.5
+            assert(coroutine.close(t._.th))
+        end
+    else
+        coroutine.close(t._.th) -- TODO: assert fails "tasks.lua: error 2"
+        error(err, 0)
+    end
+
+    if coroutine.status(t._.th) == 'dead' then
+        t.ret = err
+        t._.up._.gc = true
+        --if t._.status ~= 'aborted' then
+            local up = _me_(false, t._.up)
+            M.emit(false, up, t)
+            if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
+                local up = _me_(false, t._.up._.up)
+                M.emit(false, up, t._.up, t)
+            end
+        --end
+        meta_task.__close(t)
+    end
+end
+
+task_gc = function (t)
+    if t._.gc and t._.ing==0 then
+        t._.gc = false
+        for i=#t._.dns, 1, -1 do
+            local s = t._.dns[i]
+            if getmetatable(s)==meta_task and coroutine.status(s._.th)=='dead' then
+                table.remove(t._.dns, i)
+            end
+        end
+    end
+end
+
+---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+local _envs_ = {}
+
+function M.env (e)
+    if e.mode == nil then
+        -- no mode: single-env only, cannot combine with others
+        assertn(2, #_envs_ == 0,
+            "invalid env : single-env only (mode not set)")
+        _envs_[1] = e
+        return
+    end
+    assertn(2, #_envs_ == 0 or _envs_[1].mode,
+        "invalid env : previous env is single-env only (mode not set)")
+    _envs_[#_envs_+1] = e
+    if #_envs_ == 2 then
+        local first = _envs_[1]
+        assertn(2, first.mode.primary,
+            "invalid env : primary mode not supported")
+        first.mode.current = 'primary'
+    end
+    if #_envs_ >= 2 then
+        assertn(2, e.mode.secondary,
+            "invalid env : secondary mode not supported")
+        e.mode.current = 'secondary'
+    end
+end
+
+function M.close ()
+    meta_tasks.__close(TASKS)
+end
+
+function M.defer (f)
+    return setmetatable({f=f}, meta_defer)
+end
+
+local meta_throw = {}
+
+local function trace ()
+    local ret = {}
+    local x = M.me(true)
+    while x and x~=TASKS do
+        ret[#ret+1] = {
+            msg = (getmetatable(x)==meta_task and 'task') or 'tasks',
+            dbg = x._.dbg,
+        }
+        x = x._.up
+    end
+    return ret
+end
+
+local function tothrow (dbg, ...)
+    local err = {
+        _ = {
+            dbg = { file=dbg.short_src, line=dbg.currentline },
+            pre = trace(),
+            pos = {},
+        },
+        ...
+    }
+    return setmetatable(err, meta_throw)
+end
+
+function M.throw (...)
+    return error(tothrow(debug.getinfo(2),...))
+end
+
+function M.catch (...)
+    local cnd = { ... }
+    local blk = table.remove(cnd, #cnd)
+    return (function (ok, err, ...)
+        if ok then
+            return ok,err,...
+        elseif getmetatable(err) == meta_throw then
+            local X = cnd[1]
+            if false then
+            elseif X == false then
+                error(err, 0)
+            elseif X == true then
+                return false, table.unpack(err)
+            elseif type(X) == 'function' then
+                return (function (ok, ...)
+                    if ok then
+                        return false, ...
+                    else
+                        error(err, 0)
+                    end
+                end)(X(table.unpack(err)))
+            else
+                for i=1, #cnd do
+                    if not M.is(err[i],cnd[i]) then
+                        error(err, 0)
+                    end
+                end
+                return false, table.unpack(err)
+            end
+        else
+             error(err, 0)
+        end
+    end)(pcall(blk))
+end
+
+local function flatten (err)
+    local str = ""
+    for i,e in ipairs(err) do
+        if i > 1 then
+            str = str .. ", "
+        end
+        str = str .. tostring(e) or ('('..type(e)..')')
+    end
+    local ret = "==> ERROR:\n"
+
+    for i=#err._.pos, 1, -1 do
+        local t = err._.pos[i]
+        ret = ret .. " |  "
+        for j=1, #t do
+            local e = t[j]
+            ret = ret .. e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg.. ")"
+            if j < #t then
+                ret = ret .. " <- "
+            end
+        end
+        ret = ret .. "\n"
+    end
+
+    ret = ret .. " v  " .. err._.dbg.file .. ":" .. err._.dbg.line .. " (throw)"
+    for i=1, #err._.pre do
+        local e = err._.pre[i]
+        ret = ret .. " <- "
+        ret = ret .. e.dbg.file .. ":" .. e.dbg.line .. " (" .. e.msg .. ')'
+    end
+    ret = ret .. "\n"
+
+    ret = ret .. "==> " .. str .. '\n'
+    return ret
+end
+
+local function xcall (dbg, stk, f, ...)
+    return (function (ok, err, ...)
+        if ok then
+            return err, ...
+        end
+
+        if type(err)=='string' and string.match(err, '^==> ERROR:') then
+            -- already flatten
+            error(err, 0)
+        end
+
+        if stk then
+            if (getmetatable(err) ~= meta_throw) then
+                local file, line, msg = string.match(err, '(.-):(%d-): (.*)')
+                err = {
+                    _ = {
+                        dbg = { file=file or '?', line=line or '?' },
+                        pre = trace(),
+                        pos = {},
+                    },
+                    msg or err
+                }
+                err = setmetatable(err, meta_throw)
+            end
+            if getmetatable(err) == meta_throw then
+                local t = trace()
+                err._.pos[#err._.pos+1] = t
+                table.insert(t, 1, {
+                    msg = stk,
+                    dbg = { file=dbg.short_src, line=dbg.currentline },
+                })
+            end
+        end
+        if stk == "loop" then
+            err = flatten(err)
+        end
+        error(err, 0)
+
+    end)(pcall(f, ...))
+end
+
+function M.loop (body, ...)
+    assertn(2, type(body) == 'function',
+        "invalid loop : expected body function")
+    return xcall(debug.getinfo(2), "loop", function (...)
+        local _ <close> = M.defer(function ()
+            M.stop()
+        end)
+        for _, env in ipairs(_envs_) do
+            if env.open then env.open() end
+        end
+        local t <close> = M.spawn(debug.getinfo(4), nil, false, body, ...)
+        while true do
+            if coroutine.status(t._.th) == 'dead' then
+                break
+            end
+            local quit = false
+            for _, env in ipairs(_envs_) do
+                if env.step() then
+                    quit = true
+                    break
+                end
+            end
+            if quit then
+                break
+            end
+        end
+        return t.ret
+    end, ...)
+end
+
+function M.start (body, ...)
+    assertn(2, type(body) == 'function',
+        "invalid start : expected body function")
+    assertn(2, #_envs_ == 1,
+        "invalid start : expected single env")
+    assertn(2, _envs_[1].mode == nil,
+        "invalid start : expected env with mode=nil")
+    if _envs_[1].open then _envs_[1].open() end
+    M.spawn(debug.getinfo(2), nil, false, body, ...)
+end
+
+function M.stop ()
+    M.close()
+    for i=#_envs_, 1, -1 do
+        if _envs_[i].close then
+            _envs_[i].close()
+        end
+        _envs_[i] = nil
+    end
+end
+
+-------------------------------------------------------------------------------
+
+function M.tasks (max)
+    local n = max and tonumber(max) or nil
+    assertn(2, (not max) or n, "invalid tasks limit : expected number")
+    local up = M.me(true) or TASKS
+    local dbg = debug.getinfo(2)
+    local ts = {
+        _ = {
+            up  = up,
+            dns = {},
+            pin = false,
+            ing = 0,
+            gc  = false,
+            dbg = {file=dbg.short_src, line=dbg.currentline},
+            ---
+            max = n,
+        }
+    }
+    up._.dns[#up._.dns+1] = ts
+    setmetatable(ts, meta_tasks)
+    return ts
+end
+
+function M.task (dbg, tra, f)
+    assertn(3, type(f)=='function', "invalid task : expected function")
+    local f = function (...)
+        local _no_tco_ <close> = nil
+        return f(...)
+    end
+    local t = {
+        _ = {
+            up  = nil,
+            dns = {},
+            pin = false,
+            ing = 0,
+            gc  = false,
+            dbg = {file=dbg.short_src, line=dbg.currentline},
+            ---
+            th  = coroutine.create(f),
+            tra = tra,
+            status = nil, -- aborted, toggled
+            await = {
+                time = 0,
+            },
+            ret = nil,
+        }
+    }
+    TASKS._.cache[t._.th] = t
+    setmetatable(t, meta_task)
+    return t
+end
+
+function M.spawn (dbg, up, tra, t, ...)
+    if type(t) == 'function' then
+        t = M.task(dbg, tra, t)
+        if t == nil then
+            return nil
+        else
+            return M.spawn(dbg, up, tra, t, ...)
+        end
+    end
+    assertn(2, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
+    assertn(2, t._.tra == tra, "invalid spawn : transparent modifier mismatch")
+
+    up = up or M.me(true) or TASKS
+    if getmetatable(up) == meta_tasks then
+        t.pin = true
+    end
+    if up._.max then
+        local n = #up._.dns
+        if n >= up._.max then
+            for _,t in ipairs(up._.dns) do
+                if coroutine.status(t._.th) == 'dead' then
+                    n = n - 1
+                end
+            end
+            if n >= up._.max then
+                return nil
+            end
+        end
+    end
+    up._.dns[#up._.dns+1] = t
+    t._.up = assert(t._.up==nil and up)
+
+    task_result(t, coroutine.resume(t._.th, ...))
+    return t
+end
+
+-------------------------------------------------------------------------------
+
+local function check_task_ret (t)
+    if t.tag == '_==_' then
+        if (getmetatable(t[1]) == meta_task) and (coroutine.status(t[1]._.th) == 'dead') then
+            return true, t[1].ret, t[1]
+        else
+            return false
+        end
+    elseif t.tag == '_or_' then
+        for _,x in ipairs(t) do
+            local chk,ret = check_task_ret(x)
+            if chk then
+                return chk, ret
+            end
+        end
+        return false
+    elseif t.tag == '_and_' then
+        local rets = {}
+        for i,x in ipairs(t) do
+            local chk,ret = check_task_ret(x)
+            if chk then
+                t[i] = { tag='_ok_', ret }
+                rets[#rets+1] = ret
+            end
+        end
+        if #rets == #t then
+            return true, rets
+        else
+            return false
+        end
+    else
+        return false
+    end
+end
+
+local function check_ret (awt, ...)
+    -- awt = await pattern | ... = occurring event arguments
+    local e = awt[1]
+    local mta = getmetatable(awt)
+    local mte = getmetatable(...)
+    if awt.tag == '_or_' then
+        for _, x in ipairs(awt) do
+            local vs = { check_ret(x, ...) }
+            if vs[1] then
+                return table.unpack(vs)
+            end
+        end
+        return false
+    elseif awt.tag == '_and_' then
+        for i, x in ipairs(awt) do
+            local vs = { check_ret(x, ...) }
+            if vs[1] then
+                local t = (#vs>2 and {table.unpack(vs,2)}) or vs[2]
+                awt[i] = { tag='_ok_', t }
+            end
+        end
+        local ret = {}
+        for _,x in ipairs(awt) do
+            if x.tag == '_ok_' then
+                ret[#ret+1] = x[1]
+            else
+                return false
+            end
+        end
+        return true, table.unpack(ret)
+    elseif mta and mta.__atmos then
+        return mta.__atmos(awt, ...)
+    elseif mte and mte.__atmos then
+        return mte.__atmos(awt, ...)
+    elseif awt.tag == 'boolean' then
+        if e == false then
+            -- never awakes
+            return false
+        elseif e == true then
+            return true, ...
+        else
+            error "bug found : impossible case"
+        end
+    elseif awt.tag == '_==_' then
+        for i,v in ipairs(awt) do
+            if not _is_(select(i,...),v) then
+                return false
+            end
+        end
+        if getmetatable(e) == meta_task then
+            return true, e.ret --, e
+        elseif getmetatable(e) == meta_tasks then
+            -- invert ts,t -> t,ts
+            return true, select(2,...), select(1,...), select(3,...)
+        else
+            return true, ...
+        end
+    elseif awt.tag == 'function' then
+        local es = { ... }
+        return (function (v, ...)
+            if select('#',...) == 0 then
+                return v, table.unpack(es)
+            else
+                return v, ...
+            end
+        end)(e(...))
+    else
+        return false
+    end
+end
+
+local function awake (err, ...)
+    local me = assert(M.me(true))
+    if err then
+        error((...), 0)
+    else
+        local awt = me._.await
+        return (function (ok, ...)
+            if ok then
+                return ...
+            else
+                return awake(coroutine.yield())
+            end
+        end)(check_ret(awt, ...))
+    end
+end
+
+local function clock_to_ms (clk)
+    return (clk.ms                         or 0) +
+           (clk.s   and clk.s  *1000       or 0) +
+           (clk.min and clk.min*1000*60    or 0) +
+           (clk.h   and clk.h  *1000*60*60 or 0)
+end
+
+local meta_clock; meta_clock = {
+    -- await(clock{ms=100})
+    -- vs
+    -- emit('clock',100)
+    -- emit(clock{ms=100})
+    __atmos = function (a, e, dt, now)
+        local ma = getmetatable(a)
+        local me = getmetatable(e)
+        if (ma == meta_clock) and (e=='clock' or me==meta_clock) then
+            if e == 'clock' then
+                a.cur = a.cur - dt
+                return (a.cur <= 0), 'clock', -a.cur, now
+            else
+                a.cur = a.cur - clock_to_ms(e)
+                return (a.cur <= 0), 'clock', -a.cur, nil
+            end
+        else
+            return false
+        end
+    end
+}
+
+local function await_to_table (e, ...)
+    local T
+    if type(e) == 'table' then
+        if (getmetatable(e) == meta_task) or getmetatable(e) == meta_tasks then
+            T = { tag='_==_', e,... }
+        elseif S.is(e) then
+            --error'TODO'
+            T = { tag='_==_', spawn(function() return e() end),... }
+        elseif e.tag=='_or_' or e.tag=='_and_' then
+            T = e
+            for i,v in ipairs(T) do
+                T[i] = await_to_table(table.unpack(v))
+            end
+        else
+            if e.tag == 'clock' then
+                e.cur = clock_to_ms(e)
+                T = e
+            else
+                T = { tag='_==_', e,... }
+            end
+        end
+    elseif type(e) == 'function' then
+        T = { tag='function', e,... }
+    elseif type(e) == 'boolean' then
+        T = { tag='boolean', e,... }
+    else
+        T = { tag='_==_', e,... }
+    end
+    T.time = TIME
+    return T
+end
+
+function M.await (e, ...)
+    -- await(stream)
+    -- await { tag='clock' }
+    -- await(f)     -- f(...)
+    -- await(true/false)
+    -- await(task)
+    -- await(...)
+    -- await(a _and_ b)
+
+    local t = M.me(true)
+    assertn(2, t, "invalid await : expected enclosing task", 2)
+    assertn(2, e~=nil, "invalid await : expected event", 2)
+
+    t._.await = await_to_table(e, ...)
+
+    local chk,ret = check_task_ret(t._.await)
+    if chk then
+        return ret
+    end
+
+    return awake(coroutine.yield())
+end
+
+function M.clock (t)
+    assertn(2, type(t)=='table', "invalid clock : expected table")
+    t.tag = 'clock'
+    return setmetatable(t, meta_clock)
+end
+
+function M._or_ (...)
+    local t = {
+        tag = '_or_',
+        ...
+    }
+    for i,x in ipairs(t) do
+        if type(x) == 'table' then
+            if getmetatable(x)==meta_task or getmetatable(x)==meta_tasks or x.tag then
+                t[i] = { x }
+            end
+        else
+            t[i] = { x }
+        end
+    end
+    return t
+end
+
+function M._and_ (...)
+    local t = {
+        tag = '_and_',
+        ...
+    }
+    for i,x in ipairs(t) do
+        if type(x) == 'table' then
+            if getmetatable(x)==meta_task or getmetatable(x)==meta_tasks or x.tag then
+                t[i] = { x }
+            end
+        else
+            t[i] = { x }
+        end
+    end
+    return t
+end
+
+-------------------------------------------------------------------------------
+
+local function fto (me, to)
+    if to == nil then
+        to = 0
+    elseif to == 'task' then
+        to = 0
+    elseif to == 'parent' then
+        to = 1
+    end
+
+    if to == 'global' then
+        to = TASKS
+    elseif type(to) == 'number' then
+        local n = tonumber(to)
+        to = me or TASKS
+        while n > 0 do
+            to = to._.up
+            assertn(3, to~=nil, "invalid emit : invalid target")
+            n = n - 1
+        end
+    elseif getmetatable(to)==meta_task or getmetatable(to)==meta_tasks then
+        to = to
+    else
+        error("invalid emit : invalid target", 3)
+    end
+
+    return to
+end
+
+local function emit (time, t, ...)
+    local ok, err = true, nil
+
+    if t._.status == 'toggled' then
+        return ok, err
+    end
+
+    t._.ing = t._.ing + 1
+    for i=1, #t._.dns do
+        local dn = t._.dns[i]
+        ok, err = pcall(emit, time, dn, ...)
+        if not ok then
+            break
+        end
+    end
+    t._.ing = t._.ing - 1
+
+    task_gc(t)
+
+    if getmetatable(t) == meta_task then
+        if not ok then
+            if coroutine.status(t._.th) == 'suspended' then
+                ok, err = coroutine.resume(t._.th, 'atm_error', err)
+                if ok then
+                    task_result(t, ok, err)
+                end
+            end
+            assertn(0, ok, err) -- TODO: error in defer?
+        else
+            if (t._.await.time < time) and (coroutine.status(t._.th) == 'suspended') then
+                task_result(t, coroutine.resume(t._.th, nil, ...))
+            end
+        end
+    else
+        assert(getmetatable(t) == meta_tasks)
+        assertn(0, ok, err)
+    end
+end
+
+function M.emit (stk, to, e, ...)
+    TIME = TIME + 1
+    local time = TIME
+    local ret = xcall(debug.getinfo(2), stk and "emit", emit, time, fto(M.me(false),to), e, ...)
+    local me = M.me(true)
+    if me and me._.status=='aborted' then
+        -- TODO: lua5.5
+        coroutine.yield()   -- wait to be closed from outside
+    end
+    return ret
+end
+
+-------------------------------------------------------------------------------
+
+function M.toggle (t, on)
+    if type(t) == 'string' then
+        local e, f = t, on
+        assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
+        do
+            local t <close> = M.spawn(debug.getinfo(2), nil, true, f)
+            local _ <close> = M.spawn(debug.getinfo(2), nil, true, function ()
+                while true do
+                    M.await(e, false)
+                    M.toggle(t, false)
+                    M.await(e, true)
+                    M.toggle(t, true)
+                end
+            end)
+            return M.await(t)
+        end
+    end
+
+    assertn(2, getmetatable(t)==meta_task or getmetatable(t)==meta_tasks,
+        "invalid toggle : expected task")
+    assertn(2, type(on) == 'boolean', "invalid toggle : expected bool argument")
+    if on then
+        assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
+        t._.status = nil
+    else
+        assertn(2, t._.status==nil --[[and coroutine.status(t._.th)=='suspended']],
+            "invalid toggle : expected awaiting task")
+        t._.status = 'toggled'
+    end
+end
+
+-------------------------------------------------------------------------------
+
+function M.every (...)
+    assertn(2, M.me(true), "invalid every : expected enclosing task")
+    local t = { ... }
+    local blk = table.remove(t, #t)
+    while true do
+        blk(M.await(table.unpack(t)))
+    end
+end
+
+local meta_par = {
+    __close = function (ts)
+        for _, t in ipairs(ts) do
+            meta_task.__close(t)
+        end
+    end
+}
+
+function M.par (...)
+    assertn(2, M.me(true), "invalid par : expected enclosing task")
+    local fs = { ... }
+    local ts <close> = setmetatable({}, meta_par)
+    for i,f in ipairs(fs) do
+        assertn(2, type(f) == 'function', "invalid par : expected task prototype")
+        ts[i] = M.spawn(debug.getinfo(2), nil, true, select(i,...))
+    end
+    M.await(false)
+end
+
+function M.par_or (...)
+    assertn(2, M.me(true), "invalid par_or : expected enclosing task")
+    local fs = { ... }
+    local ts <close> = setmetatable({}, meta_par)
+    for i,f in ipairs(fs) do
+        assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
+        ts[i] = M.spawn(debug.getinfo(2), nil, true, f)
+    end
+    return M.await(M._or_(table.unpack(ts)))
+end
+
+function M.par_and (...)
+    assertn(2, M.me(true), "invalid par_or : expected enclosing task")
+    local fs = { ... }
+    local ts <close> = setmetatable({}, meta_par)
+    for i,f in ipairs(fs) do
+        assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
+        ts[i] = M.spawn(debug.getinfo(2), nil, true, f)
+    end
+    return M.await(M._and_(table.unpack(ts)))
+end
+
+function M.watching (...)
+    assertn(2, M.me(true), "invalid watching : expected enclosing task")
+    local t = { ... }
+    local f = table.remove(t, #t)
+    assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
+    local spw <close> = M.spawn(debug.getinfo(2), nil, true, f)
+    return M.await(M._or_({table.unpack(t)}, spw))
+end
+
+return M
+
+    </script>
+    <script type="text/lua" data-module="atmos.streams">
+local S = require "streams"
+
+local n = 0
+local function N ()
+    n = n + 1
+    return 'atmos.streams.' .. n
+end
+
+local from = S.from
+
+function S.from (v, ...)
+    if _is_(v, 'clock') then
+        return S.fr_await(v, ...)
+    end
+    return from(v, ...)
+end
+
+-------------------------------------------------------------------------------
+
+local function fr_await (t)
+    return await(table.unpack(t.args))
+end
+
+local function fr_spawn (t)
+    local x <close> = spawn(t.T, table.unpack(t.args))
+    return await(x) or false
+end
+
+function S.fr_await (...)
+    local T = select(1, ...)
+    local t
+    if type(T) == 'function' then
+        t = {
+            T    = T,
+            args = { select(2,...) },
+            f    = fr_spawn,
+        }
+    else
+        t = {
+            args = { ... },
+            f    = fr_await,
+        }
+    end
+    return setmetatable(t, S.mt)
+end
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+function S.emitter (s, tgt, as)
+    if as == nil then
+        tgt, as = nil, tgt
+    end
+    return s:tap(function (v) emit_in(tgt, as, v) end)
+end
+
+-------------------------------------------------------------------------------
+
+function S.Debounce (n, src, fctl)
+    while true do
+        local e = await(src)
+        catch('X', function()
+            while true do
+                e = par_or (
+                    function()
+                        return await(src)
+                    end,
+                    function()    -- bounced
+                        local ctl <close> = fctl()
+                        ctl()
+                        throw 'X'                   -- debounced
+                    end
+                )
+            end
+        end)
+        emit_in(1, n, e)
+    end
+end
+
+local function debounce (t)
+    local _,v = await(t.n)
+    return v
+end
+
+local function close (t)
+    local _ <close> = t.tsk
+end
+
+function S.debounce (src, fctl)
+    local n = N()
+    local t = {
+        n   = n,
+        tsk = spawn(S.Debounce, n, src, fctl),
+        f   = debounce,
+        clo = close,
+    }
+    return setmetatable(t, S.mt)
+end
+
+-------------------------------------------------------------------------------
+
+function S.Buffer (n, src, ctl)
+    local ctl <close> = ctl
+    while true do
+        local ret = {}
+        catch('X', function()
+            while true do
+                ret[#ret+1] = par_or (
+                    function ()
+                        return await(src)   -- buffered
+                    end,
+                    function()
+                        await(ctl)
+                        throw 'X'           -- released
+                    end
+                )
+            end
+        end)
+        emit_in(1, n, ret)
+    end
+end
+
+local function buffer (t)
+    local _,v = await(t.n)
+    return v
+end
+
+local function close (t)
+    local _ <close> = t.tsk
+end
+
+function S.buffer (src, ctl)
+    local n = N()
+    local t = {
+        n   = n,
+        tsk = spawn(S.Buffer, n, src, ctl),
+        f   = buffer,
+        clo = close,
+    }
+    return setmetatable(t, S.mt)
+end
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+local function T (n, s)
+    while true do
+        local v = s()
+        if v == nil then
+            return
+        end
+        emit_in(3, n, v)
+    end
+end
+
+local function TT (n, tsks, ss)
+    local ss <close> = ss
+    local tsks <close> = tsks
+    while true do
+        local s = ss()
+        if s == nil then
+            await(false)
+        end
+        spawn_in(tsks, T, n, s)
+    end
+end
+
+local function clo_tsk (t)
+    local _ <close> = t.tsk
+end
+
+local function clo_tsks (t)
+    local _ <close> = t.tsks
+end
+
+-------------------------------------------------------------------------------
+
+local function par (t)
+    local _,v = await(t.n)
+    return v
+end
+
+function S.par (...)
+    local n = N()
+    local tsks = tasks()
+    for i=1, select('#',...) do
+        local s = select(i, ...)
+        spawn_in(tsks, T, n, s)
+    end
+    local t = {
+        n    = n,
+        tsks = tsks,
+        f    = par,
+        clo  = clo_tsks,
+    }
+    return setmetatable(t, S.mt)
+end
+
+function S.xpar (ss)
+    local n = N()
+    local tsks = tasks()
+    local t = {
+        n    = n,
+        tsks = tsks,
+        tsk  = spawn(TT, n, tsks, ss),
+        f    = par,
+        clo  = clo_tsk,
+    }
+    return setmetatable(t, S.mt)
+end
+
+-------------------------------------------------------------------------------
+
+local function paror (t)
+    local x,v = await(_or_(t.n,t.tsks))
+    if v == t.tsks then
+        return nil
+    end
+    return v
+end
+
+function S.paror (...)
+    local n = N()
+    local tsks = tasks()
+    for i=1, select('#',...) do
+        local s = select(i, ...)
+        spawn_in(tsks, T, n, s)
+    end
+    local t = {
+        n    = n,
+        tsks = tsks,
+        f    = paror,
+        clo  = clo_tsks,
+    }
+    return setmetatable(t, S.mt)
+end
+
+function S.xparor (ss)
+    local n = N()
+    local tsks = tasks()
+    local t = {
+        n    = n,
+        tsks = tsks,
+        tsk  = spawn(TT, n, tsks, ss),
+        f    = paror,
+        clo  = clo_tsk,
+    }
+    return setmetatable(t, S.mt)
+end
+
+-------------------------------------------------------------------------------
+
+return S
+
+    </script>
+    <script type="text/lua" data-module="atmos.x">
+local M = {}
+
+function M.tostring (v)
+    if type(v) ~= 'table' then
+        return tostring(v)
+    else
+        local fst = true
+        local vs = ""
+        local t = {}
+        for k,x in pairs(v) do
+            assert(type(k)=='number' or type(k)=='string')
+            --if k ~= 'tag' then
+                t[#t+1] = { k, x }
+            --end
+        end
+        table.sort(t, function (x, y)
+            local n1, n2 = tonumber(x[1]), tonumber(y[1])
+            if n1 and n2 then
+                return (n1 < n2)
+            else
+                return (tostring(x[1]) < tostring(y[1]))
+            end
+        end)
+        local i = 1
+        for _,kx in ipairs(t) do
+            local k,x = table.unpack(kx)
+            if not fst then
+                vs = vs .. ', '
+            end
+            if tonumber(k) == i then
+                i = i + 1
+                vs = vs .. M.tostring(x)
+            else
+                vs = vs .. k .. '=' .. M.tostring(x)
+            end
+            fst = false
+        end
+        --local tag = v.tag and (':'..v.tag..' ') or ''
+        return --[[tag ..]] "@{" .. vs .. "}"
+    end
+end
+
+function M.print (...)
+    local ret = {}
+    for i=1, select('#', ...) do
+        ret[#ret+1] = M.tostring(select(i, ...))
+    end
+    print(table.unpack(ret))
+end
+
+function M.copy (v)
+    if type(v) ~= 'table' then
+        return v
+    end
+    local ret = {}
+    for k,x in pairs(v) do
+        ret[k] = M.copy(x)
+    end
+    return ret
+end
+
+return M
+
+    </script>
+    <script type="text/lua" data-module="atmos.env.js">
+local atmos = require "atmos"
+
+local M = {
+    now = 0,
+}
+
+-- JS_now() and JS_close() must be set by the JS host before start().
+
+function M.open ()
+    M.now = JS_now()
+end
+
+function M.close ()
+    JS_close()
+end
+
+atmos.env(M)
+
+return M
+
+    </script>
+    <script type="text/lua" data-module="atmos.lang.global">
+FILE = nil
+LEX  = nil
+TK0  = nil
+TK1  = nil
+LIN  = nil
+SEP  = nil
+_n_  = nil
+_l_  = nil
+
+function init ()
+    SEP = 1
+    _n_ = 0
+    _l_ = 1
+end
+
+function N ()
+    _n_ = _n_ + 1
+    return _n_
+end
+
+SYMS = { '{', '}', '(', ')', '[', ']', ',', '\\' }
+
+KEYS = {
+    'await', 'catch', 'defer', 'do', 'else', 'emit', 'every', 'false', 'func',
+    'if', 'ifs', 'in', 'loop', 'match', 'nil', 'par', 'par_and', 'par_or',
+    'pin', 'set', 'spawn', 'tasks', 'test', 'toggle', 'true', 'val', 'var',
+    'watching', 'where', 'with',
+    -- 'break', 'escape', 'it', 'pub', 'return', 'skip', 'task',
+    -- 'throw', 'until', 'while'
+}
+
+OPS = {
+    cs = { '+', '-', '*', '/', '%', '>', '<', '=', '|', '&', '?', '!' ,'#', '~' },
+    vs = {
+        '#',
+        '=', '=>',
+        '==', '!=', '===', '=!=',
+        '>', '<', '>=', '<=',
+        '||', '&&',
+        '+', '-', '*', '**', '/', '//', '%',
+        '!',
+        '++',
+        '~~', '!~',
+        '??', '!?',
+        '?>', '!>',
+        '->', '-->', '<-', '<--',
+    },
+    unos = {
+        '-', '#', '!'
+    },
+    bins = {
+        '==', '!=', '===', '=!=',
+        '??', '!?',
+        '+', '-', '*', '**', '/', '//', '%',
+        '>', '<', '>=', '<=',
+        '||', '&&',
+        '++',
+        '?>', '!>',
+        '~~', '!~',
+    },
+    lua = {
+        ['!']  = 'not',
+        ['!='] = '~=',
+        ['||'] = 'or',
+        ['&&'] = 'and',
+        ['**'] = '^',
+    }
+}
+
+    </script>
+    <script type="text/lua" data-module="atmos.lang.aux">
+function assertn (n, cnd, err)
+    if n > 0 then
+        n = n + 1
+    end
+    if not cnd then
+        error(err, n)
+    end
+    return cnd
+end
+
+function assertfx(cur, exp)
+    return assert(string.find(cur,exp), cur)
+end
+
+function assertx(cur, exp)
+    return assert(cur == exp, cur)
+end
+
+function warnx(cur, exp)
+    return warn(cur == exp, exp)
+end
+
+function warn (ok, msg)
+    if not ok then
+        msg = "WARNING: "..(msg or "<warning message>")
+        io.stderr:write(msg..'\n')
+    end
+end
+
+function trim (s)
+    return (s:gsub("^%s*",""):gsub("\n%s*","\n"):gsub("%s*$",""))
+end
+
+function contains (t, v)
+    for _,x in ipairs(t) do
+        if x == v then
+            return true
+        end
+    end
+    return false
+end
+
+function any (t, f)
+    for _, v in ipairs(t) do
+        if f(v) then
+            return true
+        end
+    end
+    return false
+end
+
+function atm_equal (v1, v2)
+    if v1 == v2 then
+        return true
+    end
+
+    local t1 = type(v1)
+    local t2 = type(v2)
+    if t1 ~= t2 then
+        return false
+    end
+
+    local mt1 = getmetatable(v1)
+    local mt2 = getmetatable(v2)
+    if mt1 ~= mt2 then
+        return false
+    end
+
+    if t1 == 'table' then
+        for k1,x1 in pairs(v1) do
+            local x2 = v2[k1]
+            if not atm_equal(x1,x2) then
+                return false
+            end
+        end
+        for k2,x2 in pairs(v2) do
+            local x1 = v1[k2]
+            if not atm_equal(x2,x1) then
+                return false
+            end
+        end
+        return true
+    end
+
+    return false
+end
+
+function atm_is (v1, v2)
+    return atm_equal(v1,v2) or _is_(v1,v2)
+end
+
+function atm_cat (v1, v2)
+    local ok, v = pcall(function()
+        return v1 .. v2
+    end)
+    if ok then
+        return v
+    end
+
+    local ret = {}
+    for k,x in iter(v1) do
+        ret[k] = x
+    end
+    local n = 1
+    for k,x in iter(v2) do
+        if k == n then
+            ret[#ret+1] = x
+            n = n + 1
+        else
+            ret[k] = x
+        end
+    end
+    return ret
+end
+
+function atm_in (v, t)
+    for x,y in iter(t) do
+        if (x==v and type(x)~='number') or (y == v) then
+            return true
+        end
+    end
+    return false
+end
+
+local function T (id, tab, k, s)
+    s
+    :tap(function(v)
+        tab[k] = v
+    end)
+    :emitter(2, id..'.'..k)
+    :to()
+end
+
+function atm_behavior (id, tsks, tab, ss)
+    for k,s in pairs(ss) do
+        spawn_in(tsks, T, id, tab, k, s)
+    end
+end
+
+function map (t, f)
+    local ret = {}
+    for i,v in ipairs(t) do
+        ret[#ret+1] = f(v,i)
+    end
+    return ret
+end
+
+function join (sep, t)
+    local ret = ""
+    for i,v in ipairs(t) do
+        if i > 1 then
+            ret = ret .. sep
+        end
+        ret = ret .. v
+    end
+    return ret
+end
+
+function concat (t1, t2, ...)
+    local ret = {}
+    for _,v in ipairs(t1) do
+        ret[#ret+1] = v
+    end
+    for _,v in ipairs(t2) do
+        ret[#ret+1] = v
+    end
+    if ... then
+        return concat(ret, ...)
+    end
+    return ret
+end
+
+    </script>
+    <script type="text/lua" data-module="atmos.lang.lexer">
+require "atmos.lang.global"
+require "atmos.lang.aux"
+
+local match = string.match
+
+function err (tk, msg)
+    error(FILE .. " : line " .. tk.lin .. " : near '" .. tk.str .."' : " .. msg, 0)
+end
+
+local function _lexer_ (str)
+    local i = 1
+
+    local function read ()
+        local c = string.sub(str,i,i)
+        if c == '\n' then
+            LIN = LIN + 1
+            SEP = SEP + 1
+        elseif c == ';' then
+            SEP = SEP + 1
+        end
+        i = i + 1
+        return c
+    end
+    local function unread ()
+        i = i - 1
+        local c = string.sub(str,i,i)
+        if c == '\n' then
+            LIN = LIN - 1
+            SEP = SEP - 1
+        elseif c == ';' then
+            SEP = SEP - 1
+        end
+        return c
+    end
+
+    local function read_while (pre, f)
+        local ret = pre
+        local c = read()
+        while f(c) do
+            if c == '\0' then
+                return nil
+            end
+            ret = ret .. c
+            c = read()
+        end
+        unread()
+        return ret
+    end
+    local function read_until (pre, f)
+        return read_while(pre, function (c) return not f(c) end)
+    end
+    local function C (x)
+        return function (c)
+            return (x == c)
+        end
+    end
+    local function M (m)
+        return function (c)
+            return match(c, m)
+        end
+    end
+
+    while i <= #str do
+        local c = read()
+
+        -- spaces
+        if match(c, "%s") then
+            -- ignore
+
+        -- comments
+        elseif c == ';' then
+            local c2 = read()
+            if c2 ~= ';' then
+                unread()
+            else
+                local s = read_while(";;", C';')
+                if s == ";;" then
+                    read_until(s, M"[\n\0]")
+                else
+                    local lin,sep = LIN,SEP
+                    local stk = {}
+                    while true do
+                        if stk[#stk] == s then
+                            stk[#stk] = nil
+                            if #stk == 0 then
+                                break
+                            end
+                        else
+                            stk[#stk+1] = s
+                        end
+                        repeat
+                            if not read_until("", C';') then
+                                err({str=s,lin=lin,sep=sep}, "unterminated comment")
+                            end
+                            s = read_while("", C';')
+                        until #s>2 and #s>=#stk[#stk]
+                    end
+                end
+            end
+
+        -- @{, @clk
+        elseif c == '@' then
+            local c2 = read()
+            if c2 == '{' then
+                coroutine.yield { tag='sym', str=c..'{', lin=LIN,sep=SEP }
+            else -- clock
+                unread()
+                local t = read_while('', M"[%w_:%.]")
+                local h,min,s,ms = match(t, '^([^:%.]+):([^:%.]+):([^:%.]+)%.([^:%.]+)$')
+                if not h then
+                    h,min,s = match(t, '^([^:%.]+):([^:%.]+):([^:%.]+)$')
+                    if not h then
+                        min,s,ms = match(t, '^([^:%.]+):([^:%.]+)%.([^:%.]+)$')
+                        if not min then
+                            min,s = match(t, '^([^:%.]+):([^:%.]+)$')
+                            if not min then
+                                s,ms = match(t, '^([^:%.]+)%.([^:%.]+)$')
+                                if not s then
+                                    s = match(t, '^([^:%.]+)$')
+                                    if not s then
+                                        ms = match(t, '^%.([^:%.]+)$')
+                                        if not ms then
+                                            err({str='@',lin=LIN,sep=SEP}, "invalid clock")
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                coroutine.yield {
+                    tag = 'clk',
+                    str = t,
+                    clk = {
+                        h   = (h or 0),
+                        min = (min or 0),
+                        s   = (s or 0),
+                        ms  = (ms or 0)
+                    },
+                    lin=LIN,sep=SEP,
+                }
+            end
+
+        -- symbols:  {  (  ,  ;
+        elseif contains(SYMS, c) then
+            coroutine.yield { tag='sym', str=c, lin=LIN,sep=SEP }
+
+        elseif c == '.' then
+            local c2 = read()
+            if c2 ~= '.' then
+                unread()
+                coroutine.yield { tag='sym', str='.', lin=LIN,sep=SEP }
+            else
+                local c3 = read()
+                if c3 ~= '.' then
+                    unread()
+                    coroutine.yield { tag='sym', str='.', lin=LIN,sep=SEP }
+                    coroutine.yield { tag='sym', str='.', lin=LIN,sep=SEP }
+                else
+                    coroutine.yield { tag='sym', str='...', lin=LIN }
+                end
+            end
+
+        -- operators:  +  >=  #
+        elseif contains(OPS.cs, c) then
+            local op = read_while(c, function (c) return contains(OPS.cs,c) end)
+            local cur = op
+            while not contains(OPS.vs,cur) do
+                if string.len(cur) == 0 then
+                    err({str=op,lin=LIN,sep=SEP}, "invalid operator")
+                end
+                unread()
+                cur = string.sub(cur, 1, -2)
+            end
+            if op=='~~' or op=='!~' then
+                error("TODO : ~~ !~ : not implemented")
+            end
+            coroutine.yield { tag='op', str=cur, lin=LIN,sep=SEP }
+
+        -- tags:  :X  :a:b:c
+        elseif c == ':' then
+            local c2 = read()
+            if c2 == ':' then
+                coroutine.yield { tag='sym', str='::', lin=LIN,sep=SEP }
+            else
+                unread()
+                local tag = read_while(':', M"[%w_%.]")
+                --[[
+                local hier = {}
+                for x in string.gmatch(tag, ":([^:]*)") do
+                    hier[#hier+1] = x
+                end
+                ]]
+                coroutine.yield { tag='tag', str=tag, lin=LIN,sep=SEP }
+            end
+
+        -- keywords:  await  if
+        -- variables:  x  a_10
+        elseif match(c, "[%a_]") then
+            local id = read_while(c, M"[%w_]")
+            if contains(KEYS, id) then
+                coroutine.yield { tag='key', str=id, lin=LIN,sep=SEP }
+            else
+                coroutine.yield { tag='id', str=id, lin=LIN,sep=SEP }
+            end
+
+        -- numbers:  0xFF  10.1
+        elseif match(c, "%d") then
+            local num = read_while(c, M"[%w%.]")
+            if string.find(num, '[PpEe]') then
+                num = read_while(num, M"[%w%.%-%+]")
+            end
+            if not tonumber(num) then
+                err({str=num,lin=LIN,sep=SEP}, "invalid number")
+            else
+                coroutine.yield { tag='num', str=num, lin=LIN,sep=SEP }
+            end
+
+        elseif c=='`' then
+            local lin,sep = LIN,SEP
+            local pre = read_while(c, C(c))
+            local n1 = string.len(pre)
+            local v = ''
+            if n1 == 2 then
+                v = ''
+            elseif n1 == 1 then
+                v = read_until(v, M("[\n"..c.."]"))
+                if string.sub(str,i,i) == '\n' then
+                    err({str=string.sub(str,i-1,i-1),lin=lin,sep=sep}, "unterminated native")
+                end
+                assert(c == read())
+            else
+                while true do
+                    v = read_until(v, C(c))
+                    if not v then
+                        err({str=pre,lin=lin,sep=sep}, "unterminated native")
+                    end
+                    local pos = read_while('', C(c))
+                    local n2 = string.len(pos)
+                    if n1 == n2 then
+                        break
+                    end
+                    v = v .. pos
+                end
+            end
+            coroutine.yield { tag='nat', str=v, lin=lin,sep=sep }
+
+        elseif c=='"' or c=="'" then
+            local lin,sep = LIN,SEP
+            local pre = read_while(c, C(c))
+            local n1 = string.len(pre)
+            local v = ''
+            if n1 == 2 then
+                v = ''
+            elseif n1 == 1 then
+                v = read_until(v, M("[\n"..c.."]"))
+                if string.sub(str,i,i) == '\n' then
+                    err({str=string.sub(str,i-1,i-1),lin=lin,sep=sep}, "unterminated string")
+                end
+                assert(c == read())
+            else
+                while true do
+                    v = read_until(v, C(c))
+                    if not v then
+                        err({str=pre,lin=lin,sep=sep}, "unterminated string")
+                    end
+                    local pos = read_while('', C(c))
+                    local n2 = string.len(pos)
+                    if n1 == n2 then
+                        break
+                    end
+                    v = v .. pos
+                end
+            end
+            coroutine.yield { tag='str', str=v, lin=lin,sep=sep }
+
+        -- eof
+        elseif c == '\0' then
+            coroutine.yield { tag='eof', str='<eof>', lin=LIN,sep=SEP }
+
+        -- error
+        else
+            err({str=c,lin=LIN,sep=SEP}, "invalid character")
+        end
+    end
+end
+
+function lexer_init (file, str)
+    str = str .. '\0'
+    FILE = file
+    LIN = 1
+    local co = coroutine.create(_lexer_)
+    LEX = function ()
+        local ok, v = coroutine.resume(co, str)
+        if not ok then
+            error(v, 0)
+        end
+        return v
+    end
+end
+
+function lexer_next ()
+    TK0 = TK1
+    TK1 = LEX()
+end
+
+    </script>
+    <script type="text/lua" data-module="atmos.lang.parser">
+require "atmos.lang.prim"
+
+-------------------------------------------------------------------------------
+
+function check (str, tag)
+    return (tag==nil or TK1.tag==tag) and (str==nil or TK1.str==str) and TK1 or nil
+end
+function check_no_err (str, tag)
+    local tk = check(str, tag)
+    if tk then
+        err(TK1, "unexpected "..((str and "'"..str.."'") or (tag and '<'..tag..'>')))
+    end
+    return tk
+end
+function check_err (str, tag)
+    local tk = check(str, tag)
+    if not tk then
+        err(TK1, "expected "..((str and "'"..str.."'") or (tag and '<'..tag..'>')))
+    end
+    return tk
+end
+function accept (str, tag)
+    local tk = check(str, tag)
+    if tk then
+        lexer_next()
+    end
+    return tk
+end
+function accept_err (str, tag)
+    local tk = check_err(str, tag)
+    lexer_next()
+    return tk
+end
+
+-------------------------------------------------------------------------------
+
+function parser_list (sep, clo, f)
+    assert(sep or clo)
+    if clo == nil then
+        clo = function () return false end
+    elseif type(clo) == 'function' then
+        -- ok
+    else
+        local x = clo
+        clo = function () return check(x) end
+    end
+    local l = {}
+    if clo() then
+        return l
+    end
+    l[#l+1] = f(#l+1)
+    while true do
+        if clo() then
+            return l
+        end
+        if sep then
+            if check(sep) then
+                accept_err(sep)
+                if clo() then
+                    return l
+                end
+            else
+                return l
+            end
+        end
+        --[[
+        -- HACK-01: flatten "seq" into list
+        if f == parser_stmt then
+            local es = f()
+            if es.tag == "seq" then
+                for _,s in ipairs(es) do
+                    l[#l+1] = s
+                end
+            else
+                l[#l+1] = es
+            end
+        else
+            l[#l+1] = f()
+        end
+        ]]
+        l[#l+1] = f(#l+1)
+    end
+    return l
+end
+
+function parser_ids (clo)
+    return parser_list(",", clo, function () return accept_err(nil,'id') end)
+end
+
+function parser_dots_pars ()
+    if accept('...') then
+        return true, {}
+    else
+        local l = {}
+        if check(')') then
+            return false, l
+        end
+        l[#l+1] = accept_err(nil,'id')
+        while not check(')') do
+            accept_err(sep)
+            if accept('...') then
+                return true, l
+            end
+            l[#l+1] = accept(nil,'id')
+        end
+        return false, l
+    end
+end
+
+function parser_stmts (clo)
+    return parser_list(nil, clo,
+        function (i)
+            if i>1 and TK0.sep==TK1.sep then
+                err(TK1, "sequence error : expected ';' or new line")
+            end
+            return parser()
+        end
+    )
+end
+
+function parser_lambda ()
+    accept_err('\\')
+
+    -- normal lambda: \(){}
+    if not check(nil, 'op') then
+        local dots = false
+        local pars = {
+            { tag='id', str="it" },
+        }
+        if accept('(') then
+            dots, pars = parser_dots_pars()
+            accept_err(')')
+        elseif accept(nil,'id') then
+            pars = { TK0 }
+        end
+        check_err('{')
+        local blk = parser_block()
+        return { tag='func', dots=dots, pars=pars, blk=blk }
+
+    -- lambda operator: \- \++
+    else
+        local op = accept_err(nil, 'op')
+        if contains(OPS.bins, op.str) then
+            local a = { tag='id', str='a' }
+            local b = { tag='id', str='b' }
+            return {
+                tag  = 'func',
+                dots = false,
+                pars = { a, b },
+                blk  = {
+                    tag = 'block',
+                    es  = {
+                        {
+                            tag = 'bin',
+                            op  = op,
+                            e1  = {
+                                tag='acc', tk=a
+                            },
+                            e2  = {
+                                tag='acc', tk=b
+                            },
+                        }
+                    }
+                }
+            }
+        elseif contains(OPS.unos, op.str) then
+            local a = { tag='id', str='a' }
+            return {
+                tag  = 'func',
+                dots = false,
+                pars = { a },
+                blk  = {
+                    tag = 'block',
+                    es  = {
+                        {
+                            tag = 'uno',
+                            op  = op,
+                            e   = {
+                                tag='acc', tk=a
+                            },
+                        }
+                    }
+                }
+            }
+        else
+            err(op, "lambda error : invalid operator")
+        end
+    end
+end
+
+function parser_block ()
+    accept_err('{')
+    local es = parser_stmts('}')
+    accept_err('}')
+    return { tag='block', es=es }
+end
+
+function parser_main ()
+    local es = parser_stmts('<eof>')
+    accept_err('<eof>')
+    return { tag='do', blk={tag='block',es=es} }
+end
+
+-------------------------------------------------------------------------------
+
+-- 7_out : v where {...}
+-- 6_pip : v --> f     f <-- v
+-- 5_bin : a + b
+-- 4_pre : -a
+-- 3_met : v->f    f<-v
+-- 2_suf : v[0]    v.x    x::m()   f()
+--         :X() :X@{}
+--         f@{} f"" f``
+-- 1_prim
+
+local function is_prefix (e)
+    return (
+        e.tag == 'tag'    or
+        e.tag == 'acc'    or
+        e.tag == 'nat'    or
+        e.tag == 'call'   or
+        e.tag == 'met'    or
+        e.tag == 'index'  or
+        e.tag == 'parens'
+    )
+end
+
+local function check_call_arg ()
+    return check('@{') or check('\\') or
+           check(nil,'str') or check(nil,'tag') or
+           check(nil,'nat') or check(nil,'clk')
+end
+
+function parser_2_suf (pre)
+    local no = check('emit') or check('spawn') or check('toggle')
+    local e = pre or parser_1_prim()
+
+    local ok = (not no) and is_prefix(e) and
+                (TK0.sep==TK1.sep or TK1.str=='.' or TK1.str=='::')
+    if not ok then
+        return e
+    end
+
+    local tk0 = TK0
+    local ret
+
+    if accept('[') then
+        -- (t) [...]
+        local idx; do
+            if accept('=') or accept('+') or accept('-') then
+                idx = { tag='str', tk={tag='str',str=TK0.str} }
+            else
+                idx = parser()
+            end
+        end
+        accept_err(']')
+        ret = { tag='index', t=e, idx=idx }
+    elseif accept('.') then
+        -- (t) .id
+        local id = accept_err(nil,'id')
+        id = { tag='tag', str=':'..id.str }
+        local idx = { tag='tag', tk=id }
+        ret = { tag='index', t=e, idx=idx }
+    elseif accept('::') then
+        -- (o) ::m
+        local id = accept_err(nil,'id')
+        local _ = check_call_arg() or check_err('(')
+        ret = { tag='met', o=e, met=id }
+    elseif accept('(') then
+        -- (f) (...)
+        local es = parser_list(',', ')', parser)
+        accept_err(')')
+        ret = { tag='call', f=e, es=es }
+    elseif check_call_arg() then
+        local v = parser_1_prim()
+        ret = { tag='call', f=e, es={v} }
+    else
+        -- nothing consumed, not a suffix
+        return e
+    end
+
+    return parser_2_suf(ret)
+end
+
+local function pipe (f, e, pre)
+    local out = f
+    while f.tag == 'parens' do
+        f = f.e
+    end
+    if f.tag == 'call' then
+        if pre then
+            table.insert(f.es, 1, e)
+        else
+            f.es[#f.es+1] = e
+        end
+        return out
+    else
+        return { tag='call', f=out, es={e} }
+    end
+end
+
+function parser_3_met (pre)
+    local e = pre or parser_2_suf()
+    if accept('->') then
+        return parser_3_met(pipe(parser_2_suf(), e, true))
+    elseif accept('<-') then
+        return pipe(e, parser_3_met(parser_2_suf()), false)
+    else
+        return e
+    end
+end
+
+function parser_4_pre (pre)
+    local ok = check(nil,'op') and contains(OPS.unos, TK1.str)
+    if not ok then
+        return parser_3_met(pre)
+    end
+    local op = accept_err(nil,'op')
+    local e = parser_4_pre()
+    return { tag='uno', op=op, e=e }
+end
+
+function parser_5_bin (pre)
+    local e1 = pre or parser_4_pre()
+    local ok = check(nil,'op') and contains(OPS.bins, TK1.str) --and (TK0.lin==TK1.lin)
+    if not ok then
+        return e1
+    end
+    local op = accept_err(nil,'op')
+    if pre and pre.op.str~=op.str then
+        err(op, "operation error : use parentheses to disambiguate")
+    end
+    local e2 = parser_4_pre()
+    return parser_5_bin { tag='bin', op=op, e1=e1, e2=e2 }
+end
+
+function parser_6_pip (pre)
+    local e = pre or parser_5_bin()
+    local ok = true --(TK0.lin==TK1.lin)
+    if not ok then
+        return e
+    end
+
+    local op = check('-->') or check('<--')
+    if pre and op and pre.op and pre.op.str~=op.str then
+        err(op, "operation error : use parentheses to disambiguate")
+    end
+
+    local ret
+    if accept('-->') then
+        ret = pipe(parser_5_bin(), e, true)
+    elseif accept('<--') then
+        -- right to left
+        local pre = parser_6_pip()
+        if pre.op and pre.op.str == '-->' then
+            err(pre.op, "operation error : use parentheses to disambiguate")
+        end
+        return pipe(e, pre, false)
+    else
+        -- nothing consumed, not an out
+        return e
+    end
+
+    ret.op = op
+    return parser_6_pip(ret)
+end
+
+function parser_7_out (pre)
+    local e = pre or parser_6_pip()
+    local ok = true --(TK0.lin==TK1.lin)
+    if not ok then
+        return e
+    end
+
+    local op = check('where')
+    if pre and op and pre.op and pre.op.str~=op.str then
+        err(op, "operation error : use parentheses to disambiguate")
+    end
+
+    local ret
+    if accept('where') then
+        accept_err("{")
+        local ss = parser_list(nil, '}',
+            function ()
+                local ids = parser_ids('=')
+                accept_err('=')
+                local set = parser()
+                return { tag='dcl', tk={str='val'}, ids=ids, set=set }
+            end
+        )
+        accept_err("}")
+        ss[#ss+1] = e
+        ret = {
+            tag = 'call',
+            f = {
+                tag = 'func',
+                lua = true,
+                pars = {},
+                blk = {
+                    tag = 'block',
+                    es = ss,
+                },
+            },
+            es = {}
+        }
+    else
+        -- nothing consumed, not an out
+        return e
+    end
+
+    ret.op = op
+    return parser_7_out(ret)
+end
+
+function parser (...)
+    -- regardless of ..., must pass nothing to out()
+    return parser_7_out()
+end
+
+    </script>
+    <script type="text/lua" data-module="atmos.lang.prim">
+local atmos = require "atmos"
+
+local function spawn (lin, blk)
+    return {
+        tag = 'call',
+        f = { tag='acc', tk={tag='id', str='spawn', lin=lin} },
+        es = {
+            { tag='bool', tk={str='true'} },    -- transparent=true
+            { tag='func', pars={}, blk=blk },
+        },
+    }
+end
+
+function parser_spawn ()
+    accept_err('spawn')
+    if check('{') then
+        -- spawn { ... }
+        local spw = spawn(TK0.lin, parser_block())
+        return spw, spw
+    else
+        -- spawn [...] T(...)
+        local tk = TK0
+        local ts = nil; do
+            if accept('[') then
+                ts = parser()
+                accept_err(']')
+            end
+        end
+        local call = parser_6_pip()
+        if call.tag ~= 'call' then
+            err(tk, "expected call syntax")
+        end
+
+        local f; do
+            if ts then
+                table.insert(call.es, 1, ts)
+                f = 'spawn_in'
+            else
+                table.insert(call.es, 1, {tag='bool',tk={str='false'}})
+                f = 'spawn'
+            end
+        end
+        table.insert(call.es, 2, call.f)
+
+        local spw = {
+            tag = 'call',
+            f   = { tag='acc', tk={tag='id', str=f, lin=tk.lin} },
+            es  = call.es,
+        }
+        local out = parser_7_out(spw)
+        return out, spw
+    end
+end
+
+local lits = { {'nil','true','false','...'}, {'num','str','nat','clk'} }
+
+function parser_1_prim ()
+    local function check_(tag)
+        return check(nil, tag)
+    end
+
+    -- literals: nil, true, false, ..., str, nat, clock
+    -- (except tag)
+    if any(lits[1],check) or any(lits[2],check_) then
+        -- nil, true, false, ...
+        if accept('nil') then
+            return { tag='nil', tk=TK0 }
+        elseif accept('true') or accept('false') then
+            return { tag='bool', tk=TK0 }
+        elseif accept('...') then
+            return { tag='dots', tk=TK0 }
+        -- 0xFF, 'xxx', `xxx`, :X
+        elseif accept(nil,'num') then
+            return { tag='num', tk=TK0 }
+        elseif accept(nil,'str') then
+            return { tag='str', tk=TK0 }
+        elseif accept(nil,'nat') then
+            return { tag='nat', tk=TK0 }
+        elseif accept(nil,'clk') then
+            return { tag='clk', tk=TK0 }
+        else
+            error "bug found"
+        end
+
+    -- id: x, __v
+    elseif accept(nil,'id') then
+        return { tag='acc', tk=TK0 }
+
+    -- tag
+    elseif accept(nil,'tag') then
+        local e = { tag='tag', tk=TK0 }
+        if (check'(' or check'@{') and (TK0.sep == TK1.sep) then
+            -- (:X) @{...}
+            local t = parser_1_prim()
+            local f = { tag='acc', tk={tag='id',str="atm_tag_do"} }
+            return { tag='call', f=f, es={e,t} }
+        else
+            return e
+        end
+
+    -- table: @{...}
+    elseif accept('@{') then
+        local idx = 1
+        local es = parser_list(',', '}', function ()
+            local key
+            if accept('[') then
+                key = parser()
+                accept_err(']')
+                accept_err('=')
+                val = parser()
+            else
+                local e = parser()
+                if e.tag=='acc' and accept('=') then
+                    local id = { tag='tag', str=':'..e.tk.str }
+                    key = { tag='tag', tk=id }
+                    val = parser()
+                else
+                    key = { tag='num', tk={tag='num',str=tostring(idx)} }
+                    idx = idx + 1
+                    val = e
+                end
+            end
+            return { k=key, v=val }
+        end)
+        accept_err('}')
+        return { tag='table', es=es }
+
+    -- parens: (...)
+    elseif accept('(') then
+        local tk = TK0
+        local es = parser_list(',', ')', parser)
+        accept_err(')')
+        if #es == 1 then
+            return { tag='parens', tk=tk, e=es[1] }
+        else
+            return { tag='es', tk=tk, es=es }
+        end
+
+    -- emit, await, spawn, toggle
+    elseif check('emit') or check('await') or check('spawn') or check('toggle') then
+        -- emit [t] (...)
+        -- emit [t] <- :X (...)
+        if accept('emit') then
+            local tk = TK0
+            local to = nil
+            local f  = nil
+            if accept('[') then
+                to = parser()
+                accept_err(']')
+                f = 'emit_in'
+            else
+                f = 'emit'
+            end
+            local cmd = { tag='acc', tk={tag='id',str=f,lin=TK0.lin} }
+            local call = parser_6_pip(parser_5_bin(parser_4_pre(parser_3_met(parser_2_suf(cmd)))))
+            if call.tag ~= 'call' then
+                err(tk, "expected call syntax")
+            end
+            if f == 'emit_in' then
+                table.insert(call.es, 1, to)
+            end
+            return parser_7_out(call)
+        -- await(...)
+        elseif accept('await') then
+            local tk = TK0
+            if check(nil,'id') then
+                local call = parser_6_pip()
+                if call.tag ~= 'call' then
+                    err(tk, "expected call syntax")
+                end
+                return parser_7_out {
+                    tag = 'call',
+                    f   = { tag='acc', tk={tag='id', str='await', lin=tk.lin} },
+                    es  = {
+                        {
+                            tag = 'call',
+                            f   = { tag='acc', tk={tag='id', str='spawn', lin=tk.lin} },
+                            es  = concat({call.f}, call.es),
+                        }
+                    },
+                }
+            else
+                local cmd = { tag='acc', tk={tag='id',str='await',lin=tk.lin} }
+                local call = parser_6_pip(parser_5_bin(parser_4_pre(parser_3_met(parser_2_suf(cmd)))))
+                if call.tag ~= 'call' then
+                    err(tk, "expected call syntax")
+                end
+                return parser_7_out(call)
+            end
+        -- spawn {}, spawn T()
+        elseif check('spawn') then
+            local lin = TK1.lin
+            local out,spw = parser_spawn()
+            if spw.f.tk.str == 'spawn' then
+                -- force "pin" if no "in" target
+                out = {
+                    tag = 'dcl',
+                    tk  = {tag='key',str='pin',lin=lin},
+                    ids = { {tag='id',str='_'} },
+                    set = out,
+                }
+            end
+            return out
+        elseif accept('toggle') then
+            local tag = accept(nil, 'tag')
+            if tag then
+                local blk = parser_block()
+                return {
+                    tag = 'call',
+                    f = { tag='acc', tk={tag='id',str='toggle'} },
+                    es = {
+                        { tag='tag', tk=tag },
+                        {
+                            tag = 'func',
+                            lua = true,
+                            pars = {},
+                            blk = blk,
+                        },
+                    },
+                }
+            else
+                local tk = TK0
+                local cmd = { tag='acc', tk={tag='id', str='toggle', lin=TK0.lin} }
+                local call = parser_6_pip()
+                if call.tag ~= 'call' then
+                    err(tk, "expected call syntax")
+                end
+                table.insert(call.es, 1, call.f)
+                return parser_7_out({ tag='call', f=cmd, es=call.es })
+            end
+        else
+            error "bug found"
+        end
+
+    -- func, return
+    elseif check('func') or check('\\') or check('return') then
+        if accept('func') then
+            -- func () { ... }
+            -- func f () { ... }
+            -- func M.f () { ... }
+            -- func o::f () { ... }
+            if accept('(') then
+                local dots, pars = parser_dots_pars()
+                accept_err(')')
+                local blk = parser_block()
+                return { tag='func', dots=dots, pars=pars, blk=blk }
+            else
+                local id = accept_err(nil, 'id')
+
+                local idxs = {}
+                while accept('.') do
+                    idxs[#idxs+1] = accept_err(nil, 'id')
+                end
+
+                local met = nil
+                if accept('::') then
+                    met = accept_err(nil, 'id')
+                    idxs[#idxs+1] = met
+                end
+
+                accept_err('(')
+                local dots, pars = parser_dots_pars()
+                accept_err(')')
+
+                if met then
+                    table.insert(pars, 1, {tag='id',str="self"})
+                end
+
+                local dst = { tag='acc', tk=id }
+                for _, idx in ipairs(idxs) do
+                    dst = { tag='index', t=dst, idx={tag='str',tk=idx} }
+                end
+
+                local blk = parser_block()
+                return {
+                    tag  = 'set',
+                    dsts = { dst },
+                    src  = { tag='func', dots=dots, pars=pars, blk=blk }
+                }
+            end
+
+        -- lambda: \{}
+        elseif check('\\') then
+            return parser_lambda()
+
+        -- return(...)
+        elseif accept('return') then
+            accept_err('(')
+            local es = parser_list(',', ')', parser)
+            accept_err(')')
+            return { tag='return', es=es }
+        else
+            error "bug found"
+        end
+
+    -- var x = 10
+    elseif accept('val') or accept('var') or accept('pin') then
+        local tk = TK0
+
+        if accept('func') then
+            local id = accept_err(nil, 'id')
+            accept_err('(')
+            local dots, pars = parser_dots_pars()
+            accept_err(')')
+            local blk = parser_block()
+            local f = { tag='func', dots=dots, pars=pars, blk=blk }
+            return { tag='dcl', tk=tk, ids={id}, set=f }
+        end
+
+        local ids = parser_ids('=')
+
+        local beh = (#ids == 1) and accept('*')
+        if beh then
+            if tk.str ~= 'pin' then
+                err(tk, "invalid stream variable : expected pin declaration")
+            end
+        end
+
+        local set
+        if accept('=') then
+            if check('spawn') then
+                local tk1 = TK1
+                set = parser_spawn()
+                local inv = set.es[1]
+                if inv.tag=='bool' and inv.tk.str=="true" then
+                    err(tk, "invalid assignment : unexpected transparent task")
+                end
+            elseif accept('tasks') then
+                local f = { tag='acc', tk={tag='id',str="tasks",lin=TK0.lin} }
+                accept_err('(')
+                local e
+                if not check(')') then
+                    e = parser()
+                end
+                accept_err(')')
+                local ts = { tag='call', f=f, es={e} }
+                set = ts
+
+            else
+                set = parser()
+            end
+        end
+
+        if not beh then
+            return { tag='dcl', tk=tk, ids=ids, set=set }
+        else
+            --[[
+                pin x* = S.from(@1)
+                --
+                var x
+                spawn {
+                    S.from(@1)::tap \{ set x=it }::emitter('x')::to()
+                }
+                --
+                val _x = tasks()
+                val x = @{}
+                atm_behavior(_x, x, S.from(@1))
+            ]]
+            local id = ids[1]
+            if set.tag == 'table' then
+                return {
+                    tag = 'stmts',
+                    es = {
+                        { tag='dcl',
+                            tk  = { tag='pin', str="pin" },
+                            ids = { {tag='id', str="_"..id.str} },
+                            set = { tag='call',
+                                f  = { tag='acc', tk={tag='id',str="tasks"} },
+                                es = {},
+                            },
+                        },
+                        { tag='dcl',
+                            tk  = { tag='val', str="val" },
+                            ids = { id },
+                            set = { tag='table', es={} },
+                        },
+                        { tag='call',
+                            f  = { tag='acc', tk={tag='id',str="atm_behavior"} },
+                            es = {
+                                { tag='str', tk={tag='str',str=id.str} },
+                                { tag='acc', tk={tag='id',str="_"..id.str} },
+                                { tag='acc', tk={tag='id',str=id.str} },
+                                set, -- S.from(@1)
+                            },
+                        },
+                    },
+                }
+            else
+                return {
+                    tag = 'stmts',
+                    es = {
+                        { tag='dcl', tk={tag='var',str="var"}, ids={id} },
+                        spawn(tk.lin, {
+                            tag = 'block',
+                            es = {
+                                { tag='call',
+                                    f = { tag='met',
+                                        met = { tag='id', str="to" },
+                                        o = { tag='call',
+                                            f = { tag='met',
+                                                met = { tag='id', str="emitter" },
+                                                o = { tag='call',
+                                                    f = { tag='met', o=set, met={tag='id',str="tap"} },
+                                                    es = {
+                                                        { tag='func',
+                                                            pars = { {tag='id',str="it"} },
+                                                            blk = { tag='block',
+                                                                es = {
+                                                                    { tag='set',
+                                                                        dsts = {
+                                                                            { tag='acc',tk=ids[1] },
+                                                                        },
+                                                                        src = { tag='acc',tk={tag='id',str="it"} },
+                                                                    },
+                                                                },
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                            es = {
+                                                { tag='str',tk=id },
+                                            },
+                                        },
+                                    },
+                                    es = {},
+                                },
+                            },
+                        }),
+                    },
+                }
+            end
+        end
+
+    -- set x = 10
+    elseif accept('set') then
+        local dsts = parser_list(',', '=', function ()
+            local tk = TK1
+            local e = parser()
+            if e.tag=='acc' or e.tag=='index' or e.tag=='nat' then
+                -- ok
+            else
+                err(tk, "expected assignable expression")
+            end
+            return e
+        end)
+        accept_err('=')
+        local src = parser()
+        return { tag='set', dsts=dsts, src=src }
+
+    -- do, defer, catch
+    elseif check('do') or check('test') or check('catch') or check('defer') then
+        -- do :X {...}
+        -- do(...)
+        if accept('do') then
+            if check(nil,'tag') or check('{') then
+                local tag = accept(nil, 'tag')
+                local blk = parser_block()
+                return { tag='do', esc=tag, blk=blk }
+            else
+                local tk = TK0
+                local cmd = { tag='acc', tk={tag='id',str='atm_id',lin=TK0.lin} }
+                local call = parser_6_pip(parser_5_bin(parser_4_pre(parser_3_met(parser_2_suf(cmd)))))
+                if call.tag ~= 'call' then
+                    err(tk, "expected call syntax")
+                end
+                return call
+            end
+        -- test
+        elseif accept('test') then
+            local blk = parser_block()
+            if not atmos.test then
+                blk.es = {}
+            end
+            return { tag='do', blk=blk }
+        -- catch
+        elseif accept('catch') then
+            local cnd = parser()
+            local blk = parser_block()
+            return { tag='catch', cnd=cnd, blk=blk }
+        -- defer {...}
+        elseif accept('defer') then
+            local blk = parser_block()
+            return { tag='defer', blk=blk }
+        else
+            error "bug found"
+        end
+
+    -- if, ifs, match
+    elseif check('if') or check('ifs') or check('match') then
+        -- if x {...} else {...}
+        -- if x => y => z
+        if accept('if') then
+            local cnd = parser()
+            local cases = {}
+            if check('{') then
+                local blk = parser_block()
+                local t = { tag='func', lua=true, pars={}, blk=blk }
+                cases[#cases+1] = { cnd, t }
+                if accept('else') then
+                    local blk = parser_block()
+                    local f = { tag='func', lua=true, pars={}, blk=blk }
+                    cases[#cases+1] = { 'else', f }
+                end
+            else
+                accept_err('=>')
+                if check('\\') then
+                    local t = parser_lambda()
+                    cases[#cases+1] = { cnd, t }
+                    if accept('else') then
+                        local blk = parser_block()
+                        local f = { tag='func', lua=true, pars={}, blk=blk }
+                        cases[#cases+1] = { 'else', f }
+                    end
+                else
+                    local e = parser()
+                    local t = { tag='func', lua=true, pars={}, blk={tag='block', es={e}} }
+                    cases[#cases+1] = { cnd, t }
+                    if accept('=>') then
+                        local e = parser()
+                        local f = { tag='func', lua=true, pars={}, blk={tag='block', es={e}} }
+                        cases[#cases+1] = { 'else', f }
+                    end
+                end
+            end
+            return { tag='ifs', cases=cases }
+        -- ifs { x => a ; y => b ; else => c }
+        elseif accept('ifs') then
+            local ts = {}
+            local tk = accept_err('{')
+            while not check('}') do
+                local brk = false
+                local cnd; do
+                    if accept('else') then
+                        brk = true
+                        cnd = 'else'
+                    else
+                        cnd = parser()
+                    end
+                end
+                accept_err('=>')
+                local f; do
+                    if check('{') then
+                        local blk = parser_block()
+                        f = { tag='func', lua=true, pars={}, blk=blk }
+                    elseif check('\\') then
+                        f = parser_lambda()
+                    else
+                        local blk = {tag='block', es={parser()}}
+                        f = { tag='func', lua=true, pars={}, blk=blk }
+                    end
+                end
+                ts[#ts+1] = { cnd, f }
+                if brk then
+                    break
+                end
+            end
+            accept_err('}')
+            return { tag='ifs', cases=ts }
+        -- match e { x => a ; y => b ; else => c }
+        elseif accept('match') then
+            local ts = {}
+            local match = { n=N(), e=parser() }
+            local tk = accept_err('{')
+            while not check('}') do
+                local brk = false
+                local cnd; do
+                    if accept('else') then
+                        brk = true
+                        cnd = {
+                            tag = 'bin',
+                            op = { str='||' },
+                            e1 = { tag='acc', tk={str="atm_"..match.n} },
+                            e2 = { tag='bool', tk={str="true"} },
+                        }
+                    elseif check('\\') then
+                        local f = parser_lambda()
+                        cnd = {
+                            tag = 'call',
+                            f = f,
+                            es = {
+                                { tag='acc', tk={str="atm_"..match.n} },
+                            },
+                        }
+                    else
+                        local cmp = parser()
+                        cnd = {
+                            tag = 'bin',
+                            op = { str='&&' },
+                            e1 = {
+                                tag = 'call',
+                                f = { tag='acc', tk={str="_is_"} },
+                                es = {
+                                    { tag='acc', tk={str="atm_"..match.n} },
+                                    cmp
+                                },
+                            },
+                            e2 = {
+                                tag = 'bin',
+                                op = { str='||' },
+                                e1 = { tag='acc', tk={str="atm_"..match.n} },
+                                e2 = { tag='bool', tk={str="true"} },
+                            },
+                        }
+                    end
+                end
+                accept_err('=>')
+                local f; do
+                    if check('{') then
+                        local blk = parser_block()
+                        f = { tag='func', lua=true, pars={}, blk=blk }
+                    elseif check('\\') then
+                        f = parser_lambda()
+                    else
+                        local blk = { tag='block', es={parser()} }
+                        f = { tag='func', lua=true, pars={}, blk=blk }
+                    end
+                end
+                ts[#ts+1] = { cnd, f }
+                if brk then
+                    break
+                end
+            end
+            accept_err('}')
+            return { tag='ifs', match=match, cases=ts }
+        else
+            error "bug found"
+        end
+
+    -- loop
+    elseif accept('loop') then
+        local ids = check(nil,'id') and parser_ids('in') or nil
+        local itr = nil
+        if accept('in') then
+            itr = parser()
+        end
+        local blk = parser_block()
+        return { tag='loop', ids=ids, itr=itr, blk=blk }
+
+    -- every, pars, watching
+    elseif check('every') or check('par') or check('par_and') or check('par_or') or check('watching') then
+        -- every { ... }
+        if accept('every') then
+            local ids = {}
+            local awt = parser_list(',', '{', parser)
+            if accept('in') then
+                ids = awt
+                for i,v in ipairs(ids) do
+                    if v.tag ~= 'acc' then
+                        err(v.tk, "expected identifier")
+                    end
+                    ids[i] = v.tk
+                end
+                awt = parser_list(',', '{', parser)
+            end
+            local blk = parser_block()
+            local cb = { tag='func', lua=true, pars=ids, blk=blk }
+            return {
+                tag = 'call',
+                f = { tag='acc', tk={tag='id',str='every'} },
+                es = concat(awt, {cb})
+            }
+        -- par
+        elseif accept('par') or accept('par_and') or accept('par_or') then
+            local par = TK0.str
+            local fs = { parser_block() }
+            while accept('with') do
+                fs[#fs+1] = parser_block()
+            end
+            fs = map(fs, function (blk)
+                return {
+                    tag  = 'func',
+                    lua  = true,
+                    pars = {},
+                    blk  = blk,
+                }
+            end)
+            return {
+                tag = 'call',
+                f = { tag='acc', tk={tag='id',str=par} },
+                es = fs,
+            }
+        -- watching
+        elseif accept('watching') then
+            local awt = parser_list(',', '{', parser)
+            local blk = parser_block()
+            return {
+                tag = 'call',
+                f = { tag='acc', tk={tag='id',str='watching'} },
+                es = concat(awt, {
+                    {
+                        tag  = 'func',
+                        lua  = true,
+                        pars = {},
+                        blk  = blk,
+                    }
+                })
+            }
+        else
+            error "bug found"
+        end
+    else
+        err(TK1, "expected expression")
+    end
+end
+
+    </script>
+    <script type="text/lua" data-module="atmos.lang.coder">
+require "atmos.lang.tosource"
+
+local function L (tk)
+    local ls = ''
+    if tk and tk.lin then
+        if tk.lin < _l_ then
+            return ls
+                -- TODO: workaround
+                    -- where (tasks.lua, "every-where")
+                    -- (exec.lua, "func 2c")
+        end
+        assert(tk.lin >= _l_)
+        while tk.lin > _l_ do
+            ls = ls .. '\n'
+            _l_ = _l_ + 1
+        end
+    end
+    return ls
+end
+
+local function is_stmt (e)  -- cannot generate lua expressions (local, '=')
+    return e.tag=='dcl' or e.tag=='set' or e.tag=='defer'
+end
+
+function coder_stmts (es, noret)
+    local function f (e, i)
+        if noret or i<#es or is_stmt(e) then
+            return "; " .. coder(e)
+        else
+            -- TCO breaks atmos stack trace
+            return "; local _no_tco_ <close> = nil" -- prevents TCO
+                .. "; return " .. coder(e)
+        end
+    end
+    return join('', map(es,f))
+end
+
+function coder_args (es)
+    return join(", ", map(es,coder))
+end
+
+function coder_tag (tag)
+    return L(tag) .. '"' .. tag.str:sub(2) .. '"'
+end
+
+local ids = { 'break', 'until', 'while', 'return' }
+
+function coder (e)
+    if e.tag == 'tag' then
+        return coder_tag(e.tk)
+    elseif e.tag == 'acc' then
+        if e.tk.str == 'pub' then
+            --return L(e.tk) .. "(function() print(debug.traceback());return assert(atm_me(true), 'TODO') end)().pub"
+            return L(e.tk) .. "assert(task(),'invalid pub : expected enclosing task').pub"
+        elseif contains(ids, e.tk.str) then
+            return L(e.tk) .. "atm_"..e.tk.str
+        else
+            return L(e.tk) .. tosource(e)
+        end
+    elseif e.tag == 'str' then
+        return L(e.tk) .. "trim(" .. string.format("%q", e.tk.str) .. ")"
+    elseif e.tag == 'nat' then
+        return L(e.tk) .. e.tk.str
+    elseif e.tag == 'clk' then
+        local t = e.tk.clk
+        return L(e.tk) .. "clock {" ..
+            'h='..t.h..',' .. 'min='..t.min..',' .. 's='..t.s..',' .. 'ms='..t.ms ..
+        " }"
+    elseif e.tag == 'index' then
+        return coder(e.t) ..'['..coder(e.idx) .. ']'
+    elseif e.tag == 'table' then
+        local es = join(", ", map(e.es, function (t)
+            return '['..coder(t.k)..'] = '..coder(t.v)
+        end))
+        return "atm_table{ " .. es .. "}"
+    elseif e.tag == 'uno' then
+        return '('..(OPS.lua[e.op.str] or e.op.str)..' '..coder(e.e)..')'
+    elseif e.tag == 'bin' then
+        if false then
+        elseif e.op.str == '===' then
+            return "atm_equal(" .. coder(e.e1) .. ',' .. coder(e.e2) .. ')'
+        elseif e.op.str == '=!=' then
+            return "(not atm_equal(" .. coder(e.e1) .. ',' .. coder(e.e2) .. '))'
+        elseif e.op.str == '++' then
+            return "atm_cat(" .. coder(e.e1) .. ',' .. coder(e.e2) .. ')'
+        elseif e.op.str == '??' then
+            return "atm_is(" .. coder(e.e1) .. ',' .. coder(e.e2) .. ')'
+        elseif e.op.str == '!?' then
+            return "(not atm_is(" .. coder(e.e1) .. ',' .. coder(e.e2) .. '))'
+        elseif e.op.str == '?>' then
+            return "atm_in(" .. coder(e.e1) .. ',' .. coder(e.e2) .. ')'
+        elseif e.op.str == '!>' then
+            return "(not atm_in(" .. coder(e.e1) .. ',' .. coder(e.e2) .. '))'
+        else
+            return '('..coder(e.e1)..' '..(L(e.op)..(OPS.lua[e.op.str] or e.op.str))..' '..coder(e.e2)..')'
+        end
+    elseif e.tag == 'call' then
+        return coder(e.f) .. '(' .. coder_args(e.es) .. ')'
+    elseif e.tag == 'met' then
+        return coder(e.o) .. ':' .. e.met.str
+    elseif e.tag == 'func' then
+        local pars = join(', ', map(e.pars, function (id) return id.str end))
+        local dots = ''; do
+            if e.dots then
+                if #e.pars == 0 then
+                    dots = '...'
+                else
+                    dots = ', ...'
+                end
+            end
+        end
+        local f = (
+            "function (" .. pars .. dots .. ") " ..
+                coder(e.blk) ..
+            " end"
+        )
+        if e.lua then
+            f = '(' .. f .. ')'
+        else
+            f = "atm_func(" .. f .. ")"
+        end
+        return f
+    elseif e.tag == 'parens' then
+        local s = coder(e.e)
+        if e.e.tag == 'es' then
+            s = "(function () return " .. s .. " end)()"
+        end
+        return L(e.tk) .. '(' .. s .. ')'
+    elseif e.tag == 'es' then
+        return coder_args(e.es)
+
+    elseif e.tag == 'dcl' then
+        local mod = ''; do
+            if e.tk.str == 'val' then
+                mod = " <const>"
+            elseif e.tk.str == 'pin' then
+                mod = " <close>"
+            end
+        end
+        local ids = join(", ", map(e.ids,  function(id) return id.str end))
+        local out = L(e.tk) .. 'local ' .. ids .. mod
+        if not e.set then
+            return out
+        elseif e.tk.str == 'pin' then
+            local chk = (e.ids[1].str == '_') and "false" or "true"
+            return out .. " = atm_pin_chk_set(" .. chk .. ", true, "..coder(e.set)..')'
+        else
+            return out .. " = atm_pin_chk_set(true, false, "..coder(e.set)..')'
+        end
+    elseif e.tag == 'set' then
+        return coder_args(e.dsts) .. ' = atm_pin_chk_set(true, false, ' .. coder(e.src) .. ')'
+    elseif e.tag == 'do' then
+        if e.esc then
+            return (
+                "atm_do(" .. coder_tag(e.esc) .. ',' ..
+                    "function () " .. coder(e.blk) .. " end" ..
+                ")"
+            )
+        else
+            return "(function () " .. coder(e.blk) .. " end)()"
+        end
+    elseif e.tag == 'stmts' then
+        return coder_stmts(e.es, true)
+    elseif e.tag == 'block' then
+        return coder_stmts(e.es)
+    elseif e.tag == 'defer' then
+        local n = N()
+        local def = "atm_"..n
+        return
+            "local " .. def .. " <close> = setmetatable({}, {__close=" ..
+                "function () " ..
+                    coder_stmts(e.blk.es,true) ..
+                " end" ..
+            "})"
+    elseif e.tag == 'ifs' then
+        local function f (case)
+            local cnd,e = table.unpack(case)
+            local n = "atm_" .. N()
+            if cnd == 'else' then
+                cnd = "true"
+            else
+                cnd = coder(cnd)
+            end
+            return "local " .. n .. "=" .. cnd .. " ; if " .. n .. " then return (" .. coder(e) .. ")(" .. n .. ") end"
+        end
+        if e.match then
+            return (
+                "(function (atm_" .. e.match.n .. ") " ..
+                    join(' ', map(e.cases,f)) ..
+                " end)(" .. coder(e.match.e) .. ")"
+            )
+        else
+            return (
+                "(function () " ..
+                    join(' ', map(e.cases,f)) ..
+                " end)()"
+            )
+        end
+    elseif e.tag == 'loop' then
+        local ids = join(', ', map(e.ids or {{str="_"}}, function(id) return id.str end))
+        local itr = e.itr and coder(e.itr) or ''
+        return (
+            "atm_loop(" ..
+                "function () " ..
+                    "for " .. ids .. " in iter(" .. itr .. ") do " ..
+                        coder_stmts(e.blk.es,true) ..
+                    " end" ..
+                " end" ..
+            ")"
+        )
+    elseif e.tag == 'catch' then
+        local xe = coder(e.cnd)
+        return (
+            "catch(" .. xe .. ',' ..
+                "function () " .. coder(e.blk) .. " end" ..
+            ")"
+        )
+
+    else
+        --print(e.tag)
+        return L(e.tk) .. tosource(e)
+    end
+end
+
+    </script>
+    <script type="text/lua" data-module="atmos.lang.tosource">
+function tosource_stmts (e)
+    return join('\n', map(e.es,tosource)) ..'\n'
+end
+
+function tosource_block (e)
+    return '{\n' .. tosource_stmts(e) .. '}'
+end
+
+function tosource_args (es)
+    return join(', ', map(es,tosource))
+end
+
+function tosource (e, lbd)
+    if e.tag=='nil' or e.tag=='bool' or e.tag=='tag' or e.tag=='num' or e.tag=='acc' or e.tag=='dots' then
+        return e.tk.str
+    elseif e.tag == 'str' then
+        return '"' .. e.tk.str .. '"'
+    elseif e.tag == 'nat' then
+        return '`' .. e.tk.str .. '`'
+    elseif e.tag == 'clk' then
+        local t = e.tk.clk
+        return '@' .. t.h .. ':' .. t.min .. ':' .. t.s .. '.' .. t.ms
+    elseif e.tag == 'uno' then
+        return '(' .. e.op.str .. tosource(e.e) .. ')'
+    elseif e.tag == 'bin' then
+        return '('..tosource(e.e1)..' '..e.op.str..' '..tosource(e.e2)..')'
+    elseif e.tag == 'index' then
+        return tosource(e.t)..'['..tosource(e.idx)..']'
+    elseif e.tag == 'table' then
+        local es = join(", ", map(e.es, function (t)
+            return '['..tosource(t.k)..']='..tosource(t.v)
+        end))
+        return '@{' .. es .. '}'
+    elseif e.tag == 'es' then
+        return '(' .. tosource_args(e.es) .. ')'
+    elseif e.tag == 'parens' then
+        local e = tosource(e.e)
+        if e:sub(1,1)=='(' and e:sub(#e,#e)==')' then
+            return e
+        else
+            return '(' .. e .. ')'
+        end
+    elseif e.tag == 'call' then
+        return tosource(e.f) .. '(' .. tosource_args(e.es) .. ')'
+    elseif e.tag == 'met' then
+        return tosource(e.o) .. '::' .. e.met.str
+    elseif e.tag == 'func' then
+        local pars = join(', ', map(e.pars, function (id) return id.str end))
+        local dots = ''; do
+            if e.dots then
+                if #e.pars == 0 then
+                    dots = '...'
+                else
+                    dots = ', ...'
+                end
+            end
+        end
+        if lbd then
+            if #pars>0 then
+                return "\\(" .. pars .. dots .. ")" .. tosource_block(e.blk)
+            else
+                return tosource_block(e.blk)
+            end
+        else
+            return "func (" .. pars .. dots .. ") " .. tosource_block(e.blk)
+        end
+
+    elseif e.tag == 'dcl' then
+        local ids = join(', ', map(e.ids,  function(id) return id.str end))
+        local set = e.set and (' = '..tosource(e.set)) or ''
+        return e.tk.str .. " " .. ids .. set
+    elseif e.tag == 'set' then
+        return "set " .. tosource_args(e.dsts) .. " = " .. tosource(e.src)
+    elseif e.tag == 'stmts' then
+        return tosource_stmts(e)
+    elseif e.tag == 'block' then
+        return tosource_block(e)
+    elseif e.tag == 'do' then
+        return "do " .. (e.esc and e.esc.str.." " or "") .. tosource(e.blk)
+    elseif e.tag == 'defer' then
+        return "defer " .. tosource_block(e.blk)
+    elseif e.tag == 'ifs' then
+        local function f (t,i)
+            local cnd, x = table.unpack(t)
+            if cnd ~= "else" then
+                cnd = tosource(cnd)
+            end
+            return cnd .. " => " .. tosource(x,true) .. '\n'
+        end
+        local head = "ifs"
+        if e.match then
+            head = "match " .. tosource(e.match.e)
+        end
+        return head .. " {\n" .. join('',map(e.cases,f)) .. "}"
+    elseif e.tag == 'loop' then
+        local ids = e.ids and (' '..join(', ', map(e.ids, function(id) return id.str end))) or ''
+        local itr = e.itr and (' in '..tosource(e.itr)) or ''
+        return "loop" .. ids .. itr .. ' ' .. tosource_block(e.blk)
+    elseif e.tag == 'catch' then
+        return "catch " .. tosource(e.cnd) .. " " .. tosource_block(e.blk)
+    else
+        print(e.tag)
+        error("TODO")
+    end
+end
+
+    </script>
+    <script type="text/lua" data-module="atmos.lang.exec">
+require "atmos.lang.global"
+require "atmos.lang.lexer"
+require "atmos.lang.parser"
+require "atmos.lang.coder"
+
+function atm_test (src, tst)
+    local out = ""
+    PRINT = print
+    print = (tst and print) or (function (...)
+        local t = {}
+        for i=1, select('#',...) do
+            t[#t+1] = tostring(select(i,...))
+        end
+        out = out .. join('\t', t) .. '\n'
+    end)
+    local f, err = atm_loadstring(src, "anon.atm")
+    if not f then
+        print = PRINT
+        return err
+    end
+    atmos = require "atmos"
+    X = require "atmos.x"
+    require "atmos.lang.run"
+    local ok, err = pcall(atmos.loop,f)
+    print = PRINT
+    if ok then
+        return out
+    else
+        return out .. err
+    end
+end
+
+function atm_searcher (name)
+    local path = package.path:gsub('%?%.lua','?.atm'):gsub('init%.lua','init.atm')
+    local f, err = package.searchpath(name, path)
+    if not f then
+        return f, err
+    end
+    return function(_,x)
+        return assert(atm_loadfile(x))()
+    end, f
+end
+
+package.searchers[#package.searchers+1] = atm_searcher
+
+function atm_to_lua (file, src)
+    init()
+    lexer_init(file, src)
+    lexer_next()
+    local ast = parser_main()
+    return coder_stmts(ast.blk.es)
+end
+
+function atm_loadstring (src, file)
+    local ok,lua = pcall(atm_to_lua, file, src)
+    if not ok then
+        return ok,lua
+    end
+--io.stderr:write('\n'..lua..'\n\n')
+    local f,msg1 = load(lua, file)
+    if not f then
+        local filex, lin, msg2 = string.match(msg1, '%[string "(.-)"%]:(%d+): (.-) at line %d+$')
+        if not filex then
+            filex, lin, msg2 = string.match(msg1, '%[string "(.-)"%]:(%d+): (.*)$')
+        end
+        assert(file == filex)
+        return f, (file..' : line '..lin..' : '..msg2..'\n')
+    end
+    return f
+end
+
+function atm_loadfile (file)
+    local f = assert(io.open(file))
+    -- enclose with func (atm_func) b/c of return (throw)
+    -- func { \0 ... \n }:
+    --  - 1st \0 means no \n b/c of lexer lines
+    --  - 2nd \n prevents ";; }" in last line
+    local src = "(func (...) { " .. f:read('*a') .. "\n})(...)"
+    --local src = f:read('*a')
+     return atm_loadstring(src, file)
+end
+
+function atm_dostring (src, file)
+    return assertn(0, atm_loadstring(src,file))()
+end
+
+function atm_dofile (file)
+    local f = assert(io.open(file))
+    local src = f:read('*a')
+    return atm_dostring(src, file)
+end
+
+    </script>
+    <script type="text/lua" data-module="atmos.lang.run">
+function atm_pin_chk_set (chk, pin, ...)
+    local t = ...
+    if _is_(t,'task') or _is_(t,'tasks') then
+        if pin then
+            assertn(2, (not chk) or (not t.pin),
+                "invalid assignment : expected unpinned value")
+            t.pin = true
+        else
+            assertn(2, (not chk) or t.pin,
+                "invalid assignment : expected pinned value")
+        end
+    end
+    return ...
+end
+
+function atm_tag_do (tag, t)
+    assertn(2, type(t)=='table', 'invalid tag operation : expected table', 2)
+    t.tag = tag
+    return t
+end
+
+function atm_id ()
+end
+
+-------------------------------------------------------------------------------
+
+local meta_table = {
+    __index = function (t, i)
+        if i == '=' then
+            return t[#t]
+        elseif i == '-' then
+            local v = t[#t]
+            t[#t] = nil
+            return v
+        else
+            return nil
+        end
+    end,
+    __newindex = function (t, i, v)
+        if i == '=' then
+            t[#t] = v
+        elseif i == '+' then
+            t[#t+1] = v
+        else
+            rawset(t, i, v)
+        end
+    end,
+}
+
+function atm_table (t)
+    return setmetatable(t, meta_table)
+end
+
+-------------------------------------------------------------------------------
+-- CATCH/THROW, LOOP/UNTIL/WHILE/BREAK, FUNC/RETURN, DO/ESCAPE
+-------------------------------------------------------------------------------
+
+function atm_loop (blk)
+    return (function (ok, ...)
+        if ok then
+            return ...
+        else
+            -- atm-loop, ...
+            return select(2, ...)
+        end
+    end)(catch('atm-loop', blk))
+end
+
+function atm_until (cnd, ...)
+    if cnd then
+        if ... then
+            return atm_break(...)
+        else
+            return atm_break(cnd)
+        end
+    end
+end
+
+function atm_while (cnd, ...)
+    if not cnd then
+        return atm_break(...)
+    end
+end
+
+function atm_func (f)
+    return function (...)
+        local args = { ... }
+        return (function (ok, ...)
+            if ok then
+                return ...
+            else
+                -- atm-do, ...
+                return select(2, ...)
+            end
+        end)(catch('atm-func', function () return f(table.unpack(args)) end))
+    end
+end
+
+
+function atm_do (tag, blk)
+    return (function (ok, ...)
+        if ok then
+            return ...
+        else
+            -- atm-do, tag, ...
+            if select('#',...) == 2 then
+                return select(2, ...)
+            else
+                return select(3, ...)
+            end
+        end
+    end)(catch('atm-do', tag, blk))
+end
+
+function atm_break (...)
+    return throw('atm-loop', ...)
+end
+
+function atm_return (...)
+    return throw('atm-func', ...)
+end
+
+function escape (...)
+    return throw('atm-do', ...)
+end
+
+-------------------------------------------------------------------------------
+-- ITER
+-------------------------------------------------------------------------------
+
+local function fi (N, i)
+    i = i + 1
+    if i>N then
+        return nil
+    end
+    return i
+end
+
+function iter (t, ...)
+    local mt = getmetatable(t)
+    if mt and mt.__pairs then
+        return mt.__pairs(t)
+    elseif mt and mt.__call then
+        return t
+    elseif t == nil then
+        return fi, math.maxinteger-1, 0
+    elseif type(t) == 'function' then
+        return t
+    elseif type(t) == 'number' then
+        local fr, to
+        if ... then
+            fr, to = t-1, ...
+        else
+            fr, to = 0, t
+        end
+        return fi, to, fr
+    elseif type(t) == 'table' then
+        -- TODO: xnext
+        return coroutine.wrap(function()
+            for i=1, #t do
+                coroutine.yield(i, t[i])
+            end
+            for k,v in pairs(t) do
+                if type(k)~='number' or k<=0 or k>#t then
+                    coroutine.yield(k,v)
+                end
+            end
+        end)
+    else
+        error("TODO - iter(t)")
+    end
+end
+
+    </script>
+
+    <script type="module">
+// lua-atmos v0.5
+// run.js — shared utilities for all three tiers
+// Never used standalone; concatenated with a tier file by build.sh
+
+import { LuaFactory } from
+    'https://cdn.jsdelivr.net/npm/wasmoon@1.16.0/+esm';
+
+const output = document.getElementById('output');
+const status = document.getElementById('status');
+
+function getCode () {
+    const hash = location.hash.slice(1);
+    if (!hash) {
+        status.textContent = 'No program in URL.';
+        return null;
+    }
+    return atob(hash);
+}
+
+async function createEngine () {
+    const factory = new LuaFactory();
+    const lua = await factory.createEngine();
+    lua.global.set('print', (...args) => {
+        output.textContent += args.join('\t') + '\n';
+    });
+    return lua;
+}
+
+async function preloadModules (lua) {
+    const tags = document.querySelectorAll(
+        'script[type="text/lua"]'
+    );
+    for (const el of tags) {
+        lua.global.set('JS_mod_name', el.dataset.module);
+        lua.global.set('JS_mod_src', el.textContent);
+        await lua.doString(
+            'package.preload[JS_mod_name]'
+            + ' = assert(load(JS_mod_src,'
+            + ' "@" .. JS_mod_name))'
+        );
+    }
+}
+
+function startLoop (lua) {
+    let emitting = false;
+    const interval = setInterval(() => {
+        if (emitting) return;
+        emitting = true;
+        try {
+            const now = Date.now();
+            lua.doString(
+                `local E = JS_env`
+                + `\nlocal dt = ${now} - E.now`
+                + `\nif dt > 0 then`
+                + `\n    E.now = ${now}`
+                + `\n    emit('clock', dt, ${now})`
+                + `\nend`
+            );
+            if (lua.global.get('JS_done')) {
+                clearInterval(interval);
+                lua.doString('stop()');
+                status.textContent = 'Done.';
+            }
+        } finally {
+            emitting = false;
+        }
+    }, 16);
+    return interval;
+}
+// atmos.js — compile .atm source, then run under atmos runtime
+
+(async () => {
+    const code = getCode();
+    if (!code) return;
+
+    status.textContent = 'Loading...';
+    const lua = await createEngine();
+    await preloadModules(lua);
+    lua.global.set('JS_now', () => Date.now());
+
+    let interval;
+    lua.global.set('JS_close', () => clearInterval(interval));
+
+    status.textContent = 'Compiling...';
+    try {
+        await lua.doString(
+            'atmos = require "atmos"\n'
+            + 'X = require "atmos.x"\n'
+            + 'require "atmos.lang.exec"\n'
+            + 'require "atmos.lang.run"'
+        );
+
+        const wrapped =
+            '(func (...) { ' + code + '\n})(...)';
+        lua.global.set('JS_src', wrapped);
+        lua.global.set('JS_file', 'input.atm');
+
+        status.textContent = 'Running...';
+        await lua.doString(
+            'JS_env = require("atmos.env.js")\n'
+            + 'local f, err = '
+            + 'JS_loadstring(JS_src, JS_file)\n'
+            + 'if not f then error(err) end\n'
+            + 'start(function()\n'
+            + '    f()\n'
+            + '    JS_done = true\n'
+            + 'end)'
+        );
+        interval = startLoop(lua);
+    } catch (e) {
+        output.textContent += 'ERROR: ' + e.message + '\n';
+        status.textContent = 'Error.';
+    }
+})();
+
+    </script>
+</body>
+</html>
