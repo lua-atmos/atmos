@@ -11,35 +11,35 @@ VERSION="v0.5"
 
 GITHUB_RAW="https://raw.githubusercontent.com"
 
-# --- Module lists ---
+# --- Module lists (name  repo  version  path) ---
 
 LUA_ATMOS_MODULES=(
-    'streams         lua-atmos/f-streams  streams/init.lua'
-    'atmos           lua-atmos/atmos      atmos/init.lua'
-    'atmos.util      lua-atmos/atmos      atmos/util.lua'
-    'atmos.run       lua-atmos/atmos      atmos/run.lua'
-    'atmos.streams   lua-atmos/atmos      atmos/streams.lua'
-    'atmos.x         lua-atmos/atmos      atmos/x.lua'
-    'atmos.env.js    lua-atmos/atmos      atmos/env/js/init.lua'
+    'streams         lua-atmos/f-streams  main  streams/init.lua'
+    'atmos           lua-atmos/atmos      main  atmos/init.lua'
+    'atmos.util      lua-atmos/atmos      main  atmos/util.lua'
+    'atmos.run       lua-atmos/atmos      main  atmos/run.lua'
+    'atmos.streams   lua-atmos/atmos      main  atmos/streams.lua'
+    'atmos.x         lua-atmos/atmos      main  atmos/x.lua'
+    'atmos.env.js    lua-atmos/atmos      main  atmos/env/js/init.lua'
 )
 
 ATMOS_LANG_MODULES=(
-    'atmos.lang.global   atmos-lang/atmos  src/global.lua'
-    'atmos.lang.aux      atmos-lang/atmos  src/aux.lua'
-    'atmos.lang.lexer    atmos-lang/atmos  src/lexer.lua'
-    'atmos.lang.parser   atmos-lang/atmos  src/parser.lua'
-    'atmos.lang.prim     atmos-lang/atmos  src/prim.lua'
-    'atmos.lang.coder    atmos-lang/atmos  src/coder.lua'
-    'atmos.lang.tosource atmos-lang/atmos  src/tosource.lua'
-    'atmos.lang.exec     atmos-lang/atmos  src/exec.lua'
-    'atmos.lang.run      atmos-lang/atmos  src/run.lua'
+    'atmos.lang.global   atmos-lang/atmos  main  src/global.lua'
+    'atmos.lang.aux      atmos-lang/atmos  main  src/aux.lua'
+    'atmos.lang.lexer    atmos-lang/atmos  main  src/lexer.lua'
+    'atmos.lang.parser   atmos-lang/atmos  main  src/parser.lua'
+    'atmos.lang.prim     atmos-lang/atmos  main  src/prim.lua'
+    'atmos.lang.coder    atmos-lang/atmos  main  src/coder.lua'
+    'atmos.lang.tosource atmos-lang/atmos  main  src/tosource.lua'
+    'atmos.lang.exec     atmos-lang/atmos  main  src/exec.lua'
+    'atmos.lang.run      atmos-lang/atmos  main  src/run.lua'
 )
 
 # --- Helpers ---
 
 fetch_module () {
-    local name="$1" repo="$2" path="$3"
-    local url="$GITHUB_RAW/$repo/$VERSION/$path"
+    local name="$1" repo="$2" version="$3" path="$4"
+    local url="$GITHUB_RAW/$repo/$version/$path"
     local dest="$TMP/$name.lua"
     echo "  fetch $name ($repo/$path)"
     curl -fsSL "$url" -o "$dest"
@@ -83,14 +83,14 @@ ENDHTML
 
 echo "Fetching lua-atmos runtime modules..."
 for entry in "${LUA_ATMOS_MODULES[@]}"; do
-    read -r name repo path <<< "$entry"
-    fetch_module "$name" "$repo" "$path"
+    read -r name repo version path <<< "$entry"
+    fetch_module "$name" "$repo" "$version" "$path"
 done
 
 echo "Fetching atmos-lang compiler modules..."
 for entry in "${ATMOS_LANG_MODULES[@]}"; do
-    read -r name repo path <<< "$entry"
-    fetch_module "$name" "$repo" "$path"
+    read -r name repo version path <<< "$entry"
+    fetch_module "$name" "$repo" "$version" "$path"
 done
 
 # --- Build module tags ---
