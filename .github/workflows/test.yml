@@ -21,29 +21,3 @@ jobs:
         sudo apt-get install -y lua5.4
     - name: Run tests
       run: cd tst && LUA_PATH="../f-streams/?/init.lua;../?.lua;../?/init.lua;;" lua5.4 all.lua
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Check HTML is up to date
-      run: |
-        bash atmos/env/js/build.sh
-        git diff --exit-code atmos/env/js/lua.html atmos/env/js/lua-atmos.html atmos/env/js/atmos.html
-
-  js-test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 22
-    - name: Cache Puppeteer browsers
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/puppeteer
-        key: puppeteer-${{ runner.os }}-${{ hashFiles('atmos/env/js/test/package.json') }}
-    - name: Install dependencies
-      run: cd atmos/env/js/test && npm ci
-    - name: Run Puppeteer tests
-      run: cd atmos/env/js/test && npm test

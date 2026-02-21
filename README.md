@@ -171,8 +171,6 @@ atmos
 │   │   ├── exs/
 │   │   │   └── cli-srv.lua
 │   │   └── init.lua
-│   └── js/
-│       └── init.lua
 ├── init.lua
 ├── run.lua
 ├── streams.lua
@@ -206,7 +204,7 @@ The standard distribution of Atmos provides the following environments:
 - [`atmos.env.iup`](atmos/env/iup/):
     An environment that relies on [IUP][iup] ([iup-lua][iup-lua]) to provide
     graphical user interfaces (GUIs).
-- [`atmos.env.js`](atmos/env/js/):
+- [`atmos.env.js`](https://github.com/lua-atmos/env-js):
     An environment for running Atmos in the browser via
     [wasmoon][wasmoon] (Lua 5.4 compiled to WebAssembly).
 
