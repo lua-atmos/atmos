@@ -861,8 +861,7 @@ function M.thread (...)
     local linda = lanes.linda()
     local bytecode = string.dump(f)
 
-    local _lane
-    local gen = assert(lanes.gen("*", function (linda, f_bytecode, ...)
+    local proto = assert(lanes.gen("*", function (linda, f_bytecode, ...)
         local f = load(f_bytecode)
         (function (ok, ...)
             if ok then
@@ -873,11 +872,10 @@ function M.thread (...)
         end)(pcall(f, ...))
     end))
 
-    local _d <close> = M.defer(function ()
-        pcall(function () _lane:cancel(0, true) end)
+    local lane = assert(proto(linda, bytecode, table.unpack(args)))
+    local _ <close> = M.defer(function ()
+        pcall(function () lane:cancel(0, true) end)
     end)
-
-    _lane = assert(gen(linda, bytecode, table.unpack(args)))
 
     -- Poll in place: wake on any event, check if lane is done
     while true do
