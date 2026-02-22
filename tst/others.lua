@@ -14,7 +14,7 @@ do
         end)
     end
     assertx(out(), "2\n1\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -32,7 +32,7 @@ do
     end
     out(4)
     assertx(out(), "1\n2\n3\ndefer\n4\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -50,7 +50,7 @@ do
     end
     out(4)
     assertx(out(), "1\n2\n3\ndefer\n4\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -66,7 +66,7 @@ do
         end)
     end)
     assertx(out(), "nested task aborted\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -80,7 +80,7 @@ do
         end)
     end)
     assertx(out(), "nested task aborted\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -93,7 +93,7 @@ do
     end)
     assertfx(err, "ok")
     assertx(out(), "defer\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -107,7 +107,7 @@ do
     end)
     assertfx(err, "ok")
     assertx(out(), "defer\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- THROW / CATCH ---"
@@ -124,7 +124,7 @@ do
         out(4)
     end
     assertx(out(), "1\n2\n4\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -139,7 +139,7 @@ do
         out(4)
     end
     assertx(out(), "1\n2\n4\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -155,7 +155,7 @@ do
     end)
     out(ok,v)
     assertx(out(), "1\n2\nfalse\tnil\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -170,7 +170,7 @@ do
         out(4)
     end
     assertx(out(), "1\n2\n4\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -189,7 +189,7 @@ do
         out(6)
     end
     assertx(out(), "1\n2\n3\n6\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -209,7 +209,7 @@ do
     end
     --assertx(out(), "1\n2\n3\n6\n")
     assertx(out(), "1\n2\n3\n5\n6\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -221,7 +221,7 @@ do
         out(ok,v1,v2)
     end
     assertx(out(), "false\t10\t20\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -233,7 +233,7 @@ do
         out(ok,v)
     end
     assertx(out(), "true\t10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -246,7 +246,7 @@ do
         end)
     end
     assertx(out(), "3\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -262,7 +262,7 @@ do
     end)
     out(ok,v)
     assertx(out(), "1\n2\nfalse\tnil\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -278,7 +278,7 @@ do
     end)
     out(ok,v)
     assertx(out(), "1\n2\nfalse\tY\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -294,7 +294,7 @@ do
     end)
     out(ok,x,y,z)
     assertx(out(), "1\n2\nfalse\tX\tY\tnil\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -304,7 +304,7 @@ do
     end)
     out(ok, type(x), x.tag)
     assertx(out(), "false\ttable\tX\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -318,7 +318,7 @@ do
             end)
         end)
     end)
-    atmos.close()
+    atmos.stop()
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
@@ -343,7 +343,7 @@ do
         out('ok')
     end
     assertx(out(), "false\tX\t10\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -363,7 +363,7 @@ do
         out('ok')
     end
     assertx(out(), "false\tX\t10\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- CALL ---"
@@ -377,7 +377,7 @@ do
         out(v)
     end
     assertx(out(), "1\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -394,7 +394,7 @@ do
         out(v)
     end
     assertx(out(), "1\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -406,7 +406,7 @@ do
         end)
         out(v)
     end)
-    atmos.close()
+    atmos.stop()
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
@@ -428,7 +428,7 @@ do
         end)
         out(v)
     end)
-    atmos.close()
+    atmos.stop()
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
@@ -450,7 +450,7 @@ do
         end)
         out(v)
     end)
-    atmos.close()
+    atmos.stop()
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
@@ -479,7 +479,7 @@ do
         end)
         out('ok')
     end)
-    atmos.close()
+    atmos.stop()
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
@@ -505,7 +505,7 @@ do
             emit('X')
         end)
     end)
-    atmos.close()
+    atmos.stop()
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)

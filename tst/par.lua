@@ -12,7 +12,7 @@ do
     end)
     out("ok")
     assertx(out(), "ok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -41,7 +41,7 @@ do
     emit 'Z'
     emit 'X'
     assertx(out(), "X\nZ\nZ\nX\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -80,7 +80,7 @@ do
     emit('Y',10)
     emit('X')
     assertx(out(), "Y\t10\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -100,7 +100,7 @@ do
     emit('Z')
     emit('Y', 10)
     assertx(out(), "10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -117,7 +117,7 @@ do
         out(v)
     end)
     assertx(out(), "Y\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -136,7 +136,7 @@ do
     end)
     emit 'X'
     assertx(out(), "ok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -155,7 +155,7 @@ do
     end)
     emit()
     assertx(out(), "ok\nno\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -180,7 +180,7 @@ do
          v  par.lua:%d+ %(throw%)
         ==> attempt to call a nil value %(global 'f'%)
     ]])
-    atmos.close()
+    atmos.stop()
 end
 
 print '--- PAR_AND ---'
@@ -201,7 +201,7 @@ do
     emit('Y',10)
     emit('X')
     assertx(out(), "Y\t10\nX\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -222,7 +222,7 @@ do
     emit('Y', 10)
     emit('X')
     assertx(out(), "X\t10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -240,7 +240,7 @@ do
     end)
     emit 'X'
     assertx(out(), "X\tY\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print '--- WATCHING ---'
@@ -257,7 +257,7 @@ do
     end)
     emit 'X'
     assertx(out(), "X\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -275,7 +275,7 @@ do
     end)
     emit 'X'
     assertx(out(), "Y\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -293,7 +293,7 @@ do
     end)
     emit 'X'
     assertfx(out(), "Y\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -308,7 +308,7 @@ do
     end)
     emit 'X'
     assertx(out(), "Y\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -323,7 +323,7 @@ do
     end)
     emit 'X'
     assertx(out(), "X\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -357,7 +357,7 @@ do
     emit('X', 20)
     emit('X', 10)
     assertx(out(), "10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -373,7 +373,7 @@ do
     end)
     emit()
     assertx(out(), "no\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -389,5 +389,5 @@ do
     end)
     emit 'X'
     assertx(out(), "no\nok\n")
-    atmos.close()
+    atmos.stop()
 end

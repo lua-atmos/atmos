@@ -182,10 +182,6 @@ function M.env (e)
     end
 end
 
-function M.close ()
-    meta_tasks.__close(TASKS)
-end
-
 function M.defer (f)
     return setmetatable({f=f}, meta_defer)
 end
@@ -369,7 +365,7 @@ function M.start (body, ...)
 end
 
 function M.stop ()
-    M.close()
+    meta_tasks.__close(TASKS)
     for i=#_envs_, 1, -1 do
         if _envs_[i].close then
             _envs_[i].close()
