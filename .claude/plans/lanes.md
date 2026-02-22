@@ -20,10 +20,11 @@ inside the atmos scheduler.
 ### Implementation (`atmos/run.lua`)
 
 ```
-require lanes at module top
-    local lanes = require("lanes").configure()
-
+lazy-require lanes (module-level local, initialized on first call)
+    local lanes
+    ...
 M.thread(...)
+    lanes = lanes or require("lanes").configure()
     -- validation: body is a function, caller is inside a task, no upvalues
 
     local linda    = lanes.linda()
