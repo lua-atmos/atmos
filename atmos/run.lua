@@ -1,5 +1,6 @@
 local S = require "atmos.streams"
 require "atmos.util"
+local lanes = require("lanes").configure()
 
 local M = {}
 
@@ -835,6 +836,66 @@ function M.toggle (t, on)
 end
 
 -------------------------------------------------------------------------------
+-- thread (LuaLanes)
+-------------------------------------------------------------------------------
+
+function M.thread (...)
+    local args = { ... }
+    local f = table.remove(args)
+    assertn(2, type(f) == 'function', "invalid thread : expected body function")
+
+    local me = M.me(true)
+    assertn(2, me, "invalid thread : expected enclosing task")
+
+    -- Reject functions that capture external variables (upvalues beyond _ENV).
+    -- Lanes serialize bytecode, so upvalues are lost.
+    local uvi = 2  -- index 1 is always _ENV
+    while true do
+        local name = debug.getupvalue(f, uvi)
+        if not name then break end
+        assertn(2, false,
+            "invalid thread : function captures external variable '" .. name .. "'")
+        uvi = uvi + 1
+    end
+
+    local linda = lanes.linda()
+    local bytecode = string.dump(f)
+
+    local _lane
+    local gen = assert(lanes.gen("*", function (linda, f_bytecode, ...)
+        local f = load(f_bytecode)
+        (function (ok, ...)
+            if ok then
+                linda:send("ok", true, ...)
+            else
+                linda:send("ok", false, tostring((...)))
+            end
+        end)(pcall(f, ...))
+    end))
+
+    local _d <close> = M.defer(function ()
+        pcall(function () _lane:cancel(0, true) end)
+    end)
+
+    _lane = assert(gen(linda, bytecode, table.unpack(args)))
+
+    -- Poll in place: wake on any event, check if lane is done
+    while true do
+        local r = table.pack((function (key, ...)
+            if key then return ... end
+        end)(linda:receive(0, "ok")))
+        if r.n > 0 then
+            if r[1] then
+                return table.unpack(r, 2, r.n)
+            else
+                error(r[2], 0)
+            end
+        end
+        M.await(true)
+    end
+end
+
+-------------------------------------------------------------------------------
 
 function M.every (...)
     assertn(2, M.me(true), "invalid every : expected enclosing task")
@@ -893,64 +954,6 @@ function M.watching (...)
     assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
     local spw <close> = M.spawn(debug.getinfo(2), nil, true, f)
     return M.await(M._or_({table.unpack(t)}, spw))
-end
-
--------------------------------------------------------------------------------
--- thread (LuaLanes)
--------------------------------------------------------------------------------
-
-function M.thread (...)
-    local args = { ... }
-    local f = table.remove(args)
-    assertn(2, type(f) == 'function', "invalid thread : expected body function")
-
-    local me = M.me(true)
-    assertn(2, me, "invalid thread : expected enclosing task")
-
-    -- Reject functions that capture external variables (upvalues beyond _ENV).
-    -- Lanes serialize bytecode, so upvalues are lost.
-    local uvi = 2  -- index 1 is always _ENV
-    while true do
-        local name = debug.getupvalue(f, uvi)
-        if not name then break end
-        assertn(2, false,
-            "invalid thread : function captures external variable '" .. name .. "'")
-        uvi = uvi + 1
-    end
-
-    local lanes = require("lanes").configure()
-    local linda = lanes.linda()
-    local bytecode = string.dump(f)
-
-    local _lane
-    local _d <close> = M.defer(function ()
-        if _lane then
-            pcall(function () _lane:cancel(0, true) end)
-        end
-    end)
-
-    _lane = lanes.gen("base,table,math,string", function (linda, f_bytecode, ...)
-        local f = load(f_bytecode)
-        local ok, result = pcall(f, ...)
-        if ok then
-            linda:send("result", { true, result })
-        else
-            linda:send("result", { false, tostring(result) })
-        end
-    end)(linda, bytecode, table.unpack(args))
-
-    -- Poll in place: wake on any event, check if lane is done
-    while true do
-        local key, val = linda:receive(0, "result")
-        if key then
-            if val[1] then
-                return val[2]       -- success
-            else
-                error(val[2], 0)    -- propagate lane error
-            end
-        end
-        M.await(true)
-    end
 end
 
 return M
