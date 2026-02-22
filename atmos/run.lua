@@ -11,7 +11,6 @@ local task_gc
 
 local _lanes = nil       -- lazy-loaded lanes module
 local _thread_gen = nil  -- lane generator for thread bodies
-local _LINDAS = {}       -- pending lindas: { {linda=, task=} }
 
 local function lanes_init ()
     if not _lanes then
@@ -29,17 +28,6 @@ local function lanes_init ()
         end)
     end
     return _lanes, _thread_gen
-end
-
-local function poll_thread_lindas ()
-    for i = #_LINDAS, 1, -1 do
-        local entry = _LINDAS[i]
-        local key, val = entry.linda:receive(0, "result")
-        if key then
-            table.remove(_LINDAS, i)
-            M.emit(false, entry.task, entry.linda, val)
-        end
-    end
 end
 
 local meta_defer = {
@@ -383,15 +371,6 @@ function M.loop (body, ...)
         while true do
             if coroutine.status(t._.th) == 'dead' then
                 break
-            end
-
-            -- Poll thread lindas (before env steps so results arrive promptly)
-            if #_LINDAS > 0 then
-                poll_thread_lindas()
-                -- The emit inside poll may have finished the body task
-                if coroutine.status(t._.th) == 'dead' then
-                    break
-                end
             end
 
             local quit = false
@@ -954,8 +933,7 @@ function M.thread (...)
     assertn(2, me, "invalid thread : expected enclosing task")
 
     -- Reject functions that capture external variables (upvalues beyond _ENV).
-    -- This is the runtime equivalent of the compile-time check described in
-    -- the design: lanes serialize bytecode, so upvalues are lost.
+    -- Lanes serialize bytecode, so upvalues are lost.
     local uvi = 2  -- index 1 is always _ENV
     while true do
         local name = debug.getupvalue(f, uvi)
@@ -971,7 +949,7 @@ function M.thread (...)
     -- Serialize the function body (pure bytecode, no upvalues survive).
     local bytecode = string.dump(f)
 
-    -- defer registered BEFORE spawn — guarantees cleanup on any exit path
+    -- defer: cancel lane on any exit path (abort, error, scope close)
     local _lane
     local _d <close> = M.defer(function ()
         if _lane then
@@ -982,17 +960,17 @@ function M.thread (...)
     -- Spawn the lane (parameters are deep-copied by Lanes)
     _lane = gen(linda, bytecode, table.unpack(args))
 
-    -- Register linda so the scheduler can poll it
-    _LINDAS[#_LINDAS + 1] = { linda = linda, task = me }
-
-    -- Suspend until the scheduler detects "result" on the linda
-    local info = M.await(linda)
-
-    -- Process result
-    if info[1] then
-        return info[2]      -- success
-    else
-        error(info[2], 0)   -- propagate lane error
+    -- Poll in place: wake on any event, check if lane is done
+    while true do
+        local key, val = linda:receive(0, "result")
+        if key then
+            if val[1] then
+                return val[2]       -- success
+            else
+                error(val[2], 0)    -- propagate lane error
+            end
+        end
+        M.await(true)
     end
 end
 
