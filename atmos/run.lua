@@ -5,31 +5,6 @@ local M = {}
 
 local task_gc
 
--------------------------------------------------------------------------------
--- thread support (LuaLanes)
--------------------------------------------------------------------------------
-
-local _lanes = nil       -- lazy-loaded lanes module
-local _thread_gen = nil  -- lane generator for thread bodies
-
-local function lanes_init ()
-    if not _lanes then
-        local ok, l = pcall(require, "lanes")
-        assertn(2, ok, "invalid thread : 'lanes' module not found (install LuaLanes)")
-        _lanes = l.configure()
-        _thread_gen = _lanes.gen("base,table,math,string", function (linda, f_bytecode, ...)
-            local f = load(f_bytecode)
-            local ok, result = pcall(f, ...)
-            if ok then
-                linda:send("result", { true, result })
-            else
-                linda:send("result", { false, tostring(result) })
-            end
-        end)
-    end
-    return _lanes, _thread_gen
-end
-
 local meta_defer = {
     __close = function (t) t.f() end
 }
@@ -943,13 +918,10 @@ function M.thread (...)
         uvi = uvi + 1
     end
 
-    local lns, gen = lanes_init()
-    local linda = lns.linda()
-
-    -- Serialize the function body (pure bytecode, no upvalues survive).
+    local lanes = require("lanes").configure()
+    local linda = lanes.linda()
     local bytecode = string.dump(f)
 
-    -- defer: cancel lane on any exit path (abort, error, scope close)
     local _lane
     local _d <close> = M.defer(function ()
         if _lane then
@@ -957,8 +929,15 @@ function M.thread (...)
         end
     end)
 
-    -- Spawn the lane (parameters are deep-copied by Lanes)
-    _lane = gen(linda, bytecode, table.unpack(args))
+    _lane = lanes.gen("base,table,math,string", function (linda, f_bytecode, ...)
+        local f = load(f_bytecode)
+        local ok, result = pcall(f, ...)
+        if ok then
+            linda:send("result", { true, result })
+        else
+            linda:send("result", { false, tostring(result) })
+        end
+    end)(linda, bytecode, table.unpack(args))
 
     -- Poll in place: wake on any event, check if lane is done
     while true do
