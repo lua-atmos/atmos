@@ -1,5 +1,6 @@
 local S = require "atmos.streams"
 require "atmos.util"
+local lanes = require("lanes").configure()
 
 local M = {}
 
@@ -342,6 +343,7 @@ function M.loop (body, ...)
             if coroutine.status(t._.th) == 'dead' then
                 break
             end
+
             local quit = false
             for _, env in ipairs(_envs_) do
                 if env.step() then
@@ -351,6 +353,13 @@ function M.loop (body, ...)
             end
             if quit then
                 break
+            end
+
+            -- Heartbeat: when no envs are registered, no events fire,
+            -- so polling tasks (e.g. thread's await(true)) would stall.
+            -- Emit a synthetic event to give them a chance to run.
+            if #_envs_ == 0 then
+                M.emit(false, nil, true)
             end
         end
         return t.ret
@@ -821,6 +830,66 @@ function M.toggle (t, on)
         assertn(2, t._.status==nil --[[and coroutine.status(t._.th)=='suspended']],
             "invalid toggle : expected awaiting task")
         t._.status = 'toggled'
+    end
+end
+
+-------------------------------------------------------------------------------
+-- thread (LuaLanes)
+-------------------------------------------------------------------------------
+
+function M.thread (...)
+    local args = { ... }
+    local f = table.remove(args)
+    assertn(2, type(f) == 'function', "invalid thread : expected body function")
+
+    local me = M.me(true)
+    assertn(2, me, "invalid thread : expected enclosing task")
+
+    -- Reject functions that capture external variables (upvalues beyond _ENV).
+    -- Lanes serialize bytecode, so upvalues are lost.
+    local uvi = 1
+    while true do
+        local name = debug.getupvalue(f, uvi)
+        if not name then break end
+        if name ~= "_ENV" then
+            assertn(2, false,
+                "invalid thread : function captures external variable '" .. name .. "'")
+        end
+        uvi = uvi + 1
+    end
+
+    local linda = lanes.linda()
+    local bytecode = string.dump(f)
+
+    local proto = assert(lanes.gen("*", function (linda, f_bytecode, ...)
+        local f = load(f_bytecode)
+        (function (ok, ...)
+            if ok then
+                linda:send("ok", true, ...)
+            else
+                linda:send("ok", false, tostring((...)))
+            end
+        end)(pcall(f, ...))
+    end))
+
+    local lane = assert(proto(linda, bytecode, table.unpack(args)))
+    local _ <close> = M.defer(function ()
+        pcall(function () lane:cancel(0, true) end)
+    end)
+
+    -- Poll in place: wake on any event, check if lane is done
+    while true do
+        local r = table.pack((function (key, ...)
+            if key then return ... end
+        end)(linda:receive(0, "ok")))
+        if r.n > 0 then
+            if r[1] then
+                return table.unpack(r, 2, r.n)
+            else
+                error(r[2], 0)
+            end
+        end
+        M.await(true)
     end
 end
 
