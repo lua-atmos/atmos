@@ -20,8 +20,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y lua5.4 luarocks
     - name: Install LuaLanes
-      run: sudo luarocks install lanes
+      run: sudo luarocks --lua-version=5.4 install lanes
     - name: Run tests
       run: |
-        eval $(luarocks path)
+        eval $(luarocks path --lua-version=5.4)
         cd tst && LUA_PATH="../f-streams/?/init.lua;../?.lua;../?/init.lua;;$LUA_PATH" lua5.4 all.lua
