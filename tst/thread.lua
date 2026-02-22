@@ -11,7 +11,7 @@ do
         thread(function () end)
     end)
     assertfx(err, "invalid thread : expected enclosing task")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -22,7 +22,7 @@ do
         end)
     end)
     assertfx(err, "invalid thread : expected body function")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -36,7 +36,7 @@ do
         end)
     end)
     assertfx(err, "invalid thread : function captures external variable")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- THREAD / BASIC ---"
@@ -50,7 +50,7 @@ do
         out("done")
     end)
     assertx(out(), "done\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -62,7 +62,7 @@ do
         out(v)
     end)
     assertx(out(), "42\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -76,7 +76,7 @@ do
         out(v)
     end)
     assertx(out(), "30\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -93,7 +93,7 @@ do
         out(v)
     end)
     assertx(out(), "6\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -105,7 +105,7 @@ do
         out(v)
     end)
     assertx(out(), "HELLO WORLD\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -117,7 +117,7 @@ do
         out(v)
     end)
     assertx(out(), "3.0\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- THREAD / ERROR PROPAGATION ---"
@@ -132,7 +132,7 @@ do
         end)
     end)
     assertfx(tostring(err), "lane error")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- THREAD / LIFECYCLE ---"
@@ -152,7 +152,7 @@ do
         out("after")
     end)
     assertx(out(), "before\nafter\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -163,7 +163,7 @@ do
         out(a, b)
     end)
     assertx(out(), "11\t22\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -180,7 +180,7 @@ do
         out(v)
     end)
     assertx(out(), "from thread\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- THREAD / ISOLATION ---"
@@ -197,5 +197,5 @@ do
         out(t[1])   -- parent still has 1
     end)
     assertx(out(), "999\n1\n")
-    atmos.close()
+    atmos.stop()
 end
