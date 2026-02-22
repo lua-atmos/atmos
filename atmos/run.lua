@@ -849,12 +849,14 @@ function M.thread (...)
 
     -- Reject functions that capture external variables (upvalues beyond _ENV).
     -- Lanes serialize bytecode, so upvalues are lost.
-    local uvi = 2  -- index 1 is always _ENV
+    local uvi = 1
     while true do
         local name = debug.getupvalue(f, uvi)
         if not name then break end
-        assertn(2, false,
-            "invalid thread : function captures external variable '" .. name .. "'")
+        if name ~= "_ENV" then
+            assertn(2, false,
+                "invalid thread : function captures external variable '" .. name .. "'")
+        end
         uvi = uvi + 1
     end
 
