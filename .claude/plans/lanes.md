@@ -20,11 +20,10 @@ inside the atmos scheduler.
 ### Implementation (`atmos/run.lua`)
 
 ```
-lazy-require lanes (module-level local, initialized on first call)
-    local lanes
-    ...
+require lanes at module top (hard error if not installed)
+    local lanes = require("lanes").configure()
+
 M.thread(...)
-    lanes = lanes or require("lanes").configure()
     -- validation: body is a function, caller is inside a task, no upvalues
 
     local linda    = lanes.linda()
@@ -94,6 +93,10 @@ thread = run.thread
     sudo apt-get install -y lua5.4 luarocks
 - name: Install LuaLanes
   run: sudo luarocks install lanes
+- name: Run tests
+  run: |
+    eval $(luarocks path)
+    cd tst && LUA_PATH="...;;$LUA_PATH" lua5.4 all.lua
 ```
 
 ### Tests (`tst/thread.lua`)

@@ -22,4 +22,6 @@ jobs:
     - name: Install LuaLanes
       run: sudo luarocks install lanes
     - name: Run tests
-      run: cd tst && LUA_PATH="../f-streams/?/init.lua;../?.lua;../?/init.lua;;" lua5.4 all.lua
+      run: |
+        eval $(luarocks path)
+        cd tst && LUA_PATH="../f-streams/?/init.lua;../?.lua;../?/init.lua;;$LUA_PATH" lua5.4 all.lua

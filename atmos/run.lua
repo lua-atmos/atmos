@@ -1,9 +1,8 @@
 local S = require "atmos.streams"
 require "atmos.util"
+local lanes = require("lanes").configure()
 
 local M = {}
-
-local lanes
 
 local task_gc
 
@@ -841,8 +840,6 @@ end
 -------------------------------------------------------------------------------
 
 function M.thread (...)
-    lanes = lanes or require("lanes").configure()
-
     local args = { ... }
     local f = table.remove(args)
     assertn(2, type(f) == 'function', "invalid thread : expected body function")
