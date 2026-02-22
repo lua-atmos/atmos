@@ -9,7 +9,7 @@ do
         await()
     end)
     assertfx(err, "task.lua:9: invalid await : expected enclosing task")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -20,7 +20,7 @@ do
         end)
     end)
     assertfx(err, "task.lua:19: invalid await : expected event")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -32,7 +32,7 @@ do
         end)()
     end)
     assertfx(err, "task.lua:31: invalid emit : invalid target")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -46,7 +46,7 @@ do
     spawn(t, 10)
     emit('X')
     assertx(out(), "10\nX\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -59,7 +59,7 @@ do
     spawn(T,10)
     emit('ok')
     assertx(out(), "10\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -75,7 +75,7 @@ do
     emit(2)
     emit(3)
     assertx(out(), "1\t1\n2\t2\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -87,7 +87,7 @@ do
     emit(10)
     out("ok")
     assertx(out(), "awake\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -99,7 +99,7 @@ do
     emit(10)
     out("ok")
     assertx(out(), "ok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- EMIT / SCOPE ---"
@@ -118,7 +118,7 @@ do
         emit 'X'
     end
     assertx(out(), "OK\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- AWAIT / CLOCK ---"
@@ -135,7 +135,7 @@ do
     emit(clock{h=10})
     out("ok")
     assertx(out(), "awake\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -147,7 +147,7 @@ do
     emit('clock', 10*60*60*1000, 0)
     out("ok")
     assertx(out(), "awake\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -165,7 +165,7 @@ do
     emit('clock', 500, 0)
     emit 'D'
     assertx(out(), "1s elapsed\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- AWAIT / TASK ---"
@@ -180,7 +180,7 @@ do
     end)
     out("ok")
     assertx(out(), "awake\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -195,7 +195,7 @@ do
     emit()
     out("ok")
     assertx(out(), "awake\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -213,7 +213,7 @@ do
     emit()
     out("ok")
     assertx(out(), "ok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -231,7 +231,7 @@ do
     end)
     emit()
     assertx(out(), "20\n10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- AWAIT / _OR_ ---"
@@ -244,7 +244,7 @@ do
     end)
     emit('Y',10)
     assertx(out(), "Y\t10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -255,7 +255,7 @@ do
     end)
     emit('Y',10)
     assertx(out(), "Y\t10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -270,7 +270,7 @@ do
     end)
     emit 'X'
     assertx(out(), "10\ttrue\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -285,7 +285,7 @@ do
     end)
     emit 'X'
     assertx(out(), "true\ttrue\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -298,7 +298,7 @@ do
     emit('clock', 515)
     emit 'X'
     assertx(out(), "clock\t25\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- AWAIT / _AND_ ---"
@@ -313,7 +313,7 @@ do
     emit('Y',10)
     emit('X',20)
     assertx(out(), "X\t20\nY\t10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -324,7 +324,7 @@ do
     end)
     emit('Y')
     assertx(out(), "Y\tY\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -339,7 +339,7 @@ do
     end)
     emit 'X'
     assertx(out(), "10\tX\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -354,7 +354,7 @@ do
     end)
     emit 'X'
     assertx(out(), "true\ttrue\tX\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -367,7 +367,7 @@ do
     emit('clock', 515)
     emit 'X'
     assertx(out(), "X\t25\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print '--- AND / OR ---'
@@ -389,7 +389,7 @@ do
     emit 'Z'
     emit('clock', 515)
     assertx(out(), "25\ttrue\ttrue\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print '--- PUB ---'
@@ -401,7 +401,7 @@ do
         out(task().v)
     end)
     assertx(out(), "10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -411,7 +411,7 @@ do
     end)
     --assertfx(err, "task.lua:182: pub error : expected enclosing task")
     assertfx(err, "task.lua:%d+: attempt to index a nil valu")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -421,7 +421,7 @@ do
     end)
     out(t.v)
     assertx(out(), "10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -432,7 +432,7 @@ do
     --assertfx(err, "task.lua:201: pub error : expected task")
     --assertfx(err, "task.lua:%d+: attempt to index a nil value")
     assertx(err, "invalid task : expected function")
-    atmos.close()
+    atmos.stop()
 end
 
 print '--- LOOP / EVERY ---'
@@ -450,7 +450,7 @@ do
     emit(20)
     out("ok")
     assertx(out(), "10\n20\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -470,7 +470,7 @@ do
     emit(20)
     out("ok")
     assertx(out(), "10\n20\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -487,7 +487,7 @@ do
     emit(30)
     out("ok")
     assertx(out(), "20\n30\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- TOGGLE ---"
@@ -498,7 +498,7 @@ do
         toggle(1, true)
     end)
     assertfx(err, "task.lua:%d+: invalid toggle : expected task")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -508,7 +508,7 @@ do
         toggle(f)
     end)
     assertfx(err, "task.lua:%d+: invalid toggle : expected bool argument")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -522,7 +522,7 @@ do
     --end)
     --assertx(err, "task.lua:291: invalid toggle : expected awaiting task")
     assertx(out(), "ok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -548,7 +548,7 @@ do
         emit 'X'
     end
     assertx(out(), "A\nB\n1\nC\n2\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -568,7 +568,7 @@ do
         emit('X')
     end
     assertx(out(), "1\n2\n10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -588,7 +588,7 @@ do
         out(2)
     end
     assertx(out(), "1\n2\n10\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -611,7 +611,7 @@ do
         emit ('nil')
     end
     assertx(out(), "1\n2\n3\n4\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- TOGGLE BLOCK ---"
@@ -622,7 +622,7 @@ do
         toggle ('X',false)
     end)
     assertfx(err, "task.lua:%d+: invalid toggle : expected task prototype")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -646,7 +646,7 @@ do
         emit('Draw', 2)
     end
     assertx(out(), "0\n1\n2\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -661,7 +661,7 @@ do
         out('ok')
     end
     assertx(out(), "10\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -680,7 +680,7 @@ do
         out('ok')
     end
     assertx(out(), "false\terr\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- NESTED ---"
@@ -700,7 +700,7 @@ do
         spawn (T)
     end
     assertx(out(), "10\n20\n20\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- ABORT ---"
@@ -730,7 +730,7 @@ do
         out(7)
     end
     assertx(out(), "0\n1\n2\n3\n5\n6\n7\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -747,7 +747,7 @@ do
         out("ok")
     end
     assertx(out(), "ok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -768,7 +768,7 @@ do
         out("2")
     end
     assertx(out(), "0\n1\n2\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -801,7 +801,7 @@ do
         emit("A")
         assertx(out(), "1\n2\n")
     end
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- ERRORS ---"

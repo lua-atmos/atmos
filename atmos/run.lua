@@ -183,10 +183,6 @@ function M.env (e)
     end
 end
 
-function M.close ()
-    meta_tasks.__close(TASKS)
-end
-
 function M.defer (f)
     return setmetatable({f=f}, meta_defer)
 end
@@ -334,8 +330,7 @@ local function xcall (dbg, stk, f, ...)
 end
 
 function M.loop (body, ...)
-    assertn(2, type(body) == 'function',
-        "invalid loop : expected body function")
+    assertn(2, type(body)=='function', "invalid loop : expected body function")
     return xcall(debug.getinfo(2), "loop", function (...)
         local _ <close> = M.defer(function ()
             M.stop()
@@ -372,18 +367,14 @@ function M.loop (body, ...)
 end
 
 function M.start (body, ...)
-    assertn(2, type(body) == 'function',
-        "invalid start : expected body function")
-    assertn(2, #_envs_ == 1,
-        "invalid start : expected single env")
-    assertn(2, _envs_[1].mode == nil,
-        "invalid start : expected env with mode=nil")
+    assertn(2, type(body)=='function', "invalid start : expected body function")
+    assertn(2, #_envs_==1 and _envs_[1].mode==nil, "invalid start : expected single-mode env only")
     if _envs_[1].open then _envs_[1].open() end
     M.spawn(debug.getinfo(2), nil, false, body, ...)
 end
 
 function M.stop ()
-    M.close()
+    meta_tasks.__close(TASKS)
     for i=#_envs_, 1, -1 do
         if _envs_[i].close then
             _envs_[i].close()

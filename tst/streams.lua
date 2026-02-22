@@ -21,7 +21,7 @@ do
     emit('E')
     out 'fim'
     assertx(out(), "antes\nok\ndepois\nfim\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -36,7 +36,7 @@ do
     emit('E')
     emit('E')
     assertx(out(), "false\nfalse\n")
-    atmos.close()
+    atmos.stop()
 
     print("Testing...", "task 2")
     local T = function ()
@@ -52,7 +52,7 @@ do
     end)
     emit('E')
     assertx(out(), "defer\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -72,7 +72,7 @@ do
     end)
     emit('F')
     assertx(out(), "defer\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -87,7 +87,7 @@ do
     emit 'Y'
     emit 'X'
     assertx(out(), "X\nY\nX\n")
-    atmos.close()
+    atmos.stop()
 
     print("Testing...", "xpar 1")
     local x = S.fr_await('X')
@@ -100,7 +100,7 @@ do
     emit 'Y'
     emit 'X'
     assertx(out(), "X\nY\nX\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -134,7 +134,7 @@ do
     emit 'X'
     emit 'C'    -- C
     assertx(out(), "X\nA\nB\nY\nB\nC\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -168,7 +168,7 @@ do
     emit 'X'
     emit 'C'    -- C
     assertx(out(), "X\nA\nB\nY\nB\nC\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -192,7 +192,7 @@ do
     emit 'X'
     emit 'A'
     assertx(out(), "defer\tB\nB\ndefer\tA\nX\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -216,7 +216,7 @@ do
     emit 'X'
     emit 'A'
     assertx(out(), "defer\tB\nB\ndefer\tA\nX\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -232,7 +232,7 @@ do
     emit 'Y'
     emit 'X'
     assertx(out(), "X\nfim\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -248,7 +248,7 @@ do
     emit 'Y'
     emit 'X'
     assertx(out(), "X\nfim\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -272,7 +272,7 @@ do
     --emit 'X'
     emit 'A'
     assertx(out(), "defer\tB\nB\ndefer\tA\nX\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -296,7 +296,7 @@ do
     --emit 'X'
     emit 'A'
     assertx(out(), "defer\tB\nB\ndefer\tA\nX\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- DEBOUNCE ---"
@@ -316,7 +316,7 @@ do
     emit { tag='X', v=3 }
     emit 'Y'
     assertx(out(), "1\n3\n")
-    atmos.close()
+    atmos.stop()
 end
 ]]
 
@@ -337,7 +337,7 @@ do
         emit 'Y'
     end)
     assertx(out(), "1\n3\n")
-    atmos.close()
+    atmos.stop()
 end
 
 
@@ -361,7 +361,7 @@ do
     emit { tag='X', v=3 }
     emit 'Y'
     assertx(out(), "1\n1\n2\n2\n3\n")
-    atmos.close()
+    atmos.stop()
 end
 ]]
 
@@ -384,7 +384,7 @@ do
     emit { tag='X', v=3 }
     emit 'Y'
     assertx(out(), "2\n1\n2\n0\n1\n3\n")
-    atmos.close()
+    atmos.stop()
     --   x   x   y    y  x   y
     --         {x,x} {}     {x}
 end
@@ -414,7 +414,7 @@ do
     emit { tag='X', v=3 }
     emit 'Y'
     assertx(out(), "2\n1\n2\n1\n3\n")
-    atmos.close()
+    atmos.stop()
     --   x   x   y    y  x   y
     --         {x,x}        {x}
 end
@@ -440,7 +440,7 @@ do
     emit { tag='X', v=3 }
     emit 'Y'
     assertx(out(), "2\n1\n2\n1\n3\n")
-    atmos.close()
+    atmos.stop()
     --   x   x   y    y  x   y
     --         {x,x}        {x}
 end

@@ -6,7 +6,7 @@ do
     local ts = tasks()
     out(ts)
     assertfx(out(), "table: 0x")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -15,7 +15,7 @@ do
         local ts = tasks(true)
     end)
     assertfx(err, "tasks.lua:%d+: invalid tasks limit : expected number")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -28,7 +28,7 @@ do
     out "out"
     assertx(#ts, 0)
     assertx(out(), "in\nout\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -41,7 +41,7 @@ do
     spawn_in(ts,T)
     assertx(#ts, 0)
     assertx(out(), "ok\nok\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -56,7 +56,7 @@ do
     out(ok1==nil, ok2==nil)
     assertx(#ts, 1)
     assertx(out(), "1\nfalse\ttrue\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -77,7 +77,7 @@ do
     emit('x')
     out(n)
     assertx(out(), "2\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -96,7 +96,7 @@ do
     assertx(#ts, 1)
     out(ok1==nil, ok2==nil)
     assertx(out(), "1\n1\n2\nfalse\tfalse\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -112,7 +112,7 @@ do
         out(i, t.v)
     end
     assertx(out(), "1\t10\n2\t20\n")
-    atmos.close()
+    atmos.stop()
 end
 
 do
@@ -131,7 +131,7 @@ do
     local ok = spawn_in(ts, T)      -- (no) success b/c ts.ing=0
     out(ok ~= nil)
     assertx(out(), "ok\ntrue\nfalse\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- TOGGLE ---"
@@ -157,7 +157,7 @@ do
         emit('X')
     end
     assertx(out(), "1\n2\n---\n---\n1\n2\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print("--- AWAIT / TASKS ---")
@@ -180,7 +180,7 @@ do
         emit(2)
     end
     assertx(out(), "t2\n")
-    atmos.close()
+    atmos.stop()
 end
 
 print "--- ERROR ---"
