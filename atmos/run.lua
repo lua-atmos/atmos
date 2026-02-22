@@ -5,6 +5,43 @@ local M = {}
 
 local task_gc
 
+-------------------------------------------------------------------------------
+-- thread support (LuaLanes)
+-------------------------------------------------------------------------------
+
+local _lanes = nil       -- lazy-loaded lanes module
+local _thread_gen = nil  -- lane generator for thread bodies
+local _LINDAS = {}       -- pending lindas: { {linda=, task=} }
+
+local function lanes_init ()
+    if not _lanes then
+        local ok, l = pcall(require, "lanes")
+        assertn(2, ok, "invalid thread : 'lanes' module not found (install LuaLanes)")
+        _lanes = l.configure()
+        _thread_gen = _lanes.gen("base,table,math,string", function (linda, f_bytecode, ...)
+            local f = load(f_bytecode)
+            local ok, result = pcall(f, ...)
+            if ok then
+                linda:send("result", { true, result })
+            else
+                linda:send("result", { false, tostring(result) })
+            end
+        end)
+    end
+    return _lanes, _thread_gen
+end
+
+local function poll_thread_lindas ()
+    for i = #_LINDAS, 1, -1 do
+        local entry = _LINDAS[i]
+        local key, val = entry.linda:receive(0, "result")
+        if key then
+            table.remove(_LINDAS, i)
+            M.emit(false, entry.task, entry.linda, val)
+        end
+    end
+end
+
 local meta_defer = {
     __close = function (t) t.f() end
 }
@@ -347,6 +384,16 @@ function M.loop (body, ...)
             if coroutine.status(t._.th) == 'dead' then
                 break
             end
+
+            -- Poll thread lindas (before env steps so results arrive promptly)
+            if #_LINDAS > 0 then
+                poll_thread_lindas()
+                -- The emit inside poll may have finished the body task
+                if coroutine.status(t._.th) == 'dead' then
+                    break
+                end
+            end
+
             local quit = false
             for _, env in ipairs(_envs_) do
                 if env.step() then
@@ -892,6 +939,61 @@ function M.watching (...)
     assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
     local spw <close> = M.spawn(debug.getinfo(2), nil, true, f)
     return M.await(M._or_({table.unpack(t)}, spw))
+end
+
+-------------------------------------------------------------------------------
+-- thread (LuaLanes)
+-------------------------------------------------------------------------------
+
+function M.thread (...)
+    local args = { ... }
+    local f = table.remove(args)
+    assertn(2, type(f) == 'function', "invalid thread : expected body function")
+
+    local me = M.me(true)
+    assertn(2, me, "invalid thread : expected enclosing task")
+
+    -- Reject functions that capture external variables (upvalues beyond _ENV).
+    -- This is the runtime equivalent of the compile-time check described in
+    -- the design: lanes serialize bytecode, so upvalues are lost.
+    local uvi = 2  -- index 1 is always _ENV
+    while true do
+        local name = debug.getupvalue(f, uvi)
+        if not name then break end
+        assertn(2, false,
+            "invalid thread : function captures external variable '" .. name .. "'")
+        uvi = uvi + 1
+    end
+
+    local lns, gen = lanes_init()
+    local linda = lns.linda()
+
+    -- Serialize the function body (pure bytecode, no upvalues survive).
+    local bytecode = string.dump(f)
+
+    -- defer registered BEFORE spawn — guarantees cleanup on any exit path
+    local _lane
+    local _d <close> = M.defer(function ()
+        if _lane then
+            pcall(function () _lane:cancel(0, true) end)
+        end
+    end)
+
+    -- Spawn the lane (parameters are deep-copied by Lanes)
+    _lane = gen(linda, bytecode, table.unpack(args))
+
+    -- Register linda so the scheduler can poll it
+    _LINDAS[#_LINDAS + 1] = { linda = linda, task = me }
+
+    -- Suspend until the scheduler detects "result" on the linda
+    local info = M.await(linda)
+
+    -- Process result
+    if info[1] then
+        return info[2]      -- success
+    else
+        error(info[2], 0)   -- propagate lane error
+    end
 end
 
 return M

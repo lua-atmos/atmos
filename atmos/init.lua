@@ -60,5 +60,6 @@ par      = run.par
 par_or   = run.par_or
 par_and  = run.par_and
 watching = run.watching
+thread   = run.thread
 
 return atmos
