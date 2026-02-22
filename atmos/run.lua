@@ -1,9 +1,6 @@
 local S = require "atmos.streams"
 require "atmos.util"
-local ok_lanes, lanes = pcall(function ()
-    return require("lanes").configure()
-end)
-if not ok_lanes then lanes = nil end
+local lanes = require("lanes").configure()
 
 local M = {}
 
@@ -356,6 +353,13 @@ function M.loop (body, ...)
             end
             if quit then
                 break
+            end
+
+            -- Heartbeat: when no envs are registered, no events fire,
+            -- so polling tasks (e.g. thread's await(true)) would stall.
+            -- Emit a synthetic event to give them a chance to run.
+            if #_envs_ == 0 then
+                M.emit(false, nil, true)
             end
         end
         return t.ret
@@ -854,26 +858,38 @@ function M.thread (...)
         uvi = uvi + 1
     end
 
-    -- Isolate: reload function from bytecode, deep copy table arguments.
-    local isolated_f = assert(load(string.dump(f)))
-    local function deep_copy (v)
-        if type(v) ~= 'table' then return v end
-        local t = {}
-        for k, val in pairs(v) do
-            t[deep_copy(k)] = deep_copy(val)
-        end
-        return t
-    end
-    for i, v in ipairs(args) do
-        args[i] = deep_copy(v)
-    end
+    local linda = lanes.linda()
+    local bytecode = string.dump(f)
 
-    -- Run synchronously with isolation.
-    local results = table.pack(pcall(isolated_f, table.unpack(args)))
-    if results[1] then
-        return table.unpack(results, 2, results.n)
-    else
-        error(tostring(results[2]), 0)
+    local proto = assert(lanes.gen("*", function (linda, f_bytecode, ...)
+        local f = load(f_bytecode)
+        (function (ok, ...)
+            if ok then
+                linda:send("ok", true, ...)
+            else
+                linda:send("ok", false, tostring((...)))
+            end
+        end)(pcall(f, ...))
+    end))
+
+    local lane = assert(proto(linda, bytecode, table.unpack(args)))
+    local _ <close> = M.defer(function ()
+        pcall(function () lane:cancel(0, true) end)
+    end)
+
+    -- Poll in place: wake on any event, check if lane is done
+    while true do
+        local r = table.pack((function (key, ...)
+            if key then return ... end
+        end)(linda:receive(0, "ok")))
+        if r.n > 0 then
+            if r[1] then
+                return table.unpack(r, 2, r.n)
+            else
+                error(r[2], 0)
+            end
+        end
+        M.await(true)
     end
 end
 
