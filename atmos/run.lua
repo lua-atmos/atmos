@@ -359,6 +359,13 @@ function M.loop (body, ...)
             if quit then
                 break
             end
+
+            -- Heartbeat: when no envs are registered, no events fire,
+            -- so polling tasks (e.g. thread's await(true)) would stall.
+            -- Emit a synthetic event to give them a chance to run.
+            if #_envs_ == 0 then
+                M.emit(false, nil, true)
+            end
         end
         return t.ret
     end, ...)
