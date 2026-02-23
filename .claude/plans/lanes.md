@@ -1,9 +1,9 @@
-# xtask / xspawn (LuaLanes)
+# thread (LuaLanes)
 
 Run a Lua function in a real OS thread via LuaLanes, then poll for its result
 inside the atmos cooperative scheduler.
 
-## Status: done
+## Status: done (replaced xtask/xspawn)
 
 ## Problem
 
@@ -12,7 +12,7 @@ event loop.  This works well for I/O-bound and event-driven code, but **cannot
 exploit multiple CPU cores**.  A CPU-heavy computation blocks the entire
 scheduler until it returns.
 
-`xtask`/`xspawn` solve this by offloading a function to a **real OS thread**
+`thread` solves this by offloading a function to a **real OS thread**
 (via LuaLanes), while the atmos scheduler continues running other tasks.  The
 calling task polls for the result via `await(true)` and resumes when the lane
 finishes.
@@ -38,10 +38,10 @@ into the new state.  This is serialization:
 
 ### What Lanes handles automatically
 
-The current implementation **lets Lanes handle function serialization
-directly** — we pass the function `f` itself to `lanes.gen("*", ...)` as a
-closure, and Lanes serializes it (bytecode + upvalues) internally.  There is
-no manual `string.dump` / `load` step.
+The implementation **lets Lanes handle function serialization directly** — we
+pass the function `f` as an upvalue of a wrapper closure to `lanes.gen("*",
+...)`, and Lanes serializes it (bytecode + upvalues) internally at lane launch
+time.  There is no manual `string.dump` / `load` step.
 
 This means:
 - Pure functions work.
@@ -50,58 +50,59 @@ This means:
 - Functions capturing non-serializable upvalues (C functions, coroutines,
   userdata) fail with a Lanes error at lane creation time.
 
-## Design: mirrors task/spawn
+## API: `thread(args..., f)`
 
-The API mirrors the existing `task`/`spawn` pattern:
-
-| Pattern | Creates prototype | Executes |
-|---------|------------------|----------|
-| `task(f)` / `spawn(t, ...)` | coroutine-based task | runs in same Lua state |
-| `xtask(f)` / `xspawn(xt, ...)` | lanes.gen-based prototype | runs in separate OS thread |
-
-Like `spawn(f, ...)`, `xspawn(f, ...)` is a shorthand that creates and
-immediately runs an xtask.
-
-### `xtask(f)` — create a reusable prototype
+Single inline blocking call — args come first, body function last:
 
 ```lua
-function M.xtask (f)
-    assertn(2, type(f) == 'function', "invalid xtask : expected function")
-    return setmetatable({
+local result = thread(10, 3, function (data, factor)
+    return data * factor
+end)
+```
+
+- Blocks the calling task (via `await(true)` polling)
+- Returns the lane result inline
+- No handle, no separate await, no __close
+- Cleanup via `defer` inside the function scope
+- `lanes.gen` cached by function identity (weak-key table)
+- `require("lanes")` is lazy — first `thread` call triggers it
+
+### Implementation (`atmos/run.lua`)
+
+```lua
+local _gen_cache = setmetatable({}, { __mode = 'k' })
+
+function M.thread (...)
+    local args = { ... }
+    local f = table.remove(args)
+    assertn(2, type(f)=='function',
+        "invalid thread : expected body function")
+
+    local me = M.me(true)
+    assertn(2, me,
+        "invalid thread : expected enclosing task")
+
+    if not lanes then
+        lanes = require("lanes").configure()
+    end
+
+    local gen = _gen_cache[f]
+    if not gen then
         gen = lanes.gen("*", function (linda, ...)
             local r = table.pack(pcall(f, ...))
             if r[1] then
-                linda:send("ok", { true, table.unpack(r, 2, r.n) })
+                linda:send("ok",
+                    { true, table.unpack(r, 2, r.n) })
             else
-                linda:send("ok", { false, tostring(r[2]) })
+                linda:send("ok",
+                    { false, tostring(r[2]) })
             end
         end)
-    }, meta_xtask)
-end
-```
-
-`lanes.gen("*", wrapper)` compiles a lane prototype that:
-1. Imports all standard libraries (`"*"`)
-2. Wraps `f` in `pcall` to catch errors
-3. Sends results (or stringified error) back through a linda
-
-The function `f` is captured as an upvalue of the wrapper.  Lanes serializes
-both the wrapper bytecode and `f` (as a sub-upvalue) when the lane launches.
-
-### `xspawn(xt, ...)` — launch and poll
-
-```lua
-function M.xspawn (xt, ...)
-    if type(xt) == 'function' then
-        xt = M.xtask(xt)
+        _gen_cache[f] = gen
     end
-    assertn(2, getmetatable(xt) == meta_xtask, "invalid xspawn : expected xtask prototype")
-
-    local me = M.me(true)
-    assertn(2, me, "invalid xspawn : expected enclosing task")
 
     local linda = lanes.linda()
-    local lane = assert(xt.gen(linda, ...))
+    local lane = assert(gen(linda, table.unpack(args)))
     local _ <close> = M.defer(function ()
         pcall(function () lane:cancel(0, true) end)
     end)
@@ -120,54 +121,41 @@ function M.xspawn (xt, ...)
 end
 ```
 
-Polling loop:
-1. Creates a fresh `linda` (thread-safe queue) per spawn
-2. Launches the lane with `xt.gen(linda, ...)`
-3. Registers a `<close>` defer to cancel the lane if the parent task aborts
-4. Polls `linda:receive(0, "ok")` (non-blocking) each scheduler tick
-5. On result: unpacks return values or re-raises the stringified error
+### Why caching is safe
 
-### Heartbeat (scheduler support)
+`lanes.gen("*", wrapper)` records the function prototype. The wrapper captures
+`f` as an upvalue. Serialization of `f` (its bytecode + upvalues) happens at
+**lane launch time** (`gen(linda, ...)`), NOT at gen creation time. So a cached
+gen correctly picks up updated upvalue values on later calls.
 
-When no environments are registered (e.g. tests without `require "atmos.env.clock"`),
-the main loop has no event source.  Without events, `await(true)` never wakes
-because nothing fires `emit`.
-
-Fix: the loop emits a synthetic heartbeat when `#_envs_ == 0`:
-
-```lua
--- in M.loop, after env.step() calls:
-if #_envs_ == 0 then
-    M.emit(false, nil, true)
-end
-```
-
-This ensures `xspawn`'s `await(true)` gets a chance to check the linda each
-iteration.
+Cache key is function **identity** (same Lua object = cache hit). Weak keys
+(`__mode = 'k'`) ensure no memory leak — if `f` is garbage collected, the
+cached gen entry disappears automatically.
 
 ## Key decisions
 
 | Decision | Choice | Why |
 |----------|--------|-----|
-| API naming | `xtask`/`xspawn` | mirrors `task`/`spawn`; "x" = cross-thread |
+| API | `thread(args..., f)` | inline like `do{...}`, single concept |
 | Serialization | let Lanes handle it | no manual `string.dump`; upvalues transfer automatically |
 | Result channel | `linda:send("ok", {bool, ...})` | table wrapper avoids multi-value send issues |
 | Library imports | `"*"` (all) | avoids surprises when lane code uses any stdlib |
 | Error serialization | `tostring(err)` on send side | error objects can't cross lane boundaries |
-| Defer placement | after `xt.gen(...)` call | `lane` is always set, no nil guard needed |
+| Defer placement | after `gen(...)` call | `lane` is always set, no nil guard needed |
 | Cancel strategy | `lane:cancel(0, true)` in `pcall` | immediate soft-cancel; pcall absorbs if lane already finished |
 | Polling | `linda:receive(0, "ok")` + `await(true)` | non-blocking check, yields to scheduler between polls |
-| Heartbeat | `emit(false, nil, true)` when no envs | keeps polling alive in env-less tests |
+| Caching | weak-key table by function identity | avoids repeated `lanes.gen` for same function |
+| Lazy require | `lanes` loaded on first `thread` call | no penalty for programs that never use threads |
 
 ## Upvalue support
 
 Unlike the earlier `thread` design which **rejected** functions with upvalues
-(via `debug.getupvalue` checks), `xtask`/`xspawn` **allows** them — Lanes
-serializes upvalues automatically when they are serializable types:
+(via `debug.getupvalue` checks), the current implementation **allows** them —
+Lanes serializes upvalues automatically when they are serializable types:
 
 | Upvalue type | Works? | Example |
 |-------------|--------|---------|
-| number, string, boolean | yes | `local x = 42; xspawn(function() return x end)` |
+| number, string, boolean | yes | `local x = 42; thread(function() return x end)` |
 | table (of serializable values) | yes | deep-copied into lane |
 | pure Lua function | yes | `local f = function(n) return n*2 end` |
 | C function, userdata, thread | no | Lanes error at lane creation |
@@ -178,45 +166,47 @@ This is tested in `tst/thread.lua` tests 9-10.
 
 | File | Change |
 |------|--------|
-| `atmos/run.lua` | `require("lanes").configure()` at top; `M.xtask`/`M.xspawn` section; heartbeat in `M.loop` |
-| `atmos/init.lua` | `xtask = run.xtask` / `xspawn = run.xspawn` globals |
-| `tst/thread.lua` | 17 tests covering errors, basic usage, upvalues, error propagation, lifecycle, isolation, prototype reuse |
+| `atmos/run.lua` | lazy `local lanes`; `_gen_cache` + `M.thread` replacing `meta_xtask`/`M.xtask`/`M.xspawn` |
+| `atmos/init.lua` | `thread = run.thread` (removed `xtask`/`xspawn` globals) |
+| `tst/thread.lua` | 17 tests covering errors, basic usage, upvalues, error propagation, lifecycle, isolation, reuse, cache |
 | `tst/all.lua` | `dofile "thread.lua"` entry |
 | `.github/workflows/test.yml` | `liblua5.4-dev` + `luarocks install lanes` |
 
 ## Tests (`tst/thread.lua`)
 
+All tests use `spawn` + `os.execute("sleep 0.1")` + `emit()` pattern
+(no `loop`, no environment).
+
 ### Error tests
-- xspawn 1: no enclosing task
-- xspawn 2: no body function (passes non-function)
-- xtask 1: no function argument
+- thread 1: no enclosing task
+- thread 2: no body function (passes non-function)
 
 ### Basic tests
-- xspawn 3: no return value
-- xspawn 4: return value
-- xspawn 5: copied value parameters
-- xspawn 6: table parameter (deep-copied)
-- xspawn 7: string library available in lane
-- xspawn 8: math library available in lane
+- thread 3: no return value
+- thread 4: return value
+- thread 5: copied value parameters
+- thread 6: table parameter (deep-copied)
+- thread 7: string library available in lane
+- thread 8: math library available in lane
 
 ### Upvalue tests
-- xspawn 9: captures a pure function upvalue
-- xspawn 10: captures a value upvalue
+- thread 9: captures a pure function upvalue
+- thread 10: captures a value upvalue
 
 ### Error propagation
-- xspawn 11: error inside lane propagates to parent
+- thread 11: error inside lane propagates to parent
 
 ### Lifecycle
-- xspawn 12: parent task suspends during xspawn
-- xspawn 13: sequential xspawns
-- xspawn 14: xspawn inside par_or
+- thread 12: parent task suspends during thread
+- thread 13: sequential threads (2x sleep+emit cycles)
+- thread 14: thread inside par_or
 
 ### Isolation
-- xspawn 15: table mutation in lane does not affect parent
+- thread 15: table mutation in lane does not affect parent
 
-### Prototype reuse
-- xtask 2: reuse same prototype for multiple xspawns
-- xtask 3: prototype captures upvalue
+### Reuse / Cache
+- thread 16: prototype reuse (same fn, multiple calls)
+- thread 17: cache hit with updated upvalue
 
 ## Evolution
 
@@ -229,43 +219,17 @@ The implementation went through several iterations:
 2. **`thread` with synchronous isolation**: attempted to run "in-process"
    without Lanes for simplicity, but lost real parallelism.
 
-3. **`xtask`/`xspawn` (current)**: renamed to mirror `task`/`spawn`, lets
-   Lanes handle function serialization directly (no manual bytecode step),
-   supports serializable upvalues naturally.
+3. **`xtask`/`xspawn`**: renamed to mirror `task`/`spawn`, lets Lanes handle
+   function serialization directly, supports serializable upvalues naturally.
+   Two-concept API (factory + launcher).
 
-### Bug: polling loop hangs in bare `loop()` (resolved)
+4. **`thread` with gen caching (current)**: simplified back to single inline
+   `thread(args..., f)` API, with `lanes.gen` cached by function identity in
+   a weak-key table. Lazy `require("lanes")`. Removed `xtask`/`xspawn`.
 
-During the `thread` iteration, the polling loop hung when no envs
-were registered.  Root cause:
+## TODO
 
-```
-loop(body)
-  -> spawn(body)
-    -> coroutine.resume(body)
-      -> thread(f)
-        -> lane launched (separate OS thread)
-        -> linda:receive(0, "ok") — lane not done yet
-        -> M.await(true) — yields coroutine
-      <- coroutine returns (suspended)
-  -> while true do
-       coroutine.status(t._.th) == 'suspended'
-       for _, env in ipairs(_envs_) do  -- EMPTY
-       end
-       -- loops forever, nobody resumes the coroutine
-     end
-
-Meanwhile, lane OS thread:
-  -> pcall(f), linda:send("ok", true) — done
-  (but nobody resumes the main coroutine)
-```
-
-`await(true)` yields and relies on `emit(...)` to resume.
-With no envs, no `env.step()` runs, no events fire, and the
-coroutine stays suspended forever — even though the lane has
-already posted its result to the linda.
-
-Fix: the heartbeat (`emit(false, nil, true)` when `#_envs_ == 0`)
-described in the Heartbeat section above.
+- `xemit`, `xawait`, `xchannel(linda)` for inter-thread communication
 
 ### CI/CD (`.github/workflows/test.yml`)
 

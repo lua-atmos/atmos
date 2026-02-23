@@ -1,5 +1,7 @@
 # lanes.gen caching for thread
 
+## Status: done (implemented in atmos/run.lua)
+
 ## Problem
 
 `lanes.gen("*", f)` compiles a lane prototype. Without
@@ -88,13 +90,13 @@ end
 references), the cached gen entry disappears automatically.
 No memory leak from accumulated prototypes.
 
-## Test case
+## Test case (thread 17 in `tst/thread.lua`)
 
 ```lua
 do
     print("Testing...",
-        "thread: cache hit with updated upvalue")
-    loop(function ()
+        "thread 17: cache hit with updated upvalue")
+    spawn(function ()
         local x = 10
         local function compute (n) return n + x end
 
@@ -105,6 +107,10 @@ do
         local b = thread(5, compute)
         out(b)              -- 25 (5+20, cache hit, new x)
     end)
+    os.execute("sleep 0.1")
+    emit()
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "15\n25\n")
     atmos.stop()
 end

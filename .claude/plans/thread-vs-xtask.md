@@ -1,8 +1,10 @@
 # thread vs xtask — API comparison
 
+## Status: resolved — `thread` chosen
+
 ## Two approaches to OS threads in atmos
 
-### A. Inline `thread` (pr-19-threads style)
+### A. Inline `thread` (chosen)
 
 ```lua
 -- blocks current task, returns result inline
@@ -22,7 +24,7 @@ end)
 **Cons**: no non-blocking usage, can't launch multiple in
 parallel from the same task
 
-### B. `xtask`/`xspawn` handles (current pr-20 branch)
+### B. `xtask`/`xspawn` handles (removed)
 
 ```lua
 local xt = xtask(function (n) return n * n end)
@@ -51,16 +53,9 @@ mapping (task IS the handle, xtask is NOT)
 | cancel | `t <close>` | scope-based defer | `h <close>` |
 | reuse | no (task is single-use) | cache-based | explicit prototype |
 
-## Key difference
+## Decision
 
-In the task world, `task()` returns the thing you
-spawn/await/close — it IS the handle.
-
-In xtask world, `xtask()` returns a factory and `xspawn()`
-returns the handle — they're different objects. This
-asymmetry is inherent: coroutines are single-use, but
-`lanes.gen` prototypes are reusable.
-
-The `thread` approach sidesteps this entirely — no handle
-concept, no asymmetry. Reuse comes from caching, not from
-explicit prototypes.
+`thread` was chosen for simplicity. The inline blocking
+pattern covers the primary use case (offload CPU work). For
+future non-blocking parallel lanes, `xemit`/`xawait`/
+`xchannel(linda)` will be added on top.
