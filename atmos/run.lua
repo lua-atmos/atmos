@@ -1,5 +1,6 @@
 local S = require "atmos.streams"
 require "atmos.util"
+local lanes -- lazy require in `spawn`
 
 local M = {}
 
@@ -813,6 +814,56 @@ function M.toggle (t, on)
         assertn(2, t._.status==nil --[[and coroutine.status(t._.th)=='suspended']],
             "invalid toggle : expected awaiting task")
         t._.status = 'toggled'
+    end
+end
+
+-------------------------------------------------------------------------------
+
+local _gen_cache = setmetatable({}, { __mode = 'k' })
+
+function M.thread (...)
+    local args = { ... }
+    local f = table.remove(args)
+    assertn(2, type(f)=='function', "invalid thread : expected body function")
+
+    local me = M.me(true)
+    assertn(2, me, "invalid thread : expected enclosing task")
+
+    if not lanes then
+        lanes = require("lanes").configure()
+    end
+
+    local gen = _gen_cache[f]
+    if not gen then
+        gen = lanes.gen("*", function (linda, ...)
+            local r = table.pack(pcall(f, ...))
+            if r[1] then
+                linda:send("ok",
+                    { true, table.unpack(r, 2, r.n) })
+            else
+                linda:send("ok",
+                    { false, tostring(r[2]) })
+            end
+        end)
+        _gen_cache[f] = gen
+    end
+
+    local linda = lanes.linda()
+    local lane = assert(gen(linda, table.unpack(args)))
+    local _ <close> = M.defer(function ()
+        pcall(function () lane:cancel(0, true) end)
+    end)
+
+    while true do
+        local key, r = linda:receive(0, "ok")
+        if key then
+            if r[1] then
+                return table.unpack(r, 2)
+            else
+                error(r[2], 0)
+            end
+        end
+        M.await(true)
     end
 end
 

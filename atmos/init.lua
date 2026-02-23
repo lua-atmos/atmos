@@ -51,11 +51,14 @@ function emit (e, ...)
     return run.emit(true, nil, e, ...)
 end
 
-await    = run.await
 clock    = run.clock
 _or_     = run._or_
 _and_    = run._and_
+
+await    = run.await
 toggle   = run.toggle
+thread   = run.thread
+
 every    = run.every
 par      = run.par
 par_or   = run.par_or
