@@ -1,6 +1,6 @@
 local S = require "atmos.streams"
 require "atmos.util"
-local lanes = require("lanes").configure()
+local lanes -- lazy require in `spawn`
 
 local M = {}
 
@@ -819,33 +819,37 @@ end
 
 -------------------------------------------------------------------------------
 
-local meta_xtask = {}
+local _gen_cache = setmetatable({}, { __mode = 'k' })
 
-function M.xtask (f)
-    assertn(2, type(f)=='function', "invalid xtask : expected function")
-    return setmetatable({
+function M.thread (...)
+    local args = { ... }
+    local f = table.remove(args)
+    assertn(2, type(f)=='function', "invalid thread : expected body function")
+
+    local me = M.me(true)
+    assertn(2, me, "invalid thread : expected enclosing task")
+
+    if not lanes then
+        lanes = require("lanes").configure()
+    end
+
+    local gen = _gen_cache[f]
+    if not gen then
         gen = lanes.gen("*", function (linda, ...)
             local r = table.pack(pcall(f, ...))
             if r[1] then
-                linda:send("ok", { true, table.unpack(r, 2, r.n) })
+                linda:send("ok",
+                    { true, table.unpack(r, 2, r.n) })
             else
-                linda:send("ok", { false, tostring(r[2]) })
+                linda:send("ok",
+                    { false, tostring(r[2]) })
             end
         end)
-    }, meta_xtask)
-end
-
-function M.xspawn (xt, ...)
-    if type(xt) == 'function' then
-        xt = M.xtask(xt)
+        _gen_cache[f] = gen
     end
-    assertn(2, getmetatable(xt)==meta_xtask, "invalid xspawn : expected xtask prototype")
-
-    local me = M.me(true)
-    assertn(2, me, "invalid xspawn : expected enclosing task")
 
     local linda = lanes.linda()
-    local lane = assert(xt.gen(linda, ...))
+    local lane = assert(gen(linda, table.unpack(args)))
     local _ <close> = M.defer(function ()
         pcall(function () lane:cancel(0, true) end)
     end)

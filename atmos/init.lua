@@ -57,9 +57,7 @@ _and_    = run._and_
 
 await    = run.await
 toggle   = run.toggle
-
-xtask    = run.xtask
-xspawn   = run.xspawn
+thread   = run.thread
 
 every    = run.every
 par      = run.par
