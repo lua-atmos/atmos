@@ -232,3 +232,52 @@ The implementation went through several iterations:
 3. **`xtask`/`xspawn` (current)**: renamed to mirror `task`/`spawn`, lets
    Lanes handle function serialization directly (no manual bytecode step),
    supports serializable upvalues naturally.
+
+### Bug: polling loop hangs in bare `loop()` (resolved)
+
+During the `thread` iteration, the polling loop hung when no envs
+were registered.  Root cause:
+
+```
+loop(body)
+  -> spawn(body)
+    -> coroutine.resume(body)
+      -> thread(f)
+        -> lane launched (separate OS thread)
+        -> linda:receive(0, "ok") — lane not done yet
+        -> M.await(true) — yields coroutine
+      <- coroutine returns (suspended)
+  -> while true do
+       coroutine.status(t._.th) == 'suspended'
+       for _, env in ipairs(_envs_) do  -- EMPTY
+       end
+       -- loops forever, nobody resumes the coroutine
+     end
+
+Meanwhile, lane OS thread:
+  -> pcall(f), linda:send("ok", true) — done
+  (but nobody resumes the main coroutine)
+```
+
+`await(true)` yields and relies on `emit(...)` to resume.
+With no envs, no `env.step()` runs, no events fire, and the
+coroutine stays suspended forever — even though the lane has
+already posted its result to the linda.
+
+Fix: the heartbeat (`emit(false, nil, true)` when `#_envs_ == 0`)
+described in the Heartbeat section above.
+
+### CI/CD (`.github/workflows/test.yml`)
+
+```yaml
+- name: Install Lua
+  run: |
+    sudo apt-get update
+    sudo apt-get install -y lua5.4 luarocks
+- name: Install LuaLanes
+  run: sudo luarocks install lanes
+- name: Run tests
+  run: |
+    eval $(luarocks path)
+    cd tst && LUA_PATH="...;;$LUA_PATH" lua5.4 all.lua
+```
