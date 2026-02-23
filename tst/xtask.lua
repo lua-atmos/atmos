@@ -38,11 +38,15 @@ print "--- XSPAWN / BASIC ---"
 
 do
     print("Testing...", "xspawn 3: basic - no return")
-    loop(function ()
+    spawn(function ()
         xspawn(function ()
+print'inside'
         end)
         out("done")
     end)
+    os.execute("sleep 0.5")
+print'emit'
+    emit(true)
     assertx(out(), "done\n")
     atmos.stop()
 end
