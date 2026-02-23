@@ -1,51 +1,45 @@
 local atmos = require "atmos"
 require "test"
 
-print "--- THREAD ---"
+print "--- XTASK / XSPAWN ---"
 
-print "--- THREAD / ERRORS ---"
+print "--- XSPAWN / ERRORS ---"
 
 do
-    print("Testing...", "thread 1: error - no enclosing task")
+    print("Testing...", "xspawn 1: error - no enclosing task")
     local _,err = pcall(function ()
-        thread(function () end)
+        xspawn(function () end)
     end)
-    assertfx(err, "invalid thread : expected enclosing task")
+    assertfx(err, "invalid xspawn : expected enclosing task")
     atmos.stop()
 end
 
 do
-    print("Testing...", "thread 2: error - no body function")
+    print("Testing...", "xspawn 2: error - no body function")
     local _,err = pcall(function ()
         spawn(function ()
-            thread(10)
+            xspawn(10)
         end)
     end)
-    assertfx(err, "invalid thread : expected body function")
+    assertfx(err, "invalid xspawn : expected xtask prototype")
     atmos.stop()
 end
 
 do
-    print("Testing...", "thread 3: error - captures external variable")
+    print("Testing...", "xtask 1: error - no function")
     local _,err = pcall(function ()
-        local x = 10
-        spawn(function ()
-            thread(function ()
-                return x  -- captures 'x' as upvalue
-            end)
-        end)
+        xtask(10)
     end)
-    assertfx(err, "invalid thread : function captures external variable")
+    assertfx(err, "invalid xtask : expected function")
     atmos.stop()
 end
 
-print "--- THREAD / BASIC ---"
+print "--- XSPAWN / BASIC ---"
 
 do
-    print("Testing...", "thread 4: basic - no return")
-    local v = loop(function ()
-        thread(function ()
-            -- empty thread body
+    print("Testing...", "xspawn 3: basic - no return")
+    loop(function ()
+        xspawn(function ()
         end)
         out("done")
     end)
@@ -54,9 +48,9 @@ do
 end
 
 do
-    print("Testing...", "thread 5: basic - return value")
+    print("Testing...", "xspawn 4: basic - return value")
     loop(function ()
-        local v = thread(function ()
+        local v = xspawn(function ()
             return 42
         end)
         out(v)
@@ -66,13 +60,11 @@ do
 end
 
 do
-    print("Testing...", "thread 6: parameters - copied values")
+    print("Testing...", "xspawn 5: parameters - copied values")
     loop(function ()
-        local data = 10
-        local factor = 3
-        local v = thread(data, factor, function (data, factor)
+        local v = xspawn(function (data, factor)
             return data * factor
-        end)
+        end, 10, 3)
         out(v)
     end)
     assertx(out(), "30\n")
@@ -80,16 +72,15 @@ do
 end
 
 do
-    print("Testing...", "thread 7: parameters - table copy")
+    print("Testing...", "xspawn 6: parameters - table copy")
     loop(function ()
-        local t = { 1, 2, 3 }
-        local v = thread(t, function (t)
+        local v = xspawn(function (t)
             local sum = 0
             for _, x in ipairs(t) do
                 sum = sum + x
             end
             return sum
-        end)
+        end, { 1, 2, 3 })
         out(v)
     end)
     assertx(out(), "6\n")
@@ -97,11 +88,11 @@ do
 end
 
 do
-    print("Testing...", "thread 8: string operations (string lib available)")
+    print("Testing...", "xspawn 7: string operations (string lib available)")
     loop(function ()
-        local v = thread("hello world", function (s)
+        local v = xspawn(function (s)
             return string.upper(s)
-        end)
+        end, "hello world")
         out(v)
     end)
     assertx(out(), "HELLO WORLD\n")
@@ -109,24 +100,54 @@ do
 end
 
 do
-    print("Testing...", "thread 9: math operations (math lib available)")
+    print("Testing...", "xspawn 8: math operations (math lib available)")
     loop(function ()
-        local v = thread(9, function (n)
+        local v = xspawn(function (n)
             return math.sqrt(n)
-        end)
+        end, 9)
         out(v)
     end)
     assertx(out(), "3.0\n")
     atmos.stop()
 end
 
-print "--- THREAD / ERROR PROPAGATION ---"
+print "--- XSPAWN / UPVALUES ---"
 
 do
-    print("Testing...", "thread 10: error inside lane propagates")
+    print("Testing...", "xspawn 9: upvalue - pure function")
+    loop(function ()
+        local function double (n)
+            return n * 2
+        end
+        local v = xspawn(function (n)
+            return double(n)
+        end, 21)
+        out(v)
+    end)
+    assertx(out(), "42\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "xspawn 10: upvalue - value")
+    loop(function ()
+        local multiplier = 3
+        local v = xspawn(function (n)
+            return n * multiplier
+        end, 10)
+        out(v)
+    end)
+    assertx(out(), "30\n")
+    atmos.stop()
+end
+
+print "--- XSPAWN / ERROR PROPAGATION ---"
+
+do
+    print("Testing...", "xspawn 11: error inside lane propagates")
     local _,err = pcall(function ()
         loop(function ()
-            thread(function ()
+            xspawn(function ()
                 error("lane error")
             end)
         end)
@@ -135,14 +156,13 @@ do
     atmos.stop()
 end
 
-print "--- THREAD / LIFECYCLE ---"
+print "--- XSPAWN / LIFECYCLE ---"
 
 do
-    print("Testing...", "thread 11: parent task suspends during thread")
+    print("Testing...", "xspawn 12: parent task suspends during xspawn")
     loop(function ()
         out("before")
-        thread(function ()
-            -- heavy computation simulation
+        xspawn(function ()
             local sum = 0
             for i = 1, 1000 do
                 sum = sum + i
@@ -156,10 +176,10 @@ do
 end
 
 do
-    print("Testing...", "thread 12: sequential threads")
+    print("Testing...", "xspawn 13: sequential xspawns")
     loop(function ()
-        local a = thread(10, function (x) return x + 1 end)
-        local b = thread(20, function (x) return x + 2 end)
+        local a = xspawn(function (x) return x + 1 end, 10)
+        local b = xspawn(function (x) return x + 2 end, 20)
         out(a, b)
     end)
     assertx(out(), "11\t22\n")
@@ -167,11 +187,11 @@ do
 end
 
 do
-    print("Testing...", "thread 13: thread inside par_or")
+    print("Testing...", "xspawn 14: xspawn inside par_or")
     loop(function ()
         local v = par_or(
             function ()
-                return thread(function () return "from thread" end)
+                return xspawn(function () return "from xspawn" end)
             end,
             function ()
                 await(false)
@@ -179,23 +199,53 @@ do
         )
         out(v)
     end)
-    assertx(out(), "from thread\n")
+    assertx(out(), "from xspawn\n")
     atmos.stop()
 end
 
-print "--- THREAD / ISOLATION ---"
+print "--- XSPAWN / ISOLATION ---"
 
 do
-    print("Testing...", "thread 14: table isolation - mutation in lane does not affect parent")
+    print("Testing...", "xspawn 15: table isolation - mutation in lane does not affect parent")
     loop(function ()
         local t = { 1, 2, 3 }
-        local v = thread(t, function (t)
-            t[1] = 999  -- mutate the copy
+        local v = xspawn(function (t)
+            t[1] = 999
             return t[1]
-        end)
-        out(v)      -- lane saw 999
-        out(t[1])   -- parent still has 1
+        end, t)
+        out(v)
+        out(t[1])
     end)
     assertx(out(), "999\n1\n")
+    atmos.stop()
+end
+
+print "--- XTASK / REUSE ---"
+
+do
+    print("Testing...", "xtask 2: reuse prototype")
+    loop(function ()
+        local xt = xtask(function (n)
+            return n * n
+        end)
+        local a = xspawn(xt, 3)
+        local b = xspawn(xt, 7)
+        out(a, b)
+    end)
+    assertx(out(), "9\t49\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "xtask 3: prototype with upvalue")
+    loop(function ()
+        local base = 100
+        local xt = xtask(function (n)
+            return base + n
+        end)
+        local v = xspawn(xt, 42)
+        out(v)
+    end)
+    assertx(out(), "142\n")
     atmos.stop()
 end

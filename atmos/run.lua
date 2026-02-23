@@ -834,57 +834,45 @@ function M.toggle (t, on)
 end
 
 -------------------------------------------------------------------------------
--- thread (LuaLanes)
+-- xtask / xspawn (LuaLanes)
 -------------------------------------------------------------------------------
 
-function M.thread (...)
-    local args = { ... }
-    local f = table.remove(args)
-    assertn(2, type(f) == 'function', "invalid thread : expected body function")
+local meta_xtask = {}
+
+function M.xtask (f)
+    assertn(2, type(f) == 'function', "invalid xtask : expected function")
+    return setmetatable({
+        gen = lanes.gen("*", function (linda, ...)
+            local r = table.pack(pcall(f, ...))
+            if r[1] then
+                linda:send("ok", { true, table.unpack(r, 2, r.n) })
+            else
+                linda:send("ok", { false, tostring(r[2]) })
+            end
+        end)
+    }, meta_xtask)
+end
+
+function M.xspawn (xt, ...)
+    if type(xt) == 'function' then
+        xt = M.xtask(xt)
+    end
+    assertn(2, getmetatable(xt) == meta_xtask, "invalid xspawn : expected xtask prototype")
 
     local me = M.me(true)
-    assertn(2, me, "invalid thread : expected enclosing task")
-
-    -- Reject functions that capture external variables (upvalues beyond _ENV).
-    -- Lanes serialize bytecode, so upvalues are lost.
-    local uvi = 1
-    while true do
-        local name = debug.getupvalue(f, uvi)
-        if not name then break end
-        if name ~= "_ENV" then
-            assertn(2, false,
-                "invalid thread : function captures external variable '" .. name .. "'")
-        end
-        uvi = uvi + 1
-    end
+    assertn(2, me, "invalid xspawn : expected enclosing task")
 
     local linda = lanes.linda()
-    local bytecode = string.dump(f)
-
-    local proto = assert(lanes.gen("*", function (linda, f_bytecode, ...)
-        local f = load(f_bytecode)
-        (function (ok, ...)
-            if ok then
-                linda:send("ok", true, ...)
-            else
-                linda:send("ok", false, tostring((...)))
-            end
-        end)(pcall(f, ...))
-    end))
-
-    local lane = assert(proto(linda, bytecode, table.unpack(args)))
+    local lane = assert(xt.gen(linda, ...))
     local _ <close> = M.defer(function ()
         pcall(function () lane:cancel(0, true) end)
     end)
 
-    -- Poll in place: wake on any event, check if lane is done
     while true do
-        local r = table.pack((function (key, ...)
-            if key then return ... end
-        end)(linda:receive(0, "ok")))
-        if r.n > 0 then
+        local key, r = linda:receive(0, "ok")
+        if key then
             if r[1] then
-                return table.unpack(r, 2, r.n)
+                return table.unpack(r, 2)
             else
                 error(r[2], 0)
             end
