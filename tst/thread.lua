@@ -35,38 +35,42 @@ do
         out("done")
     end)
     os.execute("sleep 0.1")
-    emit(true)
+    emit()
     assertx(out(), "done\n")
     atmos.stop()
 end
 
 do
     print("Testing...", "thread 4: basic - return value")
-    loop(function ()
+    spawn(function ()
         local v = thread(function ()
             return 42
         end)
         out(v)
     end)
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "42\n")
     atmos.stop()
 end
 
 do
     print("Testing...", "thread 5: parameters - copied values")
-    loop(function ()
+    spawn(function ()
         local v = thread(10, 3, function (data, factor)
             return data * factor
         end)
         out(v)
     end)
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "30\n")
     atmos.stop()
 end
 
 do
     print("Testing...", "thread 6: parameters - table copy")
-    loop(function ()
+    spawn(function ()
         local v = thread({ 1, 2, 3 }, function (t)
             local sum = 0
             for _, x in ipairs(t) do
@@ -76,6 +80,8 @@ do
         end)
         out(v)
     end)
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "6\n")
     atmos.stop()
 end
@@ -83,12 +89,14 @@ end
 do
     print("Testing...",
         "thread 7: string operations (string lib available)")
-    loop(function ()
+    spawn(function ()
         local v = thread("hello world", function (s)
             return string.upper(s)
         end)
         out(v)
     end)
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "HELLO WORLD\n")
     atmos.stop()
 end
@@ -96,12 +104,14 @@ end
 do
     print("Testing...",
         "thread 8: math operations (math lib available)")
-    loop(function ()
+    spawn(function ()
         local v = thread(9, function (n)
             return math.sqrt(n)
         end)
         out(v)
     end)
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "3.0\n")
     atmos.stop()
 end
@@ -110,7 +120,7 @@ print "--- THREAD / UPVALUES ---"
 
 do
     print("Testing...", "thread 9: upvalue - pure function")
-    loop(function ()
+    spawn(function ()
         local function double (n)
             return n * 2
         end
@@ -119,19 +129,23 @@ do
         end)
         out(v)
     end)
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "42\n")
     atmos.stop()
 end
 
 do
     print("Testing...", "thread 10: upvalue - value")
-    loop(function ()
+    spawn(function ()
         local multiplier = 3
         local v = thread(10, function (n)
             return n * multiplier
         end)
         out(v)
     end)
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "30\n")
     atmos.stop()
 end
@@ -142,11 +156,13 @@ do
     print("Testing...",
         "thread 11: error inside lane propagates")
     local _,err = pcall(function ()
-        loop(function ()
+        spawn(function ()
             thread(function ()
                 error("lane error")
             end)
         end)
+        os.execute("sleep 0.1")
+        emit()
     end)
     assertfx(tostring(err), "lane error")
     atmos.stop()
@@ -157,7 +173,7 @@ print "--- THREAD / LIFECYCLE ---"
 do
     print("Testing...",
         "thread 12: parent task suspends during thread")
-    loop(function ()
+    spawn(function ()
         out("before")
         thread(function ()
             local sum = 0
@@ -168,13 +184,15 @@ do
         end)
         out("after")
     end)
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "before\nafter\n")
     atmos.stop()
 end
 
 do
     print("Testing...", "thread 13: sequential threads")
-    loop(function ()
+    spawn(function ()
         local a = thread(10, function (x)
             return x + 1
         end)
@@ -183,13 +201,17 @@ do
         end)
         out(a, b)
     end)
+    os.execute("sleep 0.1")
+    emit()
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "11\t22\n")
     atmos.stop()
 end
 
 do
     print("Testing...", "thread 14: thread inside par_or")
-    loop(function ()
+    spawn(function ()
         local v = par_or(
             function ()
                 return thread(function ()
@@ -202,6 +224,8 @@ do
         )
         out(v)
     end)
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "from thread\n")
     atmos.stop()
 end
@@ -212,7 +236,7 @@ do
     print("Testing...",
         "thread 15: table isolation"
             .. " - mutation in lane does not affect parent")
-    loop(function ()
+    spawn(function ()
         local t = { 1, 2, 3 }
         local v = thread(t, function (t)
             t[1] = 999
@@ -221,6 +245,8 @@ do
         out(v)
         out(t[1])
     end)
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "999\n1\n")
     atmos.stop()
 end
@@ -230,7 +256,7 @@ print "--- THREAD / REUSE ---"
 do
     print("Testing...",
         "thread 16: prototype reuse (same fn, multiple calls)")
-    loop(function ()
+    spawn(function ()
         local function square (n)
             return n * n
         end
@@ -238,6 +264,10 @@ do
         local b = thread(7, square)
         out(a, b)
     end)
+    os.execute("sleep 0.1")
+    emit()
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "9\t49\n")
     atmos.stop()
 end
@@ -245,7 +275,7 @@ end
 do
     print("Testing...",
         "thread 17: cache hit with updated upvalue")
-    loop(function ()
+    spawn(function ()
         local x = 10
         local function compute (n) return n + x end
 
@@ -256,6 +286,10 @@ do
         local b = thread(5, compute)
         out(b)
     end)
+    os.execute("sleep 0.1")
+    emit()
+    os.execute("sleep 0.1")
+    emit()
     assertx(out(), "15\n25\n")
     atmos.stop()
 end
