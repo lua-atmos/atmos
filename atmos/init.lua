@@ -51,17 +51,20 @@ function emit (e, ...)
     return run.emit(true, nil, e, ...)
 end
 
-await    = run.await
 clock    = run.clock
 _or_     = run._or_
 _and_    = run._and_
+
+await    = run.await
 toggle   = run.toggle
+
+xtask    = run.xtask
+xspawn   = run.xspawn
+
 every    = run.every
 par      = run.par
 par_or   = run.par_or
 par_and  = run.par_and
 watching = run.watching
-xtask    = run.xtask
-xspawn   = run.xspawn
 
 return atmos

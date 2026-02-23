@@ -160,25 +160,17 @@ end
 local _envs_ = {}
 
 function M.env (e)
-    if e.mode == nil then
-        -- no mode: single-env only, cannot combine with others
-        assertn(2, #_envs_ == 0,
-            "invalid env : single-env only (mode not set)")
-        _envs_[1] = e
-        return
-    end
-    assertn(2, #_envs_ == 0 or _envs_[1].mode,
-        "invalid env : previous env is single-env only (mode not set)")
     _envs_[#_envs_+1] = e
-    if #_envs_ == 2 then
-        local first = _envs_[1]
-        assertn(2, first.mode.primary,
-            "invalid env : primary mode not supported")
-        first.mode.current = 'primary'
-    end
-    if #_envs_ >= 2 then
-        assertn(2, e.mode.secondary,
-            "invalid env : secondary mode not supported")
+    if #_envs_ == 1 then
+        -- ok: first env may support any mode
+    else
+        assertn(2, _envs_[1].mode and _envs_[1].mode.primary,
+            "invalid env : primary env must support primary mode")
+        assertn(2, _envs_[i].mode and _envs_[i].mode.secondary,
+            "invalid env : non-primary envs must support secondary mode")
+        assertn(2, #_envs_==0 or _envs_[1].mode,
+            "invalid env : previous env is single-env only (mode not set)")
+        _envs_[1].mode.current = 'primary'
         e.mode.current = 'secondary'
     end
 end
@@ -343,7 +335,6 @@ function M.loop (body, ...)
             if coroutine.status(t._.th) == 'dead' then
                 break
             end
-
             local quit = false
             for _, env in ipairs(_envs_) do
                 if env.step() then
@@ -353,13 +344,6 @@ function M.loop (body, ...)
             end
             if quit then
                 break
-            end
-
-            -- Heartbeat: when no envs are registered, no events fire,
-            -- so polling tasks (e.g. thread's await(true)) would stall.
-            -- Emit a synthetic event to give them a chance to run.
-            if #_envs_ == 0 then
-                M.emit(false, nil, true)
             end
         end
         return t.ret
@@ -834,13 +818,11 @@ function M.toggle (t, on)
 end
 
 -------------------------------------------------------------------------------
--- xtask / xspawn (LuaLanes)
--------------------------------------------------------------------------------
 
 local meta_xtask = {}
 
 function M.xtask (f)
-    assertn(2, type(f) == 'function', "invalid xtask : expected function")
+    assertn(2, type(f)=='function', "invalid xtask : expected function")
     return setmetatable({
         gen = lanes.gen("*", function (linda, ...)
             local r = table.pack(pcall(f, ...))
@@ -857,7 +839,7 @@ function M.xspawn (xt, ...)
     if type(xt) == 'function' then
         xt = M.xtask(xt)
     end
-    assertn(2, getmetatable(xt) == meta_xtask, "invalid xspawn : expected xtask prototype")
+    assertn(2, getmetatable(xt)==meta_xtask, "invalid xspawn : expected xtask prototype")
 
     local me = M.me(true)
     assertn(2, me, "invalid xspawn : expected enclosing task")
