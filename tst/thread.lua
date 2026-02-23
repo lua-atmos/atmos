@@ -164,7 +164,7 @@ do
         os.execute("sleep 0.1")
         emit()
     end)
-    assertfx(tostring(err), "lane error")
+    assertfx(tostring(err[1]), "lane error")
     atmos.stop()
 end
 
