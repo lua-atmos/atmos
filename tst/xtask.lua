@@ -40,12 +40,10 @@ do
     print("Testing...", "xspawn 3: basic - no return")
     spawn(function ()
         xspawn(function ()
-print'inside'
         end)
         out("done")
     end)
-    os.execute("sleep 0.5")
-print'emit'
+    os.execute("sleep 0.1")
     emit(true)
     assertx(out(), "done\n")
     atmos.stop()
