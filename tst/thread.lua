@@ -55,9 +55,10 @@ do
 end
 
 do
-    print("Testing...", "thread 5: parameters - copied values")
+    print("Testing...", "thread 5: parameters - upvalues")
     spawn(function ()
-        local v = thread(10, 3, function (data, factor)
+        local data, factor = 10, 3
+        local v = thread(function ()
             return data * factor
         end)
         out(v)
@@ -71,7 +72,8 @@ end
 do
     print("Testing...", "thread 6: parameters - table copy")
     spawn(function ()
-        local v = thread({ 1, 2, 3 }, function (t)
+        local t = { 1, 2, 3 }
+        local v = thread(function ()
             local sum = 0
             for _, x in ipairs(t) do
                 sum = sum + x
@@ -90,7 +92,8 @@ do
     print("Testing...",
         "thread 7: string operations (string lib available)")
     spawn(function ()
-        local v = thread("hello world", function (s)
+        local s = "hello world"
+        local v = thread(function ()
             return string.upper(s)
         end)
         out(v)
@@ -105,7 +108,8 @@ do
     print("Testing...",
         "thread 8: math operations (math lib available)")
     spawn(function ()
-        local v = thread(9, function (n)
+        local n = 9
+        local v = thread(function ()
             return math.sqrt(n)
         end)
         out(v)
@@ -124,8 +128,8 @@ do
         local function double (n)
             return n * 2
         end
-        local v = thread(21, function (n)
-            return double(n)
+        local v = thread(function ()
+            return double(21)
         end)
         out(v)
     end)
@@ -139,7 +143,8 @@ do
     print("Testing...", "thread 10: upvalue - value")
     spawn(function ()
         local multiplier = 3
-        local v = thread(10, function (n)
+        local n = 10
+        local v = thread(function ()
             return n * multiplier
         end)
         out(v)
@@ -193,11 +198,11 @@ end
 do
     print("Testing...", "thread 13: sequential threads")
     spawn(function ()
-        local a = thread(10, function (x)
-            return x + 1
+        local a = thread(function ()
+            return 10 + 1
         end)
-        local b = thread(20, function (x)
-            return x + 2
+        local b = thread(function ()
+            return 20 + 2
         end)
         out(a, b)
     end)
@@ -238,7 +243,7 @@ do
             .. " - mutation in lane does not affect parent")
     spawn(function ()
         local t = { 1, 2, 3 }
-        local v = thread(t, function (t)
+        local v = thread(function ()
             t[1] = 999
             return t[1]
         end)
@@ -260,8 +265,8 @@ do
         local function square (n)
             return n * n
         end
-        local a = thread(3, square)
-        local b = thread(7, square)
+        local a = thread(function () return square(3) end)
+        local b = thread(function () return square(7) end)
         out(a, b)
     end)
     os.execute("sleep 0.1")
@@ -279,11 +284,11 @@ do
         local x = 10
         local function compute (n) return n + x end
 
-        local a = thread(5, compute)
+        local a = thread(function () return compute(5) end)
         out(a)
 
         x = 20
-        local b = thread(5, compute)
+        local b = thread(function () return compute(5) end)
         out(b)
     end)
     os.execute("sleep 0.1")

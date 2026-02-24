@@ -821,38 +821,39 @@ end
 
 local _gen_cache = setmetatable({}, { __mode = 'k' })
 
-function M.thread (...)
-    local f = (...)
-    assertn(2, type(f)=='function', "invalid thread : expected body function")
-
+function M.thread (f)
     local me = M.me(true)
+    assertn(2, type(f)=='function', "invalid thread : expected body function")
     assertn(2, me, "invalid thread : expected enclosing task")
 
-    if not lanes then
+    if not lanes then   -- lazy require
+        -- requires lanes installed only if uses `thread`
         lanes = require("lanes").configure()
     end
 
     local gen = _gen_cache[f]
     if not gen then
-        gen = lanes.gen("*", function (linda, ...)
-            linda:send(pcall(f,...))
+        gen = lanes.gen("*", function (linda)
+            linda:send("ok", { pcall(f) })
         end)
         _gen_cache[f] = assert(gen)
     end
 
     local linda = lanes.linda()
-    local lane = assert(gen(linda, select(2,...)))
+    local lane = assert(gen(linda))
 
     local _ <close> = M.defer(function ()
         lane:cancel(0, true)
     end)
 
     while true do
-        local t = { linda:receive(0, true, false) }
-        if t[1] == true then
-            return table.unpack(t, 2)
-        elseif t[1] == false then
-            return error(t[2], 0)
+        local key, t = linda:receive(0, "ok")
+        if key then
+            if t[1] then
+                return table.unpack(t, 2)
+            else
+                error(t[2], 0)
+            end
         else
             M.await(true)
         end
