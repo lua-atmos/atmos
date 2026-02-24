@@ -822,8 +822,7 @@ end
 local _gen_cache = setmetatable({}, { __mode = 'k' })
 
 function M.thread (...)
-    local args = { ... }
-    local f = table.remove(args)
+    local f = (...)
     assertn(2, type(f)=='function', "invalid thread : expected body function")
 
     local me = M.me(true)
@@ -836,34 +835,27 @@ function M.thread (...)
     local gen = _gen_cache[f]
     if not gen then
         gen = lanes.gen("*", function (linda, ...)
-            local r = table.pack(pcall(f, ...))
-            if r[1] then
-                linda:send("ok",
-                    { true, table.unpack(r, 2, r.n) })
-            else
-                linda:send("ok",
-                    { false, tostring(r[2]) })
-            end
+            linda:send(pcall(f,...))
         end)
-        _gen_cache[f] = gen
+        _gen_cache[f] = assert(gen)
     end
 
     local linda = lanes.linda()
-    local lane = assert(gen(linda, table.unpack(args)))
+    local lane = assert(gen(linda, select(2,...)))
+
     local _ <close> = M.defer(function ()
-        pcall(function () lane:cancel(0, true) end)
+        lane:cancel(0, true)
     end)
 
     while true do
-        local key, r = linda:receive(0, "ok")
-        if key then
-            if r[1] then
-                return table.unpack(r, 2)
-            else
-                error(r[2], 0)
-            end
+        local t = { linda:receive(0, true, false) }
+        if t[1] == true then
+            return table.unpack(t, 2)
+        elseif t[1] == false then
+            return error(t[2], 0)
+        else
+            M.await(true)
         end
-        M.await(true)
     end
 end
 
