@@ -848,14 +848,14 @@ function M.thread (...)
     end)
 
     while true do
-        (function (ok, ...)
-            if ok then
-                return ...
-            else
-                error(..., 0)
-            end
-        end)(linda:receive(0))
-        M.await(true)
+        local t = { linda:receive(0, true, false) }
+        if t[1] == true then
+            return table.unpack(t, 2)
+        elseif t[1] == false then
+            return error(t[2], 0)
+        else
+            M.await(true)
+        end
     end
 end
 
