@@ -298,3 +298,56 @@ do
     assertx(out(), "15\n25\n")
     atmos.stop()
 end
+
+print "--- THREAD / FORBIDDEN ---"
+
+do
+    print("Testing...",
+        "thread 18: await forbidden inside thread")
+    local _,err = pcall(function ()
+        spawn(function ()
+            thread(function ()
+                await(true)
+            end)
+        end)
+        os.execute("sleep 0.1")
+        emit()
+    end)
+    assertfx(tostring(err[1]), "attempt to call a nil value %(global 'await'%)")
+    atmos.stop()
+end
+
+do
+    print("Testing...",
+        "thread 19: spawn forbidden inside thread")
+    local _,err = pcall(function ()
+        spawn(function ()
+            thread(function ()
+                spawn(function () end)
+            end)
+        end)
+        os.execute("sleep 0.1")
+        emit()
+    end)
+    assertfx(tostring(err[1]), "attempt to call a nil value %(global 'spawn'%)")
+    atmos.stop()
+end
+
+do
+    print("Testing...",
+        "thread 20: par_or forbidden inside thread")
+    local _,err = pcall(function ()
+        spawn(function ()
+            thread(function ()
+                par_or(
+                    function () end,
+                    function () end
+                )
+            end)
+        end)
+        os.execute("sleep 0.1")
+        emit()
+    end)
+    assertfx(tostring(err[1]), "attempt to call a nil value %(global 'par_or'%)")
+    atmos.stop()
+end
