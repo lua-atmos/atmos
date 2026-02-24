@@ -843,7 +843,10 @@ function M.thread (f)
     local lane = assert(gen(linda))
 
     local _ <close> = M.defer(function ()
-        lane:cancel(0, true)
+        while lane.status == 'pending' do
+            -- busy wait: "Not started yet. Shouldn't stay very long in that state."
+        end
+        assert(lane:cancel('hard', 0, true, 1))
     end)
 
     while true do
