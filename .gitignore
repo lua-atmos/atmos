@@ -1,4 +1,6 @@
 .*.swp
+.claude/ok
+atmos-*.src.rock
 atmos/env/iup
 atmos/env/pico
 atmos/env/sdl

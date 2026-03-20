@@ -26,7 +26,20 @@ This plan uses release branches (not tags) for versioning.
 cd tst && lua5.4 all.lua
 ```
 
-### 1b. Test all env examples (manual)
+### 2. Create rockspec `atmos-0.6-1.rockspec`
+
+- Copy from `atmos-0.5-1.rockspec`
+- Change `version` to `"0.6-1"`
+- Change `branch` to `"v0.6"`
+- Remove all non-clock env modules (sdl, pico, socket, iup)
+- Move old rockspec to `old/`
+- Install locally:
+
+```bash
+sudo luarocks make atmos-0.6-1.rockspec --lua-version=5.4
+```
+
+### 3. Test all env examples (manual) — local install
 
 **clock** (atmos built-in):
 - [ ] `atmos/env/clock/exs/hello.lua`
@@ -67,15 +80,18 @@ Note: requires pico-sdl v0.3 (`sudo luarocks --lua-version=5.4 install pico-sdl 
 **env-js**:
 - [ ] generate pages
 
-### 2. Create rockspec `atmos-0.6-1.rockspec`
+### 4. Release all environments and apps
 
-- Copy from `atmos-0.5-1.rockspec`
-- Change `version` to `"0.6-1"`
-- Change `branch` to `"v0.6"`
-- Remove all non-clock env modules (sdl, pico, socket, iup)
-- Move old rockspec to `old/`
+- [ ] env-sdl
+- [ ] env-pico
+- [ ] env-socket
+- [ ] env-iup
+- [ ] env-js
+- [ ] pico-rocks
+- [ ] sdl-rocks
+- [ ] iup-7guis
 
-### 3. Update `README.md`
+### 5. Update `README.md`
 
 - Add `v0.6` to version list
 - Update stable link from `v0.5` to `v0.6`
@@ -86,7 +102,7 @@ Note: requires pico-sdl v0.3 (`sudo luarocks --lua-version=5.4 install pico-sdl 
     - sdl, pico, socket, iup → link to separate repos
       (lua-atmos/env-sdl, env-pico, env-socket, env-iup)
 
-### 4. Update `HISTORY.md`
+### 6. Update `HISTORY.md`
 
 ```
 v0.6 (mar/26)
@@ -98,11 +114,11 @@ v0.6 (mar/26)
 - Thread no-args
 ```
 
-### 5. Commit all changes
+### 7. Commit all changes
 
 Single commit: `release: v0.6`
 
-### 6. Push main
+### 8. Push main
 
 ```bash
 git push origin main
@@ -110,7 +126,7 @@ git push origin main
 
 Check GitHub Actions for green CI.
 
-### 7. Create release branch and push
+### 9. Create release branch and push
 
 ```bash
 git checkout -b v0.6
@@ -124,21 +140,22 @@ git push origin v0.6
 git checkout main
 ```
 
-### 8. Publish to LuaRocks
+### 10. Publish to LuaRocks
 
 ```bash
 luarocks upload atmos-0.6-1.rockspec
 ```
 
-### 9. Verify LuaRocks install
+### 11. Verify LuaRocks install + test all examples again (remote)
 
 ```bash
 sudo luarocks --lua-version=5.4 remove atmos
 sudo luarocks --lua-version=5.4 install atmos 0.6
-lua5.4 <lua-path>/atmos/env/clock/exs/hello.lua
 ```
 
-### 10. Add installation instructions to each env README
+Re-run the same test checklist from step 3 with the remote install.
+
+### 12. Add installation instructions to each env README
 
 - [ ] env-sdl
 - [ ] env-pico
@@ -146,18 +163,7 @@ lua5.4 <lua-path>/atmos/env/clock/exs/hello.lua
 - [ ] env-iup
 - [ ] env-js
 
-### 11. Release all environments and apps
-
-- [ ] env-sdl
-- [ ] env-pico
-- [ ] env-socket
-- [ ] env-iup
-- [ ] env-js
-- [ ] pico-rocks
-- [ ] sdl-rocks
-- [ ] iup-7guis
-
-### 11. Announce (manual)
+### 13. Announce (manual)
 
 - Mailing list
 - Students
@@ -173,16 +179,19 @@ lua5.4 <lua-path>/atmos/env/clock/exs/hello.lua
 
 ## Progress
 
-- [ ] Pending: rockspec cleanup (from extract-envs)
-- [ ] Pending: README env links (from extract-envs)
+- [x] Pending: rockspec cleanup (from extract-envs)
+- [x] Pending: README env links (from extract-envs)
 - [ ] Pending: extracted env rockspecs install into atmos/env/*
-- [ ] Step 1 — Run tests
-- [ ] Step 2 — Create rockspec
-- [ ] Step 3 — Update README
-- [ ] Step 4 — Update HISTORY
-- [ ] Step 5 — Commit
-- [ ] Step 6 — Push main
-- [ ] Step 7 — Create release branch
-- [ ] Step 8 — Publish to LuaRocks
-- [ ] Step 9 — Verify install
-- [ ] Step 10 — Announce
+- [x] Step 1 — Run tests
+- [x] Step 2 — Create rockspec
+- [ ] Step 3 — Test all examples (local install)
+- [ ] Step 4 — Release all envs and apps
+- [x] Step 5 — Update README
+- [x] Step 6 — Update HISTORY
+- [ ] Step 7 — Commit
+- [ ] Step 8 — Push main
+- [ ] Step 9 — Create release branch
+- [ ] Step 10 — Publish to LuaRocks
+- [ ] Step 11 — Verify install + test examples (remote)
+- [ ] Step 12 — Add install instructions to env READMEs
+- [ ] Step 13 — Announce
