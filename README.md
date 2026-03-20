@@ -8,6 +8,7 @@
 ***Structured Event-Driven Concurrency for Lua***
 
 [
+    [`v0.6`](https://github.com/lua-atmos/atmos/tree/v0.6)      |
     [`v0.5`](https://github.com/lua-atmos/atmos/tree/v0.5)      |
     [`v0.4`](https://github.com/lua-atmos/atmos/tree/v0.4)      |
     [`v0.3`](https://github.com/lua-atmos/atmos/tree/v0.3)      |
@@ -16,7 +17,7 @@
 ]
 
 This is the unstable `main` branch.
-Please, switch to stable [`v0.5`](https://github.com/lua-atmos/atmos/tree/v0.4).
+Please, switch to stable [`v0.6`](https://github.com/lua-atmos/atmos/tree/v0.6).
 <!--
 -->
 
@@ -74,7 +75,7 @@ During 5 seconds, displays `Hello World!` every second:
 ```
 require "atmos.env.clock"
 
-call(function ()
+loop(function ()
     watching(clock{s=5}, function ()
         every(clock{s=1}, function ()
             print("Hello World!")
@@ -85,14 +86,14 @@ end)
 
 We first import the builtin `clock` environment, which provides timers to
 applications.
-The `call` primitive receives a function with the application logic in Atmos,
+The `loop` primitive receives a function with the application logic in Atmos,
 as follows:
 
 - The `watching` command will execute its inner function during 5 seconds.
 - The `every` loop will execute its inner function every second.
-- Once the `watching` terminates, the `call` returns back to Lua.
+- Once the `watching` terminates, the `loop` returns back to Lua.
 
-In Atmos, the lifetimes and schedules of tasks are determined by lexical 
+In Atmos, the lifetimes and schedules of tasks are determined by lexical
 structure.
 Tasks that would awake "simultaneously" instead do so in order of appearance in
 the source code.
@@ -107,10 +108,10 @@ Applying this to the above example:
 - On the fifth second, `watching` and `every` are both scheduled to awake.
 - The `every` awakes before the enclosing `watching`, printing `"Hello World!"`
   for the fifth (and last) time.
-- Therefore, `call` returns after five seconds having printed `"Hello World!"`
+- Therefore, `loop` returns after five seconds having printed `"Hello World!"`
   five times.
 
-See [the relevant section in the guide](guide.md#31-lexical-scheduling) for 
+See [the relevant section in the guide](guide.md#31-lexical-scheduling) for
 other, more complex examples.
 
 Now, the same specification, but using streams:
@@ -119,7 +120,7 @@ Now, the same specification, but using streams:
 require "atmos.env.clock"
 local S = require "atmos.streams"
 
-call(function ()
+loop(function ()
     local s1 = S.from(clock{s=1})
         :tap(function()
             print("Hello World!")
@@ -139,7 +140,7 @@ end)
 # Install & Run
 
 ```
-sudo luarocks --lua-version=5.4 install atmos 0.5
+sudo luarocks --lua-version=5.4 install atmos 0.6
 lua5.4 <lua-path>/atmos/env/clock/exs/hello.lua
 ```
 
@@ -147,34 +148,18 @@ You may also clone the repository and copy part of the source tree, as follows,
 into your Lua path (e.g., `/usr/local/share/lua/5.4`):
 
 ```
-atmos
+atmos/
 ├── env/
-│   ├── clock/
-│   │   ├── exs/
-│   │   │   ├── hello.lua
-│   │   │   └── hello-rx.lua
-│   │   └── init.lua
-│   ├── iup/
-│   │   ├── exs/
-│   │   │   └── button-counter.lua
-│   │   └── init.lua
-│   ├── pico/
-│   │   ├── exs/
-│   │   │   └── click-drag-cancel.lua
-│   │   └── init.lua
-│   ├── sdl/
-│   │   ├── exs/
-│   │   │   ├── click-drag-cancel.lua
-│   │   │   └── DejaVuSans.ttf
-│   │   └── init.lua
-│   └── socket/
-│       ├── exs/
-│       │   └── cli-srv.lua
-│       └── init.lua
+│   └── clock/
+│       ├── exs/
+│       │   ├── hello.lua
+│       │   └── hello-rx.lua
+│       └── init.lua
 ├── init.lua
 ├── run.lua
 ├── streams.lua
-└── util.lua
+├── util.lua
+└── x.lua
 ```
 
 Atmos depends on [f-streams][f-streams].
@@ -186,22 +171,23 @@ Atmos depends on [f-streams][f-streams].
 An environment is an external component that bridges input events from the real
 world into an Atmos application.
 
-The standard distribution of Atmos provides the following environments:
+The standard distribution of Atmos provides a simple `clock` environment to
+experiment with time.
+
+All other environments are available as separate packages:
 
 - [`atmos.env.clock`](atmos/env/clock/):
     A simple pure-Lua environment that uses `os.clock` to issue timer events.
-- [`atmos.env.socket`](atmos/env/socket/):
+- [`atmos.env.socket`](https://github.com/lua-atmos/env-socket):
     An environment that relies on [luasocket][luasocket] to provide network
     communication.
-- [`atmos.env.sdl`](atmos/env/sdl/):
+- [`atmos.env.sdl`](https://github.com/lua-atmos/env-sdl):
     An environment that relies on [lua-sdl2][luasdl] to provide window, mouse,
     key, and timer events.
-    - `sudo luarocks --lua-version=5.4 install lua-sdl2 2.0`
-- [`atmos.env.pico`](atmos/env/pico/):
-    An environment that relies on [pico-sdl-lua][pico-sdl-lua] as a simpler
-    alternative do SDL.
-    - `sudo luarocks --lua-version=5.4 install pico-sdl 0.2`
-- [`atmos.env.iup`](atmos/env/iup/):
+- [`atmos.env.pico`](https://github.com/lua-atmos/env-pico):
+    An environment that relies on [pico-lua][pico-lua] as a simpler
+    alternative to SDL.
+- [`atmos.env.iup`](https://github.com/lua-atmos/env-iup):
     An environment that relies on [IUP][iup] ([iup-lua][iup-lua]) to provide
     graphical user interfaces (GUIs).
 - [`atmos.env.js`](https://github.com/lua-atmos/env-js/):
@@ -210,7 +196,7 @@ The standard distribution of Atmos provides the following environments:
 
 [luasocket]:    https://lunarmodules.github.io/luasocket/
 [luasdl]:       https://github.com/Tangent128/luasdl2/
-[pico-sdl-lua]: https://github.com/fsantanna/pico-sdl/tree/main/lua
+[pico-lua]:     https://github.com/fsantanna/pico-sdl/tree/main/lua
 [iup]:          https://www.tecgraf.puc-rio.br/iup/
 [iup-lua]:      https://www.tecgraf.puc-rio.br/iup/en/basic/index.html
 [wasmoon]:      https://github.com/ceifa/wasmoon
@@ -223,7 +209,7 @@ The standard distribution of Atmos provides the following environments:
 # Resources
 
 - [A toy problem][toy]: Drag, Click, or Cancel
-    - [click-drag-cancel.lua](atmos/env/pico/exs/click-drag-cancel.lua)
+    - [click-drag-cancel.lua](https://github.com/lua-atmos/env-pico/blob/main/exs/click-drag-cancel.lua)
 - A simple but complete 2D game in Atmos:
     - https://github.com/lua-atmos/pico-rocks/
 - Academic publications (Céu):

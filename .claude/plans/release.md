@@ -138,7 +138,18 @@ sudo luarocks --lua-version=5.4 install atmos 0.6
 lua5.4 <lua-path>/atmos/env/clock/exs/hello.lua
 ```
 
-### 10. Announce (manual)
+### 10. Release all environments and apps
+
+- [ ] env-sdl
+- [ ] env-pico
+- [ ] env-socket
+- [ ] env-iup
+- [ ] env-js
+- [ ] pico-rocks
+- [ ] sdl-rocks
+- [ ] iup-7guis
+
+### 11. Announce (manual)
 
 - Mailing list
 - Students
