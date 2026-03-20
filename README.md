@@ -16,10 +16,8 @@
     [`v0.1`](https://github.com/lua-atmos/atmos/tree/v0.1)
 ]
 
-This is the unstable `main` branch.
-Please, switch to stable [`v0.6`](https://github.com/lua-atmos/atmos/tree/v0.6).
-<!--
--->
+Please, switch to stable
+    [`v0.5`](https://github.com/lua-atmos/atmos/tree/v0.5).
 
 [
     [About](#about)                 |
