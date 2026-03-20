@@ -1,3 +1,9 @@
+Install `lanes`:
+
+```
+sudo luarocks --lua-version=5.4 install lanes
+```
+
 Assumes this directory structure:
 
 ```
