@@ -1,5 +1,6 @@
 .*.swp
 atmos/env/iup
+atmos/env/pico
 atmos/env/sdl
 atmos/env/socket
 atmos/lang
