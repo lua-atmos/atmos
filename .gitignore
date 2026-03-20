@@ -1,2 +1,3 @@
 .*.swp
-.worktrees/
+atmos/env/
+atmos/lang
