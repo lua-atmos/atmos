@@ -27,3 +27,20 @@ end)
 # Events
 
 - `clock`
+
+# Source
+
+Assumes this directory structure:
+
+```
+.
+├── atmos/
+│   └── atmos
+│       └── env
+│           └── clock   <-- we are here
+└── f-streams/
+```
+
+```bash
+LUA_PATH="../../../../f-streams/?/init.lua;../../../?.lua;../../../?/init.lua;;" lua5.4 exs/hello.lua
+```

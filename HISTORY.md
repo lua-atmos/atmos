@@ -1,3 +1,17 @@
+v0.6 (mar/26)
+-------------
+
+- Additions:
+    - `thread` block (CPU parallelism via LuaLanes)
+- Modifications:
+    - `loop` (was `call`)
+- Environments:
+    - new API: `open`, `step`, `close`
+    - multi-env mode system (primary/secondary)
+    - new environment `env-js`
+    - all extracted to separate repos:
+        - `env-iup`, `env-js`, `env-pico`, `env-sdl`, `env-socket`
+
 v0.5 (jan/26)
 -------------
 

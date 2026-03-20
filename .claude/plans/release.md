@@ -26,6 +26,47 @@ This plan uses release branches (not tags) for versioning.
 cd tst && lua5.4 all.lua
 ```
 
+### 1b. Test all env examples (manual)
+
+**clock** (atmos built-in):
+- [ ] `atmos/env/clock/exs/hello.lua`
+- [ ] `atmos/env/clock/exs/hello-rx.lua`
+
+**env-sdl** (`/x/lua-atmos/env-sdl`):
+- [ ] `exs/hello.lua`
+- [ ] `exs/across.lua`
+- [ ] `exs/click-drag-cancel.lua`
+
+**env-pico** (`/x/lua-atmos/env-pico`):
+Note: requires pico-sdl v0.3 (`sudo luarocks --lua-version=5.4 install pico-sdl 0.3`)
+- [ ] `exs/hello.lua`
+- [ ] `exs/across.lua`
+- [ ] `exs/click-drag-cancel.lua`
+
+**env-socket** (`/x/lua-atmos/env-socket`):
+- [ ] `exs/hello.lua`
+- [ ] `exs/cli-srv.lua`
+
+**env-iup** (not yet extracted):
+- [ ] `atmos/env/iup/exs/hello.lua`
+- [ ] `atmos/env/iup/exs/button-counter.lua`
+- [ ] `atmos/env/iup/exs/iup-net.lua`
+
+**pico-rocks** (`/x/lua-atmos/pico-rocks`):
+- [ ] `main.lua`
+
+**sdl-rocks** (`/x/lua-atmos/sdl-rocks`):
+- [ ] `main.lua`
+
+**iup-7guis** (`/x/lua-atmos/iup-7guis`):
+- [ ] `01-counter.lua`
+- [ ] `02-temperature.lua`
+- [ ] `03-flight.lua`
+- [ ] `01-counter-net.lua`
+
+**env-js**:
+- [ ] generate pages
+
 ### 2. Create rockspec `atmos-0.6-1.rockspec`
 
 - Copy from `atmos-0.5-1.rockspec`
