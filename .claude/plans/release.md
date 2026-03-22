@@ -39,11 +39,29 @@ cd tst && lua5.4 all.lua
 sudo luarocks make atmos-0.6-1.rockspec --lua-version=5.4
 ```
 
-### 3. Test all env examples (manual) — local install
+### 3. Release all environments
+
+For each env:
+
+1. Create rockspec (modules install into `atmos/env/<name>/*`)
+2. Update README with install instructions
+3. Commit: `release: v0.1`
+4. Push main
+5. Create branch `v0.1`, push
+6. `luarocks upload <name>-0.1-1.rockspec`
+7. Verify: `sudo luarocks --lua-version=5.4 install <name>`
+
+- [ ] env-sdl
+- [ ] env-pico
+- [ ] env-socket
+- [ ] env-iup
+- [ ] env-js
+
+### 4. Test all env examples (manual) — local install
 
 **clock** (atmos built-in):
-- [ ] `atmos/env/clock/exs/hello.lua`
-- [ ] `atmos/env/clock/exs/hello-rx.lua`
+- [x] `atmos/env/clock/exs/hello.lua`
+- [x] `atmos/env/clock/exs/hello-rx.lua`
 
 **env-sdl** (`/x/lua-atmos/env-sdl`):
 - [ ] `exs/hello.lua`
@@ -79,24 +97,6 @@ Note: requires pico-sdl v0.3 (`sudo luarocks --lua-version=5.4 install pico-sdl 
 
 **env-js**:
 - [ ] generate pages
-
-### 4. Release all environments
-
-For each env:
-
-1. Create rockspec (modules install into `atmos/env/<name>/*`)
-2. Update README with install instructions
-3. Commit: `release: v0.1`
-4. Push main
-5. Create branch `v0.1`, push
-6. `luarocks upload <name>-0.1-1.rockspec`
-7. Verify: `sudo luarocks --lua-version=5.4 install <name>`
-
-- [ ] env-sdl
-- [ ] env-pico
-- [ ] env-socket
-- [ ] env-iup
-- [ ] env-js
 
 ### 5. Release all apps (depend on environments)
 
@@ -205,8 +205,8 @@ Re-run the same test checklist from step 3 with the remote install.
 - [ ] Pending: extracted env rockspecs install into atmos/env/*
 - [x] Step 1 — Run tests
 - [x] Step 2 — Create rockspec
-- [ ] Step 3 — Test all examples (local install)
-- [ ] Step 4 — Release all environments
+- [ ] Step 3 — Release all environments
+- [ ] Step 4 — Test all examples (local install)
 - [ ] Step 5 — Release all apps
 - [x] Step 6 — Update README
 - [x] Step 7 — Update HISTORY
