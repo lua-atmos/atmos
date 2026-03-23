@@ -51,11 +51,11 @@ For each env:
 6. `luarocks upload <name>-0.1-1.rockspec`
 7. Verify: `sudo luarocks --lua-version=5.4 install <name>`
 
-- [ ] env-sdl
-- [ ] env-pico
-- [ ] env-socket
-- [ ] env-iup
-- [ ] env-js
+- [x] env-sdl
+- [x] env-pico
+- [x] env-socket
+- [ ] env-iup (skipped — extraction not complete)
+- [ ] env-js (skipped)
 
 ### 4. Test all env examples (manual) — local install
 
@@ -86,7 +86,16 @@ Note: requires pico-sdl v0.3 (`sudo luarocks --lua-version=5.4 install pico-sdl 
 **pico-rocks** (`/x/lua-atmos/pico-rocks`):
 - [ ] `main.lua`
 
+**pico-birds** (`/x/lua-atmos/pico-birds`):
+- [ ] `birds-11.lua`
+
 **sdl-rocks** (`/x/lua-atmos/sdl-rocks`):
+- [ ] `main.lua`
+
+**sdl-birds** (`/x/lua-atmos/sdl-birds`):
+- [ ] `birds-11.lua`
+
+**sdl-pingus** (`/x/lua-atmos/sdl-pingus`):
 - [ ] `main.lua`
 
 **iup-7guis** (`/x/lua-atmos/iup-7guis`):
@@ -95,7 +104,7 @@ Note: requires pico-sdl v0.3 (`sudo luarocks --lua-version=5.4 install pico-sdl 
 - [ ] `03-flight.lua`
 - [ ] `01-counter-net.lua`
 
-**env-js**:
+**env-js** (`/x/lua-atmos/env-js`):
 - [ ] generate pages
 
 ### 5. Release all apps (depend on environments)
@@ -202,10 +211,10 @@ Re-run the same test checklist from step 3 with the remote install.
 
 - [x] Pending: rockspec cleanup (from extract-envs)
 - [x] Pending: README env links (from extract-envs)
-- [ ] Pending: extracted env rockspecs install into atmos/env/*
+- [x] Pending: extracted env rockspecs install into atmos/env/*
 - [x] Step 1 — Run tests
 - [x] Step 2 — Create rockspec
-- [ ] Step 3 — Release all environments
+- [x] Step 3 — Release all environments (sdl, pico, socket done; iup, js skipped)
 - [ ] Step 4 — Test all examples (local install)
 - [ ] Step 5 — Release all apps
 - [x] Step 6 — Update README
