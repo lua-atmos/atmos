@@ -70,9 +70,9 @@ For each env:
 
 **env-pico** (`/x/lua-atmos/env-pico`):
 Note: requires pico-sdl v0.3 (`sudo luarocks --lua-version=5.4 install pico-sdl 0.3`)
-- [ ] `exs/hello.lua`
-- [ ] `exs/across.lua`
-- [ ] `exs/click-drag-cancel.lua`
+- [x] `exs/hello.lua`
+- [x] `exs/across.lua`
+- [x] `exs/click-drag-cancel.lua`
 
 **env-socket** (`/x/lua-atmos/env-socket`):
 - [ ] `exs/hello.lua`
@@ -87,7 +87,7 @@ Note: requires pico-sdl v0.3 (`sudo luarocks --lua-version=5.4 install pico-sdl 
 - [ ] `main.lua`
 
 **pico-birds** (`/x/lua-atmos/pico-birds`):
-- [ ] `birds-11.lua`
+- [x] `birds-11.lua`
 
 **sdl-rocks** (`/x/lua-atmos/sdl-rocks`):
 - [ ] `main.lua`
@@ -107,19 +107,22 @@ Note: requires pico-sdl v0.3 (`sudo luarocks --lua-version=5.4 install pico-sdl 
 **env-js** (`/x/lua-atmos/env-js`):
 - [ ] generate pages
 
-### 5. Release all apps (depend on environments)
+### 5. Release all apps (folded into step 4)
 
-Apps install deps via meta-packages, e.g.:
-`sudo luarocks --lua-version=5.4 install atmos-pico 0.6`
-which installs atmos + env-pico (TODO: create meta-package in env-pico repo).
+For each app, as we test:
+1. Fix code (`call` → `loop`, etc.)
+2. Update README with install + `git checkout v0.1` instructions
+3. Commit, push main
+4. Create branch `v0.1`, push
+5. Update README on `v0.1` branch: `git checkout v0.1`
+6. Commit + push `v0.1`, return to main
 
-For each app, update README install instructions to use
-meta-package instead of separate installs.
-
-- [ ] pico-rocks (atmos-pico)
-- [ ] pico-birds (atmos-pico)
-- [ ] sdl-rocks (atmos-sdl)
-- [ ] iup-7guis (atmos-iup)
+- [ ] sdl-birds (atmos >= 0.6, atmos-env-sdl)
+- [ ] sdl-rocks (atmos >= 0.6, atmos-env-sdl)
+- [ ] sdl-pingus (atmos >= 0.6, atmos-env-sdl)
+- [ ] pico-rocks (atmos >= 0.6, atmos-env-pico)
+- [x] pico-birds (atmos >= 0.6, atmos-env-pico)
+- [ ] iup-7guis (atmos >= 0.6, atmos-env-iup, atmos-env-socket)
 
 ### 6. Update `README.md`
 
