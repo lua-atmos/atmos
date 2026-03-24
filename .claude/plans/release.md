@@ -41,6 +41,10 @@ sudo luarocks make atmos-0.6-1.rockspec --lua-version=5.4
 
 ### 3. Release all environments and apps
 
+Two test phases for each env/app:
+1. **Local**: use `LUA_PATH` trick from README
+2. **Global**: `luarocks make` to install, then test
+
 **clock** (atmos built-in):
 - [x] `atmos/env/clock/exs/hello.lua`
 - [x] `atmos/env/clock/exs/hello-rx.lua`
@@ -48,28 +52,35 @@ sudo luarocks make atmos-0.6-1.rockspec --lua-version=5.4
 #### 3.1 env-sdl
 
 Env steps:
-1. [x] Create rockspec
-2. [x] Update README
-3. [x] Commit, push main
-4. [x] Create/update branch `v0.1`, push
-
-Test examples:
-- [x] `exs/hello.lua`
-- [x] `exs/across.lua`
-- [x] `exs/click-drag-cancel.lua`
+1. [x] Update README
+2. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+3. [x] Create rockspec
+4. [x] Make rockspec
+5. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+6. [x] Commit, push main
+7. [x] Create/update branch `v0.1`, push
 
 ##### 3.1.1 sdl-birds
-- [x] Test `birds-11.lua`
+- [x] Test `birds-11.lua` (local)
+- [ ] Test `birds-11.lua` (global)
 - [x] Commit, push main
 - [x] Create branch, push
 
 ##### 3.1.2 sdl-rocks
-- [x] Test `main.lua`
+- [x] Test `main.lua` (local)
+- [ ] Test `main.lua` (global)
 - [x] Commit, push main
 - [x] Create branch, push
 
 ##### 3.1.3 sdl-pingus
-- [x] Test `main.lua`
+- [x] Test `main.lua` (local)
+- [ ] Test `main.lua` (global)
 - [x] Commit, push main
 - [x] Create branch, push
 
@@ -78,37 +89,46 @@ Test examples:
 Note: requires pico-sdl v0.3
 
 Env steps:
-1. [x] Create rockspec
-2. [x] Update README
-3. [x] Commit (init-on-require), push main
-4. [x] Create/update branch `v0.1`, push
-
-Test examples:
-- [x] `exs/hello.lua`
-- [x] `exs/across.lua`
-- [x] `exs/click-drag-cancel.lua`
+1. [x] Update README
+2. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+3. [x] Create rockspec
+4. [x] Make rockspec
+5. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+6. [x] Commit (init-on-require), push main
+7. [x] Create/update branch `v0.1`, push
 
 ##### 3.2.1 pico-birds
-- [x] Test `birds-11.lua`
+- [x] Test `birds-11.lua` (local)
+- [ ] Test `birds-11.lua` (global)
 - [x] Commit, push main
 - [x] Create branch `v0.4`, push
 
 ##### 3.2.2 pico-rocks
-- [x] Test `main.lua`
+- [x] Test `main.lua` (local)
+- [ ] Test `main.lua` (global)
 - [x] Commit, push main
 - [x] Create branch, push
 
 #### 3.3 env-socket
 
 Env steps:
-1. [x] Create rockspec
-2. [x] Update README
-3. [x] Commit, push main
-4. [ ] Create/update branch `v0.1`, push
-
-Test examples:
-- [ ] `exs/hello.lua`
-- [ ] `exs/cli-srv.lua`
+1. [x] Update README
+2. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/cli-srv.lua`
+3. [x] Create rockspec
+4. [x] Make rockspec
+5. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/cli-srv.lua`
+6. [x] Commit, push main
+7. [x] Create/update branch `v0.1`, push
 
 ##### 3.3.1 iup-7guis (also needs env-iup)
 - [ ] `01-counter.lua`
