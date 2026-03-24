@@ -4,9 +4,11 @@
 2. [External Environments](#2-external-environments)
 3. [Lexical Structure](#3-lexical-structure)
 4. [Compound Statements](#4-compound-statements)
-5. [Functional Streams](#5-functional-streams)
-6. [More about Tasks](#6-more-about-tasks)
-7. [Errors](#7-errors)
+5. [More about Tasks](#5-more-about-tasks)
+6. [Errors](#6-errors)
+7. [Complementary Concurrency Models](#7-complementary-concurrency-models)
+    - [Functional Streams](#X-functional-streams)
+    - [Asynchronous Parallelism](#X-asynchronous-parallelism)
 
 # 1. Tasks & Events
 
@@ -265,7 +267,179 @@ end)
 print "X, Y, and Z occurred"
 ```
 
-# 5. Functional Streams
+# 5. More about Tasks
+
+## 5.1. Public Data
+
+A task is a Lua table, and can hold public data fields as usual.
+It is also possible to self refer to the running task with a call to `task()`:
+
+```
+function T ()
+    task().v = 10
+end
+local t = spawn(T)
+print(t.v)  -- 10
+```
+
+## 5.2. Task Pools
+
+A task pool, created with the `tasks` primitive, allows that multiple tasks
+share a parent container in the hierarchy.
+When the pool goes out of scope, all attached tasks are aborted.
+When a task terminates, it is automatically removed from the pool.
+
+```
+function T (id, ms)
+    task().id = id
+    print('start', id, ms)
+    await(clock{ms=ms})
+    print('stop', id, ms)
+end
+
+do
+    local ts <close> = tasks()
+    for i=1, 10 do
+        spawn_in(ts, T, i, math.random(500,1500))
+    end
+    await(clock{s=1})
+end
+```
+
+In the example, we first create a pool `ts`.
+Then we use `spawn_in` to spawn and attach 10 tasks into the pool.
+Each task sleeps between `500ms` and `1500ms` before terminating.
+After `1s`, the `ts` block goes out of scope, aborting all tasks that did not
+complete.
+
+Task pools provide a `pairs` iterator to traverse currently attached tasks:
+
+```
+for _,t in pairs(ts) do
+    print(t.id)
+end
+```
+
+If we include this loop after the `await(clock{s=1})` in the previous example,
+it will print the task ids that did not awake.
+
+## 5.3. Task Toggling
+
+A task can be toggled off (and back to on) to remain alive but unresponsive
+(and back to responsive) to upcoming events:
+
+```
+local t = spawn (function ()
+    await 'X'
+    print "awakes from X"
+end)
+toggle(t, false)
+emit 'X'    -- ignored
+toggle(t, true)
+emit 'X'    -- awakes
+```
+
+`TODO: explain`
+
+In addition, Atmos provides a `toggle` statement, which awaits the given body
+to terminate, while also observing its first argument as a boolean event:
+When receiving `false`, the body toggles off.
+When receiving `true`, the body toggles on.
+
+```
+spawn(function()
+    toggle('X', function ()
+        every(clock{s=1}, function ()
+            print "1s elapses"
+        end)
+    end)
+end)
+emit('X', false)    -- body above toggles off
+<...>
+emit('X', true)     -- body above toggles on
+<...>
+```
+
+# 6. Errors
+
+Atmos provides `throw` and `catch` primitives to handle errors, which take in
+consideration the task hierarchy, i.e., a parent task catches errors from child
+tasks.
+
+```
+function T ()
+    spawn (function ()
+        await 'X'
+        throw 'Y'
+    end)
+    await(false)
+end
+
+spawn(function ()
+    local ok, err = catch('Y', function ()
+        spawn(T)
+        await(false)
+    end)
+    print(ok, err)
+end)
+
+emit 'X'
+
+-- "false, Y"
+```
+
+In the example, we spawn a parent task that catches errors of type `Y`.
+Then we spawn a named task `T`, which spawns an anonymous task, which awaits
+`X` to finally throw `Y`.
+Outside the task hierarchy, we `emit X`, which only awakes the nested task.
+Nevertheless, the error propagates up in the task hierarchy until it is caught
+by the top-level task, returning `false` and the error `Y`.
+
+## 6.1. Bidimensional Stack Traces
+
+An error trace may cross multiple tasks from a series of emits and awaits,
+e.g.: an `emit` in one task awakes an `await` in another task, which may `emit`
+and match an `await` in a third task.
+However, *cross-task traces* do not inform how each task in the trace started
+and reached its `emit`, i.e. each of the *intra-task* traces, which is as much
+as insightful to understand the errors.
+
+Atmos provides bidimensional stack traces, which include cross-task and
+intra-task traces.
+
+In the next example, we spawn 3 tasks in `ts`, and then `emit` an event
+targeting the task with `id=2`.
+Only this task awakes and generates an uncaught error:
+
+```
+function T (id)
+    await('X', id)
+    throw 'error'
+end
+
+local ts <close> = tasks()
+spawn_in(ts, T, 1)
+spawn_in(ts, T, 2)
+spawn_in(ts, T, 3)
+
+emit('X', 2)
+```
+
+The stack trace identifies that the task lives in `ts` in line 6 and spawns in
+line 8, before throwing the error in line 3:
+
+```
+==> ERROR:
+ |  x.lua:11 (emit)
+ v  x.lua:3 (throw) <- x.lua:8 (task) <- x.lua:6 (tasks)
+==> error
+```
+
+# 7. Complementary Concurrency Models
+
+TODO
+
+## 7.1. Functional Streams
 
 Functional data streams represent incoming values over continuous time, and can
 be combined a pipeline for real-time processing.
@@ -345,170 +519,5 @@ The example only takes the first two numbers, prints them, and terminates.
 
 `TODO: safe finalization of stateful (task-based) streams`
 
-# 6. More about Tasks
+## 7.2. Asynchronous Parallelism
 
-## 6.1. Public Data
-
-A task is a Lua table, and can hold public data fields as usual.
-It is also possible to self refer to the running task with a call to `task()`:
-
-```
-function T ()
-    task().v = 10
-end
-local t = spawn(T)
-print(t.v)  -- 10
-```
-
-## 6.2. Task Pools
-
-A task pool, created with the `tasks` primitive, allows that multiple tasks
-share a parent container in the hierarchy.
-When the pool goes out of scope, all attached tasks are aborted.
-When a task terminates, it is automatically removed from the pool.
-
-```
-function T (id, ms)
-    task().id = id
-    print('start', id, ms)
-    await(clock{ms=ms})
-    print('stop', id, ms)
-end
-
-do
-    local ts <close> = tasks()
-    for i=1, 10 do
-        spawn_in(ts, T, i, math.random(500,1500))
-    end
-    await(clock{s=1})
-end
-```
-
-In the example, we first create a pool `ts`.
-Then we use `spawn_in` to spawn and attach 10 tasks into the pool.
-Each task sleeps between `500ms` and `1500ms` before terminating.
-After `1s`, the `ts` block goes out of scope, aborting all tasks that did not
-complete.
-
-Task pools provide a `pairs` iterator to traverse currently attached tasks:
-
-```
-for _,t in pairs(ts) do
-    print(t.id)
-end
-```
-
-If we include this loop after the `await(clock{s=1})` in the previous example,
-it will print the task ids that did not awake.
-
-## 6.3. Task Toggling
-
-A task can be toggled off (and back to on) to remain alive but unresponsive
-(and back to responsive) to upcoming events:
-
-```
-local t = spawn (function ()
-    await 'X'
-    print "awakes from X"
-end)
-toggle(t, false)
-emit 'X'    -- ignored
-toggle(t, true)
-emit 'X'    -- awakes
-```
-
-`TODO: explain`
-
-In addition, Atmos provides a `toggle` statement, which awaits the given body
-to terminate, while also observing its first argument as a boolean event:
-When receiving `false`, the body toggles off.
-When receiving `true`, the body toggles on.
-
-```
-spawn(function()
-    toggle('X', function ()
-        every(clock{s=1}, function ()
-            print "1s elapses"
-        end)
-    end)
-end)
-emit('X', false)    -- body above toggles off
-<...>
-emit('X', true)     -- body above toggles on
-<...>
-```
-
-# 7. Errors
-
-Atmos provides `throw` and `catch` primitives to handle errors, which take in
-consideration the task hierarchy, i.e., a parent task catches errors from child
-tasks.
-
-```
-function T ()
-    spawn (function ()
-        await 'X'
-        throw 'Y'
-    end)
-    await(false)
-end
-
-spawn(function ()
-    local ok, err = catch('Y', function ()
-        spawn(T)
-        await(false)
-    end)
-    print(ok, err)
-end)
-
-emit 'X'
-
--- "false, Y"
-```
-
-In the example, we spawn a parent task that catches errors of type `Y`.
-Then we spawn a named task `T`, which spawns an anonymous task, which awaits
-`X` to finally throw `Y`.
-Outside the task hierarchy, we `emit X`, which only awakes the nested task.
-Nevertheless, the error propagates up in the task hierarchy until it is caught
-by the top-level task, returning `false` and the error `Y`.
-
-## 7.1. Bidimensional Stack Traces
-
-An error trace may cross multiple tasks from a series of emits and awaits,
-e.g.: an `emit` in one task awakes an `await` in another task, which may `emit`
-and match an `await` in a third task.
-However, *cross-task traces* do not inform how each task in the trace started
-and reached its `emit`, i.e. each of the *intra-task* traces, which is as much
-as insightful to understand the errors.
-
-Atmos provides bidimensional stack traces, which include cross-task and
-intra-task traces.
-
-In the next example, we spawn 3 tasks in `ts`, and then `emit` an event
-targeting the task with `id=2`.
-Only this task awakes and generates an uncaught error:
-
-```
-function T (id)
-    await('X', id)
-    throw 'error'
-end
-
-local ts <close> = tasks()
-spawn_in(ts, T, 1)
-spawn_in(ts, T, 2)
-spawn_in(ts, T, 3)
-
-emit('X', 2)
-```
-
-The stack trace identifies that the task lives in `ts` in line 6 and spawns in
-line 8, before throwing the error in line 3:
-
-```
-==> ERROR:
- |  x.lua:11 (emit)
- v  x.lua:3 (throw) <- x.lua:8 (task) <- x.lua:6 (tasks)
-==> error
-```
