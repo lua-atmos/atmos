@@ -9,14 +9,8 @@ This plan uses release branches (not tags) for versioning.
 
 ## Pending from extract-envs
 
-- [ ] Update rockspec: remove non-clock env module entries
-- [ ] Update README.md: remove bundled env tree, update env
-      links to point to separate repos
 - [ ] Rockspecs for extracted envs must install into `atmos/env/*`
-    - env-sdl
-    - env-socket
     - env-iup
-    - env-pico
 
 ## Steps
 
@@ -68,19 +62,19 @@ Env steps:
 
 ##### 3.1.1 sdl-birds
 - [x] Test `birds-11.lua` (local)
-- [ ] Test `birds-11.lua` (global)
+- [x] Test `birds-11.lua` (global)
 - [x] Commit, push main
 - [x] Create branch, push
 
 ##### 3.1.2 sdl-rocks
 - [x] Test `main.lua` (local)
-- [ ] Test `main.lua` (global)
+- [x] Test `main.lua` (global)
 - [x] Commit, push main
 - [x] Create branch, push
 
 ##### 3.1.3 sdl-pingus
 - [x] Test `main.lua` (local)
-- [ ] Test `main.lua` (global)
+- [x] Test `main.lua` (global)
 - [x] Commit, push main
 - [x] Create branch, push
 
@@ -105,13 +99,13 @@ Env steps:
 
 ##### 3.2.1 pico-birds
 - [x] Test `birds-11.lua` (local)
-- [ ] Test `birds-11.lua` (global)
+- [x] Test `birds-11.lua` (global)
 - [x] Commit, push main
 - [x] Create branch `v0.4`, push
 
 ##### 3.2.2 pico-rocks
 - [x] Test `main.lua` (local)
-- [ ] Test `main.lua` (global)
+- [x] Test `main.lua` (global)
 - [x] Commit, push main
 - [x] Create branch, push
 
@@ -209,9 +203,9 @@ Re-run the same test checklist from step 3 with the remote install.
 
 ### 11. Add installation instructions to each env README
 
-- [ ] env-sdl
-- [ ] env-pico
-- [ ] env-socket
+- [x] env-sdl
+- [x] env-pico
+- [x] env-socket
 - [ ] env-iup
 - [ ] env-js
 
@@ -236,7 +230,7 @@ Re-run the same test checklist from step 3 with the remote install.
 - [x] Pending: extracted env rockspecs install into atmos/env/*
 - [x] Step 1 — Run tests
 - [x] Step 2 — Create rockspec
-- [ ] Step 3 — Release all envs and apps (tests done, branches/pushes pending)
+- [ ] Step 3 — Release all envs and apps (env steps done, app global tests pending)
 - [x] Step 4 — Update README
 - [x] Step 5 — Update HISTORY
 - [ ] Step 6 — Commit
