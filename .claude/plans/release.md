@@ -39,92 +39,88 @@ cd tst && lua5.4 all.lua
 sudo luarocks make atmos-0.6-1.rockspec --lua-version=5.4
 ```
 
-### 3. Release all environments
-
-For each env:
-
-1. Create rockspec (modules install into `atmos/env/<name>/*`)
-2. Update README with install instructions
-3. Commit: `release: v0.1`
-4. Push main
-5. Create branch `v0.1`, push
-6. `luarocks upload <name>-0.1-1.rockspec`
-7. Verify: `sudo luarocks --lua-version=5.4 install <name>`
-
-- [x] env-sdl
-- [x] env-pico
-- [x] env-socket
-- [ ] env-iup (skipped — extraction not complete)
-- [ ] env-js (skipped)
-
-### 4. Test all env examples (manual) — local install
+### 3. Release all environments and apps
 
 **clock** (atmos built-in):
 - [x] `atmos/env/clock/exs/hello.lua`
 - [x] `atmos/env/clock/exs/hello-rx.lua`
 
-**env-sdl** (`/x/lua-atmos/env-sdl`):
-- [ ] `exs/hello.lua`
-- [ ] `exs/across.lua`
-- [ ] `exs/click-drag-cancel.lua`
+#### 3.1 env-sdl
 
-**env-pico** (`/x/lua-atmos/env-pico`):
-Note: requires pico-sdl v0.3 (`sudo luarocks --lua-version=5.4 install pico-sdl 0.3`)
+Env steps:
+1. [x] Create rockspec
+2. [x] Update README
+3. [x] Commit, push main
+4. [x] Create/update branch `v0.1`, push
+
+Test examples:
 - [x] `exs/hello.lua`
 - [x] `exs/across.lua`
 - [x] `exs/click-drag-cancel.lua`
 
-**env-socket** (`/x/lua-atmos/env-socket`):
+##### 3.1.1 sdl-birds
+- [x] Test `birds-11.lua`
+- [x] Commit, push main
+- [x] Create branch, push
+
+##### 3.1.2 sdl-rocks
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
+
+##### 3.1.3 sdl-pingus
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
+
+#### 3.2 env-pico
+
+Note: requires pico-sdl v0.3
+
+Env steps:
+1. [x] Create rockspec
+2. [x] Update README
+3. [ ] Commit (init-on-require), push main
+4. [ ] Create/update branch `v0.1`, push
+
+Test examples:
+- [x] `exs/hello.lua`
+- [x] `exs/across.lua`
+- [x] `exs/click-drag-cancel.lua`
+
+##### 3.2.1 pico-birds
+- [x] Test `birds-11.lua`
+- [x] Commit, push main
+- [x] Create branch `v0.4`, push
+
+##### 3.2.2 pico-rocks
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
+
+#### 3.3 env-socket
+
+Env steps:
+1. [x] Create rockspec
+2. [x] Update README
+3. [x] Commit, push main
+4. [ ] Create/update branch `v0.1`, push
+
+Test examples:
 - [ ] `exs/hello.lua`
 - [ ] `exs/cli-srv.lua`
 
-**env-iup** (not yet extracted):
-- [ ] `atmos/env/iup/exs/hello.lua`
-- [ ] `atmos/env/iup/exs/button-counter.lua`
-- [ ] `atmos/env/iup/exs/iup-net.lua`
-
-**pico-rocks** (`/x/lua-atmos/pico-rocks`):
-- [ ] `main.lua`
-
-**pico-birds** (`/x/lua-atmos/pico-birds`):
-- [x] `birds-11.lua`
-
-**sdl-rocks** (`/x/lua-atmos/sdl-rocks`):
-- [ ] `main.lua`
-
-**sdl-birds** (`/x/lua-atmos/sdl-birds`):
-- [ ] `birds-11.lua`
-
-**sdl-pingus** (`/x/lua-atmos/sdl-pingus`):
-- [ ] `main.lua`
-
-**iup-7guis** (`/x/lua-atmos/iup-7guis`):
+##### 3.3.1 iup-7guis (also needs env-iup)
 - [ ] `01-counter.lua`
 - [ ] `02-temperature.lua`
 - [ ] `03-flight.lua`
 - [ ] `01-counter-net.lua`
 
-**env-js** (`/x/lua-atmos/env-js`):
-- [ ] generate pages
+#### 3.4 env-iup (skipped — extraction not complete)
 
-### 5. Release all apps (folded into step 4)
+#### 3.5 env-js (skipped)
 
-For each app, as we test:
-1. Fix code (`call` → `loop`, etc.)
-2. Update README with install + `git checkout v0.1` instructions
-3. Commit, push main
-4. Create branch `v0.1`, push
-5. Update README on `v0.1` branch: `git checkout v0.1`
-6. Commit + push `v0.1`, return to main
-
-- [ ] sdl-birds (atmos >= 0.6, atmos-env-sdl)
-- [ ] sdl-rocks (atmos >= 0.6, atmos-env-sdl)
-- [ ] sdl-pingus (atmos >= 0.6, atmos-env-sdl)
-- [ ] pico-rocks (atmos >= 0.6, atmos-env-pico)
-- [x] pico-birds (atmos >= 0.6, atmos-env-pico)
-- [ ] iup-7guis (atmos >= 0.6, atmos-env-iup, atmos-env-socket)
-
-### 6. Update `README.md`
+### 4. Update `README.md`
 
 - Add `v0.6` to version list
 - Update stable link from `v0.5` to `v0.6`
@@ -135,7 +131,7 @@ For each app, as we test:
     - sdl, pico, socket, iup → link to separate repos
       (lua-atmos/env-sdl, env-pico, env-socket, env-iup)
 
-### 7. Update `HISTORY.md`
+### 5. Update `HISTORY.md`
 
 ```
 v0.6 (mar/26)
@@ -147,11 +143,11 @@ v0.6 (mar/26)
 - Thread no-args
 ```
 
-### 8. Commit all changes
+### 6. Commit all changes
 
 Single commit: `release: v0.6`
 
-### 9. Push main
+### 7. Push main
 
 ```bash
 git push origin main
@@ -159,7 +155,7 @@ git push origin main
 
 Check GitHub Actions for green CI.
 
-### 10. Create release branch and push
+### 8. Create release branch and push
 
 ```bash
 git checkout -b v0.6
@@ -173,13 +169,16 @@ git push origin v0.6
 git checkout main
 ```
 
-### 11. Publish to LuaRocks
+### 9. Publish all rockspecs to LuaRocks
 
 ```bash
 luarocks upload atmos-0.6-1.rockspec
+luarocks upload atmos-env-sdl-0.1-1.rockspec
+luarocks upload atmos-env-pico-0.1-1.rockspec
+luarocks upload atmos-env-socket-0.1-1.rockspec
 ```
 
-### 12. Verify LuaRocks install + test all examples again (remote)
+### 10. Verify LuaRocks install + test all examples again (remote)
 
 ```bash
 sudo luarocks --lua-version=5.4 remove atmos
@@ -188,7 +187,7 @@ sudo luarocks --lua-version=5.4 install atmos 0.6
 
 Re-run the same test checklist from step 3 with the remote install.
 
-### 13. Add installation instructions to each env README
+### 11. Add installation instructions to each env README
 
 - [ ] env-sdl
 - [ ] env-pico
@@ -196,7 +195,7 @@ Re-run the same test checklist from step 3 with the remote install.
 - [ ] env-iup
 - [ ] env-js
 
-### 14. Announce (manual)
+### 12. Announce (manual)
 
 - Mailing list
 - Students
@@ -217,15 +216,13 @@ Re-run the same test checklist from step 3 with the remote install.
 - [x] Pending: extracted env rockspecs install into atmos/env/*
 - [x] Step 1 — Run tests
 - [x] Step 2 — Create rockspec
-- [x] Step 3 — Release all environments (sdl, pico, socket done; iup, js skipped)
-- [ ] Step 4 — Test all examples (local install)
-- [ ] Step 5 — Release all apps
-- [x] Step 6 — Update README
-- [x] Step 7 — Update HISTORY
-- [ ] Step 8 — Commit
-- [ ] Step 9 — Push main
-- [ ] Step 10 — Create release branch
-- [ ] Step 11 — Publish to LuaRocks
-- [ ] Step 12 — Verify install + test examples (remote)
-- [ ] Step 13 — Add install instructions to env READMEs
-- [ ] Step 14 — Announce
+- [ ] Step 3 — Release all envs and apps (tests done, branches/pushes pending)
+- [x] Step 4 — Update README
+- [x] Step 5 — Update HISTORY
+- [ ] Step 6 — Commit
+- [ ] Step 7 — Push main
+- [ ] Step 8 — Create release branch
+- [ ] Step 9 — Publish all rockspecs to LuaRocks
+- [ ] Step 10 — Verify install + test examples (remote)
+- [ ] Step 11 — Add install instructions to env READMEs
+- [ ] Step 12 — Announce
