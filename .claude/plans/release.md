@@ -134,30 +134,39 @@ Env steps:
 
 #### 3.5 env-js (skipped)
 
-### 4. Update `README.md`
+### 4. Docs
 
-- Add `v0.6` to version list
-- Update stable link from `v0.5` to `v0.6`
-- Update `Install & Run` section: `install atmos 0.6`
-- Remove bundled env directory tree (only clock remains)
-- Update Environments section:
+#### 4.1 README.md (done)
+
+- [x] Add `v0.6` to version list
+- [x] Update stable link from `v0.5` to `v0.6`
+- [x] Update `Install & Run` section: `install atmos 0.6`
+- [x] Remove bundled env directory tree (only clock remains)
+- [x] Update Environments section:
     - clock stays as bundled
     - sdl, pico, socket, iup → link to separate repos
       (lua-atmos/env-sdl, env-pico, env-socket, env-iup)
 
-### 5. Update `HISTORY.md`
+#### 4.2 HISTORY.md (done)
 
-```
-v0.6 (mar/26)
--------------
+- [x] v0.6 entry added
 
-- Extracted environments to separate repos:
-    - env-sdl, env-pico, env-socket, env-iup
-- Thread cancel
-- Thread no-args
-```
+#### 4.3 Rockspec description
 
-### 6. Commit, push main, create release branch
+- [ ] Add `thread` (CPU parallelism) to `detailed` description
+- [ ] Keep in sync with README "About" section
+
+#### 4.4 guide.md
+
+- [ ] Document `thread` block (CPU parallelism via LuaLanes)
+- [ ] Document thread cancel
+- [ ] Document thread no-args
+
+#### 4.5 api.md
+
+- [ ] Document `thread(f)` API
+
+### 5. Commit, push main, create release branch
 
 - [x] Single commit: `release: v0.6`
 - [x] Push main, check GitHub Actions for green CI
@@ -166,7 +175,7 @@ v0.6 (mar/26)
 - [x] Commit and push `v0.6`
 - [x] Return to main
 
-### 7. Publish all rockspecs to LuaRocks (done)
+### 6. Publish all rockspecs to LuaRocks (done)
 
 ```bash
 luarocks upload atmos-0.6-1.rockspec
@@ -175,7 +184,7 @@ luarocks upload atmos-env-pico-0.1-1.rockspec
 luarocks upload atmos-env-socket-0.1-1.rockspec
 ```
 
-### 8. Verify LuaRocks install + test all examples again (remote)
+### 7. Verify LuaRocks install + test all examples again (remote)
 
 ```bash
 sudo luarocks --lua-version=5.4 remove atmos
@@ -184,7 +193,7 @@ sudo luarocks --lua-version=5.4 install atmos 0.6
 
 Re-run the same test checklist from step 3 with the remote install.
 
-### 9. Announce (manual)
+### 8. Announce (manual)
 
 - Twitter / BlueSky
 - Mailing list
