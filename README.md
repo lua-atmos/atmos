@@ -119,29 +119,6 @@ Applying this to the above example:
 See [the relevant section in the guide](guide.md#31-lexical-scheduling) for
 other, more complex examples.
 
-Now, the same specification, but using streams:
-
-```
-require "atmos.env.clock"
-local S = require "atmos.streams"
-
-loop(function ()
-    local s1 = S.from(clock{s=1})
-        :tap(function()
-            print("Hello World!")
-        end)
-    local s2 = S.from(clock{s=5}):take(1)
-    S.paror(s1,s2):to() -- note that s1 comes before s2!
-end)
-```
-
-- `s1` is a periodic 1-second stream that prints the message on every
-  occurrence, through the `tap` combinator.
-- `s2` is a periodic 5-seconds stream that terminates after its first
-  occurrence, because of `take(1)`.
-- `S.paror` merges the streams, terminating when either of them terminate.
-- `to` is a sink that starts and exhausts the full stream pipeline.
-
 # Install & Run
 
 ```
