@@ -324,11 +324,15 @@ end
 function M.loop (body, ...)
     assertn(2, type(body)=='function', "invalid loop : expected body function")
     return xcall(debug.getinfo(2), "loop", function (...)
-        local _ <close> = M.defer(function ()
-            M.stop()
-        end)
-        for _, env in ipairs(_envs_) do
-            if env.open then env.open() end
+        local f = body
+        body = function (...)
+            for _, env in ipairs(_envs_) do
+                if env.open then env.open() end
+            end
+            local _ <close> = M.defer(function ()
+                M.stop()
+            end)
+            return f(...)
         end
         local t <close> = M.spawn(debug.getinfo(4), nil, false, body, ...)
         while true do
