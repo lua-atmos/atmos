@@ -7,8 +7,8 @@
 5. [More about Tasks](#5-more-about-tasks)
 6. [Errors](#6-errors)
 7. [Complementary Concurrency Models](#7-complementary-concurrency-models)
-    - [Functional Streams](#X-functional-streams)
-    - [Asynchronous Parallelism](#X-asynchronous-parallelism)
+    - [Functional Streams](#71-functional-streams)
+    - [Asynchronous Parallelism](#72-asynchronous-parallelism)
 
 # 1. Tasks & Events
 

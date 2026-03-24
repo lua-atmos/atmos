@@ -22,31 +22,32 @@ cd tst && lua5.4 all.lua
 
 ### 2. Docs
 
-#### 2.1 README.md
+#### 2.1 README.md (done)
 
-- [ ] Add `v0.6` to version list
-- [ ] Update stable link from `v0.5` to `v0.6`
-- [ ] Update `Install & Run` section: `install atmos 0.6`
-- [ ] Remove bundled env directory tree (only clock remains)
-- [ ] Update Environments section:
+- [x] Add `v0.6` to version list
+- [x] Update stable link from `v0.5` to `v0.6`
+- [x] Update `Install & Run` section: `install atmos 0.6`
+- [x] Remove bundled env directory tree (only clock remains)
+- [x] Update Environments section:
     - clock stays as bundled
     - sdl, pico, socket, iup → link to separate repos
       (lua-atmos/env-sdl, env-pico, env-socket, env-iup)
+- [x] Test examples in the doc
+    - [x] Task-based Hello World (watching/every with clock)
+    - [x] Stream-based Hello World — removed from README
 
-#### 2.2 HISTORY.md
+#### 2.2 HISTORY.md (done)
 
-- [ ] v0.6 entry added
+- [x] v0.6 entry added
 
-#### 2.3 Rockspec description
+#### 2.3 Rockspec description (done)
 
-- [ ] Add `thread` (CPU parallelism) to `detailed` description
-- [ ] Keep in sync with README "About" section
+- [x] Keep in sync with README "About" section
 
 #### 2.4 guide.md
 
 - [ ] Document `thread` block (CPU parallelism via LuaLanes)
-- [ ] Document thread cancel
-- [ ] Document thread no-args
+    - include implicit abortion
 
 #### 2.5 api.md
 

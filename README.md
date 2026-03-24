@@ -104,7 +104,7 @@ Tasks that would awake "simultaneously" instead do so in order of appearance in
 the source code.
 This enables reasoning about programs more statically based on the structure of
 the source code.
-Tasks that abort also abort their inner taks, which have a "last chance" to
+Tasks that abort also abort their inner tasks, which have a "last chance" to
 execute if applicable.
 Applying this to the above example:
 
