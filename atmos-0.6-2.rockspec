@@ -9,10 +9,9 @@ description = {
     Structured Event-Driven Concurrency for Lua
    ]],
    detailed = [[
-    Atmos is a programming library for Lua that reconciles *Structured
-    Concurrency*, *Event-Driven Programming*, and
-    *Functional Streams*, extending classical structured programming
-    with three main functionalities:
+    Atmos is a programming library for Lua that reconciles Structured
+    Concurrency and Event-Driven Programming, extending classical
+    structured programming with two main functionalities:
 
     - Structured Deterministic Concurrency:
         - A `task` primitive with deterministic scheduling provides predictable
@@ -23,13 +22,7 @@ description = {
           lifecycle.
     - Event Signaling Mechanisms:
         - An `await` primitive suspends a task and wait for events.
-        - An `emit` primitive signal events and awake awaiting tasks.
-    - Functional Streams (à la ReactiveX):
-        - Functional combinators for lazy (infinite) lists.
-        - Interoperability with tasks & events:
-            tasks and events as streams, and
-            streams as events.
-        - Safe finalization of stateful (task-based) streams.
+        - An `emit` primitive signals events and awake awaiting tasks.
 
     Atmos is inspired by synchronous programming languages like Céu
     and Esterel.
