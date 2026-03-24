@@ -80,8 +80,8 @@ Note: requires pico-sdl v0.3
 Env steps:
 1. [x] Create rockspec
 2. [x] Update README
-3. [ ] Commit (init-on-require), push main
-4. [ ] Create/update branch `v0.1`, push
+3. [x] Commit (init-on-require), push main
+4. [x] Create/update branch `v0.1`, push
 
 Test examples:
 - [x] `exs/hello.lua`
