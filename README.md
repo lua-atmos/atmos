@@ -32,9 +32,8 @@ Stable branch is [`v0.6`](https://github.com/lua-atmos/atmos/tree/v0.6).
 # About
 
 Atmos is a programming library for [Lua][lua] that reconciles *[Structured
-Concurrency][sc]*, *[Event-Driven Programming][events]*, and
-*[Functional Streams][streams]*, extending classical structured programming
-with three main functionalities:
+Concurrency][sc]* and *[Event-Driven Programming][events]*, extending classical
+structured programming with two main functionalities:
 
 - Structured Deterministic Concurrency:
     - A `task` primitive with deterministic scheduling provides predictable
@@ -46,21 +45,30 @@ with three main functionalities:
 - Event Signaling Mechanisms:
     - An `await` primitive suspends a task and wait for events.
     - An `emit` primitive signals events and awake awaiting tasks.
-- Functional Streams (à la [ReactiveX][rx]):
-    - Functional combinators for lazy (infinite) lists.
-    - Interoperability with tasks & events:
-        tasks and events as streams, and
-        streams as events.
-    - Safe finalization of stateful (task-based) streams.
+
+Atmos also complements its core synchronous concurrency model with
+    *[Functional Streams][streams]* (à la [ReactiveX][rx]) and
+    [Multithreading Parallelism][threads] (via [LuaLanes][lanes]):
+
+- Functional Streams:
+    - Interoperability with tasks & events.
+    - Safe finalization of stateful streams.
+- Asynchronous Parallelism:
+    - A `thread` primitive offloads computations to isolated OS threads.
+    - Safe abortion and finalization for threads.
 
 Atmos is inspired by [synchronous programming languages][sync] like [Céu][ceu]
 and [Esterel][esterel].
 
 [lua]:          https://www.lua.org/
 [sc]:           https://en.wikipedia.org/wiki/Structured_concurrency
-[streams]:      https://en.wikipedia.org/wiki/Stream_(abstract_data_type)
 [events]:       https://en.wikipedia.org/wiki/Event-driven_programming
+
+[streams]:      https://en.wikipedia.org/wiki/Stream_(abstract_data_type)
 [rx]:           https://en.wikipedia.org/wiki/ReactiveX
+[threads]:      https://en.wikipedia.org/wiki/Thread_(computing)
+[lanes]:        https://lualanes.github.io/lanes/
+
 [sync]:         https://fsantanna.github.io/sc.html
 [ceu]:          http://www.ceu-lang.org/
 [esterel]:      https://en.wikipedia.org/wiki/Esterel
