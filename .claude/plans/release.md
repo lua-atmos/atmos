@@ -20,7 +20,39 @@ This plan uses release branches (not tags) for versioning.
 cd tst && lua5.4 all.lua
 ```
 
-### 2. Create rockspec `atmos-0.6-1.rockspec`
+### 2. Docs
+
+#### 2.1 README.md
+
+- [ ] Add `v0.6` to version list
+- [ ] Update stable link from `v0.5` to `v0.6`
+- [ ] Update `Install & Run` section: `install atmos 0.6`
+- [ ] Remove bundled env directory tree (only clock remains)
+- [ ] Update Environments section:
+    - clock stays as bundled
+    - sdl, pico, socket, iup → link to separate repos
+      (lua-atmos/env-sdl, env-pico, env-socket, env-iup)
+
+#### 2.2 HISTORY.md
+
+- [ ] v0.6 entry added
+
+#### 2.3 Rockspec description
+
+- [ ] Add `thread` (CPU parallelism) to `detailed` description
+- [ ] Keep in sync with README "About" section
+
+#### 2.4 guide.md
+
+- [ ] Document `thread` block (CPU parallelism via LuaLanes)
+- [ ] Document thread cancel
+- [ ] Document thread no-args
+
+#### 2.5 api.md
+
+- [ ] Document `thread(f)` API
+
+### 3. Create rockspec `atmos-0.6-1.rockspec`
 
 - Copy from `atmos-0.5-1.rockspec`
 - Change `version` to `"0.6-1"`
@@ -33,147 +65,115 @@ cd tst && lua5.4 all.lua
 sudo luarocks make atmos-0.6-1.rockspec --lua-version=5.4
 ```
 
-### 3. Release all environments and apps
+### 4. Release all environments and apps
 
 Two test phases for each env/app:
 1. **Local**: use `LUA_PATH` trick from README
 2. **Global**: `luarocks make` to install, then test
 
 **clock** (atmos built-in):
-- [x] `atmos/env/clock/exs/hello.lua`
-- [x] `atmos/env/clock/exs/hello-rx.lua`
+- [ ] `atmos/env/clock/exs/hello.lua`
+- [ ] `atmos/env/clock/exs/hello-rx.lua`
 
-#### 3.1 env-sdl
+#### 4.1 env-sdl
 
 Env steps:
-1. [x] Update README
-2. [x] Phase 1 tests (local)
-    - [x] `exs/hello.lua`
-    - [x] `exs/across.lua`
-    - [x] `exs/click-drag-cancel.lua`
-3. [x] Create rockspec
-4. [x] Make rockspec
-5. [x] Phase 2 tests (global)
-    - [x] `exs/hello.lua`
-    - [x] `exs/across.lua`
-    - [x] `exs/click-drag-cancel.lua`
-6. [x] Commit, push main
-7. [x] Create/update branch `v0.1`, push
+1. [ ] Update README
+2. [ ] Phase 1 tests (local)
+    - [ ] `exs/hello.lua`
+    - [ ] `exs/across.lua`
+    - [ ] `exs/click-drag-cancel.lua`
+3. [ ] Create rockspec
+4. [ ] Make rockspec
+5. [ ] Phase 2 tests (global)
+    - [ ] `exs/hello.lua`
+    - [ ] `exs/across.lua`
+    - [ ] `exs/click-drag-cancel.lua`
+6. [ ] Commit, push main
+7. [ ] Create/update branch `v0.1`, push
 
-##### 3.1.1 sdl-birds
-- [x] Test `birds-11.lua` (local)
-- [x] Test `birds-11.lua` (global)
-- [x] Commit, push main
-- [x] Create branch, push
+##### 4.1.1 sdl-birds
+- [ ] Test `birds-11.lua` (local)
+- [ ] Test `birds-11.lua` (global)
+- [ ] Commit, push main
+- [ ] Create branch, push
 
-##### 3.1.2 sdl-rocks
-- [x] Test `main.lua` (local)
-- [x] Test `main.lua` (global)
-- [x] Commit, push main
-- [x] Create branch, push
+##### 4.1.2 sdl-rocks
+- [ ] Test `main.lua` (local)
+- [ ] Test `main.lua` (global)
+- [ ] Commit, push main
+- [ ] Create branch, push
 
-##### 3.1.3 sdl-pingus
-- [x] Test `main.lua` (local)
-- [x] Test `main.lua` (global)
-- [x] Commit, push main
-- [x] Create branch, push
+##### 4.1.3 sdl-pingus
+- [ ] Test `main.lua` (local)
+- [ ] Test `main.lua` (global)
+- [ ] Commit, push main
+- [ ] Create branch, push
 
-#### 3.2 env-pico
+#### 4.2 env-pico
 
 Note: requires pico-sdl v0.3
 
 Env steps:
-1. [x] Update README
-2. [x] Phase 1 tests (local)
-    - [x] `exs/hello.lua`
-    - [x] `exs/across.lua`
-    - [x] `exs/click-drag-cancel.lua`
-3. [x] Create rockspec
-4. [x] Make rockspec
-5. [x] Phase 2 tests (global)
-    - [x] `exs/hello.lua`
-    - [x] `exs/across.lua`
-    - [x] `exs/click-drag-cancel.lua`
-6. [x] Commit (init-on-require), push main
-7. [x] Create/update branch `v0.1`, push
+1. [ ] Update README
+2. [ ] Phase 1 tests (local)
+    - [ ] `exs/hello.lua`
+    - [ ] `exs/across.lua`
+    - [ ] `exs/click-drag-cancel.lua`
+3. [ ] Create rockspec
+4. [ ] Make rockspec
+5. [ ] Phase 2 tests (global)
+    - [ ] `exs/hello.lua`
+    - [ ] `exs/across.lua`
+    - [ ] `exs/click-drag-cancel.lua`
+6. [ ] Commit (init-on-require), push main
+7. [ ] Create/update branch `v0.1`, push
 
-##### 3.2.1 pico-birds
-- [x] Test `birds-11.lua` (local)
-- [x] Test `birds-11.lua` (global)
-- [x] Commit, push main
-- [x] Create branch `v0.4`, push
+##### 4.2.1 pico-birds
+- [ ] Test `birds-11.lua` (local)
+- [ ] Test `birds-11.lua` (global)
+- [ ] Commit, push main
+- [ ] Create branch `v0.4`, push
 
-##### 3.2.2 pico-rocks
-- [x] Test `main.lua` (local)
-- [x] Test `main.lua` (global)
-- [x] Commit, push main
-- [x] Create branch, push
+##### 4.2.2 pico-rocks
+- [ ] Test `main.lua` (local)
+- [ ] Test `main.lua` (global)
+- [ ] Commit, push main
+- [ ] Create branch, push
 
-#### 3.3 env-socket
+#### 4.3 env-socket
 
 Env steps:
-1. [x] Update README
-2. [x] Phase 1 tests (local)
-    - [x] `exs/hello.lua`
-    - [x] `exs/cli-srv.lua`
-3. [x] Create rockspec
-4. [x] Make rockspec
-5. [x] Phase 2 tests (global)
-    - [x] `exs/hello.lua`
-    - [x] `exs/cli-srv.lua`
-6. [x] Commit, push main
-7. [x] Create/update branch `v0.1`, push
+1. [ ] Update README
+2. [ ] Phase 1 tests (local)
+    - [ ] `exs/hello.lua`
+    - [ ] `exs/cli-srv.lua`
+3. [ ] Create rockspec
+4. [ ] Make rockspec
+5. [ ] Phase 2 tests (global)
+    - [ ] `exs/hello.lua`
+    - [ ] `exs/cli-srv.lua`
+6. [ ] Commit, push main
+7. [ ] Create/update branch `v0.1`, push
 
-##### 3.3.1 iup-7guis (also needs env-iup)
+##### 4.3.1 iup-7guis (also needs env-iup)
 - [ ] `01-counter.lua`
 - [ ] `02-temperature.lua`
 - [ ] `03-flight.lua`
 - [ ] `01-counter-net.lua`
 
-#### 3.4 env-iup (skipped — extraction not complete)
+#### 4.4 env-iup (skipped — extraction not complete)
 
-#### 3.5 env-js (skipped)
-
-### 4. Docs
-
-#### 4.1 README.md (done)
-
-- [x] Add `v0.6` to version list
-- [x] Update stable link from `v0.5` to `v0.6`
-- [x] Update `Install & Run` section: `install atmos 0.6`
-- [x] Remove bundled env directory tree (only clock remains)
-- [x] Update Environments section:
-    - clock stays as bundled
-    - sdl, pico, socket, iup → link to separate repos
-      (lua-atmos/env-sdl, env-pico, env-socket, env-iup)
-
-#### 4.2 HISTORY.md (done)
-
-- [x] v0.6 entry added
-
-#### 4.3 Rockspec description
-
-- [ ] Add `thread` (CPU parallelism) to `detailed` description
-- [ ] Keep in sync with README "About" section
-
-#### 4.4 guide.md
-
-- [ ] Document `thread` block (CPU parallelism via LuaLanes)
-- [ ] Document thread cancel
-- [ ] Document thread no-args
-
-#### 4.5 api.md
-
-- [ ] Document `thread(f)` API
+#### 4.5 env-js (skipped)
 
 ### 5. Commit, push main, create release branch
 
-- [x] Single commit: `release: v0.6`
-- [x] Push main, check GitHub Actions for green CI
-- [x] Create branch `v0.6`
-- [x] Update README links: `main` → `v0.6`
-- [x] Commit and push `v0.6`
-- [x] Return to main
+- [ ] Single commit: `release: v0.6`
+- [ ] Push main, check GitHub Actions for green CI
+- [ ] Create branch `v0.6`
+- [ ] Update README links: `main` → `v0.6`
+- [ ] Commit and push `v0.6`
+- [ ] Return to main
 
 ### 6. Publish all rockspecs to LuaRocks (done)
 
@@ -191,7 +191,7 @@ sudo luarocks --lua-version=5.4 remove atmos
 sudo luarocks --lua-version=5.4 install atmos 0.6
 ```
 
-Re-run the same test checklist from step 3 with the remote install.
+Re-run the same test checklist from step 4 with the remote install.
 
 ### 8. Announce (manual)
 
