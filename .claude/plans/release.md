@@ -166,7 +166,7 @@ v0.6 (mar/26)
 - [x] Commit and push `v0.6`
 - [x] Return to main
 
-### 7. Publish all rockspecs to LuaRocks
+### 7. Publish all rockspecs to LuaRocks (done)
 
 ```bash
 luarocks upload atmos-0.6-1.rockspec
