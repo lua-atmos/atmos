@@ -157,33 +157,16 @@ v0.6 (mar/26)
 - Thread no-args
 ```
 
-### 6. Commit all changes
+### 6. Commit, push main, create release branch
 
-Single commit: `release: v0.6`
-
-### 7. Push main
-
-```bash
-git push origin main
-```
-
-Check GitHub Actions for green CI.
-
-### 8. Create release branch and push
-
-```bash
-git checkout -b v0.6
-```
-
+- Single commit: `release: v0.6`
+- Push main, check GitHub Actions for green CI
+- Create branch `v0.6`
 - Update README links: `main` → `v0.6`
-- Commit and push
+- Commit and push `v0.6`
+- Return to main
 
-```bash
-git push origin v0.6
-git checkout main
-```
-
-### 9. Publish all rockspecs to LuaRocks
+### 7. Publish all rockspecs to LuaRocks
 
 ```bash
 luarocks upload atmos-0.6-1.rockspec
@@ -192,7 +175,7 @@ luarocks upload atmos-env-pico-0.1-1.rockspec
 luarocks upload atmos-env-socket-0.1-1.rockspec
 ```
 
-### 10. Verify LuaRocks install + test all examples again (remote)
+### 8. Verify LuaRocks install + test all examples again (remote)
 
 ```bash
 sudo luarocks --lua-version=5.4 remove atmos
@@ -201,42 +184,8 @@ sudo luarocks --lua-version=5.4 install atmos 0.6
 
 Re-run the same test checklist from step 3 with the remote install.
 
-### 11. Add installation instructions to each env README
+### 9. Announce (manual)
 
-- [x] env-sdl
-- [x] env-pico
-- [x] env-socket
-- [ ] env-iup
-- [ ] env-js
-
-### 12. Announce (manual)
-
+- Twitter / BlueSky
 - Mailing list
 - Students
-
-## Files to modify
-
-| File                      | Change                                  |
-| ------------------------- | --------------------------------------- |
-| `atmos-0.6-1.rockspec`   | new (from 0.5, updated)                 |
-| `old/`                    | move old rockspec here                  |
-| `README.md`               | version list, stable link, env links    |
-| `HISTORY.md`              | v0.6 entry                              |
-
-## Progress
-
-- [x] Pending: rockspec cleanup (from extract-envs)
-- [x] Pending: README env links (from extract-envs)
-- [x] Pending: extracted env rockspecs install into atmos/env/*
-- [x] Step 1 — Run tests
-- [x] Step 2 — Create rockspec
-- [ ] Step 3 — Release all envs and apps (env steps done, app global tests pending)
-- [x] Step 4 — Update README
-- [x] Step 5 — Update HISTORY
-- [ ] Step 6 — Commit
-- [ ] Step 7 — Push main
-- [ ] Step 8 — Create release branch
-- [ ] Step 9 — Publish all rockspecs to LuaRocks
-- [ ] Step 10 — Verify install + test examples (remote)
-- [ ] Step 11 — Add install instructions to env READMEs
-- [ ] Step 12 — Announce

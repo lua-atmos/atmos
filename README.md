@@ -16,8 +16,7 @@
     [`v0.1`](https://github.com/lua-atmos/atmos/tree/v0.1)
 ]
 
-Please, switch to stable
-    [`v0.5`](https://github.com/lua-atmos/atmos/tree/v0.5).
+Stable branch is [`v0.6`](https://github.com/lua-atmos/atmos/tree/v0.6).
 
 [
     [About](#about)                 |
