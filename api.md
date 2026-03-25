@@ -6,17 +6,18 @@
 4. [Errors](#4-errors)
 5. [Compounds](#5-compounds)
 6. [Streams](#6-streams)
+7. [Threads](#7-threads)
 
 # 1. Basic
 
 [
-    [call](#call-f) |
+    [loop](#loop-f) |
     [defer](#defer-f) |
     [atmos.env](#atmosenv-e) |
     [atmos.status](#atmosstatus-tsk)
 ]
 
-## `call (f)`
+## `loop (f)`
 
 Calls the given body as a task, passing control to Atmos.
 
@@ -27,7 +28,7 @@ Calls the given body as a task, passing control to Atmos.
     - `...`
         | return values from the task
 
-The call returns when the given body terminates.
+The loop returns when the given body terminates.
 
 ## `defer (f)`
 
@@ -51,21 +52,19 @@ end
 
 ## `atmos.env (e)`
 
-`TODO`
+Registers an environment table with Atmos.
 
 - Parameters:
-    - `e: { ...}`
-        | environment table with state fields and callback functions
+    - `e: { ... }`
+        | environment table with callback functions
+        - `open: function`
+            | called by [loop](#loop-f) before the body starts
         - `step: function`
-            | called by [call](#call-f) continually in a loop until the body terminates
-        - `loop: function`
-            | substitutes the [call](#call-f) loop
-        - `stop: function`
-            | appended to the [call](#call-f) body
+            | called by [loop](#loop-f) continually until the body terminates
         - `close: function`
-            | called by [call](#call-f) when the body terminates (or on any error)
-        - `now: number`
-            | number of elapsed milliseconds since the environment is loaded
+            | called by [loop](#loop-f) when the body terminates (or on any error)
+        - `mode: table`
+            | `{ primary=true, secondary=true }` for multi-env support
 
 (This function is only used internally by environments.)
 
@@ -428,3 +427,19 @@ local S = require "atmos.streams"
         terminates
 
 `TODO: parand / xparand`
+
+# 7. Threads
+
+## `thread (f)`
+
+Spawns a function to execute in an OS thread and awaits its termination.
+
+- Parameters:
+    - `f: function`
+        | function to execute in a separate thread
+- Returns:
+    - `...`
+        | function return values
+
+The function receives copies of its upvalues, but cannot access Atmos
+primitives (`await`, `emit`, `spawn`).

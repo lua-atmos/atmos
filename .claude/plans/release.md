@@ -64,9 +64,11 @@ List all tests in the docs.
 - [x] Document `thread` block (CPU parallelism via LuaLanes)
     - include implicit abortion
 
-#### 2.5 api.md
+#### 2.5 api.md (done)
 
-- [ ] Document `thread(f)` API
+- [x] Document `thread(f)` API
+- [x] Rename `call` → `loop`
+- [x] Fix `atmos.env`: remove `loop`/`stop`, add `open`/`mode`
 
 ### 3. Rockspec
 
