@@ -103,22 +103,22 @@ Env steps:
 7. [x] Create/update branch `v0.1`, push
 
 ##### 4.1.1 sdl-birds
-- [ ] Test `birds-11.lua` (local)
-- [ ] Test `birds-11.lua` (global)
-- [ ] Commit, push main
-- [ ] Create branch, push
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `birds-11.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
 ##### 4.1.2 sdl-rocks
-- [ ] Test `main.lua` (local)
-- [ ] Test `main.lua` (global)
-- [ ] Commit, push main
-- [ ] Create branch, push
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
 ##### 4.1.3 sdl-pingus
-- [ ] Test `main.lua` (local)
-- [ ] Test `main.lua` (global)
-- [ ] Commit, push main
-- [ ] Create branch, push
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
 #### 4.2 env-pico
 
@@ -140,14 +140,14 @@ Env steps:
 7. [ ] Create/update branch `v0.1`, push
 
 ##### 4.2.1 pico-birds
-- [ ] Test `birds-11.lua` (local)
-- [ ] Test `birds-11.lua` (global)
+- [ ] Check README.md: app, atmos, env versions
+- [ ] Test `birds-11.lua`
 - [ ] Commit, push main
 - [ ] Create branch `v0.4`, push
 
 ##### 4.2.2 pico-rocks
-- [ ] Test `main.lua` (local)
-- [ ] Test `main.lua` (global)
+- [ ] Check README.md: app, atmos, env versions
+- [ ] Test `main.lua`
 - [ ] Commit, push main
 - [ ] Create branch, push
 
@@ -167,6 +167,7 @@ Env steps:
 7. [ ] Create/update branch `v0.1`, push
 
 ##### 4.3.1 iup-7guis (also needs env-iup)
+- [ ] Check README.md: app, atmos, env versions
 - [ ] `01-counter.lua`
 - [ ] `02-temperature.lua`
 - [ ] `03-flight.lua`
