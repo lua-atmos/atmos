@@ -16,11 +16,26 @@ This plan uses release branches (not tags) for versioning.
 
 ### 1. Run tests
 
+- [ ] Automatic tests:
+
 ```bash
 cd tst && lua5.4 all.lua
 ```
 
+List all tests in the docs.
+
+- Manual tests:
+    - [x] README.md
+    - [x] guide.md
+
 ### 2. Docs
+
+- [ ] Check if all docs are consistent:
+
+- README.md
+- guide.md
+- api.md
+- HISTORY.md
 
 #### 2.1 README.md (done)
 
@@ -44,23 +59,26 @@ cd tst && lua5.4 all.lua
 
 - [x] Keep in sync with README "About" section
 
-#### 2.4 guide.md
+#### 2.4 guide.md (done)
 
-- [ ] Document `thread` block (CPU parallelism via LuaLanes)
+- [x] Document `thread` block (CPU parallelism via LuaLanes)
     - include implicit abortion
 
 #### 2.5 api.md
 
 - [ ] Document `thread(f)` API
 
-### 3. Create rockspec `atmos-0.6-1.rockspec`
+### 3. Rockspec
+
+- [ ] Create `atmos-0.6-1.rockspec`
 
 - Copy from `atmos-0.5-1.rockspec`
 - Change `version` to `"0.6-1"`
 - Change `branch` to `"v0.6"`
 - Remove all non-clock env modules (sdl, pico, socket, iup)
 - Move old rockspec to `old/`
-- Install locally:
+
+- [ ] Install locally:
 
 ```bash
 sudo luarocks make atmos-0.6-1.rockspec --lua-version=5.4

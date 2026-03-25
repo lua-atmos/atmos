@@ -43,14 +43,14 @@ end
 do
     print("Testing...", "thread 4: basic - return value")
     spawn(function ()
-        local v = thread(function ()
-            return 42
+        local v,x = thread(function ()
+            return 42, 99
         end)
-        out(v)
+        out(v,x)
     end)
     os.execute("sleep 0.1")
     emit()
-    assertx(out(), "42\n")
+    assertx(out(), "42\t99\n")
     atmos.stop()
 end
 

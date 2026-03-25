@@ -59,22 +59,22 @@ real world into an Atmos application.
 These events can be timers, key presses, network packets, or other kinds of
 inputs, depending on the environment.
 
-The environment is loaded through `require` and depends on an outer `call`
+The environment is loaded through `require` and depends on an outer `loop`
 primitive to handle events:
 
 ```
 require "x"         -- environment "x" with events X.A, X.B, ...
 
-call(function ()
+loop(function ()
     await "X.A"     -- awakes when "x" emits "X.A"
 end)
 ```
 
-The `call` receives a body and passes control of the Lua application to the
+The `loop` receives a body and passes control of the Lua application to the
 environment.
 The environment internally executes a continuous loop that polls external
 events from the real world and forwards them to Atmos through `emit` calls.
-The call body is an anonymous task that, when terminates, returns the control
+The loop body is an anonymous task that, when terminates, returns the control
 of the environment back to the Lua application.
 
 The next example relies on the built-in [clock environment](atmos/env/clock/)
@@ -82,7 +82,7 @@ to count 5 seconds:
 
 ```
 require "atmos.env.clock"
-call(function ()
+loop(function ()
     print("Counts 5 seconds:")
     for i=1,5 do
         await(clock{s=1})
@@ -437,7 +437,10 @@ line 8, before throwing the error in line 3:
 
 # 7. Complementary Concurrency Models
 
-TODO
+Atmos complements its core synchronous concurrency model with two
+additional mechanisms:
+    functional streams for reactive data processing, and
+    asynchronous parallelism for CPU-bound computations.
 
 ## 7.1. Functional Streams
 
@@ -521,3 +524,54 @@ The example only takes the first two numbers, prints them, and terminates.
 
 ## 7.2. Asynchronous Parallelism
 
+The `thread` primitive offloads a computation to an isolated OS thread,
+allowing CPU-bound work without blocking the Atmos cooperative scheduler.
+
+The next example spawns two threads to calculate heavy `cpu` sums:
+
+```
+require "atmos.env.clock"
+
+math.randomseed()
+
+local function cpu (max)
+    local sum = 0
+    for i=1, max do
+        sum = sum + i
+    end
+    return sum
+end
+
+loop(function ()
+    local t = watching(clock{s=20}, function ()
+        return par_or(function ()
+            local v = thread(function ()
+                return cpu(math.random(10000000000))
+            end)
+            return { worker='A', value=v }
+        end, function ()
+            local v = thread(function ()
+                return cpu(math.random(10000000000))
+            end)
+            return { worker='B', value=v }
+        end)
+    end)
+
+    if t == 'clock' then
+        print("Computation timeout...")
+    else
+        print(t.worker .. " yields " .. t.value)
+    end
+end)
+```
+
+A `thread` suspends the calling task until it terminates.
+In the meantime, the other tasks can react to events normally.
+
+In the example, the program terminates when either of thread completes with the
+result, aborting the other thread.
+Also, if none of the threads complete, they are automatically aborted by the
+enclosing timeout `watching`.
+
+Threads are isolated: they may receive copies of upvalues, but cannot use Atmos
+standard primitives like `await`, `emit`, or `spawn`.
