@@ -16,7 +16,7 @@ This plan uses release branches (not tags) for versioning.
 
 ### 1. Run tests
 
-- [ ] Automatic tests:
+- [x] Automatic tests:
 
 ```bash
 cd tst && lua5.4 all.lua
@@ -30,7 +30,7 @@ List all tests in the docs.
 
 ### 2. Docs
 
-- [ ] Check if all docs are consistent:
+- [x] Check if all docs are consistent:
 
 - README.md
 - guide.md
@@ -70,21 +70,10 @@ List all tests in the docs.
 - [x] Rename `call` → `loop`
 - [x] Fix `atmos.env`: remove `loop`/`stop`, add `open`/`mode`
 
-### 3. Rockspec
+### 3. Rockspec (done)
 
-- [ ] Create `atmos-0.6-1.rockspec`
-
-- Copy from `atmos-0.5-1.rockspec`
-- Change `version` to `"0.6-1"`
-- Change `branch` to `"v0.6"`
-- Remove all non-clock env modules (sdl, pico, socket, iup)
-- Move old rockspec to `old/`
-
-- [ ] Install locally:
-
-```bash
-sudo luarocks make atmos-0.6-1.rockspec --lua-version=5.4
-```
+- [x] `atmos-0.6-2.rockspec` verified complete
+- [x] Installed locally
 
 ### 4. Release all environments and apps
 
@@ -93,25 +82,25 @@ Two test phases for each env/app:
 2. **Global**: `luarocks make` to install, then test
 
 **clock** (atmos built-in):
-- [ ] `atmos/env/clock/exs/hello.lua`
-- [ ] `atmos/env/clock/exs/hello-rx.lua`
+- [x] `atmos/env/clock/exs/hello.lua`
+- [x] `atmos/env/clock/exs/hello-rx.lua`
 
-#### 4.1 env-sdl
+#### 4.1 env-sdl (done)
 
 Env steps:
-1. [ ] Update README
-2. [ ] Phase 1 tests (local)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/across.lua`
-    - [ ] `exs/click-drag-cancel.lua`
-3. [ ] Create rockspec
-4. [ ] Make rockspec
-5. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/across.lua`
-    - [ ] `exs/click-drag-cancel.lua`
-6. [ ] Commit, push main
-7. [ ] Create/update branch `v0.1`, push
+1. [x] Update README
+2. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+3. [x] Create rockspec
+4. [x] Make rockspec
+5. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+6. [x] Commit, push main
+7. [x] Create/update branch `v0.1`, push
 
 ##### 4.1.1 sdl-birds
 - [ ] Test `birds-11.lua` (local)
