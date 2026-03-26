@@ -186,21 +186,18 @@ Env steps:
 4. [x] Test in browser (automated via Puppeteer)
     - [x] `exs/hello.lua` (bare Lua)
     - [x] `exs/hello-atmos.lua` (lua-atmos)
-    - [ ] `exs/hello.atm` (atmos-lang)
+    - [x] `exs/hello.atm` (atmos-lang)
 5. [x] Run automated tests
     - `cd test && npm ci && npm test`
     - Tests both `out/main/` and `out/v0.6/` tiers
 6. [x] Commit, push main
 7. [x] Create branch `v0.1`, push
 
-### 5. Commit, push main, create release branch
+### 5. Commit, push main, create release branch (done)
 
-- [ ] Single commit: `release: v0.6`
-- [ ] Push main, check GitHub Actions for green CI
-- [ ] Create branch `v0.6`
-- [ ] Update README links: `main` → `v0.6`
-- [ ] Commit and push `v0.6`
-- [ ] Return to main
+- [x] Push main, check GitHub Actions for green CI
+- [x] Create branch `v0.6`, push
+- [x] Return to main
 
 ### 6. Publish all rockspecs to LuaRocks (done)
 
@@ -209,6 +206,7 @@ luarocks upload atmos-0.6-1.rockspec
 luarocks upload atmos-env-sdl-0.1-1.rockspec
 luarocks upload atmos-env-pico-0.1-1.rockspec
 luarocks upload atmos-env-socket-0.1-1.rockspec
+luarocks upload atmos-env-iup-0.1-1.rockspec
 ```
 
 ### 7. Verify LuaRocks install + test all examples again (remote)
@@ -218,7 +216,48 @@ sudo luarocks --lua-version=5.4 remove atmos
 sudo luarocks --lua-version=5.4 install atmos 0.6
 ```
 
-Re-run the same test checklist from step 4 with the remote install.
+**clock** (atmos built-in):
+- [x] `atmos/env/clock/exs/hello.lua`
+- [x] `atmos/env/clock/exs/hello-rx.lua`
+
+**env-sdl**:
+- [x] `exs/hello.lua`
+- [x] `exs/across.lua`
+- [ ] `exs/click-drag-cancel.lua`
+
+**sdl-birds** (`git checkout v0.4`):
+- [x] `birds-11.lua`
+
+**sdl-rocks** (`git checkout v0.4`):
+- [x] `main.lua`
+
+**sdl-pingus** (`git checkout v0.4`):
+- [ ] `main.lua`
+
+**env-pico**:
+- [x] `exs/hello.lua`
+- [x] `exs/across.lua`
+- [x] `exs/click-drag-cancel.lua`
+
+**pico-birds** (`git checkout v0.4`):
+- [x] `birds-11.lua`
+
+**pico-rocks** (master, no version branch):
+- [x] `main.lua`
+
+**env-socket**:
+- [x] `exs/hello.lua`
+- [x] `exs/cli-srv.lua`
+
+**env-iup**:
+- [x] `exs/hello.lua`
+- [x] `exs/button-counter.lua`
+- [ ] `exs/iup-net.lua`
+
+**env-js** (automated via Puppeteer):
+- [x] `exs/hello.lua`
+- [x] `exs/hello-atmos.lua`
+- [x] `exs/hello.atm`
 
 ### 8. Announce (manual)
 
