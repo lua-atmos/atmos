@@ -164,6 +164,7 @@ function M.env (e)
     if #_envs_ == 1 then
         -- ok: first env may support any mode
     else
+        local i = #_envs_
         assertn(2, _envs_[1].mode and _envs_[1].mode.primary,
             "invalid env : primary env must support primary mode")
         assertn(2, _envs_[i].mode and _envs_[i].mode.secondary,
