@@ -85,7 +85,7 @@ Two test phases for each env/app:
 - [x] `atmos/env/clock/exs/hello.lua`
 - [x] `atmos/env/clock/exs/hello-rx.lua`
 
-#### 4.1 env-sdl (done)
+#### 4.1 env-sdl
 
 Env steps:
 1. [x] Update README
@@ -125,31 +125,31 @@ Env steps:
 Note: requires pico-sdl v0.3
 
 Env steps:
-1. [ ] Update README
-2. [ ] Phase 1 tests (local)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/across.lua`
-    - [ ] `exs/click-drag-cancel.lua`
-3. [ ] Create rockspec
-4. [ ] Make rockspec
-5. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/across.lua`
-    - [ ] `exs/click-drag-cancel.lua`
-6. [ ] Commit (init-on-require), push main
-7. [ ] Create/update branch `v0.1`, push
+1. [x] Update README
+2. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+3. [x] Create rockspec
+4. [x] Make rockspec
+5. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+6. [x] Commit, push main
+7. [x] Create/update branch `v0.1`, push
 
 ##### 4.2.1 pico-birds
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `birds-11.lua`
-- [ ] Commit, push main
-- [ ] Create branch `v0.4`, push
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `birds-11.lua`
+- [x] Commit, push main
+- [x] Create branch `v0.4`, push
 
 ##### 4.2.2 pico-rocks
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `main.lua`
-- [ ] Commit, push main
-- [ ] Create branch, push
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
 #### 4.3 env-socket
 
