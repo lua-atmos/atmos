@@ -180,15 +180,18 @@ Env steps:
 
 #### 4.5 env-js
 
-1. [ ] Update README (v0.5 → v0.6)
-2. [ ] Update/create build script (`build-v0.6.sh`)
-3. [ ] Rebuild HTML files (v0.6)
-4. [ ] Test in browser
-    - [ ] `exs/hello.lua` (bare Lua)
-    - [ ] `exs/hello-atmos.lua` (lua-atmos)
+1. [x] Update README (v0.5 → v0.6)
+2. [x] Update/create build script (`build-v0.6.sh`)
+3. [x] Rebuild HTML files (v0.6)
+4. [x] Test in browser (automated via Puppeteer)
+    - [x] `exs/hello.lua` (bare Lua)
+    - [x] `exs/hello-atmos.lua` (lua-atmos)
     - [ ] `exs/hello.atm` (atmos-lang)
-5. [ ] Commit, push main
-6. [ ] Create branch `v0.1`, push
+5. [x] Run automated tests
+    - `cd test && npm ci && npm test`
+    - Tests both `out/main/` and `out/v0.6/` tiers
+6. [x] Commit, push main
+7. [x] Create branch `v0.1`, push
 
 ### 5. Commit, push main, create release branch
 
