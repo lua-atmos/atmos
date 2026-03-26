@@ -7,11 +7,6 @@ are extracted to separate repos. New features since v0.5 include
 thread cancel, thread no-args, and the env extraction itself.
 This plan uses release branches (not tags) for versioning.
 
-## Pending from extract-envs
-
-- [ ] Rockspecs for extracted envs must install into `atmos/env/*`
-    - env-iup
-
 ## Steps
 
 ### 1. Run tests
@@ -166,16 +161,24 @@ Env steps:
 6. [ ] Commit, push main
 7. [ ] Create/update branch `v0.1`, push
 
-##### 4.3.1 iup-7guis (also needs env-iup)
-- [ ] Check README.md: app, atmos, env versions
-- [ ] `01-counter.lua`
-- [ ] `02-temperature.lua`
-- [ ] `03-flight.lua`
-- [ ] `01-counter-net.lua`
+#### 4.4 env-iup
 
-#### 4.4 env-iup (skipped — extraction not complete)
+Env steps:
+1. [ ] Update README
+2. [ ] Phase 1 tests (local)
+    - [ ] `exs/hello.lua`
+    - [ ] `exs/button-counter.lua`
+    - [ ] `exs/iup-net.lua`
+3. [ ] Create rockspec
+4. [ ] Make rockspec
+5. [ ] Phase 2 tests (global)
+    - [ ] `exs/hello.lua`
+    - [ ] `exs/button-counter.lua`
+    - [ ] `exs/iup-net.lua`
+6. [ ] Commit, push main
+7. [ ] Create/update branch `v0.1`, push
 
-#### 4.5 env-js (skipped)
+#### 4.5 env-js
 
 ### 5. Commit, push main, create release branch
 
