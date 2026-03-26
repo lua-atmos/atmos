@@ -149,36 +149,46 @@ Env steps:
 #### 4.3 env-socket
 
 Env steps:
-1. [ ] Update README
-2. [ ] Phase 1 tests (local)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/cli-srv.lua`
-3. [ ] Create rockspec
-4. [ ] Make rockspec
-5. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/cli-srv.lua`
-6. [ ] Commit, push main
-7. [ ] Create/update branch `v0.1`, push
+1. [x] Update README
+2. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/cli-srv.lua`
+3. [x] Create rockspec
+4. [x] Make rockspec
+5. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/cli-srv.lua`
+6. [x] Commit, push main
+7. [x] Create/update branch `v0.1`, push
 
 #### 4.4 env-iup
 
 Env steps:
-1. [ ] Update README
+1. [x] Update README
 2. [ ] Phase 1 tests (local)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/button-counter.lua`
+    - [x] `exs/hello.lua`
+    - [x] `exs/button-counter.lua`
     - [ ] `exs/iup-net.lua`
-3. [ ] Create rockspec
-4. [ ] Make rockspec
+3. [x] Create rockspec
+4. [x] Make rockspec
 5. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/button-counter.lua`
+    - [x] `exs/hello.lua`
+    - [x] `exs/button-counter.lua`
     - [ ] `exs/iup-net.lua`
-6. [ ] Commit, push main
-7. [ ] Create/update branch `v0.1`, push
+6. [x] Commit, push main
+7. [x] Create/update branch `v0.1`, push
 
 #### 4.5 env-js
+
+1. [ ] Update README (v0.5 → v0.6)
+2. [ ] Update/create build script (`build-v0.6.sh`)
+3. [ ] Rebuild HTML files (v0.6)
+4. [ ] Test in browser
+    - [ ] `exs/hello.lua` (bare Lua)
+    - [ ] `exs/hello-atmos.lua` (lua-atmos)
+    - [ ] `exs/hello.atm` (atmos-lang)
+5. [ ] Commit, push main
+6. [ ] Create branch `v0.1`, push
 
 ### 5. Commit, push main, create release branch
 
