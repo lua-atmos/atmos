@@ -25,6 +25,21 @@ do
     atmos.stop()
 end
 
+do
+    print("Testing...", "thread 3: error - await in thread")
+    local _,err = catch(function ()
+        spawn(function ()
+            thread(function()
+                await(false)
+            end)
+        end)
+        os.execute("sleep 0.1")
+        emit()
+    end)
+    assertfx(err, "attempt to call a nil value %(global 'await'%)")
+    atmos.stop()
+end
+
 print "--- THREAD / BASIC ---"
 
 do
