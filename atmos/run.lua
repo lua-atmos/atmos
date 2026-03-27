@@ -101,7 +101,7 @@ function M.is (v, x)
         return true
     elseif mt==meta_tasks and x=='tasks' then
         return true
-    elseif tp=='table' and type(x)=='string' then
+    elseif tp=='table' and type(x)=='string' and type(v.tag)=='string' then
         return (string.find(v.tag or '', '^'..x) == 1)
     else
         return false

@@ -1,6 +1,21 @@
 local atmos = require "atmos"
 require "test"
 
+print "--- IS ---"
+
+do
+    print("Testing...", "is 1")
+    do
+        out(_is_({tag='x.y.z'}, 'x.y'))
+        out(_is_({tag='x'},     'x.y'))
+        out(_is_({tag={}},      ''))
+    end
+    assertx(out(), "true\nfalse\nfalse\n")
+end
+
+do
+end
+
 print "--- DEFER ---"
 
 do
