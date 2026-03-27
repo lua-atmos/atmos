@@ -2,7 +2,9 @@ local S = require "atmos.streams"
 require "atmos.util"
 local lanes -- lazy require in `spawn`
 
-local M = {}
+local M = {
+    thread_modules = {}, -- requires to pass to threads
+}
 
 local task_gc
 
@@ -845,7 +847,7 @@ function M.thread (f)
     end
 
     local linda = lanes.linda()
-    local lane = assert(gen(linda, atmos.thread))
+    local lane = assert(gen(linda, M.thread_modules))
 
     local _ <close> = M.defer(function ()
         while lane.status == 'pending' do
