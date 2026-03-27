@@ -381,7 +381,7 @@ do
     atmos.stop()
 end
 
-print "--- CALL ---"
+print "--- LOOP ---"
 
 do
     print("Testing...", "call 1")

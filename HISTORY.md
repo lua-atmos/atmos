@@ -1,3 +1,9 @@
+v0.7 (mar/26)
+-------------
+
+- Additions:
+    - `abort` task and tasks
+
 v0.6 (mar/26)
 -------------
 

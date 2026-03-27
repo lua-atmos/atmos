@@ -55,3 +55,5 @@ abort    = run.abort
 - [x] Expose `abort` in `atmos/init.lua`
 - [x] Create `tst/abort.lua`
 - [x] Test
+- [x] Update docs
+- [ ] Add to atmos-lang

@@ -85,6 +85,7 @@ Returns the status of the given task.
     [task(f)](#task-tra-f) |
     [task()](#task-) |
     [tasks](#tasks-n) |
+    [abort](#abort-t) |
     [spawn(tsk)](#spawn-tsk-) |
     [spawn(f)](#spawn-tra-f-) |
     [spawn_in](#spawn_in-tsks-tsk-) |
@@ -127,6 +128,16 @@ Creates a task pool.
 - Returns:
     - `: task`
         | task pool
+
+## `abort (t)`
+
+Aborts a task or task pool.
+
+- Parameters:
+    - `t: task|tasks`
+        | task or task pool to abort
+- Returns:
+    - `nil`
 
 ## `spawn (tsk, ...)`
 
