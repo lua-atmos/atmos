@@ -22,6 +22,7 @@ throw = run.throw
 catch = run.catch
 defer = run.defer
 tasks = run.tasks
+abort = run.abort
 
 function task (tra, ...)
     if tra == nil then

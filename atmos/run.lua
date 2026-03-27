@@ -424,6 +424,20 @@ function M.task (dbg, tra, f)
     return t
 end
 
+function M.abort (t)
+    assertn(2, getmetatable(t)==meta_task or getmetatable(t)==meta_tasks, "invalid abort : expected task")
+    getmetatable(t).__close(t)
+    if t._.up then
+        t._.up._.gc = true
+    end
+    local me = M.me(true)
+    if me and me._.status=='aborted' then
+        -- TODO: lua5.5
+        coroutine.yield()
+        error "bug found"
+    end
+end
+
 function M.spawn (dbg, up, tra, t, ...)
     if type(t) == 'function' then
         t = M.task(dbg, tra, t)
@@ -784,6 +798,7 @@ function M.emit (stk, to, e, ...)
     if me and me._.status=='aborted' then
         -- TODO: lua5.5
         coroutine.yield()   -- wait to be closed from outside
+        error "bug found"
     end
     return ret
 end

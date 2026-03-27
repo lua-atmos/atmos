@@ -51,6 +51,7 @@ abort    = run.abort
 
 ## Progress
 
-- [ ] Add `M.abort` to `atmos/run.lua`
-- [ ] Expose `abort` in `atmos/init.lua`
-- [ ] Test
+- [x] Add `M.abort` to `atmos/run.lua`
+- [x] Expose `abort` in `atmos/init.lua`
+- [x] Create `tst/abort.lua`
+- [x] Test
