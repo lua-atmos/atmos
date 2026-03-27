@@ -835,14 +835,17 @@ function M.thread (f)
 
     local gen = _gen_cache[f]
     if not gen then
-        gen = lanes.gen("*", function (linda)
+        gen = lanes.gen("*", function (linda, mods)
+            for _,mod in ipairs(mods) do
+                require(mod)
+            end
             linda:send("ok", { pcall(f) })
         end)
         _gen_cache[f] = assert(gen)
     end
 
     local linda = lanes.linda()
-    local lane = assert(gen(linda))
+    local lane = assert(gen(linda, atmos.thread))
 
     local _ <close> = M.defer(function ()
         while lane.status == 'pending' do

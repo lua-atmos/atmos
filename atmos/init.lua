@@ -9,6 +9,8 @@ local atmos = {
     --
     status = run.status,
     env    = run.env,
+    --
+    thread = {},            -- requires to pass to threads
 }
 
 loop  = run.loop
