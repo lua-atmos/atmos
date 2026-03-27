@@ -3,6 +3,8 @@ v0.7 (mar/26)
 
 - Additions:
     - `abort` task and tasks
+- Environments:
+    - `open`+`close` changed to main body + `quit`
 
 v0.6 (mar/26)
 -------------

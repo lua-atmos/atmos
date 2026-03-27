@@ -139,6 +139,9 @@ Aborts a task or task pool.
 - Returns:
     - `nil`
 
+All nested tasks are also aborted.
+All nested [deferred](#defer-f) blocks execute.
+
 ## `spawn (tsk, ...)`
 
 Spawns a task.
