@@ -1,34 +1,40 @@
-# Envs open/close analysis
+# Envs: drop open, rename close to quit
 
-## M.loop lifecycle (run.lua:327-355)
+## Decision
 
-- Lines 331-333: call `env.open()` for each registered env before
-  the main loop.
-- `M.stop()` (line 335 via defer, lines 364-372): call
-  `env.close()` for each env on exit.
+`require` IS the open — module body does init.
+Only `quit` (formerly `close`) is needed for teardown.
 
-## Env status
+```
+require       step...step      quit
+  |               |              |
+  module+init     event loop     release C resources
+```
 
-| Env        | open             | close            | Needs? | Why                                    |
-|------------|------------------|------------------|--------|----------------------------------------|
-| env-sdl    | SDL/IMG/TTF/MIX init + audio | SDL/IMG/TTF/MIX quit | Yes    | C libs need init/quit for OS resources |
-| env-iup    | iup.Open         | iup.Close        | Yes    | C GUI toolkit requires Open/Close      |
-| env-socket | none             | none             | No     | sockets are per-connection, no global  |
-| env-pico   | empty (commented)| pico.init(false) | Partial| init at require-time, asymmetric       |
+## Framework changes (run.lua)
 
-## Issues
+- [x] `loop` (lines 331-332): remove `env.open()` loop
+- [x] `start` (line 360): remove `env.open()` call
+- [x] `stop` (lines 367-368): rename `env.close` to `env.quit`
 
-- [ ] env-pico: `pico.init(true)` runs at require-time (line
-  13-14), not inside `open`.
-  `close` calls `pico.init(false)`.
-  TODO on line 12 acknowledges the asymmetry.
-  Fix: move `pico.init(true)` + `pico.set.expert(...)` into
-  `open`.
+## Env changes
+
+| Env        | Action                                          |
+|------------|-------------------------------------------------|
+| env-sdl    | move `open` body to module top-level, rename `close` to `quit` |
+| env-iup    | remove `open = iup.Open` (likely redundant), rename `close` to `quit` |
+| env-socket | no change (has neither)                         |
+| env-pico   | remove empty `open`, rename `close` to `quit`   |
+
+## Testing
+
+- [x] Auto test: `tst/envs.lua` + added to `tst/all.lua`
+- [ ] Manual test: env-iup example with sockets
 
 ## Notes
 
-- env-sdl and env-iup genuinely need both open and close
-  because they wrap C libraries with explicit lifecycle.
-- env-socket needs neither; socket creation is per-use.
-- env-pico needs close but open is currently a no-op due to
-  init being at require-time.
+- env-pico was the only broken env (init at require-time,
+  empty open). New design makes it the reference pattern.
+- env-iup: `require("iuplua")` likely calls `iup.Open`
+  internally; the explicit `open = iup.Open` was probably
+  redundant. Confirm when editing.
