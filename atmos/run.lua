@@ -168,11 +168,9 @@ function M.env (e)
     else
         local i = #_envs_
         assertn(2, _envs_[1].mode and _envs_[1].mode.primary,
-            "invalid env : primary env must support primary mode")
+            "invalid env : first env must support primary mode")
         assertn(2, _envs_[i].mode and _envs_[i].mode.secondary,
-            "invalid env : non-primary envs must support secondary mode")
-        assertn(2, #_envs_==0 or _envs_[1].mode,
-            "invalid env : previous env is single-env only (mode not set)")
+            "invalid env : non-first envs must support secondary mode")
         _envs_[1].mode.current = 'primary'
         e.mode.current = 'secondary'
     end
@@ -328,9 +326,6 @@ function M.loop (body, ...)
     assertn(2, type(body)=='function', "invalid loop : expected body function")
     return xcall(debug.getinfo(2), "loop", function (...)
         local f = body
-        for _, env in ipairs(_envs_) do
-            if env.open then env.open() end
-        end
         local _ <close> = M.defer(function ()
             M.stop()
         end)
@@ -357,15 +352,14 @@ end
 function M.start (body, ...)
     assertn(2, type(body)=='function', "invalid start : expected body function")
     assertn(2, #_envs_==1 and _envs_[1].mode==nil, "invalid start : expected single-mode env only")
-    if _envs_[1].open then _envs_[1].open() end
     M.spawn(debug.getinfo(2), nil, false, body, ...)
 end
 
 function M.stop ()
     meta_tasks.__close(TASKS)
     for i=#_envs_, 1, -1 do
-        if _envs_[i].close then
-            _envs_[i].close()
+        if _envs_[i].quit then
+            _envs_[i].quit()
         end
         _envs_[i] = nil
     end
