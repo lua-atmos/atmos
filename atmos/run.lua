@@ -681,6 +681,7 @@ function M.clock (t)
     return setmetatable(t, meta_clock)
 end
 
+--@ derived: or-combinator factory; deprecated, use {'or', ...} literal
 function M._or_ (...)
     local t = {
         tag = '_or_',
@@ -698,6 +699,7 @@ function M._or_ (...)
     return t
 end
 
+--@ derived: and-combinator factory; deprecated, use {'and', ...} literal
 function M._and_ (...)
     local t = {
         tag = '_and_',
@@ -801,6 +803,7 @@ end
 
 function M.toggle (t, on)
     if type(t) == 'string' then
+        --@ derived: do { pin t = spawn(f); every(evt, \on -> toggle(t, on)) }
         local e, f = t, on
         assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
         do
@@ -881,6 +884,7 @@ end
 
 -------------------------------------------------------------------------------
 
+--@ derived: loop { f(await(awt, payload...)) }
 function M.every (...)
     assertn(2, M.me(true), "invalid every : expected enclosing task")
     local t = { ... }
@@ -898,6 +902,7 @@ local meta_par = {
     end
 }
 
+--@ derived: spawn each + await(false) + lifetime
 function M.par (...)
     assertn(2, M.me(true), "invalid par : expected enclosing task")
     local fs = { ... }
@@ -909,6 +914,7 @@ function M.par (...)
     M.await(false)
 end
 
+--@ derived: throw-based race per plan §4
 function M.par_or (...)
     assertn(2, M.me(true), "invalid par_or : expected enclosing task")
     local fs = { ... }
@@ -920,6 +926,7 @@ function M.par_or (...)
     return M.await(M._or_(table.unpack(ts)))
 end
 
+--@ derived: sequential await on each spawn
 function M.par_and (...)
     assertn(2, M.me(true), "invalid par_or : expected enclosing task")
     local fs = { ... }
@@ -931,6 +938,7 @@ function M.par_and (...)
     return M.await(M._and_(table.unpack(ts)))
 end
 
+--@ derived: par_or { await(awt, payload...) } with { f() }
 function M.watching (...)
     assertn(2, M.me(true), "invalid watching : expected enclosing task")
     local t = { ... }
