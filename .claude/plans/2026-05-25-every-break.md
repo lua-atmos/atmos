@@ -93,7 +93,7 @@ So only `break` migrates to lua-atmos as `_break_`.
     - `M.every` wraps `while` in `catch('atm-loop', ...)`
     - test `every 3: break` now uses `_break_()`
     - test `every 4: return passes through` (guards tag-specific catch)
-- [ ] RUN lua-atmos tests (user) to confirm green
+- [x] lua-atmos tests pass (incl. `every 3`/`every 4`)
 - [ ] investigate `par`/`watching`
 - [ ] atmos-lang side: coder emits `_break_`, drop `atm_break`,
       `atm_until`/`atm_while` call `_break_`, add `.atm` tests
