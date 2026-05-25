@@ -211,6 +211,12 @@ function M.throw (...)
     return error(tothrow(debug.getinfo(2),...))
 end
 
+-- break out of an enclosing loop (every): tail call preserves the
+-- caller line in the throw trace, mirroring the language atm_break
+function M._break_ (...)
+    return M.throw('atm-loop', ...)
+end
+
 function M.catch (...)
     local cnd = { ... }
     local blk = table.remove(cnd, #cnd)
@@ -885,9 +891,13 @@ function M.every (...)
     assertn(2, M.me(true), "invalid every : expected enclosing task")
     local t = { ... }
     local blk = table.remove(t, #t)
-    while true do
-        blk(M.await(table.unpack(t)))
-    end
+    -- tag-specific catch: break exits the loop, but return (atm-func),
+    -- abort, and any other throw still propagate past every
+    M.catch('atm-loop', function ()
+        while true do
+            blk(M.await(table.unpack(t)))
+        end
+    end)
 end
 
 local meta_par = {

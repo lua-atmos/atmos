@@ -17,12 +17,13 @@ loop  = run.loop
 start = run.start
 stop  = run.stop
 
-_is_  = run.is
-throw = run.throw
-catch = run.catch
-defer = run.defer
-tasks = run.tasks
-abort = run.abort
+_is_    = run.is
+_break_ = run._break_
+throw   = run.throw
+catch   = run.catch
+defer   = run.defer
+tasks   = run.tasks
+abort   = run.abort
 
 function task (tra, ...)
     if tra == nil then
