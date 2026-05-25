@@ -388,6 +388,6 @@ do
         out 'ok'
     end)
     emit 'X'
-    assertx(out(), "no\nok\n")
+    assertx(out(), "ok\n")
     atmos.stop()
 end
