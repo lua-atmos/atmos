@@ -490,6 +490,35 @@ do
     atmos.stop()
 end
 
+do
+    print("Testing...", "every 3: break")
+    spawn(function ()
+        every(true, function ()
+            _break_()
+        end)
+        out("ok")
+    end)
+    emit(10)
+    assertx(out(), "ok\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "every 4: return passes through")
+    spawn(function ()
+        catch('atm-func', function ()
+            every(true, function ()
+                throw('atm-func')   -- compiled return()
+            end)
+            out("never")
+        end)
+        out("ok")
+    end)
+    emit(10)
+    assertx(out(), "ok\n")
+    atmos.stop()
+end
+
 print "--- TOGGLE ---"
 
 do
