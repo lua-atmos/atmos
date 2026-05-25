@@ -944,14 +944,19 @@ end
 
 --@ derived: sequential await on each spawn
 function M.par_and (...)
-    assertn(2, M.me(true), "invalid par_or : expected enclosing task")
+    assertn(2, M.me(true), "invalid par_and : expected enclosing task")
     local fs = { ... }
+    local dbg = debug.getinfo(2)
     local ts <close> = setmetatable({}, meta_par)
     for i,f in ipairs(fs) do
-        assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = M.spawn(debug.getinfo(2), nil, true, f)
+        assertn(2, type(f) == 'function', "invalid par_and : expected task prototype")
+        ts[i] = M.spawn(dbg, nil, true, f)
     end
-    return M.await(M._and_(table.unpack(ts)))
+    local rets = {}
+    for i,t in ipairs(ts) do
+        rets[i] = M.await(t)
+    end
+    return table.unpack(rets, 1, #fs)
 end
 
 --@ derived: par_or { await(awt, payload...) } with { f() }
@@ -960,8 +965,10 @@ function M.watching (...)
     local t = { ... }
     local f = table.remove(t, #t)
     assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
-    local spw <close> = M.spawn(debug.getinfo(2), nil, true, f)
-    return M.await(M._or_({table.unpack(t)}, spw))
+    return M.par_or(
+        function () return M.await(table.unpack(t)) end,
+        f
+    )
 end
 
 return M
