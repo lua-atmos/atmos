@@ -809,7 +809,7 @@ end
 
 function M.toggle (t, on)
     if type(t) == 'string' then
-        --@ derived: do { pin t = spawn(f); every(evt, \on -> toggle(t, on)) }
+        --@ derived: spawn; loop { await; toggle; await; toggle; }
         local e, f = t, on
         assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
         do
@@ -928,12 +928,18 @@ end
 function M.par_or (...)
     assertn(2, M.me(true), "invalid par_or : expected enclosing task")
     local fs = { ... }
-    local ts <close> = setmetatable({}, meta_par)
-    for i,f in ipairs(fs) do
-        assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = M.spawn(debug.getinfo(2), nil, true, f)
-    end
-    return M.await(M._or_(table.unpack(ts)))
+    local dbg = debug.getinfo(2)
+    local trap = {}
+    return (function (_, _, ...) return ... end)(M.catch(trap, function ()
+        local ts <close> = setmetatable({}, meta_par)
+        for i,f in ipairs(fs) do
+            assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
+            ts[i] = M.spawn(dbg, nil, true, function ()
+                M.throw(trap, f())
+            end)
+        end
+        M.await(false)
+    end))
 end
 
 --@ derived: sequential await on each spawn
