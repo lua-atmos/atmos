@@ -641,7 +641,7 @@ local function await_to_table (e, ...)
             for i = 2, #e do
                 T[#T+1] = await_to_table(e[i])
             end
-        elseif e.tag == 'clock' then
+        elseif getmetatable(e) == meta_clock then
             e.cur = clock_to_ms(e)
             T = e
         elseif type(e[1]) == 'string' then
@@ -685,7 +685,7 @@ end
 
 function M.clock (t)
     assertn(2, type(t)=='table', "invalid clock : expected table")
-    t.tag = 'clock'
+    t[1] = 'clock'
     return setmetatable(t, meta_clock)
 end
 
