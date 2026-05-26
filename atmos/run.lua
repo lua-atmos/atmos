@@ -630,29 +630,29 @@ local function await_to_table (e, ...)
     local T
     if type(e) == 'table' then
         if (getmetatable(e) == meta_task) or getmetatable(e) == meta_tasks then
-            T = { tag='_==_', e,... }
+            T = { '==', e, ... }
         elseif S.is(e) then
             --error'TODO'
-            T = { tag='_==_', spawn(function() return e() end),... }
-        elseif e.tag=='_or_' or e.tag=='_and_' then
+            T = { '==', spawn(function() return e() end), ... }
+        elseif e[1] == 'or' or e[1] == 'and' then
+            T = { e[1] }
+            for i = 2, #e do
+                T[#T+1] = await_to_table(e[i])
+            end
+        elseif e.tag == 'clock' then
+            e.cur = clock_to_ms(e)
             T = e
-            for i,v in ipairs(T) do
-                T[i] = await_to_table(table.unpack(v))
-            end
+        elseif type(e[1]) == 'string' then
+            T = { '==', table.unpack(e) }
         else
-            if e.tag == 'clock' then
-                e.cur = clock_to_ms(e)
-                T = e
-            else
-                T = { tag='_==_', e,... }
-            end
+            T = { '==', e, ... }
         end
     elseif type(e) == 'function' then
-        T = { tag='function', e,... }
+        T = { 'fn', e, ... }
     elseif type(e) == 'boolean' then
-        T = { tag='boolean', e,... }
+        T = { 'bool', e, ... }
     else
-        T = { tag='_==_', e,... }
+        T = { '==', e, ... }
     end
     T.time = TIME
     return T
