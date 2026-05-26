@@ -239,7 +239,7 @@ print "--- AWAIT / _OR_ ---"
 do
     print("Testing...", "await or 1")
     spawn(function ()
-        local v,u = await(_or_('X','Y'))
+        local v,u = await({'or', 'X', 'Y'})
         out(v,u)
     end)
     emit('Y',10)
@@ -250,7 +250,7 @@ end
 do
     print("Testing...", "await or 2")
     spawn(function ()
-        local v,u = await(_or_({'Y',5},{'Y',10}))
+        local v,u = await {'or', {'Y',5}, {'Y',10}}
         out(v,u)
     end)
     emit('Y',10)
@@ -265,7 +265,7 @@ do
             await 'X'
             return 10
         end)
-        local v,u = await(_or_(t,'X'))
+        local v,u = await {'or', t, 'X'}
         out(v,u==nil)
     end)
     emit 'X'
@@ -280,7 +280,7 @@ do
         local t = spawn_in(ts, function ()
             await 'X'
         end)
-        local v,u = await(_or_(ts,'X'))
+        local v,u = await {'or', ts, 'X'}
         out(v==t,u==ts)
     end)
     emit 'X'
@@ -291,7 +291,7 @@ end
 do
     print("Testing...", "await or 5: clock")
     spawn(function ()
-        local v,u = await(_or_('X',clock{s=1}))
+        local v,u = await {'or', 'X', clock{s=1}}
         out(v,u)
     end)
     emit('clock', 510)
@@ -306,7 +306,7 @@ print "--- AWAIT / _AND_ ---"
 do
     print("Testing...", "await and 1")
     spawn(function ()
-        local v,u = await(_and_('X','Y'))
+        local v,u = await({'and', 'X', 'Y'})
         out(table.unpack(v))
         out(table.unpack(u))
     end)
@@ -319,7 +319,7 @@ end
 do
     print("Testing...", "await and 2")
     spawn(function ()
-        local v,u = await(_and_('Y','Y'))
+        local v,u = await {'and', 'Y', 'Y'}
         out(v,u)
     end)
     emit('Y')
@@ -334,7 +334,7 @@ do
             await 'X'
             return 10
         end)
-        local v,u = await(_and_(t,'X'))
+        local v,u = await {'and', t, 'X'}
         out(v,u)
     end)
     emit 'X'
@@ -349,7 +349,7 @@ do
         local t = spawn_in(ts, function ()
             await 'X'
         end)
-        local v,u = await(_and_(ts,'X'))
+        local v,u = await {'and', ts, 'X'}
         out(v[1]==t,v[2]==ts,u)
     end)
     emit 'X'
@@ -360,7 +360,7 @@ end
 do
     print("Testing...", "await and 5: clock")
     spawn(function ()
-        local v,u = await(_and_('X',clock{s=1}))
+        local v,u = await {'and', 'X', clock{s=1}}
         out(v,u[2])
     end)
     emit('clock', 510)
@@ -382,7 +382,7 @@ do
         local T = spawn_in(ts, function ()
             await('Z')
         end)
-        local v,u = await(_and_(_or_('X',clock{s=1}), _or_(ts,t)))
+        local v,u = await {'and', {'or', 'X', clock{s=1}}, {'or', ts, t}}
         out(v[2],u[1]==T,u[2]==ts)
     end)
     emit('clock', 510)
