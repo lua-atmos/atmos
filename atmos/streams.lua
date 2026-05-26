@@ -57,9 +57,10 @@ end
 -------------------------------------------------------------------------------
 
 function S.Debounce (n, src, fctl)
+    local trap = {}
     while true do
         local e = await(src)
-        catch('X', function()
+        catch(trap, function()
             while true do
                 e = par_or (
                     function()
@@ -68,7 +69,7 @@ function S.Debounce (n, src, fctl)
                     function()    -- bounced
                         local ctl <close> = fctl()
                         ctl()
-                        throw 'X'                   -- debounced
+                        throw(trap)                 -- debounced
                     end
                 )
             end
@@ -101,9 +102,10 @@ end
 
 function S.Buffer (n, src, ctl)
     local ctl <close> = ctl
+    local trap = {}
     while true do
         local ret = {}
-        catch('X', function()
+        catch(trap, function()
             while true do
                 ret[#ret+1] = par_or (
                     function ()
@@ -111,7 +113,7 @@ function S.Buffer (n, src, ctl)
                     end,
                     function()
                         await(ctl)
-                        throw 'X'           -- released
+                        throw(trap)         -- released
                     end
                 )
             end
@@ -212,7 +214,7 @@ end
 -------------------------------------------------------------------------------
 
 local function paror (t)
-    local x,v = await(_or_(t.n,t.tsks))
+    local x,v = await {'or', t.n, t.tsks}
     if v == t.tsks then
         return nil
     end

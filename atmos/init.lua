@@ -56,8 +56,6 @@ function emit (e, ...)
 end
 
 clock    = run.clock
-_or_     = run._or_
-_and_    = run._and_
 
 await    = run.await
 toggle   = run.toggle

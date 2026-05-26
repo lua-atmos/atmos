@@ -269,24 +269,12 @@ The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 - `x, ...` | `x==e` and all remaining arguments match the emit payloads
 - `x: task` | `x==e`, modifying the await return to be the task return
 - `x: tasks` | `e` matches any task in `x`
-- `{ tag='clock', h=?, min=?, s=?, ms=? }` | TODO
-- `{ tag='_and_', ...}` | `e` matches all the patterns in `...`
-- `{ tag='_or_', ...}` | `e` matches any of the patterns in `...`
+- `clock{ h=?, min=?, s=?, ms=? }` | TODO
+- `{ 'and', ...}` | `e` matches all the patterns in `...`
+- `{ 'or', ...}` | `e` matches any of the patterns in `...`
 - `mt.__atmos` | TODO
 - `: function` | function receives `e,...` and returns if it matches, also
     modifying the await return
-
-### `clock { ... }`
-
-Expands to `{ tag='clock', ... }`.
-
-### `_and_ (...)`
-
-Expands to `{ tag='_and_', ... }`.
-
-### `_or_ (...)`
-
-Expands to `{ tag='_or_', ... }`.
 
 # 4. Errors
 
@@ -358,7 +346,7 @@ occurs.
 A `watching` is equivalent to the call as follows:
 
 ```
-await(_or_({...}, spawn(f)))
+par_or(function() return await(...) end, f)
 ```
 
 ## `toggle (evt, f)`
@@ -395,7 +383,7 @@ Spawn the given bodies and terminate when all of them terminate.
     - `...`
         | tasks to spawn as functions
 - Returns:
-    - `: table`: combined returns of the tasks
+    - `...`: return value of tasks (first per task)
 
 ### `par_or (...)`
 

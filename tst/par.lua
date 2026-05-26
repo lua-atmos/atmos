@@ -154,7 +154,7 @@ do
         )
     end)
     emit()
-    assertx(out(), "ok\nno\n")
+    assertx(out(), "ok\n")
     atmos.stop()
 end
 
@@ -289,7 +289,7 @@ do
                 return 'Y'
             end
         )
-        out(v.ret)
+        out(v)
     end)
     emit 'X'
     assertfx(out(), "Y\n")
@@ -372,7 +372,7 @@ do
         out 'ok'
     end)
     emit()
-    assertx(out(), "no\nok\n")
+    assertx(out(), "ok\n")
     atmos.stop()
 end
 
@@ -388,6 +388,6 @@ do
         out 'ok'
     end)
     emit 'X'
-    assertx(out(), "no\nok\n")
+    assertx(out(), "ok\n")
     atmos.stop()
 end

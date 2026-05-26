@@ -476,32 +476,11 @@ end
 
 -------------------------------------------------------------------------------
 
-local function check_task_ret (t)
-    if t.tag == '_==_' then
-        if (getmetatable(t[1]) == meta_task) and (coroutine.status(t[1]._.th) == 'dead') then
-            return true, t[1].ret, t[1]
-        else
-            return false
-        end
-    elseif t.tag == '_or_' then
-        for _,x in ipairs(t) do
-            local chk,ret = check_task_ret(x)
-            if chk then
-                return chk, ret
-            end
-        end
-        return false
-    elseif t.tag == '_and_' then
-        local rets = {}
-        for i,x in ipairs(t) do
-            local chk,ret = check_task_ret(x)
-            if chk then
-                t[i] = { tag='_ok_', ret }
-                rets[#rets+1] = ret
-            end
-        end
-        if #rets == #t then
-            return true, rets
+local function check_task_ret (T)
+    local tp,e = table.unpack(T)
+    if tp == '==' then
+        if (getmetatable(e) == meta_task) and (coroutine.status(e._.th) == 'dead') then
+            return true, e.ret, e
         else
             return false
         end
@@ -510,41 +489,16 @@ local function check_task_ret (t)
     end
 end
 
-local function check_ret (awt, ...)
-    -- awt = await pattern | ... = occurring event arguments
-    local e = awt[1]
-    local mta = getmetatable(awt)
+local function check_ret (T, ...)
+    -- T = await pattern | ... = occurring event arguments
+    local tp,e = table.unpack(T)
+    local mta = getmetatable(T)
     local mte = getmetatable(...)
-    if awt.tag == '_or_' then
-        for _, x in ipairs(awt) do
-            local vs = { check_ret(x, ...) }
-            if vs[1] then
-                return table.unpack(vs)
-            end
-        end
-        return false
-    elseif awt.tag == '_and_' then
-        for i, x in ipairs(awt) do
-            local vs = { check_ret(x, ...) }
-            if vs[1] then
-                local t = (#vs>2 and {table.unpack(vs,2)}) or vs[2]
-                awt[i] = { tag='_ok_', t }
-            end
-        end
-        local ret = {}
-        for _,x in ipairs(awt) do
-            if x.tag == '_ok_' then
-                ret[#ret+1] = x[1]
-            else
-                return false
-            end
-        end
-        return true, table.unpack(ret)
-    elseif mta and mta.__atmos then
-        return mta.__atmos(awt, ...)
+    if mta and mta.__atmos then
+        return mta.__atmos(T, ...)
     elseif mte and mte.__atmos then
-        return mte.__atmos(awt, ...)
-    elseif awt.tag == 'boolean' then
+        return mte.__atmos(T, ...)
+    elseif tp == 'bool' then
         if e == false then
             -- never awakes
             return false
@@ -553,9 +507,9 @@ local function check_ret (awt, ...)
         else
             error "bug found : impossible case"
         end
-    elseif awt.tag == '_==_' then
-        for i,v in ipairs(awt) do
-            if not _is_(select(i,...),v) then
+    elseif tp == '==' then
+        for i = 2, #T do
+            if not _is_(select(i-1,...), T[i]) then
                 return false
             end
         end
@@ -567,7 +521,7 @@ local function check_ret (awt, ...)
         else
             return true, ...
         end
-    elseif awt.tag == 'function' then
+    elseif tp == 'func' then
         local es = { ... }
         return (function (v, ...)
             if select('#',...) == 0 then
@@ -630,29 +584,24 @@ local function await_to_table (e, ...)
     local T
     if type(e) == 'table' then
         if (getmetatable(e) == meta_task) or getmetatable(e) == meta_tasks then
-            T = { tag='_==_', e,... }
+            T = { '==', e, ... }
         elseif S.is(e) then
             --error'TODO'
-            T = { tag='_==_', spawn(function() return e() end),... }
-        elseif e.tag=='_or_' or e.tag=='_and_' then
+            T = { '==', spawn(function() return e() end), ... }
+        elseif getmetatable(e) == meta_clock then
+            e.cur = clock_to_ms(e)
             T = e
-            for i,v in ipairs(T) do
-                T[i] = await_to_table(table.unpack(v))
-            end
+        elseif type(e[1]) == 'string' then
+            T = { '==', table.unpack(e) }
         else
-            if e.tag == 'clock' then
-                e.cur = clock_to_ms(e)
-                T = e
-            else
-                T = { tag='_==_', e,... }
-            end
+            T = { '==', e, ... }
         end
     elseif type(e) == 'function' then
-        T = { tag='function', e,... }
+        T = { 'func', e, ... }
     elseif type(e) == 'boolean' then
-        T = { tag='boolean', e,... }
+        T = { 'bool', e, ... }
     else
-        T = { tag='_==_', e,... }
+        T = { '==', e, ... }
     end
     T.time = TIME
     return T
@@ -660,16 +609,31 @@ end
 
 function M.await (e, ...)
     -- await(stream)
-    -- await { tag='clock' }
+    -- await(clock{...})
     -- await(f)     -- f(...)
     -- await(true/false)
     -- await(task)
-    -- await(...)
-    -- await(a _and_ b)
+    -- await('X', ...)
+    -- await({'or'/'and', ...})
 
     local t = M.me(true)
     assertn(2, t, "invalid await : expected enclosing task", 2)
     assertn(2, e~=nil, "invalid await : expected event", 2)
+
+    -- combinator awt is derived: reduce to throw-based par_or / par_and.
+    -- same branch for both: or preserves the winner's multi-values (carried
+    -- by the throw), and yields one value per branch (par_and joins via
+    -- single-valued task.ret).
+    local v = (type(e) == 'table') and e[1]
+    if v=='or' or v=='and' then
+        local fs = {}
+        for i = 2, #e do
+            local sub = e[i]
+            fs[#fs+1] = function () return M.await(sub) end
+        end
+        local f = (v=='or' and M.par_or) or M.par_and
+        return f(table.unpack(fs))
+    end
 
     t._.await = await_to_table(e, ...)
 
@@ -683,42 +647,8 @@ end
 
 function M.clock (t)
     assertn(2, type(t)=='table', "invalid clock : expected table")
-    t.tag = 'clock'
+    t[1] = 'clock'
     return setmetatable(t, meta_clock)
-end
-
-function M._or_ (...)
-    local t = {
-        tag = '_or_',
-        ...
-    }
-    for i,x in ipairs(t) do
-        if type(x) == 'table' then
-            if getmetatable(x)==meta_task or getmetatable(x)==meta_tasks or x.tag then
-                t[i] = { x }
-            end
-        else
-            t[i] = { x }
-        end
-    end
-    return t
-end
-
-function M._and_ (...)
-    local t = {
-        tag = '_and_',
-        ...
-    }
-    for i,x in ipairs(t) do
-        if type(x) == 'table' then
-            if getmetatable(x)==meta_task or getmetatable(x)==meta_tasks or x.tag then
-                t[i] = { x }
-            end
-        else
-            t[i] = { x }
-        end
-    end
-    return t
 end
 
 -------------------------------------------------------------------------------
@@ -807,6 +737,7 @@ end
 
 function M.toggle (t, on)
     if type(t) == 'string' then
+        --@ derived: spawn; loop { await; toggle; await; toggle; }
         local e, f = t, on
         assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
         do
@@ -887,6 +818,7 @@ end
 
 -------------------------------------------------------------------------------
 
+--@ derived: loop { f(await(awt, payload...)) }
 function M.every (...)
     assertn(2, M.me(true), "invalid every : expected enclosing task")
     local t = { ... }
@@ -908,6 +840,7 @@ local meta_par = {
     end
 }
 
+--@ derived: spawn each + await(false) + lifetime
 function M.par (...)
     assertn(2, M.me(true), "invalid par : expected enclosing task")
     local fs = { ... }
@@ -919,35 +852,51 @@ function M.par (...)
     M.await(false)
 end
 
+--@ derived: throw-based race per plan §4
 function M.par_or (...)
     assertn(2, M.me(true), "invalid par_or : expected enclosing task")
     local fs = { ... }
-    local ts <close> = setmetatable({}, meta_par)
-    for i,f in ipairs(fs) do
-        assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = M.spawn(debug.getinfo(2), nil, true, f)
-    end
-    return M.await(M._or_(table.unpack(ts)))
+    local dbg = debug.getinfo(2)
+    local trap = {}
+    return (function (_, _, ...) return ... end)(M.catch(trap, function ()
+        local ts <close> = setmetatable({}, meta_par)
+        for i,f in ipairs(fs) do
+            assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
+            ts[i] = M.spawn(dbg, nil, true, function ()
+                M.throw(trap, f())
+            end)
+        end
+        M.await(false)
+    end))
 end
 
+--@ derived: sequential await on each spawn
 function M.par_and (...)
-    assertn(2, M.me(true), "invalid par_or : expected enclosing task")
+    assertn(2, M.me(true), "invalid par_and : expected enclosing task")
     local fs = { ... }
+    local dbg = debug.getinfo(2)
     local ts <close> = setmetatable({}, meta_par)
     for i,f in ipairs(fs) do
-        assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
-        ts[i] = M.spawn(debug.getinfo(2), nil, true, f)
+        assertn(2, type(f) == 'function', "invalid par_and : expected task prototype")
+        ts[i] = M.spawn(dbg, nil, true, f)
     end
-    return M.await(M._and_(table.unpack(ts)))
+    local rets = {}
+    for i,t in ipairs(ts) do
+        rets[i] = M.await(t)
+    end
+    return table.unpack(rets, 1, #fs)
 end
 
+--@ derived: par_or { await(awt, payload...) } with { f() }
 function M.watching (...)
     assertn(2, M.me(true), "invalid watching : expected enclosing task")
     local t = { ... }
     local f = table.remove(t, #t)
     assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
-    local spw <close> = M.spawn(debug.getinfo(2), nil, true, f)
-    return M.await(M._or_({table.unpack(t)}, spw))
+    return M.par_or(
+        function () return M.await(table.unpack(t)) end,
+        f
+    )
 end
 
 return M
