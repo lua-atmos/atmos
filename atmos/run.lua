@@ -476,31 +476,32 @@ end
 
 -------------------------------------------------------------------------------
 
-local function check_task_ret (t)
-    if t.tag == '_==_' then
-        if (getmetatable(t[1]) == meta_task) and (coroutine.status(t[1]._.th) == 'dead') then
-            return true, t[1].ret, t[1]
+local function check_task_ret (T)
+    local tp,e = table.unpack(T)
+    if tp == '==' then
+        if (getmetatable(e) == meta_task) and (coroutine.status(e._.th) == 'dead') then
+            return true, e.ret, e
         else
             return false
         end
-    elseif t.tag == '_or_' then
-        for _,x in ipairs(t) do
-            local chk,ret = check_task_ret(x)
+    elseif tp == 'or' then
+        for i = 2, #T do
+            local chk,ret = check_task_ret(T[i])
             if chk then
                 return chk, ret
             end
         end
         return false
-    elseif t.tag == '_and_' then
+    elseif tp == 'and' then
         local rets = {}
-        for i,x in ipairs(t) do
-            local chk,ret = check_task_ret(x)
+        for i = 2, #T do
+            local chk,ret = check_task_ret(T[i])
             if chk then
-                t[i] = { tag='_ok_', ret }
+                T[i] = { 'ok', ret }
                 rets[#rets+1] = ret
             end
         end
-        if #rets == #t then
+        if #rets == (#T - 1) then
             return true, rets
         else
             return false
@@ -510,41 +511,42 @@ local function check_task_ret (t)
     end
 end
 
-local function check_ret (awt, ...)
-    -- awt = await pattern | ... = occurring event arguments
-    local e = awt[1]
-    local mta = getmetatable(awt)
+local function check_ret (T, ...)
+    -- T = await pattern | ... = occurring event arguments
+    local tp,e = table.unpack(T)
+    local mta = getmetatable(T)
     local mte = getmetatable(...)
-    if awt.tag == '_or_' then
-        for _, x in ipairs(awt) do
-            local vs = { check_ret(x, ...) }
+    if tp == 'or' then
+        for i = 2, #T do
+            local vs = { check_ret(T[i], ...) }
             if vs[1] then
                 return table.unpack(vs)
             end
         end
         return false
-    elseif awt.tag == '_and_' then
-        for i, x in ipairs(awt) do
-            local vs = { check_ret(x, ...) }
+    elseif tp == 'and' then
+        for i = 2, #T do
+            local vs = { check_ret(T[i], ...) }
             if vs[1] then
                 local t = (#vs>2 and {table.unpack(vs,2)}) or vs[2]
-                awt[i] = { tag='_ok_', t }
+                T[i] = { 'ok', t }
             end
         end
         local ret = {}
-        for _,x in ipairs(awt) do
-            if x.tag == '_ok_' then
-                ret[#ret+1] = x[1]
+        for i = 2, #T do
+            local x = T[i]
+            if x[1] == 'ok' then
+                ret[#ret+1] = x[2]
             else
                 return false
             end
         end
         return true, table.unpack(ret)
     elseif mta and mta.__atmos then
-        return mta.__atmos(awt, ...)
+        return mta.__atmos(T, ...)
     elseif mte and mte.__atmos then
-        return mte.__atmos(awt, ...)
-    elseif awt.tag == 'boolean' then
+        return mte.__atmos(T, ...)
+    elseif tp == 'bool' then
         if e == false then
             -- never awakes
             return false
@@ -553,9 +555,9 @@ local function check_ret (awt, ...)
         else
             error "bug found : impossible case"
         end
-    elseif awt.tag == '_==_' then
-        for i,v in ipairs(awt) do
-            if not _is_(select(i,...),v) then
+    elseif tp == '==' then
+        for i = 2, #T do
+            if not _is_(select(i-1,...), T[i]) then
                 return false
             end
         end
@@ -567,7 +569,7 @@ local function check_ret (awt, ...)
         else
             return true, ...
         end
-    elseif awt.tag == 'function' then
+    elseif tp == 'func' then
         local es = { ... }
         return (function (v, ...)
             if select('#',...) == 0 then
