@@ -212,7 +212,7 @@ end
 -------------------------------------------------------------------------------
 
 local function paror (t)
-    local x,v = await(_or_(t.n,t.tsks))
+    local x,v = await {'or', t.n, t.tsks}
     if v == t.tsks then
         return nil
     end
