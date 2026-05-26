@@ -17,3 +17,9 @@ Assumes this directory structure:
 ```bash
 LUA_PATH="../../f-streams/?/init.lua;../?.lua;../?/init.lua;;" lua5.4 all.lua
 ```
+
+If in `.work/xxx/`:
+
+```bash
+LUA_PATH="../../../../f-streams/?/init.lua;../?.lua;../?/init.lua;;" lua5.4 all.lua
+```
