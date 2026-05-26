@@ -689,42 +689,6 @@ function M.clock (t)
     return setmetatable(t, meta_clock)
 end
 
---@ derived: or-combinator factory; deprecated, use {'or', ...} literal
-function M._or_ (...)
-    local t = {
-        tag = '_or_',
-        ...
-    }
-    for i,x in ipairs(t) do
-        if type(x) == 'table' then
-            if getmetatable(x)==meta_task or getmetatable(x)==meta_tasks or x.tag then
-                t[i] = { x }
-            end
-        else
-            t[i] = { x }
-        end
-    end
-    return t
-end
-
---@ derived: and-combinator factory; deprecated, use {'and', ...} literal
-function M._and_ (...)
-    local t = {
-        tag = '_and_',
-        ...
-    }
-    for i,x in ipairs(t) do
-        if type(x) == 'table' then
-            if getmetatable(x)==meta_task or getmetatable(x)==meta_tasks or x.tag then
-                t[i] = { x }
-            end
-        else
-            t[i] = { x }
-        end
-    end
-    return t
-end
-
 -------------------------------------------------------------------------------
 
 local function fto (me, to)
