@@ -648,7 +648,7 @@ local function await_to_table (e, ...)
             T = { '==', e, ... }
         end
     elseif type(e) == 'function' then
-        T = { 'fn', e, ... }
+        T = { 'func', e, ... }
     elseif type(e) == 'boolean' then
         T = { 'bool', e, ... }
     else
