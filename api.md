@@ -276,10 +276,6 @@ The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 - `: function` | function receives `e,...` and returns if it matches, also
     modifying the await return
 
-### `clock { ... }`
-
-Expands to `{ 'clock', ... }`.
-
 # 4. Errors
 
 [
