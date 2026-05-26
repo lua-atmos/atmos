@@ -484,28 +484,6 @@ local function check_task_ret (T)
         else
             return false
         end
-    elseif tp == 'or' then
-        for i = 2, #T do
-            local chk,ret = check_task_ret(T[i])
-            if chk then
-                return chk, ret
-            end
-        end
-        return false
-    elseif tp == 'and' then
-        local rets = {}
-        for i = 2, #T do
-            local chk,ret = check_task_ret(T[i])
-            if chk then
-                T[i] = { 'ok', ret }
-                rets[#rets+1] = ret
-            end
-        end
-        if #rets == (#T - 1) then
-            return true, rets
-        else
-            return false
-        end
     else
         return false
     end
@@ -516,33 +494,7 @@ local function check_ret (T, ...)
     local tp,e = table.unpack(T)
     local mta = getmetatable(T)
     local mte = getmetatable(...)
-    if tp == 'or' then
-        for i = 2, #T do
-            local vs = { check_ret(T[i], ...) }
-            if vs[1] then
-                return table.unpack(vs)
-            end
-        end
-        return false
-    elseif tp == 'and' then
-        for i = 2, #T do
-            local vs = { check_ret(T[i], ...) }
-            if vs[1] then
-                local t = (#vs>2 and {table.unpack(vs,2)}) or vs[2]
-                T[i] = { 'ok', t }
-            end
-        end
-        local ret = {}
-        for i = 2, #T do
-            local x = T[i]
-            if x[1] == 'ok' then
-                ret[#ret+1] = x[2]
-            else
-                return false
-            end
-        end
-        return true, table.unpack(ret)
-    elseif mta and mta.__atmos then
+    if mta and mta.__atmos then
         return mta.__atmos(T, ...)
     elseif mte and mte.__atmos then
         return mte.__atmos(T, ...)
@@ -636,11 +588,6 @@ local function await_to_table (e, ...)
         elseif S.is(e) then
             --error'TODO'
             T = { '==', spawn(function() return e() end), ... }
-        elseif e[1] == 'or' or e[1] == 'and' then
-            T = { e[1] }
-            for i = 2, #e do
-                T[#T+1] = await_to_table(e[i])
-            end
         elseif getmetatable(e) == meta_clock then
             e.cur = clock_to_ms(e)
             T = e
@@ -662,16 +609,31 @@ end
 
 function M.await (e, ...)
     -- await(stream)
-    -- await { tag='clock' }
+    -- await(clock{...})
     -- await(f)     -- f(...)
     -- await(true/false)
     -- await(task)
-    -- await(...)
-    -- await(a _and_ b)
+    -- await('X', ...)
+    -- await({'or'/'and', ...})
 
     local t = M.me(true)
     assertn(2, t, "invalid await : expected enclosing task", 2)
     assertn(2, e~=nil, "invalid await : expected event", 2)
+
+    -- combinator awt is derived: reduce to throw-based par_or / par_and.
+    -- same branch for both: or preserves the winner's multi-values (carried
+    -- by the throw), and yields one value per branch (par_and joins via
+    -- single-valued task.ret).
+    local v = (type(e) == 'table') and e[1]
+    if v=='or' or v=='and' then
+        local fs = {}
+        for i = 2, #e do
+            local sub = e[i]
+            fs[#fs+1] = function () return M.await(sub) end
+        end
+        local f = (v=='or' and M.par_or) or M.par_and
+        return f(table.unpack(fs))
+    end
 
     t._.await = await_to_table(e, ...)
 

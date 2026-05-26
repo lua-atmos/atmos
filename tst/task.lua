@@ -307,12 +307,11 @@ do
     print("Testing...", "await and 1")
     spawn(function ()
         local v,u = await({'and', 'X', 'Y'})
-        out(table.unpack(v))
-        out(table.unpack(u))
+        out(v, u)
     end)
     emit('Y',10)
     emit('X',20)
-    assertx(out(), "X\t20\nY\t10\n")
+    assertx(out(), "X\tY\n")
     atmos.stop()
 end
 
@@ -350,10 +349,10 @@ do
             await 'X'
         end)
         local v,u = await {'and', ts, 'X'}
-        out(v[1]==t,v[2]==ts,u)
+        out(v==t, u)
     end)
     emit 'X'
-    assertx(out(), "true\ttrue\tX\n")
+    assertx(out(), "true\tX\n")
     atmos.stop()
 end
 
@@ -361,12 +360,12 @@ do
     print("Testing...", "await and 5: clock")
     spawn(function ()
         local v,u = await {'and', 'X', clock{s=1}}
-        out(v,u[2])
+        out(v, u)
     end)
     emit('clock', 510)
     emit('clock', 515)
     emit 'X'
-    assertx(out(), "X\t25\n")
+    assertx(out(), "X\tclock\n")
     atmos.stop()
 end
 
@@ -383,12 +382,12 @@ do
             await('Z')
         end)
         local v,u = await {'and', {'or', 'X', clock{s=1}}, {'or', ts, t}}
-        out(v[2],u[1]==T,u[2]==ts)
+        out(v, u==T)
     end)
     emit('clock', 510)
     emit 'Z'
     emit('clock', 515)
-    assertx(out(), "25\ttrue\ttrue\n")
+    assertx(out(), "clock\ttrue\n")
     atmos.stop()
 end
 
