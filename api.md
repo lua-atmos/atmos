@@ -269,7 +269,7 @@ The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 - `x, ...` | `x==e` and all remaining arguments match the emit payloads
 - `x: task` | `x==e`, modifying the await return to be the task return
 - `x: tasks` | `e` matches any task in `x`
-- `{ tag='clock', h=?, min=?, s=?, ms=? }` | TODO
+- `clock{ h=?, min=?, s=?, ms=? }` | TODO
 - `{ 'and', ...}` | `e` matches all the patterns in `...`
 - `{ 'or', ...}` | `e` matches any of the patterns in `...`
 - `mt.__atmos` | TODO
@@ -278,7 +278,7 @@ The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 
 ### `clock { ... }`
 
-Expands to `{ tag='clock', ... }`.
+Expands to `{ 'clock', ... }`.
 
 # 4. Errors
 
@@ -350,7 +350,7 @@ occurs.
 A `watching` is equivalent to the call as follows:
 
 ```
-await(_or_({...}, spawn(f)))
+par_or(function() return await(...) end, f)
 ```
 
 ## `toggle (evt, f)`
