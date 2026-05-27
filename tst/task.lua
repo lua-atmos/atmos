@@ -391,6 +391,32 @@ do
     atmos.stop()
 end
 
+print "--- AWAIT / _NOT_ ---"
+
+do
+    print("Testing...", "await not 1")
+    spawn(function ()
+        local v,u = await {'not', 'X'}
+        out(v,u)
+    end)
+    emit('X', 99)
+    emit('Y', 10)
+    assertx(out(), "Y\t10\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "await not 2: in or")
+    spawn(function ()
+        local v,u = await {'or', {'not', 'X'}, 'Y'}
+        out(v,u)
+    end)
+    emit 'X'
+    emit('Z', 5)
+    assertx(out(), "Z\t5\n")
+    atmos.stop()
+end
+
 print '--- PUB ---'
 
 do

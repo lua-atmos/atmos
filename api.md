@@ -272,6 +272,7 @@ The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 - `clock{ h=?, min=?, s=?, ms=? }` | TODO
 - `{ 'and', ...}` | `e` matches all the patterns in `...`
 - `{ 'or', ...}` | `e` matches any of the patterns in `...`
+- `{ 'not', x }` | `e` does not match the pattern `x`
 - `mt.__atmos` | TODO
 - `: function` | function receives `e,...` and returns if it matches, also
     modifying the await return

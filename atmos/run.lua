@@ -648,6 +648,17 @@ function M.await (e, ...)
         return f(table.unpack(fs))
     end
 
+    -- not is per-emit negation: awake on the next emit that does not match the
+    -- single sub-pattern. unlike or/and it cannot reduce to par, so it derives
+    -- a func await that negates check_ret against the pattern.
+    if v == 'not' then
+        assertn(2, #e <= 2, "invalid await : too many arguments")
+        local T = await_to_table(e[2])
+        return M.await(function (...)
+            return not check_ret(T, ...)
+        end)
+    end
+
     t._.await = await_to_table(e, ...)
 
     local chk,ret = check_task_ret(t._.await)
