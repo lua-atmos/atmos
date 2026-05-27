@@ -72,6 +72,44 @@ local TASKS = setmetatable({
 
 -------------------------------------------------------------------------------
 
+local function clock_to_ms (clk)
+    return (clk.ms                         or 0) +
+           (clk.s   and clk.s  *1000       or 0) +
+           (clk.min and clk.min*1000*60    or 0) +
+           (clk.h   and clk.h  *1000*60*60 or 0)
+end
+
+local meta_clock
+meta_clock = {
+    -- await(clock{ms=100})
+    -- vs
+    -- emit('clock',100)
+    -- emit(clock{ms=100})
+    __atmos = function (a, e, dt, now)
+        local ma = getmetatable(a)
+        local me = getmetatable(e)
+        if (ma == meta_clock) and (e=='clock' or me==meta_clock) then
+            if e == 'clock' then
+                a.cur = a.cur - dt
+                return (a.cur <= 0), 'clock', -a.cur, now
+            else
+                a.cur = a.cur - clock_to_ms(e)
+                return (a.cur <= 0), 'clock', -a.cur, nil
+            end
+        else
+            return false
+        end
+    end
+}
+
+function M.clock (t)
+    assertn(2, type(t)=='table', "invalid clock : expected table")
+    t[1] = 'clock'
+    return setmetatable(t, meta_clock)
+end
+
+-------------------------------------------------------------------------------
+
 local function _me_ (tra, t)
     if t == TASKS then
         return nil
@@ -87,6 +125,8 @@ function M.me (tra)
     return th and TASKS._.cache[th] and _me_(tra, TASKS._.cache[th])
 end
 
+-------------------------------------------------------------------------------
+
 function M.is (v, x)
     if v == x then
         return true
@@ -100,6 +140,8 @@ function M.is (v, x)
     elseif mt==meta_task and x=='task' then
         return true
     elseif mt==meta_tasks and x=='tasks' then
+        return true
+    elseif mt==meta_clock and x=='clock' then
         return true
     elseif tp=='table' and type(x)=='string' and type(v.tag)=='string' then
         return (string.find(v.tag or '', '^'..x) == 1)
@@ -551,35 +593,6 @@ local function awake (err, ...)
     end
 end
 
-local function clock_to_ms (clk)
-    return (clk.ms                         or 0) +
-           (clk.s   and clk.s  *1000       or 0) +
-           (clk.min and clk.min*1000*60    or 0) +
-           (clk.h   and clk.h  *1000*60*60 or 0)
-end
-
-local meta_clock; meta_clock = {
-    -- await(clock{ms=100})
-    -- vs
-    -- emit('clock',100)
-    -- emit(clock{ms=100})
-    __atmos = function (a, e, dt, now)
-        local ma = getmetatable(a)
-        local me = getmetatable(e)
-        if (ma == meta_clock) and (e=='clock' or me==meta_clock) then
-            if e == 'clock' then
-                a.cur = a.cur - dt
-                return (a.cur <= 0), 'clock', -a.cur, now
-            else
-                a.cur = a.cur - clock_to_ms(e)
-                return (a.cur <= 0), 'clock', -a.cur, nil
-            end
-        else
-            return false
-        end
-    end
-}
-
 local function await_to_table (e, ...)
     local T
     if type(e) == 'table' then
@@ -643,12 +656,6 @@ function M.await (e, ...)
     end
 
     return awake(coroutine.yield())
-end
-
-function M.clock (t)
-    assertn(2, type(t)=='table', "invalid clock : expected table")
-    t[1] = 'clock'
-    return setmetatable(t, meta_clock)
 end
 
 -------------------------------------------------------------------------------
