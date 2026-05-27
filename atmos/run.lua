@@ -652,7 +652,7 @@ function M.await (e, ...)
     -- single sub-pattern. unlike or/and it cannot reduce to par, so it derives
     -- a func await that negates check_ret against the pattern.
     if v == 'not' then
-        assertn(2, #e <= 2, "invalid await : too many arguments")
+        assertn(2, #e == 2, "invalid await : expects one argument")
         local T = await_to_table(e[2])
         return M.await(function (...)
             return not check_ret(T, ...)
