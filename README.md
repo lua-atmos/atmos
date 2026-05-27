@@ -121,13 +121,29 @@ other, more complex examples.
 
 # Install & Run
 
+## Luarocks
+
 ```
 sudo luarocks --lua-version=5.4 install atmos 0.6
 lua5.4 <lua-path>/atmos/env/clock/exs/hello.lua
 ```
 
-You may also clone the repository and copy part of the source tree, as follows,
-into your Lua path (e.g., `/usr/local/share/lua/5.4`):
+## Development
+
+From `luarocks.org`:
+
+```
+sudo luarocks --lua-version=5.4 install --dev atmos
+```
+
+From local repo:
+
+```
+sudo luarocks make atmos-dev-1.rockspec
+```
+
+You may also copy part of the source tree into your Lua path (e.g.,
+`/usr/local/share/lua/5.4`), as follows:
 
 ```
 atmos/
