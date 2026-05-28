@@ -102,59 +102,49 @@ end)
 
 ## Environment Table
 
-Each environment registers a table with up to three callbacks:
+Each environment registers a table with up to two callbacks:
 
 | Callback   | Description                                      |
 |------------|--------------------------------------------------|
-| `open()`   | Initialize / re-initialize resources             |
 | `step()`   | Poll once for external events, emit them         |
-| `close()`  | Release resources (called by `stop`)             |
+| `quit()`   | Release resources (called by `stop`)             |
 
 ### Lifecycle
 
-`open` and `close` are symmetric: `open` is called when an application
-starts (`loop` or `start`), `close` is called during teardown (`stop`).
-This allows multiple `loop()` invocations within the same process --
-each invocation re-initializes via `open` and tears down via `close`.
-
-Initialization code lives in `open`, not at `require` time.  The module
-file sets up the Lua-side structure; `open` initializes the C backend.
+Initialization happens at `require` time: the module body sets up the
+Lua-side structure and initializes the C backend.  Teardown happens via
+`quit`, called during `stop`.
 
 ```
-require       open        step...step      close
-  |             |             |               |
-  module        C init        event loop      C teardown
-  structure     (SDL.init,    (poll/emit)     (SDL.quit,
-  (metatables,  pico.init,                    pico.init(false),
-   env table)   iup.Open)                     iup.Close)
+require                   step...step      quit
+  |                           |               |
+  module + C init             event loop      C teardown
+  (metatables, env table,     (poll/emit)     (SDL.quit,
+   SDL.init / pico.init /                      pico.init(false),
+   iup.Open)                                   iup.Close)
 ```
 
 `loop` uses `step` to drive the event loop.  `start` does not --
 the environment itself drives events (e.g. JS browser callbacks).
 
-### Teardown: `close` vs `stop`
+### Teardown: `stop`
 
-There are two levels of teardown:
-
-- **`close()`** -- kills all tasks, running their `<close>` handlers
-  (defers).  The environment is still alive at this point, so cleanup
-  code inside tasks can use environment resources (e.g. save state,
-  close windows).
-
-- **`stop()`** -- full teardown: calls `close()` first (kill tasks),
-  then `_env_.close()` (release environment resources).
+`stop` performs full teardown: kills all tasks (running their `<close>`
+defers) and then calls `env.quit()` on each registered environment.
 
 ```lua
 function run.stop ()
-    run.close()          -- 1. kill tasks  (env still alive)
-    if _env_.close then
-        _env_.close()    -- 2. tear down env
+    meta_tasks.__close(TASKS)   -- 1. kill tasks (env still alive)
+    for i=#_envs_, 1, -1 do
+        if _envs_[i].quit then
+            _envs_[i].quit()    -- 2. tear down env
+        end
     end
 end
 ```
 
 The ordering matters: tasks before environment, so that task cleanup
-can still use the environment.
+defers can still use the environment.
 
 `loop` calls `stop()` automatically when the step loop exits (via a
 deferred `<close>` handler).
@@ -172,14 +162,14 @@ end)
 
 ### Which environments provide what
 
-| Environment        | `open` | `step` | `close` | User calls  |
-|--------------------|--------|--------|---------|-------------|
-| Clock              |        | yes    |         | `loop`      |
-| SDL                | yes    | yes    | yes     | `loop`      |
-| Pico               | yes    | yes    | yes     | `loop`      |
-| Socket             |        | yes    |         | `loop`      |
-| IUP                | yes    | yes    | yes     | `loop`      |
-| JS / Web           | yes    |        | yes     | `start`     |
+| Environment        | `step` | `quit` | User calls  |
+|--------------------|--------|--------|-------------|
+| Clock              | yes    |        | `loop`      |
+| SDL                | yes    | yes    | `loop`      |
+| Pico               | yes    | yes    | `loop`      |
+| Socket             | yes    |        | `loop`      |
+| IUP                | yes    | yes    | `loop`      |
+| JS / Web           |        |        | `start` (host-driven init/teardown) |
 
 ### Timeout and efficiency
 

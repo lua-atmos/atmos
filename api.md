@@ -57,11 +57,9 @@ Registers an environment table with Atmos.
 - Parameters:
     - `e: { ... }`
         | environment table with callback functions
-        - `open: function`
-            | called by [loop](#loop-f) before the body starts
         - `step: function`
             | called by [loop](#loop-f) continually until the body terminates
-        - `close: function`
+        - `quit: function`
             | called by [loop](#loop-f) when the body terminates (or on any error)
         - `mode: table`
             | `{ primary=true, secondary=true }` for multi-env support
