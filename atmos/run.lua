@@ -97,7 +97,7 @@ meta_clock = {
                 return (a.cur <= 0), 'clock', -a.cur, nil
             end
         else
-            return false
+            return false    -- fail shortcut
         end
     end
 }
@@ -536,19 +536,26 @@ local function check_ret (T, ...)
     local tp,e = table.unpack(T)
     local mta = getmetatable(T)
     local mte = getmetatable(...)
+    -- __atmos opt-out: nil first result = not handled, fall through
     if mta and mta.__atmos then
-        return mta.__atmos(T, ...)
-    elseif mte and mte.__atmos then
-        return mte.__atmos(T, ...)
-    elseif tp == 'bool' then
-        if e == false then
-            -- never awakes
-            return false
-        elseif e == true then
-            return true, ...
-        else
-            error "bug found : impossible case"
+        local t = { mta.__atmos(T, ...) }
+        if t[1] ~= nil then
+            return table.unpack(t)
         end
+    end
+    if mte and mte.__atmos then
+        local t = { mte.__atmos(T, ...) }
+        if t[1] ~= nil then
+            return table.unpack(t)
+        end
+    end
+    if tp == 'bool' then
+        if e == true then
+            return true, ...
+        end
+        assert(e == false)
+        -- never awakes
+        return false
     elseif tp == '==' then
         for i = 2, #T do
             if not _is_(select(i-1,...), T[i]) then
@@ -603,6 +610,8 @@ local function await_to_table (e, ...)
             T = { '==', spawn(function() return e() end), ... }
         elseif getmetatable(e) == meta_clock then
             e.cur = clock_to_ms(e)
+            T = e
+        elseif getmetatable(e) and getmetatable(e).__atmos then
             T = e
         elseif type(e[1]) == 'string' then
             T = { '==', table.unpack(e) }

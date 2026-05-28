@@ -136,3 +136,118 @@ do
     assertx(out(), "1\t10\n")
     atmos.stop()
 end
+
+print "--- ENVS: __ATMOS ---"
+
+do
+    print("Testing...", "atmos nil opt-out")
+    do
+        local meta = { __atmos = function () return nil end }
+        atmos.env { step = function ()
+            emit(setmetatable({tag='X'}, meta))
+        end }
+        local v = loop(function ()
+            await 'X'
+            return 1
+        end)
+        out(v)
+    end
+    assertx(out(), "1\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "atmos true")
+    do
+        local meta = { __atmos = function () return true end }
+        atmos.env { step = function ()
+            emit(setmetatable({}, meta))
+        end }
+        local v = loop(function ()
+            await 'X'
+            return 1
+        end)
+        out(v)
+    end
+    assertx(out(), "1\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "atmos false short-circuit")
+    do
+        local meta = { __atmos = function () return false end }
+        local n = 0
+        atmos.env { step = function ()
+            n = n + 1
+            if n == 1 then
+                emit(setmetatable({tag='X'}, meta))
+            elseif n == 2 then
+                emit 'X'
+            end
+        end }
+        loop(function ()
+            await 'X'
+            out(n)
+        end)
+    end
+    assertx(out(), "2\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "atmos mta nil opt-out")
+    do
+        local meta = { __atmos = function () return nil end }
+        atmos.env { step = function ()
+            emit 'X'
+        end }
+        local pat = setmetatable({'==', 'X'}, meta)
+        local v = loop(function ()
+            await(pat)
+            return 1
+        end)
+        out(v)
+    end
+    assertx(out(), "1\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "atmos mta true")
+    do
+        local meta = { __atmos = function () return true end }
+        atmos.env { step = function ()
+            emit 'X'
+        end }
+        local pat = setmetatable({}, meta)
+        local v = loop(function ()
+            await(pat)
+            return 1
+        end)
+        out(v)
+    end
+    assertx(out(), "1\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "atmos mta false short-circuit")
+    do
+        local meta = { __atmos = function () return false end }
+        local n = 0
+        atmos.env { step = function ()
+            n = n + 1
+            emit 'X'
+        end }
+        local pat = setmetatable({'==', 'X'}, meta)
+        loop(function ()
+            par_or(
+                function () await(pat); out 'woke' end,
+                function () for i=1,3 do await(true) end; out('n='..n) end
+            )
+        end)
+    end
+    assertx(out(), "n=3\n")
+    atmos.stop()
+end
