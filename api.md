@@ -264,18 +264,21 @@ Awaits an event pattern in the running task.
 
 The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 
-- `true` | matches any emit
-- `false` | never matches an emit
-- `x, ...` | `x==e` and all remaining arguments match the emit payloads
-- `x: task` | `x==e`, modifying the await return to be the task return
-- `x: tasks` | `e` matches any task in `x`
-- `clock{ h=?, min=?, s=?, ms=? }` | TODO
-- `{ 'and', ...}` | `e` matches all the patterns in `...`
-- `{ 'or', ...}` | `e` matches any of the patterns in `...`
-- `{ 'not', x }` | `e` does not match the pattern `x`
-- `mt.__atmos` | TODO
-- `: function` | function receives `e,...` and returns if it matches, also
-    modifying the await return
+- `true`        | matches any emit
+- `false`       | never matches an emit
+- `x, ...`      | if `_is_(x,e)` and if `...` match the emit payloads
+- `t: task`     | if `t==e`, replacing result to task return
+- `ts: tasks`   | if any `ts[i]==e`, replacing result with task return
+- `c: clock`    | if [clock](#TODO) `c` expires
+- `f: function` | if `f(e,...)` is truthy, replacing the results
+- `logical`     | composition of sub-patterns
+    - `{ 'not', x }`:  matches any event that does not match `x`
+    - `{ 'and', ...}`: if all `...` match (in any order)
+    - `{ 'or', ...}`:  if any `...` matches
+- `x: meta`     | custom `v=__atmos(x,e,...)` metamethod
+    - `v = nil`:    use standard handler
+    - `v = false`:  no match
+    - `v = ...`:    matches, replacing the results
 
 # 4. Errors
 
