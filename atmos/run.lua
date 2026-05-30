@@ -667,12 +667,11 @@ function M.await (e, ...)
         end
         local f = (v=='or' and M.par_or) or M.par_and
         return f(table.unpack(fs))
-    end
 
     -- not is per-emit negation: awake on the next emit that does not match the
     -- single sub-pattern. unlike or/and it cannot reduce to par, so it derives
     -- a func await that negates check_ret against the pattern.
-    if v == 'not' then
+    elseif v == 'not' then
         assertn(2, #e == 2, "invalid await : expects one argument")
         local T = await_to_table(e[2])
         return M.await(function (...)
@@ -681,6 +680,13 @@ function M.await (e, ...)
     end
 
     t._.await = await_to_table(e, ...)
+
+    -- empty pool: nothing to await, return now (both :any and :all)
+    -- shape matches the non-empty return ret,t,ts -> here nil,nil,ts
+    local ts = t._.await[2]
+    if (getmetatable(ts) == meta_tasks) and (#ts == 0) then
+        return nil, nil, ts
+    end
 
     local chk,ret = check_task_ret(t._.await)
     if chk then
