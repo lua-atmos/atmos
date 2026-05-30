@@ -603,8 +603,20 @@ end
 local function await_to_table (e, ...)
     local T
     if type(e) == 'table' then
-        if (getmetatable(e) == meta_task) or getmetatable(e) == meta_tasks then
+        if getmetatable(e) == meta_task then
             T = { '==', e, ... }
+        elseif getmetatable(e) == meta_tasks then
+            -- await(ts, 'any'|'all'): mode picks first|last task to terminate
+            -- mode is stashed in T.mode, never as a positional payload, b/c
+            -- the pool death emits (ts,t) and check_ret matches t positionally
+            local mode = (...) or 'any'
+            assertn(3, mode=='any' or mode=='all',
+                "invalid await : expected :any or :all"
+            )
+            T = {
+                '==', e,
+                mode = mode,
+            }
         elseif S.is(e) then
             --error'TODO'
             T = { '==', spawn(function() return e() end), ... }

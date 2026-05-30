@@ -68,7 +68,7 @@ return value to be `ret`-first, consistent with `await(t)`.
 ## Progress
 
 - [x] Semantics decided (decisions table above)
-- [ ] Step 1: parse mode arg
+- [x] Step 1: parse mode arg (await_to_table, T.mode, default :any, assert)
 - [ ] Step 2: empty-pool short-circuit
 - [ ] Step 3: :any return reshape
 - [ ] Step 4: :all native loop
