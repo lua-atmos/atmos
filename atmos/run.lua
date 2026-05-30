@@ -615,10 +615,7 @@ local function await_to_table (e, ...)
             assertn(3, mode=='any' or mode=='all',
                 "invalid await : expected :any or :all"
             )
-            T = {
-                '==', e,
-                mode = mode,
-            }
+            T = { '==', e }
         elseif S.is(e) then
             --error'TODO'
             T = { '==', spawn(function() return e() end), ... }
