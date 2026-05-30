@@ -687,7 +687,7 @@ function M.await (e, ...)
     -- any member is still alive
     if (getmetatable(e) == meta_tasks) and ((...) == 'all') then
         while true do
-            local ret, t, ts = M.await(e, 'any')
+            local ret, tt, ts = M.await(e, 'any')
             assert(e == ts)
             local ok = true
             for _, x in ipairs(e._.dns) do
@@ -697,7 +697,7 @@ function M.await (e, ...)
                 end
             end
             if ok then
-                return ret, t, e
+                return ret, tt, e
             end
         end
     end
