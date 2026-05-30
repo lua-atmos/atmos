@@ -563,10 +563,12 @@ local function check_ret (T, ...)
             end
         end
         if getmetatable(e) == meta_task then
-            return true, e.ret --, e
+            return true, e.ret, e
         elseif getmetatable(e) == meta_tasks then
-            -- invert ts,t -> t,ts
-            return true, select(2,...), select(1,...), select(3,...)
+            -- pool death emits (ts,t) -> return ret,t,ts
+            -- (:any and :all share this shape; :all timing is in M.await)
+            local _,t = ...
+            return true, t.ret, t, e
         else
             return true, ...
         end
@@ -679,6 +681,27 @@ function M.await (e, ...)
         end)
     end
 
+    -- :all drains the pool via repeated :any, returning the last task to
+    -- terminate. a `#ts==0` stop cannot work: the just-terminated task lingers
+    -- in `dns` until gc (which runs only after we re-suspend), so we loop while
+    -- any member is still alive
+    if (getmetatable(e) == meta_tasks) and ((...) == 'all') then
+        while true do
+            local ret, t, ts = M.await(e, 'any')
+            assert(e == ts)
+            local ok = true
+            for _, x in ipairs(e._.dns) do
+                if coroutine.status(x._.th) ~= 'dead' then
+                    ok = false
+                    break
+                end
+            end
+            if ok then
+                return ret, t, e
+            end
+        end
+    end
+
     t._.await = await_to_table(e, ...)
 
     -- empty pool: nothing to await, return now (both :any and :all)
@@ -688,9 +711,9 @@ function M.await (e, ...)
         return nil, nil, ts
     end
 
-    local chk,ret = check_task_ret(t._.await)
+    local chk,ret,tt = check_task_ret(t._.await)
     if chk then
-        return ret
+        return ret, tt
     end
 
     return awake(coroutine.yield())

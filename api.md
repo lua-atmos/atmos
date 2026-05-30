@@ -265,10 +265,14 @@ The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 - `true`        | matches any emit
 - `false`       | never matches an emit
 - `x, ...`      | if `_is_(x,e)` and if `...` match the emit payloads
-- `t: task`     | if `t==e`, replacing result to task return
-- `ts: tasks`   | if any `ts[i]==e`, replacing result with task return
 - `c: clock`    | if [clock](#TODO) `c` expires
-- `f: function` | if `f(e,...)` is truthy, replacing the results
+- `f: function` | if `f(e,...)` is truthy, returning the results
+- `t: task`     | matches when `t` terminates; returns `v,t`, where `v` is the
+                  task return value
+- `ts: tasks, ['any'|'all']`
+                | matches when any or all tasks in `ts` terminate (defaults to
+                  `any`); returns `v,t,ts`, where `t` is the (last) terminating
+                  task and `v` is its return value
 - `logical`     | composition of sub-patterns
     - `{ 'not', x }`:  matches any event that does not match `x`
     - `{ 'and', ...}`: if all `...` match (in any order)

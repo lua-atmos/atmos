@@ -214,8 +214,10 @@ end
 -------------------------------------------------------------------------------
 
 local function paror (t)
-    local x,v = await {'or', t.n, t.tsks}
-    if v == t.tsks then
+    -- await{'or',...} forwards the winner's values: event n -> (n,payload),
+    -- pool tsks -> (ret,task,ts); pool win (3rd value is the pool) ends stream
+    local _,v,ts = await {'or', t.n, t.tsks}
+    if ts == t.tsks then
         return nil
     end
     return v

@@ -70,7 +70,7 @@ return value to be `ret`-first, consistent with `await(t)`.
 - [x] Semantics decided (decisions table above)
 - [x] Step 1: parse mode arg (await_to_table, T.mode, default :any, assert)
 - [x] Step 2: empty-pool short-circuit (#ts==0 -> nil,nil,ts, both modes)
-- [ ] Step 3: :any return reshape
-- [ ] Step 4: :all native loop
-- [ ] Step 5: api.md docs
-- [ ] Step 6: migrate call sites
+- [x] Step 3: :any return reshape (check_ret pool branch -> ret,t,ts)
+- [x] Step 4: :all loop in M.await over :any (stops when no member alive)
+- [x] Step 5: api.md docs (mode arg, ret,t,ts, empty pool, 'and' caveat)
+- [x] Step 6: migrate call sites (only tst/tasks.lua:176 was old-style)

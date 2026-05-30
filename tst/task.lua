@@ -227,10 +227,11 @@ do
             return v
         end, 20)
         out((await(y)))
-        out(await(x))
+        local vv,xx = await(x)
+        out(vv,xx==x)
     end)
     emit()
-    assertx(out(), "20\n10\n")
+    assertx(out(), "20\n10\ttrue\n")
     atmos.stop()
 end
 
@@ -266,7 +267,7 @@ do
             return 10
         end)
         local v,u = await {'or', t, 'X'}
-        out(v,u==nil)
+        out(v,u==t)
     end)
     emit 'X'
     assertx(out(), "10\ttrue\n")
@@ -278,13 +279,13 @@ do
     spawn(function ()
         local ts = tasks()
         local t = spawn_in(ts, function ()
-            await 'X'
+            return await 'X'
         end)
-        local v,u = await {'or', ts, 'X'}
-        out(v==t,u==ts)
+        local v,u,q = await {'or', ts, 'X'}
+        out(v=='X',u==t,q==ts)
     end)
     emit 'X'
-    assertx(out(), "true\ttrue\n")
+    assertx(out(), "true\ttrue\ttrue\n")
     atmos.stop()
 end
 
@@ -346,10 +347,10 @@ do
     spawn(function ()
         local ts = tasks()
         local t = spawn_in(ts, function ()
-            await 'X'
+            return await 'X'
         end)
         local v,u = await {'and', ts, 'X'}
-        out(v==t, u)
+        out(v=='X', u)
     end)
     emit 'X'
     assertx(out(), "true\tX\n")
@@ -379,10 +380,10 @@ do
             await(false)
         end)
         local T = spawn_in(ts, function ()
-            await('Z')
+            return await('Z')
         end)
         local v,u = await {'and', {'or', 'X', clock{s=1}}, {'or', ts, t}}
-        out(v, u==T)
+        out(v, u=='Z')
     end)
     emit('clock', 510)
     emit 'Z'

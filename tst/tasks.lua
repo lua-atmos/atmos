@@ -166,15 +166,15 @@ do
     print("Testing...", "await tasks 1")
     do
         function T (v)
-            await(v)
+            return await(v)
         end
         local ts = tasks()
         local t1 = spawn_in (ts, T, 1)
         local t2 = spawn_in (ts, T, 2)
         local t3 = spawn_in (ts, T, 3)
         spawn (function ()
-            local t,ts = await(ts)
-            assert(t == t2)
+            local ret,t,ts2 = await(ts)
+            assert(ret==2 and t==t2 and ts2==ts)
             out 't2'
         end)
         emit(2)
@@ -239,4 +239,106 @@ do
          v  tasks.lua:%d+ %(throw%)
         ==> attempt to perform arithmetic on a boolean value
     ]])
+end
+
+-- :any (default) returns ret,t,ts of the first task to terminate
+do
+    print("Testing...", "pools :any default -> ret,t,ts")
+    do
+        function T (v)
+            await(v)
+            return v*10
+        end
+        local ts = tasks()
+        local t1 = spawn_in (ts, T, 1)
+        local t2 = spawn_in (ts, T, 2)
+        spawn (function ()
+            local ret,t,ts2 = await(ts)
+            assert(t == t2)
+            assert(ret == 20)
+            assert(ts2 == ts)
+            out 'any'
+        end)
+        emit(2)
+    end
+    assertx(out(), "any\n")
+    atmos.stop()
+end
+
+-- :any passed explicitly
+do
+    print("Testing...", "pools :any explicit")
+    do
+        function T (v)
+            await(v)
+            return v
+        end
+        local ts = tasks()
+        local t1 = spawn_in (ts, T, 1)
+        spawn (function ()
+            local ret,t,ts2 = await(ts, "any")
+            assert(t == t1)
+            assert(ret == 1)
+            assert(ts2 == ts)
+            out 'ok'
+        end)
+        emit(1)
+    end
+    assertx(out(), "ok\n")
+    atmos.stop()
+end
+
+-- :all returns ret,t,ts of the last task to terminate (drains the pool)
+do
+    print("Testing...", "pools :all -> last to terminate")
+    do
+        function T (v)
+            await(v)
+            return v
+        end
+        local ts = tasks()
+        local t1 = spawn_in (ts, T, 1)
+        local t2 = spawn_in (ts, T, 2)
+        spawn (function ()
+            local ret,t,ts2 = await(ts, "all")
+            assert(t == t1)
+            assert(ret == 1)
+            assert(ts2 == ts)
+            out 'all'
+        end)
+        emit(2)
+        emit(1)
+    end
+    assertx(out(), "all\n")
+    atmos.stop()
+end
+
+-- empty pool returns immediately as nil,nil,ts (both modes)
+do
+    print("Testing...", "pools empty -> nil,nil,ts")
+    do
+        local ts = tasks()
+        spawn (function ()
+            local ret,t,ts2 = await(ts, "all")
+            assert(ret == nil)
+            assert(t == nil)
+            assert(ts2 == ts)
+            out 'empty'
+        end)
+    end
+    assertx(out(), "empty\n")
+    atmos.stop()
+end
+
+-- invalid mode is rejected
+do
+    print("Testing...", "pools bad mode")
+    local _,err = pcall(function ()
+        spawn (function ()
+            local ts = tasks()
+            await(ts, "foo")
+        end)
+    end)
+    assertfx(err, "invalid await : expected :any or :all")
+    atmos.stop()
 end
