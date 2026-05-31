@@ -269,10 +269,10 @@ The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 - `f: function` | if `f(e,...)` is truthy, returning the results
 - `t: task`     | matches when `t` terminates; returns `v,t`, where `v` is the
                   task return value
-- `ts: tasks, ['any'|'all']`
-                | matches when any or all tasks in `ts` terminate (defaults to
-                  `any`); returns `v,t,ts`, where `t` is the (last) terminating
-                  task and `v` is its return value
+- `ts: tasks, [**'any'**|'all']`
+                | matches when any or all tasks in `ts` terminate
+    - `any`: returns `v,t,ts` (`t`: terminated task, `v`: its return value)
+    - `all`: returns `ts`
 - `logical`     | composition of sub-patterns
     - `{ 'not', x }`:  matches any event that does not match `x`
     - `{ 'and', ...}`: if all `...` match (in any order)

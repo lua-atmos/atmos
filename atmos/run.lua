@@ -179,7 +179,7 @@ local function task_result (t, ok, err)
             M.emit(false, up, t)
             if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
                 local up = _me_(false, t._.up._.up)
-                M.emit(false, up, t._.up, t)
+                M.emit(false, up, t._.up, 'any', t)
             end
         --end
         meta_task.__close(t)
@@ -194,6 +194,11 @@ task_gc = function (t)
             if getmetatable(s)==meta_task and coroutine.status(s._.th)=='dead' then
                 table.remove(t._.dns, i)
             end
+        end
+        -- pool drained: signal :all awaiters
+        -- skip the root TASKS (no parent)
+        if (getmetatable(t) == meta_tasks) and (t ~= TASKS) and (#t._.dns == 0) then
+            M.emit(false, _me_(false, t._.up), t, 'all')
         end
     end
 end
@@ -565,10 +570,14 @@ local function check_ret (T, ...)
         if getmetatable(e) == meta_task then
             return true, e.ret, e
         elseif getmetatable(e) == meta_tasks then
-            -- pool death emits (ts,t) -> return ret,t,ts
-            -- (:any and :all share this shape; :all timing is in M.await)
-            local _,t = ...
-            return true, t.ret, t, e
+            local ts,mode,t = ...
+            assert(e == ts)
+            if mode == 'any' then
+                return true, t.ret, t, ts
+            else
+                assert(mode == 'all')
+                return true, ts
+            end
         else
             return true, ...
         end
@@ -608,14 +617,11 @@ local function await_to_table (e, ...)
         if getmetatable(e) == meta_task then
             T = { '==', e, ... }
         elseif getmetatable(e) == meta_tasks then
-            -- await(ts, 'any'|'all'): mode picks first|last task to terminate
-            -- mode is stashed in T.mode, never as a positional payload, b/c
-            -- the pool death emits (ts,t) and check_ret matches t positionally
             local mode = (...) or 'any'
             assertn(3, mode=='any' or mode=='all',
                 "invalid await : expected :any or :all"
             )
-            T = { '==', e }
+            T = { '==', e, mode }
         elseif S.is(e) then
             --error'TODO'
             T = { '==', spawn(function() return e() end), ... }
@@ -678,34 +684,18 @@ function M.await (e, ...)
         end)
     end
 
-    -- :all drains the pool via repeated :any, returning the last task to
-    -- terminate. a `#ts==0` stop cannot work: the just-terminated task lingers
-    -- in `dns` until gc (which runs only after we re-suspend), so we loop while
-    -- any member is still alive
-    if (getmetatable(e) == meta_tasks) and ((...) == 'all') then
-        while true do
-            local ret, tt, ts = M.await(e, 'any')
-            assert(e == ts)
-            local ok = true
-            for _, x in ipairs(e._.dns) do
-                if coroutine.status(x._.th) ~= 'dead' then
-                    ok = false
-                    break
-                end
-            end
-            if ok then
-                return ret, tt, e
-            end
-        end
-    end
-
     t._.await = await_to_table(e, ...)
 
     -- empty pool: nothing to await, return now (both :any and :all)
-    -- shape matches the non-empty return ret,t,ts -> here nil,nil,ts
     local ts = t._.await[2]
     if (getmetatable(ts) == meta_tasks) and (#ts == 0) then
-        return nil, nil, ts
+        local mode = t._.await[3]
+        if mode == 'any' then
+            return nil, nil, ts
+        else
+            assert(mode == 'all')
+            return ts
+        end
     end
 
     local chk,ret,tt = check_task_ret(t._.await)

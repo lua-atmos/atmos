@@ -288,7 +288,6 @@ do
     atmos.stop()
 end
 
--- :all returns ret,t,ts of the last task to terminate (drains the pool)
 do
     print("Testing...", "pools :all -> last to terminate")
     do
@@ -300,9 +299,7 @@ do
         local t1 = spawn_in (ts, T, 1)
         local t2 = spawn_in (ts, T, 2)
         spawn (function ()
-            local ret,t,ts2 = await(ts, "all")
-            assert(t == t1)
-            assert(ret == 1)
+            local ts2 = await(ts, "all")
             assert(ts2 == ts)
             out 'all'
         end)
@@ -313,15 +310,12 @@ do
     atmos.stop()
 end
 
--- empty pool returns immediately as nil,nil,ts (both modes)
 do
-    print("Testing...", "pools empty -> nil,nil,ts")
+    print("Testing...", "pools empty -> ts")
     do
         local ts = tasks()
         spawn (function ()
-            local ret,t,ts2 = await(ts, "all")
-            assert(ret == nil)
-            assert(t == nil)
+            local ts2 = await(ts, "all")
             assert(ts2 == ts)
             out 'empty'
         end)
