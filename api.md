@@ -266,7 +266,7 @@ The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
 - `false`       | never matches an emit
 - `x, ...`      | if `_is_(x,e)` and if `...` match the emit payloads
 - `c: clock`    | if [clock](#TODO) `c` expires
-- `f: function` | if `f(e,...)` is truthy, returning the results
+- `f: function` | if `f(e,...)` is truthy, returning its results
 - `t: task`     | matches when `t` terminates; returns `v,t`, where `v` is the
                   task return value
 - `ts: tasks, [**'any'**|'all']`
