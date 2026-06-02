@@ -259,3 +259,26 @@ do
     assertx(out(), "1\n1\n")
     atmos.stop()
 end
+
+do
+    print("Testing...", "filter 4: block form, 'not' (ignore one event)")
+    do
+        function T ()
+            toggle('Show', function ()
+                spawn (function ()
+                    every('Draw', function (_,v) out(v) end)
+                end)
+                every('Tick', function (_,v) out(100+v) end)
+            end, {'not', 'Tick'})    -- pass all but 'Tick'
+        end
+        spawn (T)
+        emit('Show', false) -- off: filter passes everything except 'Tick'
+        emit('Draw', 1)     -- passes
+        emit('Tick', 1)     -- the one ignored -> frozen
+        emit('Draw', 2)     -- passes
+        emit('Show', true)
+        emit('Tick', 9)     -- on -> 109
+    end
+    --assertx(out(), "1\n2\n109\n")
+    atmos.stop()
+end

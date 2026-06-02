@@ -7,7 +7,11 @@
 - [x] `run.lua` emit gate @742 (filter test).
 - [x] `run.lua` `M.toggle (t, on, ...)` block form forwards filter.
 - [x] `run.lua` `M.toggle` on/off stores/clears `t._.filter`.
-- [ ] Run `cd tst && lua all.lua` (user-run).
+- [x] Run `cd tst && lua all.lua` (user-run) — all tests pass.
+- [ ] `not` combinator in filter (PENDING): lift `not` into
+      `await_to_table` (build `{'func', ...}` that negates `check_ret`) and
+      drop the `M.await` `not` branch @679. Then `{'not','X'}` works as a
+      filter. Test `filter 4` is stubbed (assert commented @282) until then.
 
 ## Scope
 
