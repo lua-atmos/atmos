@@ -60,6 +60,12 @@ It is orthogonal to `t._.status` and is consulted only while
 `status == 'toggled'`.
 No change needed in `M.task` @445 (the field defaults to `nil`).
 
+No reentrancy/stacking: `filter` is 1:1 with `status` (set on OFF, cleared on
+ON), and `status` cannot nest (asserts @816/@819 reject double-off/double-on),
+so no save/restore is needed.
+Nested tasks each own their `filter`; `emit` reads each level independently.
+Only the clock-pattern caveat applies (see Edge cases @138).
+
 ### 2. Gate in `emit` (@742)
 
 Replace the unconditional return with a filter test.
