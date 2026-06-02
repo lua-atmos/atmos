@@ -8,10 +8,11 @@
 - [x] `run.lua` `M.toggle (t, on, ...)` block form forwards filter.
 - [x] `run.lua` `M.toggle` on/off stores/clears `t._.filter`.
 - [x] Run `cd tst && lua all.lua` (user-run) — all tests pass.
-- [ ] `not` combinator in filter (PENDING): lift `not` into
-      `await_to_table` (build `{'func', ...}` that negates `check_ret`) and
-      drop the `M.await` `not` branch @679. Then `{'not','X'}` works as a
-      filter. Test `filter 4` is stubbed (assert commented @282) until then.
+- [~] `not` combinator in filter (WON'T FIX): would require lifting `not`
+      into `await_to_table` (build `{'func', ...}` that negates `check_ret`)
+      and dropping the `M.await` `not` branch @679. Decided against.
+      Use a func predicate for negation instead. Test `filter 4` stays a
+      stub (assert commented @282).
 
 ## Scope
 
