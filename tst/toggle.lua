@@ -195,3 +195,67 @@ do
 end
 
 print "--- FILTER ---"
+
+do
+    print("Testing...", "filter 1: task form")
+    do
+        function T ()
+            spawn (function ()
+                every ('Draw', function () out(10) end)
+            end)
+            every ('Tick', function () out(20) end)
+        end
+        local t = spawn (T)
+        toggle (t, false, 'Draw')
+        emit ('Draw')   -- passes filter -> subtree draws
+        emit ('Tick')   -- gated -> frozen
+        toggle (t, true)
+        emit ('Tick')   -- on -> resumes
+    end
+    assertx(out(), "10\n20\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "filter 2: block form")
+    do
+        function T ()
+            toggle('Show', function ()
+                spawn (function ()
+                    every('Draw', function (_,v) out(v) end)
+                end)
+                every('Tick', function (_,v) out(100+v) end)
+            end, 'Draw')
+        end
+        spawn (T)
+        emit('Draw', 1)     -- on -> draws
+        emit('Tick', 1)     -- on -> ticks (101)
+        emit('Show', false) -- toggle off, filter 'Draw'
+        emit('Draw', 2)     -- passes filter while off
+        emit('Tick', 2)     -- gated while off (frozen)
+        emit('Show', true)  -- toggle on
+        emit('Draw', 3)
+        emit('Tick', 3)     -- 103
+    end
+    assertx(out(), "1\n101\n2\n3\n103\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "filter 3: on clears filter")
+    do
+        function T ()
+            every ('Draw', function () out(1) end)
+        end
+        local t = spawn (T)
+        toggle (t, false, 'Draw')
+        emit ('Draw')       -- passes filter
+        toggle (t, true)    -- clears filter
+        toggle (t, false)   -- off, no filter
+        emit ('Draw')       -- gated
+        toggle (t, true)
+        emit ('Draw')       -- resumes
+    end
+    assertx(out(), "1\n1\n")
+    atmos.stop()
+end

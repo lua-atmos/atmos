@@ -1,5 +1,14 @@
 # Toggle Filter — lua-atmos runtime
 
+## Status
+
+- [x] Tests added: `tst/toggle.lua` `--- FILTER ---` (task form, block form,
+      on-clears-filter); wired via `tst/all.lua`.
+- [x] `run.lua` emit gate @742 (filter test).
+- [x] `run.lua` `M.toggle (t, on, ...)` block form forwards filter.
+- [x] `run.lua` `M.toggle` on/off stores/clears `t._.filter`.
+- [ ] Run `cd tst && lua all.lua` (user-run).
+
 ## Scope
 
 Runtime-only (lua-atmos).

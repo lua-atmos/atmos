@@ -740,7 +740,10 @@ local function emit (time, t, ...)
     local ok, err = true, nil
 
     if t._.status == 'toggled' then
-        return ok, err
+        -- toggled off: gate the whole subtree, unless a filter matches
+        if not (t._.filter and check_ret(t._.filter, ...)) then
+            return ok, err
+        end
     end
 
     t._.ing = t._.ing + 1
@@ -790,17 +793,18 @@ end
 
 -------------------------------------------------------------------------------
 
-function M.toggle (t, on)
+function M.toggle (t, on, ...)
     if type(t) == 'string' then
         --@ derived: spawn; loop { await; toggle; await; toggle; }
         local e, f = t, on
         assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
+        local filter = table.pack(...)
         do
             local t <close> = M.spawn(debug.getinfo(2), nil, true, f)
             local _ <close> = M.spawn(debug.getinfo(2), nil, true, function ()
                 while true do
                     M.await(e, false)
-                    M.toggle(t, false)
+                    M.toggle(t, false, table.unpack(filter, 1, filter.n))
                     M.await(e, true)
                     M.toggle(t, true)
                 end
@@ -812,6 +816,7 @@ function M.toggle (t, on)
     assertn(2, getmetatable(t)==meta_task or getmetatable(t)==meta_tasks,
         "invalid toggle : expected task")
     assertn(2, type(on) == 'boolean', "invalid toggle : expected bool argument")
+    t._.filter = nil
     if on then
         assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
         t._.status = nil
@@ -819,6 +824,11 @@ function M.toggle (t, on)
         assertn(2, t._.status==nil --[[and coroutine.status(t._.th)=='suspended']],
             "invalid toggle : expected awaiting task")
         t._.status = 'toggled'
+        -- build the filter at toggle-off time so T.time = TIME is fresh
+        local filter = table.pack(...)
+        if filter.n > 0 then
+            t._.filter = await_to_table(table.unpack(filter, 1, filter.n))
+        end
     end
 end
 
