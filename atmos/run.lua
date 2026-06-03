@@ -81,12 +81,7 @@ end
 
 function M.clock (t)
     assertn(2, type(t)=='table', "invalid clock : expected table")
-    local ms = clock_to_ms(t)
-    if t[1] then
-        return 'clock', ms
-    else
-        return { 'clock', ms }
-    end
+    return 'clock', clock_to_ms(t)
 end
 
 -------------------------------------------------------------------------------
@@ -557,6 +552,9 @@ function M.await (e, ...)
 
     local tp = (type(e) == 'table') and e[1]
 
+    local mode = ...
+    local ms, now = ...     -- TODO: now
+
     if tp=='or' or tp=='and' then
         local fs = {}
         for i=2, #e do
@@ -578,16 +576,12 @@ function M.await (e, ...)
                 return table.unpack(ret, 2, ret.n)
             end
         end
-    elseif tp == 'clock' then
-        e.ms  = e[2]
-        e.now = nil     -- TODO
     elseif S.is(e) then
         return M.await(spawn(function() return e() end), ...)
     end
 
     t._.await = await_to_table(e, ...)
 
-    local mode = ...
     local emt = { n=1, false }
 
     while true do
@@ -615,9 +609,9 @@ function M.await (e, ...)
             if ret[1] then
                 return table.unpack(ret, 2, ret.n)
             end
-        elseif tp == 'clock' then
-            if e.ms <= 0 then
-                return 'clock', -e.ms, e.now
+        elseif e == 'clock' then
+            if ms <= 0 then
+                return 'clock', -ms, now
             end
         elseif type(e) == 'function' then
             local ret = table.pack(e(table.unpack(emt, 2, emt.n)))
@@ -636,14 +630,10 @@ function M.await (e, ...)
         elseif e == false then
             -- never awakes
         elseif type(e) == 'function' then
-            local ret = table.pack(e(table.unpack(emt,2,emt.n)))
-            if ret[1] then
-                return table.unpack(ret, 2, ret.n)
-            end
-        elseif tp == 'clock' then
+        elseif e == 'clock' then
             if emt[2] == 'clock' then
-                e.ms  = e.ms - emt[3]
-                e.now = emt[4]
+                ms  = ms - emt[3]
+                now = emt[4]
             end
         else
             local ret = table.pack(check_ret(t._.await, table.unpack(emt,2,emt.n)))
