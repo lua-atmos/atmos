@@ -553,7 +553,7 @@ function M.await (e, ...)
     assertn(2, t, "invalid await : expected enclosing task", 2)
     assertn(2, e~=nil, "invalid await : expected event", 2)
 
-    local mta = getmetatable(T)
+    local mta = getmetatable(e)
 
     local tp = (type(e) == 'table') and e[1]
 
@@ -611,7 +611,7 @@ function M.await (e, ...)
                 return e.ret, e
             end
         elseif mta and mta.__atmos then
-            local ret = table.pack(mta.__atmos(T, ...))
+            local ret = table.pack(mta.__atmos(e, table.unpack(emt, 2, emt.n)))
             if ret[1] then
                 return table.unpack(ret, 2, ret.n)
             end

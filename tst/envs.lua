@@ -216,7 +216,7 @@ end
 do
     print("Testing...", "atmos mta true")
     do
-        local meta = { __atmos = function () return true end }
+        local meta = { __atmos = function (me,e) return e end }
         atmos.env { step = function ()
             emit 'X'
         end }
