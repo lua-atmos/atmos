@@ -548,15 +548,6 @@ local function check_ret (T, ...)
         else
             return true, ...
         end
-    elseif tp == 'func' then
-        local es = { ... }
-        return (function (v, ...)
-            if select('#',...) == 0 then
-                return v, table.unpack(es)
-            else
-                return v, ...
-            end
-        end)(e(...))
     else
         return false
     end
@@ -566,7 +557,7 @@ local function await_to_table (e, ...)
     local T
     if type(e) == 'table' then
         if getmetatable(e) == meta_task then
-            T = { '==', e, ... }
+            T = {}
         elseif getmetatable(e) == meta_tasks then
             local mode = (...) or 'any'
             assertn(3, mode=='any' or mode=='all',
@@ -587,9 +578,9 @@ local function await_to_table (e, ...)
             T = { '==', e, ... }
         end
     elseif type(e) == 'function' then
-        T = { 'func', e, ... }
+        T = {}
     elseif type(e) == 'boolean' then
-        T = { 'bool', e, ... }
+        T = {}
     else
         T = { '==', e, ... }
     end
@@ -632,9 +623,15 @@ function M.await (e, ...)
                 return table.unpack(ret, 2, ret.n)
             end
         end
+    elseif type(e) == 'function' then
+        local ret = table.pack(e())
+        if ret[1] then
+            return table.unpack(ret, 2, ret.n)
+        end
     end
 
     t._.await = await_to_table(e, ...)
+
 
     while true do
         -- tasks : 'any' and 'all'
@@ -669,6 +666,11 @@ function M.await (e, ...)
             return table.unpack(emt, 2, emt.n)
         elseif e == false then
             -- never awakes
+        elseif type(e) == 'function' then
+            local ret = table.pack(e(table.unpack(emt,2,emt.n)))
+            if ret[1] then
+                return table.unpack(ret, 2, ret.n)
+            end
         else
             local ret = table.pack(check_ret(t._.await, table.unpack(emt,2,emt.n)))
             if ret[1] then
