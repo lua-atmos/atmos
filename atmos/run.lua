@@ -502,8 +502,8 @@ function M.await (awt, ...)
     -- await('X', ...)
     -- await({'or'/'and', ...})
 
-    local tsk = M.me(true)
-    assertn(2, tsk, "invalid await : expected enclosing task", 2)
+    local me = M.me(true)
+    assertn(2, me, "invalid await : expected enclosing task", 2)
     assertn(2, awt~=nil and select('#',...)==0,
         "invalid await : invalid event pattern", 2
     )
@@ -630,7 +630,7 @@ local function fto (me, to)
     return to
 end
 
-local function emit (time, t, ...)
+local function emit (time, t, emt)
     local ok, err = true, nil
 
     if t._.status == 'toggled' then
@@ -643,7 +643,7 @@ local function emit (time, t, ...)
     t._.ing = t._.ing + 1
     for i=1, #t._.dns do
         local dn = t._.dns[i]
-        ok, err = pcall(emit, time, dn, ...)
+        ok, err = pcall(emit, time, dn, emt)
         if not ok then
             break
         end
@@ -663,7 +663,7 @@ local function emit (time, t, ...)
             assertn(0, ok, err) -- TODO: error in defer?
         else
             if (t._.await.time < time) and (coroutine.status(t._.th) == 'suspended') then
-                task_result(t, coroutine.resume(t._.th, nil, ...))
+                task_result(t, coroutine.resume(t._.th, nil, emt))
             end
         end
     else
@@ -672,11 +672,12 @@ local function emit (time, t, ...)
     end
 end
 
-function M.emit (stk, to, e, ...)
+function M.emit (stk, to, e, emt, ...)
     TIME = TIME + 1
     local time = TIME
-    local ret = xcall(debug.getinfo(2), stk and "emit", emit, time, fto(M.me(false),to), e, ...)
+    local ret = xcall(debug.getinfo(2), stk and "emit", emit, time, fto(M.me(false),to), e, emt)
     local me = M.me(true)
+    assertn(2, select('#',...)==0, "invalid emit : unexpected argument", 2)
     if me and me._.status=='aborted' then
         -- TODO: lua5.5
         coroutine.yield()   -- wait to be closed from outside
