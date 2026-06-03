@@ -195,11 +195,6 @@ task_gc = function (t)
                 table.remove(t._.dns, i)
             end
         end
-        -- pool drained: signal :all awaiters
-        -- skip the root TASKS (no parent)
-        if (getmetatable(t) == meta_tasks) and (t ~= TASKS) and (#t._.dns == 0) then
-            M.emit(false, _me_(false, t._.up), t, 'all')
-        end
     end
 end
 
@@ -656,18 +651,7 @@ function M.await (e, ...)
 
     t._.await = await_to_table(e, ...)
 
-    -- empty pool: nothing to await, return now (both :any and :all)
-    if (getmetatable(e) == meta_tasks) and (#e == 0) then
-        local mode = t._.await[3]
-        if mode == 'any' then
-            return nil, nil, e
-        else
-            assert(mode == 'all')
-            return e
-        end
-    end
-
-    -- await task that is already dead: return immediately
+    -- await task : already dead : immediate return
     if (
         (getmetatable(e) == meta_task) and
         (coroutine.status(e._.th) == 'dead')
@@ -676,6 +660,17 @@ function M.await (e, ...)
     end
 
     while true do
+        -- empty pool : nothing to await : immediate return : 'any' and 'all'
+        if (getmetatable(e) == meta_tasks) and (#e == 0) then
+            local mode = ...
+            if mode == 'all' then
+                return e
+            else
+                assert(mode=='any' or mode==nil)
+                return nil, nil, e
+            end
+        end
+
         local emt = table.pack(coroutine.yield())
         if emt[1] then
             error(emt[2], 0)
