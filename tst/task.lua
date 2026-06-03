@@ -130,9 +130,9 @@ do
         await(clock{h=1,min=1,s=1,ms=10})
         out("awake")
     end)
-    emit(clock{h=10})
+    emit(clock{h=10,true})
     emit 'X'
-    emit(clock{h=10})
+    emit(clock{h=10,true})
     out("ok")
     assertx(out(), "awake\nok\n")
     atmos.stop()
@@ -153,9 +153,9 @@ end
 do
     print("Testing...", "await clock 3")
     spawn(function ()
-        every(function ()
+        every(clock{s=1}, function ()
             out("1s elapsed")
-        end, clock{s=1})
+        end)
     end)
     emit 'A'
     emit('clock', 500, 0)
@@ -488,9 +488,9 @@ end
 do
     print("Testing...", "every 1")
     spawn(function ()
-        every(function (e)
+        every(true, function (e)
             out(e)
-        end, true)
+        end)
     end)
     emit(10)
     emit(20)
@@ -502,11 +502,10 @@ end
 do
     print("Testing...", "every 2")
     spawn(function ()
-        every(
+        every(function (v) return v and v>10, v end,
             function (e)
                 out(e)
-            end,
-            function (v) return v and v>10, v end
+            end
         )
     end)
     emit(20)
@@ -520,9 +519,9 @@ end
 do
     print("Testing...", "every 3: break")
     spawn(function ()
-        every(function ()
+        every(true, function ()
             _break_()
-        end, true)
+        end)
         out("ok")
     end)
     emit(10)
@@ -534,9 +533,9 @@ do
     print("Testing...", "every 4: return passes through")
     spawn(function ()
         catch('atm-func', function ()
-            every(function ()
+            every(true, function ()
                 throw('atm-func')   -- compiled return()
-            end, true)
+            end)
             out("never")
         end)
         out("ok")

@@ -81,7 +81,12 @@ end
 
 function M.clock (t)
     assertn(2, type(t)=='table', "invalid clock : expected table")
-    return 'clock', clock_to_ms(t)
+    local ms = clock_to_ms(t)
+    if t[1] then
+        return 'clock', ms
+    else
+        return { 'clock', ms }
+    end
 end
 
 -------------------------------------------------------------------------------
@@ -552,9 +557,6 @@ function M.await (e, ...)
 
     local tp = (type(e) == 'table') and e[1]
 
-    local mode = ...
-    local ms, now = ...     -- TODO: now
-
     if tp=='or' or tp=='and' then
         local fs = {}
         for i=2, #e do
@@ -576,12 +578,16 @@ function M.await (e, ...)
                 return table.unpack(ret, 2, ret.n)
             end
         end
+    elseif tp == 'clock' then
+        e.ms  = e[2]
+        e.now = nil     -- TODO
     elseif S.is(e) then
         return M.await(spawn(function() return e() end), ...)
     end
 
     t._.await = await_to_table(e, ...)
 
+    local mode = ...
     local emt = { n=1, false }
 
     while true do
@@ -609,9 +615,9 @@ function M.await (e, ...)
             if ret[1] then
                 return table.unpack(ret, 2, ret.n)
             end
-        elseif e == 'clock' then
-            if ms <= 0 then
-                return 'clock', -ms, now
+        elseif tp == 'clock' then
+            if e.ms <= 0 then
+                return 'clock', -e.ms, e.now
             end
         elseif type(e) == 'function' then
             local ret = table.pack(e(table.unpack(emt, 2, emt.n)))
@@ -630,10 +636,14 @@ function M.await (e, ...)
         elseif e == false then
             -- never awakes
         elseif type(e) == 'function' then
-        elseif e == 'clock' then
+            local ret = table.pack(e(table.unpack(emt,2,emt.n)))
+            if ret[1] then
+                return table.unpack(ret, 2, ret.n)
+            end
+        elseif tp == 'clock' then
             if emt[2] == 'clock' then
-                ms  = ms - emt[3]
-                now = emt[4]
+                e.ms  = e.ms - emt[3]
+                e.now = emt[4]
             end
         else
             local ret = table.pack(check_ret(t._.await, table.unpack(emt,2,emt.n)))
@@ -823,12 +833,15 @@ end
 -------------------------------------------------------------------------------
 
 --@ derived: loop { f(await(awt, payload...)) }
-function M.every (blk, ...)
+function M.every (...)
     assertn(2, M.me(true), "invalid every : expected enclosing task")
-    local awt = table.pack(...)
+    local t = { ... }
+    local blk = table.remove(t, #t)
+    -- tag-specific catch: break exits the loop, but return (atm-func),
+    -- abort, and any other throw still propagate past every
     M.catch('atm-loop', function ()
         while true do
-            blk(M.await(table.unpack(awt,1,awt.n)))
+            blk(M.await(table.unpack(t)))
         end
     end)
 end
@@ -889,13 +902,14 @@ function M.par_and (...)
 end
 
 --@ derived: par_or { await(awt, payload...) } with { f() }
-function M.watching (blk, ...)
+function M.watching (...)
     assertn(2, M.me(true), "invalid watching : expected enclosing task")
-    assertn(2, type(blk) == 'function', "invalid watching : expected task prototype")
-    local awt = table.pack(...)
+    local t = { ... }
+    local f = table.remove(t, #t)
+    assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
     return M.par_or(
-        function () return M.await(table.unpack(awt,1,awt.n)) end,
-        blk
+        function () return M.await(table.unpack(t)) end,
+        f
     )
 end
 

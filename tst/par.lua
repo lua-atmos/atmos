@@ -248,11 +248,10 @@ print '--- WATCHING ---'
 do
     print("Testing...", "watching 1")
     spawn (function ()
-        local v = watching (
+        local v = watching (true,
             function ()
                 await(false)
-            end,
-            true
+            end
         )
         out(v)
     end)
@@ -300,11 +299,10 @@ end
 do
     print("Testing...", "watching 2")
     spawn (function ()
-        local v = watching (
+        local v = watching ('X',
             function ()
                 return 'Y'
-            end,
-            'X'
+            end
         )
         out(v)
     end)
@@ -316,11 +314,10 @@ end
 do
     print("Testing...", "watching 3")
     spawn (function ()
-        local v = watching (
+        local v = watching (false,
             function ()
                 return await('X')
-            end,
-            false
+            end
         )
         out(v)
     end)
@@ -332,7 +329,7 @@ end
 do
     print("Testing...", "watching 4: error")
     local _,err = pcall(function ()
-        watching (function () end, false)
+        watching (false, function () end)
     end)
     assertfx(err, "par.lua:%d+: invalid watching : expected enclosing task")
 end
@@ -341,7 +338,7 @@ do
     print("Testing...", "watching 5: error")
     local _,err = pcall(function ()
         spawn(function ()
-            watching ('no', false)
+            watching (false, 'no')
         end)
     end)
     assertfx(err, "par.lua:%d+: invalid watching : expected task prototype")
@@ -350,11 +347,10 @@ end
 do
     print("Testing...", "watching 6")
     spawn (function ()
-        local v = watching (
+        local v = watching (function (e,v) return e=='X' and v==10, v end,
             function ()
                 await(false)
-            end,
-            function (e,v) return e=='X' and v==10, v end
+            end
         )
         out(v)
     end)
@@ -367,12 +363,11 @@ end
 do
     print("Testing...", "watching 7")
     spawn (function ()
-        watching (
+        watching (true,
             function ()
                 await(true)
                 out 'no'
-            end,
-            true
+            end
         )
         out 'ok'
     end)
@@ -384,12 +379,11 @@ end
 do
     print("Testing...", "watching 8")
     spawn (function ()
-        watching (
+        watching ('X',
             function ()
                 await('X')
                 out 'no'
-            end,
-            'X'
+            end
         )
         out 'ok'
     end)

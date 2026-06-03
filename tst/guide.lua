@@ -128,21 +128,21 @@ loop(function ()
     -- 4.1
     do
         print "-=-=- 4.1 -=-=-"
-        watching(function()
-            every(function ()
+        watching(clock{s=1}, function()
+            every(clock{ms=100}, function ()
                 print "100 ms elapses"    -- prints this message every second
-            end, clock{ms=100})
-        end, clock{s=1})
+            end)
+        end)
     end
 
     -- 4.2
     do
         print "-=-=- 4.2 -=-=-"
         spawn(function()
-            watching(function ()
+            watching(clock{s=1}, function ()
                 await 'X'
                 print "X happens before 1s" -- prints this message unless 1 second elapses
-            end, clock{s=1})
+            end)
         end)
         emit 'X'
     end
@@ -257,9 +257,9 @@ loop(function ()
         print "-=-=- 6.4 -=-=-"
         spawn(function()
             toggle('X', function ()
-                every(function ()
+                every(clock{ms=100}, function ()
                     print "100ms elapses"
-                end, clock{ms=100})
+                end)
             end)
         end)
         print 'off'
