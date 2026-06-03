@@ -582,21 +582,6 @@ local function check_ret (T, ...)
     end
 end
 
-local function awake (err, ...)
-    if err then
-        error((...), 0)
-    end
-    local me = assert(M.me(true))
-    local awt = me._.await
-    return (function (ok, ...)
-        if ok then
-            return ...
-        else
-            return awake(coroutine.yield())
-        end
-    end)(check_ret(awt, ...))
-end
-
 local function await_to_table (e, ...)
     local T
     if type(e) == 'table' then
@@ -684,6 +669,7 @@ function M.await (e, ...)
         end
     end
 
+    -- await task that is already dead: return immediately
     local tp,e = table.unpack(t._.await)
     if (
         (tp == '==') and (getmetatable(e) == meta_task) and
@@ -692,7 +678,20 @@ function M.await (e, ...)
         return e.ret, e
     end
 
-    return awake(coroutine.yield())
+    local function awake (emt)
+        if emt[1] then
+            error(emt[2], 0)
+        end
+        local ret = table.pack(check_ret(t._.await, table.unpack(emt,2,emt.n)))
+        if ret[1] then
+            return table.unpack(ret, 2, ret.n)
+        else
+            return awake(table.pack(coroutine.yield()))
+        end
+    end
+
+    return awake(table.pack(coroutine.yield()))
+
 end
 
 -------------------------------------------------------------------------------
