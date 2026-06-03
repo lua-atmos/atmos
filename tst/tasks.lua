@@ -330,9 +330,15 @@ do
     local _,err = pcall(function ()
         spawn (function ()
             local ts = tasks()
+            spawn_in(ts,
+                function ()
+                    await(true)
+                end
+            )
             await(ts, "foo")
         end)
+        emit(true)
     end)
-    assertfx(err, "invalid await : expected :any or :all")
+    assertfx(err, "invalid await : expected 'any' or 'all'")
     atmos.stop()
 end

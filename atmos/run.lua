@@ -554,17 +554,9 @@ local function check_ret (T, ...)
 end
 
 local function await_to_table (e, ...)
-    local T
+    local T = {}
     if type(e) == 'table' then
-        if getmetatable(e) == meta_task then
-            T = {}
-        elseif getmetatable(e) == meta_tasks then
-            local mode = (...) or 'any'
-            assertn(3, mode=='any' or mode=='all',
-                "invalid await : expected :any or :all"
-            )
-            T = { '==', e, mode }
-        elseif S.is(e) then
+        if S.is(e) then
             --error'TODO'
             T = { '==', spawn(function() return e() end), ... }
         elseif getmetatable(e) == meta_clock then
@@ -577,10 +569,6 @@ local function await_to_table (e, ...)
         else
             T = { '==', e, ... }
         end
-    elseif type(e) == 'function' then
-        T = {}
-    elseif type(e) == 'boolean' then
-        T = {}
     else
         T = { '==', e, ... }
     end
@@ -642,7 +630,9 @@ function M.await (e, ...)
                     return e
                 end
             else
-                assert(mode=='any' or mode==nil)
+                assertn(2, mode=='any' or mode==nil,
+                    "invalid await : expected 'any' or 'all'"
+                )
                 if #e == 0 then             -- immediate if #e=0
                     return nil, nil, e
                 elseif e.ret then           -- some task terminated
