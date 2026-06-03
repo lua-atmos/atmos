@@ -130,9 +130,9 @@ do
         await(clock{h=1,min=1,s=1,ms=10})
         out("awake")
     end)
-    emit(clock{h=10,true})
+    emit(clock{h=10})
     emit 'X'
-    emit(clock{h=10,true})
+    emit(clock{h=10})
     out("ok")
     assertx(out(), "awake\nok\n")
     atmos.stop()

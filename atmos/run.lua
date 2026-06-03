@@ -72,21 +72,17 @@ local TASKS = setmetatable({
 
 -------------------------------------------------------------------------------
 
-local function clock_to_ms (clk)
-    return (clk.ms                         or 0) +
-           (clk.s   and clk.s  *1000       or 0) +
-           (clk.min and clk.min*1000*60    or 0) +
-           (clk.h   and clk.h  *1000*60*60 or 0)
-end
-
 function M.clock (t)
     assertn(2, type(t)=='table', "invalid clock : expected table")
-    local ms = clock_to_ms(t)
-    if t[1] then
-        return 'clock', ms
-    else
-        return { 'clock', ms }
-    end
+    return {
+        tag = 'clock',
+        ms  = (
+            (t.ms                       or 0) +
+            (t.s   and t.s  *1000       or 0) +
+            (t.min and t.min*1000*60    or 0) +
+            (t.h   and t.h  *1000*60*60 or 0)
+        ),
+    }
 end
 
 -------------------------------------------------------------------------------
@@ -555,17 +551,17 @@ function M.await (e, ...)
 
     local mta = getmetatable(e)
 
-    local tp = (type(e) == 'table') and e[1]
+    local tag = ((type(e) == 'table') and e.tag) or e
 
-    if tp=='or' or tp=='and' then
+    if tag=='or' or tag=='and' then
         local fs = {}
         for i=2, #e do
             local sub = e[i]
             fs[#fs+1] = function () return M.await(sub) end
         end
-        local f = (tp=='or' and M.par_or) or M.par_and
+        local f = (tag=='or' and M.par_or) or M.par_and
         return f(table.unpack(fs, 1, #e))
-    elseif tp == 'not' then
+    elseif tag == 'not' then
         assertn(2, #e==2, "invalid await : too many arguments")
         while true do
             local ret = table.pack(M.par_or(function()
@@ -578,9 +574,8 @@ function M.await (e, ...)
                 return table.unpack(ret, 2, ret.n)
             end
         end
-    elseif tp == 'clock' then
-        e.ms  = e[2]
-        e.now = nil     -- TODO
+    elseif tag == 'clock' then
+        e._ms = e.ms
     elseif S.is(e) then
         return M.await(spawn(function() return e() end), ...)
     end
@@ -588,7 +583,7 @@ function M.await (e, ...)
     t._.await = await_to_table(e, ...)
 
     local mode = ...
-    local emt = { n=1, false }
+    local emt = { n=1 }
 
     while true do
         if getmetatable(e) == meta_tasks then
@@ -615,9 +610,9 @@ function M.await (e, ...)
             if ret[1] then
                 return table.unpack(ret, 2, ret.n)
             end
-        elseif tp == 'clock' then
-            if e.ms <= 0 then
-                return 'clock', -e.ms, e.now
+        elseif tag == 'clock' then
+            if e._ms <= 0 then
+                return 'clock', -e._ms, e._now
             end
         elseif type(e) == 'function' then
             local ret = table.pack(e(table.unpack(emt, 2, emt.n)))
@@ -640,10 +635,10 @@ function M.await (e, ...)
             if ret[1] then
                 return table.unpack(ret, 2, ret.n)
             end
-        elseif tp == 'clock' then
+        elseif tag == 'clock' then
             if emt[2] == 'clock' then
-                e.ms  = e.ms - emt[3]
-                e.now = emt[4]
+                e._ms  = e._ms - emt[3]
+                e._now = emt[4]
             end
         else
             local ret = table.pack(check_ret(t._.await, table.unpack(emt,2,emt.n)))
