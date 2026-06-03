@@ -535,10 +535,7 @@ end
 local function await_to_table (e, ...)
     local T = {}
     if type(e) == 'table' then
-        if S.is(e) then
-            --error'TODO'
-            T = { '==', spawn(function() return e() end), ... }
-        elseif getmetatable(e) and getmetatable(e).__atmos then
+        if getmetatable(e) and getmetatable(e).__atmos then
             T = e
         elseif type(e[1]) == 'string' then
             T = { '==', table.unpack(e) }
@@ -598,6 +595,8 @@ function M.await (e, ...)
         if ret[1] then
             return table.unpack(ret, 2, ret.n)
         end
+    elseif S.is(e) then
+        return M.await(spawn(function() return e() end), ...)
     end
 
     t._.await = await_to_table(e, ...)
