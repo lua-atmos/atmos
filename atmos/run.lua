@@ -536,14 +536,7 @@ local function check_ret (T, ...)
             return table.unpack(t)
         end
     end
-    if tp == 'bool' then
-        if e == true then
-            return true, ...
-        end
-        assert(e == false)
-        -- never awakes
-        return false
-    elseif tp == '==' then
+    if tp == '==' then
         for i = 2, #T do
             if not _is_(select(i-1,...), T[i]) then
                 return false
@@ -552,14 +545,6 @@ local function check_ret (T, ...)
         if getmetatable(e) == meta_task then
             return true, e.ret, e
         elseif getmetatable(e) == meta_tasks then
-            local ts,mode,t = ...
-            assert(e == ts)
-            if mode == 'any' then
-                return true, t.ret, t, ts
-            else
-                assert(mode == 'all')
-                return true, ts
-            end
         else
             return true, ...
         end
@@ -679,9 +664,16 @@ function M.await (e, ...)
         if emt[1] then
             error(emt[2], 0)
         end
-        local ret = table.pack(check_ret(t._.await, table.unpack(emt,2,emt.n)))
-        if ret[1] then
-            return table.unpack(ret, 2, ret.n)
+
+        if e == true then
+            return table.unpack(emt, 2, emt.n)
+        elseif e == false then
+            -- never awakes
+        else
+            local ret = table.pack(check_ret(t._.await, table.unpack(emt,2,emt.n)))
+            if ret[1] then
+                return table.unpack(ret, 2, ret.n)
+            end
         end
     end
 
