@@ -523,19 +523,6 @@ end
 
 -------------------------------------------------------------------------------
 
-local function check_task_ret (T)
-    local tp,e = table.unpack(T)
-    if tp == '==' then
-        if (getmetatable(e) == meta_task) and (coroutine.status(e._.th) == 'dead') then
-            return true, e.ret, e
-        else
-            return false
-        end
-    else
-        return false
-    end
-end
-
 local function check_ret (T, ...)
     -- T = await pattern | ... = occurring event arguments
     local tp,e = table.unpack(T)
@@ -596,19 +583,18 @@ local function check_ret (T, ...)
 end
 
 local function awake (err, ...)
-    local me = assert(M.me(true))
     if err then
         error((...), 0)
-    else
-        local awt = me._.await
-        return (function (ok, ...)
-            if ok then
-                return ...
-            else
-                return awake(coroutine.yield())
-            end
-        end)(check_ret(awt, ...))
     end
+    local me = assert(M.me(true))
+    local awt = me._.await
+    return (function (ok, ...)
+        if ok then
+            return ...
+        else
+            return awake(coroutine.yield())
+        end
+    end)(check_ret(awt, ...))
 end
 
 local function await_to_table (e, ...)
@@ -698,9 +684,12 @@ function M.await (e, ...)
         end
     end
 
-    local chk,ret,tt = check_task_ret(t._.await)
-    if chk then
-        return ret, tt
+    local tp,e = table.unpack(t._.await)
+    if (
+        (tp == '==') and (getmetatable(e) == meta_task) and
+        (coroutine.status(e._.th) == 'dead')
+    ) then
+        return e.ret, e
     end
 
     return awake(coroutine.yield())
