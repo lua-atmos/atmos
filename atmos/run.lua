@@ -678,19 +678,16 @@ function M.await (e, ...)
         return e.ret, e
     end
 
-    local function awake (emt)
+    while true do
+        local emt = table.pack(coroutine.yield())
         if emt[1] then
             error(emt[2], 0)
         end
         local ret = table.pack(check_ret(t._.await, table.unpack(emt,2,emt.n)))
         if ret[1] then
             return table.unpack(ret, 2, ret.n)
-        else
-            return awake(table.pack(coroutine.yield()))
         end
     end
-
-    return awake(table.pack(coroutine.yield()))
 
 end
 
