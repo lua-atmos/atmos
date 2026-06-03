@@ -6,7 +6,7 @@ print '--- AWAIT ---'
 do
     print("Testing...", "await 1: error")
     local _,err = pcall(function ()
-        await()
+        await(true)
     end)
     assertfx(err, "task.lua:9: invalid await : expected enclosing task")
     atmos.stop()

@@ -51,13 +51,22 @@ function emit_in (to, e, ...)
     return run.emit(true, to, e, ...)
 end
 
-function emit (e, ...)
-    return run.emit(true, nil, e, ...)
+function emit (emt, ...)
+    assertn(2, emt~=nil and select('#',...)==0,
+        "invalid emit : invalid event"
+    )
+    return run.emit(true, nil, emt, ...)
+end
+
+function await (awt, ...)
+    assertn(2, awt~=nil and select('#',...)==0,
+        "invalid await : invalid event pattern"
+    )
+    return run.await(awt)
 end
 
 clock    = run.clock
 
-await    = run.await
 toggle   = run.toggle
 thread   = run.thread
 

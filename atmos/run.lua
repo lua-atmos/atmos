@@ -494,19 +494,9 @@ end
 -------------------------------------------------------------------------------
 
 function M.await (awt, ...)
-    -- await(stream)
-    -- await(clock{...})
-    -- await(f)     -- f(...)
-    -- await(true/false)
-    -- await(task)
-    -- await('X', ...)
-    -- await({'or'/'and', ...})
-
+    assert(select('#',...) == 0)    -- TODO: remove in the future
     local me = M.me(true)
-    assertn(2, me, "invalid await : expected enclosing task", 2)
-    assertn(2, awt~=nil and select('#',...)==0,
-        "invalid await : invalid event pattern", 2
-    )
+    assertn(2, me, "invalid await : expected enclosing task")
 
     local mta = getmetatable(awt)
 
@@ -594,8 +584,10 @@ function M.await (awt, ...)
                 awt._ms  = awt._ms - emt.ms
                 awt._now = emt.now
             end
-        elseif awt == emt then
-            return emt
+        elseif type(awt) == 'string' then
+            if tag == emt then
+                return emt
+            end
         end
     end
 end
@@ -630,7 +622,8 @@ local function fto (me, to)
     return to
 end
 
-local function emit (time, t, emt)
+local function emit (time, t, emt, ...)
+    assert(select('#',...) == 0)    -- TODO: remove in the future
     local ok, err = true, nil
 
     if t._.status == 'toggled' then
@@ -673,11 +666,11 @@ local function emit (time, t, emt)
 end
 
 function M.emit (stk, to, e, emt, ...)
+    assert(select('#',...) == 0)    -- TODO: remove in the future
     TIME = TIME + 1
     local time = TIME
     local ret = xcall(debug.getinfo(2), stk and "emit", emit, time, fto(M.me(false),to), e, emt)
     local me = M.me(true)
-    assertn(2, select('#',...)==0, "invalid emit : unexpected argument", 2)
     if me and me._.status=='aborted' then
         -- TODO: lua5.5
         coroutine.yield()   -- wait to be closed from outside
