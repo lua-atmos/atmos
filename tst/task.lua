@@ -153,9 +153,9 @@ end
 do
     print("Testing...", "await clock 3")
     spawn(function ()
-        every(clock{s=1}, function ()
+        every(function ()
             out("1s elapsed")
-        end)
+        end, clock{s=1})
     end)
     emit 'A'
     emit('clock', 500, 0)
@@ -488,9 +488,9 @@ end
 do
     print("Testing...", "every 1")
     spawn(function ()
-        every(true, function (e)
+        every(function (e)
             out(e)
-        end)
+        end, true)
     end)
     emit(10)
     emit(20)
@@ -502,10 +502,11 @@ end
 do
     print("Testing...", "every 2")
     spawn(function ()
-        every(function (v) return v and v>10, v end,
+        every(
             function (e)
                 out(e)
-            end
+            end,
+            function (v) return v and v>10, v end
         )
     end)
     emit(20)
@@ -519,9 +520,9 @@ end
 do
     print("Testing...", "every 3: break")
     spawn(function ()
-        every(true, function ()
+        every(function ()
             _break_()
-        end)
+        end, true)
         out("ok")
     end)
     emit(10)
@@ -533,9 +534,9 @@ do
     print("Testing...", "every 4: return passes through")
     spawn(function ()
         catch('atm-func', function ()
-            every(true, function ()
+            every(function ()
                 throw('atm-func')   -- compiled return()
-            end)
+            end, true)
             out("never")
         end)
         out("ok")

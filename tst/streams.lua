@@ -64,11 +64,11 @@ do
         await('E')
     end
     spawn(function()
-        watching('F', function()
+        watching(function()
             local s = S.fr_await(T)
             s:table():to()
             await(false)
-        end)
+        end, 'F')
     end)
     emit('F')
     assertx(out(), "defer\n")
@@ -180,12 +180,12 @@ do
         return await(x)
     end
     local _ <close> = spawn(function()
-        watching ('X', function()
+        watching (function()
             local x = S.fr_await(T, 'A')
             local y = S.fr_await(T, 'B')
             local xy = S.par(x,y):par()
             xy:take(1):tap(out):to()
-        end)
+        end, 'X')
         out 'X'
     end)
     emit 'B'
@@ -204,12 +204,12 @@ do
         return await(x)
     end
     local _ <close> = spawn(function()
-        watching ('X', function()
+        watching (function()
             local x = S.fr_await(T, 'A')
             local y = S.fr_await(T, 'B')
             local xy = S.from{x,y}:xpar()
             xy:take(1):tap(out):to()
-        end)
+        end, 'X')
         out 'X'
     end)
     emit 'B'
@@ -263,9 +263,9 @@ do
         local x = S.fr_await(T, 'A'):take(1)
         local y = S.fr_await(T, 'B'):take(1)
         local xy = S.paror(x,y)
-        watching ('X', function()
+        watching (function()
             xy:tap(out):to()
-        end)
+        end, 'X')
         out 'X'
     end)
     emit 'B'
@@ -287,9 +287,9 @@ do
         local x = S.fr_await(T, 'A'):take(1)
         local y = S.fr_await(T, 'B'):take(1)
         local xy = S.from{x,y}:xparor()
-        watching ('X', function()
+        watching (function()
             xy:tap(out):to()
-        end)
+        end, 'X')
         out 'X'
     end)
     emit 'B'

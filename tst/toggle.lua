@@ -142,9 +142,9 @@ do
         function T (v)
             toggle('Show', function ()
                 out(v)
-                every('Draw', function (_,v)
+                every(function (_,v)
                     out(v)
-                end)
+                end, 'Draw')
             end)
         end
         spawn (T,0)
@@ -201,9 +201,9 @@ do
     do
         function T ()
             spawn (function ()
-                every ('Draw', function () out(10) end)
+                every (function () out(10) end, 'Draw')
             end)
-            every ('Tick', function () out(20) end)
+            every (function () out(20) end, 'Tick')
         end
         local t = spawn (T)
         toggle (t, false, 'Draw')
@@ -222,9 +222,9 @@ do
         function T ()
             toggle('Show', function ()
                 spawn (function ()
-                    every('Draw', function (_,v) out(v) end)
+                    every(function (_,v) out(v) end, 'Draw')
                 end)
-                every('Tick', function (_,v) out(100+v) end)
+                every(function (_,v) out(100+v) end, 'Tick')
             end, 'Draw')
         end
         spawn (T)
@@ -245,7 +245,7 @@ do
     print("Testing...", "filter 3: on clears filter")
     do
         function T ()
-            every ('Draw', function () out(1) end)
+            every (function () out(1) end, 'Draw')
         end
         local t = spawn (T)
         toggle (t, false, 'Draw')
@@ -266,9 +266,9 @@ do
         function T ()
             toggle('Show', function ()
                 spawn (function ()
-                    every('Draw', function (_,v) out(v) end)
+                    every(function (_,v) out(v) end, 'Draw')
                 end)
-                every('Tick', function (_,v) out(100+v) end)
+                every(function (_,v) out(100+v) end, 'Tick')
             end, {'not', 'Tick'})    -- pass all but 'Tick'
         end
         spawn (T)

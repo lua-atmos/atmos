@@ -353,10 +353,11 @@ do
         local _, err = pcall(function ()
             loop(function ()
                 spawn(function ()
-                    watching(true,
+                    watching(
                         function ()
                             throw('err')
-                        end
+                        end,
+                        true
                     )
                 end)
             end)

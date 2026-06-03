@@ -5,11 +5,11 @@ loop(function ()
 
     print "-=- 1 -=-"
     do
-        watching(clock{s=1}, function ()
-            every(clock{ms=200}, function ()
+        watching(function ()
+            every(function ()
                 print("Hello World!")
-            end)
-        end)
+            end, clock{ms=200})
+        end, clock{s=1})
     end
 
     print "-=- 2 -=-"

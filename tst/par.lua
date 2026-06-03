@@ -248,10 +248,11 @@ print '--- WATCHING ---'
 do
     print("Testing...", "watching 1")
     spawn (function ()
-        local v = watching (true,
+        local v = watching (
             function ()
                 await(false)
-            end
+            end,
+            true
         )
         out(v)
     end)
@@ -299,10 +300,11 @@ end
 do
     print("Testing...", "watching 2")
     spawn (function ()
-        local v = watching ('X',
+        local v = watching (
             function ()
                 return 'Y'
-            end
+            end,
+            'X'
         )
         out(v)
     end)
@@ -314,10 +316,11 @@ end
 do
     print("Testing...", "watching 3")
     spawn (function ()
-        local v = watching (false,
+        local v = watching (
             function ()
                 return await('X')
-            end
+            end,
+            false
         )
         out(v)
     end)
@@ -329,7 +332,7 @@ end
 do
     print("Testing...", "watching 4: error")
     local _,err = pcall(function ()
-        watching (false, function () end)
+        watching (function () end, false)
     end)
     assertfx(err, "par.lua:%d+: invalid watching : expected enclosing task")
 end
@@ -338,7 +341,7 @@ do
     print("Testing...", "watching 5: error")
     local _,err = pcall(function ()
         spawn(function ()
-            watching (false, 'no')
+            watching ('no', false)
         end)
     end)
     assertfx(err, "par.lua:%d+: invalid watching : expected task prototype")
@@ -347,10 +350,11 @@ end
 do
     print("Testing...", "watching 6")
     spawn (function ()
-        local v = watching (function (e,v) return e=='X' and v==10, v end,
+        local v = watching (
             function ()
                 await(false)
-            end
+            end,
+            function (e,v) return e=='X' and v==10, v end
         )
         out(v)
     end)
@@ -363,11 +367,12 @@ end
 do
     print("Testing...", "watching 7")
     spawn (function ()
-        watching (true,
+        watching (
             function ()
                 await(true)
                 out 'no'
-            end
+            end,
+            true
         )
         out 'ok'
     end)
@@ -379,11 +384,12 @@ end
 do
     print("Testing...", "watching 8")
     spawn (function ()
-        watching ('X',
+        watching (
             function ()
                 await('X')
                 out 'no'
-            end
+            end,
+            'X'
         )
         out 'ok'
     end)

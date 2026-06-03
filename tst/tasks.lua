@@ -140,9 +140,9 @@ do
     print("Testing...", "toggle 1")
     do
         function T (v)
-            every(true, function ()
+            every(function ()
                 out(v)
-            end)
+            end, true)
         end
         local ts = tasks()
         local t = spawn_in (ts, T, 1)

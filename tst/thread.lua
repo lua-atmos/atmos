@@ -394,7 +394,7 @@ do
     print("Testing...", "thread 22: cancel - watching cancels sleeping thread")
     spawn(function ()
         local cleaned = false
-        local v = watching("stop",
+        local v = watching(
             function ()
                 local _ <close> = defer(function ()
                     cleaned = true
@@ -403,7 +403,8 @@ do
                     os.execute("sleep 1")
                     return "slow"
                 end)
-            end
+            end,
+            "stop"
         )
         out(v)
         out(cleaned)

@@ -823,15 +823,12 @@ end
 -------------------------------------------------------------------------------
 
 --@ derived: loop { f(await(awt, payload...)) }
-function M.every (...)
+function M.every (blk, ...)
     assertn(2, M.me(true), "invalid every : expected enclosing task")
-    local t = { ... }
-    local blk = table.remove(t, #t)
-    -- tag-specific catch: break exits the loop, but return (atm-func),
-    -- abort, and any other throw still propagate past every
+    local awt = table.pack(...)
     M.catch('atm-loop', function ()
         while true do
-            blk(M.await(table.unpack(t)))
+            blk(M.await(table.unpack(awt,1,awt.n)))
         end
     end)
 end
@@ -892,14 +889,13 @@ function M.par_and (...)
 end
 
 --@ derived: par_or { await(awt, payload...) } with { f() }
-function M.watching (...)
+function M.watching (blk, ...)
     assertn(2, M.me(true), "invalid watching : expected enclosing task")
-    local t = { ... }
-    local f = table.remove(t, #t)
-    assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
+    assertn(2, type(blk) == 'function', "invalid watching : expected task prototype")
+    local awt = table.pack(...)
     return M.par_or(
-        function () return M.await(table.unpack(t)) end,
-        f
+        function () return M.await(table.unpack(awt,1,awt.n)) end,
+        blk
     )
 end
 
