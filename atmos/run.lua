@@ -500,15 +500,8 @@ end
 local function check_ret (T, ...)
     -- T = await pattern | ... = occurring event arguments
     local tp,e = table.unpack(T)
-    local mta = getmetatable(T)
     local mte = getmetatable(...)
     -- __atmos opt-out: nil first result = not handled, fall through
-    if mta and mta.__atmos then
-        local t = { mta.__atmos(T, ...) }
-        if t[1] ~= nil then
-            return table.unpack(t)
-        end
-    end
     if mte and mte.__atmos then
         local t = { mte.__atmos(T, ...) }
         if t[1] ~= nil then
@@ -539,8 +532,6 @@ local function await_to_table (e, ...)
             T = e
         elseif type(e[1]) == 'string' then
             T = { '==', table.unpack(e) }
-        else
-            T = { '==', e, ... }
         end
     else
         T = { '==', e, ... }
@@ -561,6 +552,8 @@ function M.await (e, ...)
     local t = M.me(true)
     assertn(2, t, "invalid await : expected enclosing task", 2)
     assertn(2, e~=nil, "invalid await : expected event", 2)
+
+    local mta = getmetatable(T)
 
     local tp = (type(e) == 'table') and e[1]
 
@@ -586,15 +579,8 @@ function M.await (e, ...)
             end
         end
     elseif tp == 'clock' then
-        e.ms = e[2]
-        if e.ms <= 0 then
-            return 'clock', nil -- TODO: now?
-        end
-    elseif type(e) == 'function' then
-        local ret = table.pack(e())
-        if ret[1] then
-            return table.unpack(ret, 2, ret.n)
-        end
+        e.ms  = e[2]
+        e.now = nil     -- TODO
     elseif S.is(e) then
         return M.await(spawn(function() return e() end), ...)
     end
@@ -602,9 +588,9 @@ function M.await (e, ...)
     t._.await = await_to_table(e, ...)
 
     local mode = ...
+    local emt = { n=1, false }
 
     while true do
-        -- tasks : 'any' and 'all'
         if getmetatable(e) == meta_tasks then
             if mode == 'all' then
                 if #e == 0 then             -- only when #e=0
@@ -620,15 +606,27 @@ function M.await (e, ...)
                     return e.ret.ret, e.ret, e
                 end
             end
-
-        -- task
         elseif getmetatable(e) == meta_task then
             if coroutine.status(e._.th) == 'dead' then
                 return e.ret, e
             end
+        elseif mta and mta.__atmos then
+            local ret = table.pack(mta.__atmos(T, ...))
+            if ret[1] then
+                return table.unpack(ret, 2, ret.n)
+            end
+        elseif tp == 'clock' then
+            if e.ms <= 0 then
+                return 'clock', -e.ms, e.now
+            end
+        elseif type(e) == 'function' then
+            local ret = table.pack(e(table.unpack(emt, 2, emt.n)))
+            if ret[1] then
+                return table.unpack(ret, 2, ret.n)
+            end
         end
 
-        local emt = table.pack(coroutine.yield())
+        emt = table.pack(coroutine.yield())
         if emt[1] then
             error(emt[2], 0)
         end
@@ -644,10 +642,8 @@ function M.await (e, ...)
             end
         elseif tp == 'clock' then
             if emt[2] == 'clock' then
-                e.ms = e.ms - emt[3]
-                if e.ms <= 0 then
-                    return 'clock', -e.ms, emt[4]
-                end
+                e.ms  = e.ms - emt[3]
+                e.now = emt[4]
             end
         else
             local ret = table.pack(check_ret(t._.await, table.unpack(emt,2,emt.n)))
