@@ -19,7 +19,16 @@ do
             await()
         end)
     end)
-    assertfx(err, "task.lua:19: invalid await : expected event")
+    assertfx(err, "task.lua:19: invalid await : invalid event pattern")
+    atmos.stop()
+
+    print("Testing...", "await 2: error")
+    local _,err = pcall(function ()
+        spawn(function ()
+            await(1,2)
+        end)
+    end)
+    assertfx(err, "task.lua:28: invalid await : invalid event pattern")
     atmos.stop()
 end
 
@@ -31,7 +40,7 @@ do
             emit_in(false,1)
         end)()
     end)
-    assertfx(err, "task.lua:31: invalid emit : invalid target")
+    assertfx(err, "task.lua:40: invalid emit : invalid target")
     atmos.stop()
 end
 
@@ -144,7 +153,7 @@ do
         await(clock{h=1,min=1,s=1,ms=10})
         out("awake")
     end)
-    emit('clock', 10*60*60*1000, 0)
+    emit { tag='clock', ms=10*60*60*1000, now=0 }
     out("ok")
     assertx(out(), "awake\nok\n")
     atmos.stop()
@@ -158,11 +167,11 @@ do
         end)
     end)
     emit 'A'
-    emit('clock', 500, 0)
+    emit { tag='clock', ms=500, now=0 }
     emit 'B'
-    emit('clock', 500, 0)
+    emit { tag='clock', ms=500, now=0 }
     emit 'C'
-    emit('clock', 500, 0)
+    emit { tag='clock', ms=500, now=0 }
     emit 'D'
     assertx(out(), "1s elapsed\n")
     atmos.stop()

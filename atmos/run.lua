@@ -547,7 +547,9 @@ function M.await (awt, ...)
 
     local tsk = M.me(true)
     assertn(2, tsk, "invalid await : expected enclosing task", 2)
-    assertn(2, awt~=nil, "invalid await : expected event", 2)
+    assertn(2, awt~=nil and select('#',...)==0,
+        "invalid await : invalid event pattern", 2
+    )
 
     local mta = getmetatable(awt)
 
@@ -577,13 +579,11 @@ function M.await (awt, ...)
     elseif tag == 'clock' then
         awt._ms = awt.ms
     elseif S.is(awt) then
-        return M.await(spawn(function() return awt() end), ...)
+        return M.await(spawn(function() return awt() end))
     end
 
-    tsk._.await = await_to_table(awt, ...)
-
     local mode = ...
-    local emt = { n=1 }
+    local emt = nil
 
     while true do
         if getmetatable(awt) == meta_tasks then
@@ -606,48 +606,41 @@ function M.await (awt, ...)
                 return awt.ret, awt
             end
         elseif mta and mta.__atmos then
-            local ret = table.pack(mta.__atmos(awt, table.unpack(emt, 2, emt.n)))
-            if ret[1] then
-                return table.unpack(ret, 2, ret.n)
+            local ok, ret = mta.__atmos(awt, emt)
+            if ok then
+                return ret
             end
         elseif tag == 'clock' then
             if awt._ms <= 0 then
                 return 'clock', -awt._ms, awt._now
             end
         elseif type(awt) == 'function' then
-            local ret = table.pack(awt(table.unpack(emt, 2, emt.n)))
-            if ret[1] then
-                return table.unpack(ret, 2, ret.n)
+            local ok, ret = awt(emt)
+            if ok then
+                return ret
             end
         end
 
-        emt = table.pack(coroutine.yield())
-        if emt[1] then
-            error(emt[2], 0)
+        local err
+        err, emt = coroutine.yield()
+        if err then
+            error(emt, 0)
         end
 
         if awt == true then
-            return table.unpack(emt, 2, emt.n)
+            return emt
         elseif awt == false then
             -- never awakes
-        elseif type(awt) == 'function' then
-            local ret = table.pack(awt(table.unpack(emt,2,emt.n)))
-            if ret[1] then
-                return table.unpack(ret, 2, ret.n)
-            end
         elseif tag == 'clock' then
-            if emt[2] == 'clock' then
-                awt._ms  = awt._ms - emt[3]
-                awt._now = emt[4]
+            -- test is up
+            if emt.tag == 'clock' then
+                awt._ms  = awt._ms - emt.ms
+                awt._now = emt.now
             end
-        else
-            local ret = table.pack(check_ret(tsk._.await, table.unpack(emt,2,emt.n)))
-            if ret[1] then
-                return table.unpack(ret, 2, ret.n)
-            end
+        elseif awt == emt then
+            return emt
         end
     end
-
 end
 
 -------------------------------------------------------------------------------
