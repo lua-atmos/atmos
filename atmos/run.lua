@@ -79,33 +79,14 @@ local function clock_to_ms (clk)
            (clk.h   and clk.h  *1000*60*60 or 0)
 end
 
-local meta_clock
-meta_clock = {
-    -- await(clock{ms=100})
-    -- vs
-    -- emit('clock',100)
-    -- emit(clock{ms=100})
-    __atmos = function (a, e, dt, now)
-        local ma = getmetatable(a)
-        local me = getmetatable(e)
-        if (ma == meta_clock) and (e=='clock' or me==meta_clock) then
-            if e == 'clock' then
-                a.cur = a.cur - dt
-                return (a.cur <= 0), 'clock', -a.cur, now
-            else
-                a.cur = a.cur - clock_to_ms(e)
-                return (a.cur <= 0), 'clock', -a.cur, nil
-            end
-        else
-            return false    -- fail shortcut
-        end
-    end
-}
-
 function M.clock (t)
     assertn(2, type(t)=='table', "invalid clock : expected table")
-    t[1] = 'clock'
-    return setmetatable(t, meta_clock)
+    local ms = clock_to_ms(t)
+    if t[1] then
+        return 'clock', ms
+    else
+        return { 'clock', ms }
+    end
 end
 
 -------------------------------------------------------------------------------
@@ -140,8 +121,6 @@ function M.is (v, x)
     elseif mt==meta_task and x=='task' then
         return true
     elseif mt==meta_tasks and x=='tasks' then
-        return true
-    elseif mt==meta_clock and x=='clock' then
         return true
     elseif tp=='table' and type(x)=='string' and type(v.tag)=='string' then
         return (string.find(v.tag or '', '^'..x) == 1)
@@ -559,9 +538,6 @@ local function await_to_table (e, ...)
         if S.is(e) then
             --error'TODO'
             T = { '==', spawn(function() return e() end), ... }
-        elseif getmetatable(e) == meta_clock then
-            e.cur = clock_to_ms(e)
-            T = e
         elseif getmetatable(e) and getmetatable(e).__atmos then
             T = e
         elseif type(e[1]) == 'string' then
@@ -589,16 +565,17 @@ function M.await (e, ...)
     assertn(2, t, "invalid await : expected enclosing task", 2)
     assertn(2, e~=nil, "invalid await : expected event", 2)
 
-    local v = (type(e) == 'table') and e[1]
-    if v=='or' or v=='and' then
+    local tp = (type(e) == 'table') and e[1]
+
+    if tp=='or' or tp=='and' then
         local fs = {}
         for i=2, #e do
             local sub = e[i]
             fs[#fs+1] = function () return M.await(sub) end
         end
-        local f = (v=='or' and M.par_or) or M.par_and
-        return f(table.unpack(fs, 1, fs.n))
-    elseif v == 'not' then
+        local f = (tp=='or' and M.par_or) or M.par_and
+        return f(table.unpack(fs, 1, #e))
+    elseif tp == 'not' then
         assertn(2, #e==2, "invalid await : too many arguments")
         while true do
             local ret = table.pack(M.par_or(function()
@@ -611,6 +588,11 @@ function M.await (e, ...)
                 return table.unpack(ret, 2, ret.n)
             end
         end
+    elseif tp == 'clock' then
+        e.ms = e[2]
+        if e.ms <= 0 then
+            return 'clock', nil -- TODO: now?
+        end
     elseif type(e) == 'function' then
         local ret = table.pack(e())
         if ret[1] then
@@ -620,11 +602,11 @@ function M.await (e, ...)
 
     t._.await = await_to_table(e, ...)
 
+    local mode = ...
 
     while true do
         -- tasks : 'any' and 'all'
         if getmetatable(e) == meta_tasks then
-            local mode = ...
             if mode == 'all' then
                 if #e == 0 then             -- only when #e=0
                     return e
@@ -660,6 +642,13 @@ function M.await (e, ...)
             local ret = table.pack(e(table.unpack(emt,2,emt.n)))
             if ret[1] then
                 return table.unpack(ret, 2, ret.n)
+            end
+        elseif tp == 'clock' then
+            if emt[2] == 'clock' then
+                e.ms = e.ms - emt[3]
+                if e.ms <= 0 then
+                    return 'clock', -e.ms, emt[4]
+                end
             end
         else
             local ret = table.pack(check_ret(t._.await, table.unpack(emt,2,emt.n)))
