@@ -176,11 +176,11 @@ local function task_result (t, ok, err)
         t._.up._.gc = true
         --if t._.status ~= 'aborted' then
             local up = _me_(false, t._.up)
-            M.emit(false, up, t)
             if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
-                local up = _me_(false, t._.up._.up)
-                M.emit(false, up, t._.up, 'any', t)
+                t._.up.ret = t._.up.ret or t
+                up = _me_(false, t._.up._.up)   -- await(ts) must reach parent
             end
+            M.emit(false, up, t)
         --end
         meta_task.__close(t)
     end
@@ -633,7 +633,7 @@ function M.await (e, ...)
             fs[#fs+1] = function () return M.await(sub) end
         end
         local f = (v=='or' and M.par_or) or M.par_and
-        return f(table.unpack(fs))
+        return f(table.unpack(fs, 1, fs.n))
     elseif v == 'not' then
         assertn(2, #e==2, "invalid await : too many arguments")
         while true do
@@ -651,23 +651,27 @@ function M.await (e, ...)
 
     t._.await = await_to_table(e, ...)
 
-    -- await task : already dead : immediate return
-    if (
-        (getmetatable(e) == meta_task) and
-        (coroutine.status(e._.th) == 'dead')
-    ) then
-        return e.ret, e
-    end
-
     while true do
-        -- empty pool : nothing to await : immediate return : 'any' and 'all'
-        if (getmetatable(e) == meta_tasks) and (#e == 0) then
+        -- tasks : 'any' and 'all'
+        if getmetatable(e) == meta_tasks then
             local mode = ...
             if mode == 'all' then
-                return e
+                if #e == 0 then             -- only when #e=0
+                    return e
+                end
             else
                 assert(mode=='any' or mode==nil)
-                return nil, nil, e
+                if #e == 0 then             -- immediate if #e=0
+                    return nil, nil, e
+                elseif e.ret then           -- some task terminated
+                    return e.ret.ret, e.ret, e
+                end
+            end
+
+        -- task
+        elseif getmetatable(e) == meta_task then
+            if coroutine.status(e._.th) == 'dead' then
+                return e.ret, e
             end
         end
 
