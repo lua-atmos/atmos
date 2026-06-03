@@ -630,49 +630,46 @@ function M.await (e, ...)
     assertn(2, t, "invalid await : expected enclosing task", 2)
     assertn(2, e~=nil, "invalid await : expected event", 2)
 
-    -- combinator awt is derived: reduce to throw-based par_or / par_and.
-    -- same branch for both: or preserves the winner's multi-values (carried
-    -- by the throw), and yields one value per branch (par_and joins via
-    -- single-valued task.ret).
     local v = (type(e) == 'table') and e[1]
     if v=='or' or v=='and' then
         local fs = {}
-        for i = 2, #e do
+        for i=2, #e do
             local sub = e[i]
             fs[#fs+1] = function () return M.await(sub) end
         end
         local f = (v=='or' and M.par_or) or M.par_and
         return f(table.unpack(fs))
-
-    -- not is per-emit negation: awake on the next emit that does not match the
-    -- single sub-pattern. unlike or/and it cannot reduce to par, so it derives
-    -- a func await that negates check_ret against the pattern.
     elseif v == 'not' then
-        assertn(2, #e == 2, "invalid await : expects one argument")
-        local T = await_to_table(e[2])
-        return M.await(function (...)
-            return not check_ret(T, ...)
-        end)
+        assertn(2, #e==2, "invalid await : too many arguments")
+        while true do
+            local ret = table.pack(M.par_or(function()
+                M.await(e[2])
+                return false
+            end, function()
+                return true, M.await(true)
+            end))
+            if ret[1] then
+                return table.unpack(ret, 2, ret.n)
+            end
+        end
     end
 
     t._.await = await_to_table(e, ...)
 
     -- empty pool: nothing to await, return now (both :any and :all)
-    local ts = t._.await[2]
-    if (getmetatable(ts) == meta_tasks) and (#ts == 0) then
+    if (getmetatable(e) == meta_tasks) and (#e == 0) then
         local mode = t._.await[3]
         if mode == 'any' then
-            return nil, nil, ts
+            return nil, nil, e
         else
             assert(mode == 'all')
-            return ts
+            return e
         end
     end
 
     -- await task that is already dead: return immediately
-    local tp,e = table.unpack(t._.await)
     if (
-        (tp == '==') and (getmetatable(e) == meta_task) and
+        (getmetatable(e) == meta_task) and
         (coroutine.status(e._.th) == 'dead')
     ) then
         return e.ret, e
