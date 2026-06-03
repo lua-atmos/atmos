@@ -493,49 +493,6 @@ end
 
 -------------------------------------------------------------------------------
 
-local function check_ret (T, ...)
-    -- T = await pattern | ... = occurring event arguments
-    local tp,e = table.unpack(T)
-    local mte = getmetatable(...)
-    -- __atmos opt-out: nil first result = not handled, fall through
-    if mte and mte.__atmos then
-        local t = { mte.__atmos(T, ...) }
-        if t[1] ~= nil then
-            return table.unpack(t)
-        end
-    end
-    if tp == '==' then
-        for i = 2, #T do
-            if not _is_(select(i-1,...), T[i]) then
-                return false
-            end
-        end
-        if getmetatable(e) == meta_task then
-            return true, e.ret, e
-        elseif getmetatable(e) == meta_tasks then
-        else
-            return true, ...
-        end
-    else
-        return false
-    end
-end
-
-local function await_to_table (e, ...)
-    local T = {}
-    if type(e) == 'table' then
-        if getmetatable(e) and getmetatable(e).__atmos then
-            T = e
-        elseif type(e[1]) == 'string' then
-            T = { '==', table.unpack(e) }
-        end
-    else
-        T = { '==', e, ... }
-    end
-    T.time = TIME
-    return T
-end
-
 function M.await (awt, ...)
     -- await(stream)
     -- await(clock{...})
@@ -678,7 +635,7 @@ local function emit (time, t, ...)
 
     if t._.status == 'toggled' then
         -- toggled off: gate the whole subtree, unless a filter matches
-        if not (t._.filter and check_ret(t._.filter, ...)) then
+        if not (t._.filter and error'TODO') then
             return ok, err
         end
     end
@@ -764,6 +721,7 @@ function M.toggle (t, on, ...)
         -- build the filter at toggle-off time so T.time = TIME is fresh
         local filter = table.pack(...)
         if filter.n > 0 then
+            error'TODO'
             t._.filter = await_to_table(table.unpack(filter, 1, filter.n))
         end
     end
