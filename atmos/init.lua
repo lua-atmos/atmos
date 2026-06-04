@@ -52,7 +52,7 @@ function emit_in (to, emt, ...)
 end
 
 function emit (emt, ...)
-    assertn(2, emt~=nil and select('#',...)==0,
+    assertn(2, select('#',...) == 0,
         "invalid emit : invalid event"
     )
     return run.emit(true, nil, emt, ...)

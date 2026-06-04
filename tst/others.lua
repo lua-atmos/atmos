@@ -354,7 +354,7 @@ do
             end)
             out(x, y, z)
         end)
-        emit()
+        emit(true)
         out('ok')
     end
     assertx(out(), "false\tX\t10\nok\n")
@@ -374,7 +374,7 @@ do
             end)
             out(x, y, z)
         end)
-        emit()
+        emit(true)
         out('ok')
     end
     assertx(out(), "false\tX\t10\nok\n")
@@ -490,7 +490,7 @@ do
                 end)
                 out(x, y, z)
             end)
-            emit()
+            emit(true)
         end)
         out('ok')
     end)
