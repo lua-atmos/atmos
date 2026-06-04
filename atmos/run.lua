@@ -583,20 +583,23 @@ function M.await (awt, ...)
                 awt._ms  = awt._ms - emt.ms
                 awt._now = emt.now
             end
-        elseif type(awt) == 'string' then
-            if M.is(emt,tag) then
-                return emt
-            end
-        elseif type(awt)=='table' and awt.tag and (type(emt) == 'table') then
-            -- tagged pattern: every await field (incl. tag) must M.is the event's
-            local ok = true
-            for k, v in pairs(awt) do
-                if not M.is(emt[k], v) then
-                    ok = false
-                    break
+        elseif type(awt)=='table' then
+            -- tagged pattern: every await field must match (M.is) event
+            if awt.tag and (type(emt) == 'table') then
+                local ok = true
+                for k, v in pairs(awt) do
+                    if not M.is(emt[k], v) then
+                        ok = false
+                        break
+                    end
+                end
+                if ok then
+                    return emt
                 end
             end
-            if ok then
+        else
+            -- string, number
+            if M.is(emt,tag) then
                 return emt
             end
         end
