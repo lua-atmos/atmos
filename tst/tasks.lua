@@ -90,7 +90,7 @@ do
     local ts = tasks(1)
     local ok1 = spawn_in(ts, T, 1)
     assertx(#ts, 1)
-    emit()
+    emit(true)
     assertx(#ts, 0)
     local ok2 = spawn_in(ts, T, 2)
     assertx(#ts, 1)
@@ -124,7 +124,7 @@ do
     local ts = tasks(1)
     spawn_in(ts, T)
     for _, t in getmetatable(ts).__pairs(ts) do
-        emit()                      -- kills t
+        emit(true)                      -- kills t
         local ok = spawn_in(ts, T)  -- (no) failure b/c ts.ing>0
         out(ok ~= nil)
     end

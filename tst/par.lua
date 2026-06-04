@@ -69,10 +69,12 @@ do
     spawn(function ()
         par_or (
             function ()
-                out(await('X'))
+                local e = await('X')
+                out(e.tag, e[1])
             end,
             function ()
-                out(await('Y'))
+                local e = await('Y')
+                out(e.tag, e[1])
             end
         )
         out('ok')
@@ -91,8 +93,8 @@ do
                 return await('X')
             end,
             function ()
-                local _,v = await('Y')
-                return v
+                local e = await('Y')
+                return e[1]
             end
         )
         out(v)
@@ -193,7 +195,8 @@ do
                 out(await('X'))
             end,
             function ()
-                out(await('Y'))
+                local e = await('Y')
+                out(e.tag, e[1])
             end
         )
         out('ok')
@@ -212,8 +215,8 @@ do
                 return await('X')
             end,
             function ()
-                local _,v = await('Y')
-                return v
+                local e = await('Y')
+                return e[1]
             end
         )
         out(x,y)
@@ -347,7 +350,7 @@ end
 do
     print("Testing...", "watching 6")
     spawn (function ()
-        local v = watching (function (e,v) return e=='X' and v==10, v end,
+        local v = watching (function (e) return e and e.tag=='X' and e[1]==10, e and e[1] end,
             function ()
                 await(false)
             end

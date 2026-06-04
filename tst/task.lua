@@ -260,8 +260,8 @@ end
 do
     print("Testing...", "await or 2")
     spawn(function ()
-        local v,u = await {tag='or', {tag='Y',5}, {tag='Y',10}}
-        out(v,u)
+        local v = await {tag='or', {tag='Y',5}, {tag='Y',10}}
+        out(v.tag, v[1])
     end)
     emit{tag='Y',10}
     assertx(out(), "Y\t10\n")
@@ -317,7 +317,7 @@ do
     print("Testing...", "await and 1")
     spawn(function ()
         local v,u = await({tag='and', 'X', 'Y'})
-        out(v, u)
+        out(v.tag, u.tag)
     end)
     emit{tag='Y',10}
     emit{tag='X',20}
@@ -406,8 +406,8 @@ print "--- AWAIT / _NOT_ ---"
 do
     print("Testing...", "await not 1")
     spawn(function ()
-        local v,u = await {tag='not', 'X'}
-        out(v,u)
+        local v = await {tag='not', 'X'}
+        out(v.tag, v[1])
     end)
     emit{tag='X', 99}
     emit{tag='Y', 10}
@@ -418,8 +418,8 @@ end
 do
     print("Testing...", "await not 2: in or")
     spawn(function ()
-        local v,u = await {tag='or', {tag='not', 'X'}, 'Y'}
-        out(v,u)
+        local v = await {tag='or', {tag='not', 'X'}, 'Y'}
+        out(v.tag, v[1])
     end)
     emit 'X'
     emit{tag='Z', 5}

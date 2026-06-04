@@ -587,6 +587,18 @@ function M.await (awt, ...)
             if M.is(emt,tag) then
                 return emt
             end
+        elseif type(awt)=='table' and awt.tag and (type(emt) == 'table') then
+            -- tagged pattern: every await field (incl. tag) must M.is the event's
+            local ok = true
+            for k, v in pairs(awt) do
+                if not M.is(emt[k], v) then
+                    ok = false
+                    break
+                end
+            end
+            if ok then
+                return emt
+            end
         end
     end
 end
