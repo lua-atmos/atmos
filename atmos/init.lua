@@ -47,8 +47,8 @@ function spawn (tra, t, ...)
     end
 end
 
-function emit_in (to, e, ...)
-    return run.emit(true, to, e, ...)
+function emit_in (to, emt, ...)
+    return run.emit(true, to, emt, ...)
 end
 
 function emit (emt, ...)

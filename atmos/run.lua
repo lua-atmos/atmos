@@ -665,11 +665,11 @@ local function emit (time, t, emt, ...)
     end
 end
 
-function M.emit (stk, to, e, emt, ...)
+function M.emit (stk, to, emt, ...)
     assert(select('#',...) == 0)    -- TODO: remove in the future
     TIME = TIME + 1
     local time = TIME
-    local ret = xcall(debug.getinfo(2), stk and "emit", emit, time, fto(M.me(false),to), e, emt)
+    local ret = xcall(debug.getinfo(2), stk and "emit", emit, time, fto(M.me(false),to), emt)
     local me = M.me(true)
     if me and me._.status=='aborted' then
         -- TODO: lua5.5

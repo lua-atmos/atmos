@@ -201,7 +201,7 @@ do
         await(t)
         out("awake")
     end)
-    emit()
+    emit(true)
     out("ok")
     assertx(out(), "awake\nok\n")
     atmos.stop()
