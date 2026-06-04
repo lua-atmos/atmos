@@ -504,17 +504,16 @@ function M.await (awt, ...)
 
     if tag=='or' or tag=='and' then
         local fs = {}
-        for i=2, #awt do
-            local sub = awt[i]
+        for _,sub in ipairs(awt) do
             fs[#fs+1] = function () return M.await(sub) end
         end
         local f = (tag=='or' and M.par_or) or M.par_and
         return f(table.unpack(fs, 1, #awt))
     elseif tag == 'not' then
-        assertn(2, #awt==2, "invalid await : too many arguments")
+        assertn(2, #awt==1, "invalid await : too many arguments")
         while true do
             local ret = table.pack(M.par_or(function()
-                M.await(awt[2])
+                M.await(awt[1])
                 return false
             end, function()
                 return true, M.await(true)
@@ -585,7 +584,7 @@ function M.await (awt, ...)
                 awt._now = emt.now
             end
         elseif type(awt) == 'string' then
-            if tag == emt then
+            if M.is(emt,tag) then
                 return emt
             end
         end

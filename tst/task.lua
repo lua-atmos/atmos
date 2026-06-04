@@ -219,7 +219,7 @@ do
         await(y)
         out("awake")
     end)
-    emit()
+    emit(true)
     out("ok")
     assertx(out(), "ok\n")
     atmos.stop()
@@ -239,7 +239,7 @@ do
         local vv,xx = await(x)
         out(vv,xx==x)
     end)
-    emit()
+    emit(true)
     assertx(out(), "20\n10\ttrue\n")
     atmos.stop()
 end
@@ -249,10 +249,10 @@ print "--- AWAIT / _OR_ ---"
 do
     print("Testing...", "await or 1")
     spawn(function ()
-        local v,u = await({'or', 'X', 'Y'})
-        out(v,u)
+        local v = await({tag='or', 'X', 'Y'})
+        out(v.tag,v[1])
     end)
-    emit('Y',10)
+    emit { tag='Y', 10 }
     assertx(out(), "Y\t10\n")
     atmos.stop()
 end
