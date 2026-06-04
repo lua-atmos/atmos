@@ -510,8 +510,6 @@ function M.await (awt, ...)
     local me = M.me(true)
     assertn(2, me, "invalid await : expected enclosing task")
 
-    local mta = getmetatable(awt)
-
     local tag = ((type(awt) == 'table') and awt.tag) or awt
 
     if tag=='or' or tag=='and' then
@@ -540,10 +538,16 @@ function M.await (awt, ...)
         return M.await(spawn(function() return awt() end))
     end
 
+    local mta = getmetatable(awt)
     local emt = nil
 
     while true do
-        if getmetatable(awt) == meta_tasks then
+        if mta and mta.__atmos then
+            local ok, ret = mta.__atmos(awt, emt)
+            if ok then
+                return ret
+            end
+        elseif getmetatable(awt) == meta_tasks then
             if mode == 'all' then
                 if #awt == 0 then             -- only when #awt=0
                     return awt
@@ -558,11 +562,6 @@ function M.await (awt, ...)
         elseif getmetatable(awt) == meta_task then
             if coroutine.status(awt._.th) == 'dead' then
                 return awt.ret, awt
-            end
-        elseif mta and mta.__atmos then
-            local ok, ret = mta.__atmos(awt, emt)
-            if ok then
-                return ret
             end
         elseif tag == 'clock' then
             if awt._ms <= 0 then
@@ -581,7 +580,13 @@ function M.await (awt, ...)
             error(emt, 0)
         end
 
-        if awt == true then
+        local mte = getmetatable(emt)
+        if mte and mte.__atmos then
+            local ok, ret = mte.__atmos(emt, awt)
+            if ok then
+                return ret
+            end
+        elseif awt == true then
             return emt
         elseif awt == false then
             -- never awakes

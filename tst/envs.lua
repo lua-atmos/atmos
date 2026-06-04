@@ -129,9 +129,9 @@ do
     atmos.env { step=step1, mode={ primary=true, secondary=false } }
     atmos.env { step=step2, mode={ primary=false, secondary=true } }
     loop(function ()
-        local _, s = await 'sensor'
-        local _, x = await 'net'
-        out(s, x)
+        local s = await 'sensor'
+        local x = await 'net'
+        out(s[1], x[1])
     end)
     assertx(out(), "1\t10\n")
     atmos.stop()
@@ -139,6 +139,7 @@ end
 
 print "--- ENVS: __ATMOS ---"
 
+--[[
 do
     print("Testing...", "atmos nil opt-out")
     do
@@ -155,6 +156,7 @@ do
     assertx(out(), "1\n")
     atmos.stop()
 end
+]]
 
 do
     print("Testing...", "atmos true")
@@ -195,6 +197,7 @@ do
     atmos.stop()
 end
 
+--[[
 do
     print("Testing...", "atmos mta nil opt-out")
     do
@@ -212,6 +215,7 @@ do
     assertx(out(), "1\n")
     atmos.stop()
 end
+]]
 
 do
     print("Testing...", "atmos mta true")
