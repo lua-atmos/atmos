@@ -658,8 +658,8 @@ local function emit (time, t, emt, ...)
     local ok, err = true, nil
 
     if t._.status == 'toggled' then
-        -- toggled off: gate the subtree unless the filter passed this emit
-        if not (t._.filter and t._.filter.pass==time) then
+        -- toggled off: gate the subtree; the filter guard re-injects matches
+        if not t._.bypass then
             return ok, err
         end
     end
@@ -742,14 +742,9 @@ function M.toggle (t, on, filter, ...)
         assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
         t._.status = nil
         if t._.filter and t._.filter.task then
-            meta_task.__close(t._.filter.task)
-            local dns = t._.up._.dns
-            for i=#dns,1,-1 do
-                if dns[i] == t._.filter.task then
-                    table.remove(dns, i)
-                    break
-                end
-            end
+            local g = t._.filter.task
+            meta_task.__close(g)        -- close; task_gc removes the dead guard
+            g._.up._.gc = true          -- (mid-emit safe: no dns mutation here)
             t._.filter = nil
         end
     else
@@ -757,17 +752,16 @@ function M.toggle (t, on, filter, ...)
             "invalid toggle : expected awaiting task")
         t._.status = 'toggled'
         if filter ~= nil then
-            local up = t._.up
-            local g = M.spawn(debug.getinfo(2), up, true, function ()
+            -- guard is a plain sibling; on a match it re-injects the event into
+            -- t's subtree through the gate (no dns ordering needed)
+            local g = M.spawn(debug.getinfo(2), t._.up, true, function ()
                 while true do
-                    M.await(filter)
-                    t._.filter.pass = TIME
+                    local ev = M.await(filter)
+                    t._.bypass = true
+                    M.emit(false, t, ev)
+                    t._.bypass = false
                 end
             end)
-            -- move guard to just before t in dns (gate ordering); safe outside an emit
-            local dns = up._.dns
-            for i=#dns,1,-1 do if dns[i]==g then table.remove(dns,i) break end end
-            for i=1,#dns     do if dns[i]==t then table.insert(dns,i,g) break end end
             t._.filter = { task = g }
         end
     end
