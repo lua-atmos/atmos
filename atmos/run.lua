@@ -47,9 +47,9 @@ local meta_task = {
         for _,dn in ipairs(t._.dns) do
             getmetatable(dn).__close(dn)
         end
-        if t._.filter and t._.filter.task then
-            -- close the toggle filter guard
-            getmetatable(t._.filter.task).__close(t._.filter.task)
+        if t._.toggle and t._.toggle.task then
+            -- close the off-tree toggle gate
+            getmetatable(t._.toggle.task).__close(t._.toggle.task)
         end
         local st = coroutine.status(t._.th)
         if st == 'suspended' then
@@ -658,8 +658,11 @@ local function emit (time, t, emt, ...)
     local ok, err = true, nil
 
     if t._.status == 'toggled' then
-        -- toggled off: gate the subtree; the filter guard re-injects matches
-        if not t._.bypass then
+        -- toggled off: drive the off-tree gate task first, then gate the subtree
+        if t._.toggle then
+            emit(time, t._.toggle.task, emt)
+        end
+        if not (t._.toggle and t._.toggle.pass == time) then
             return ok, err
         end
     end
@@ -741,28 +744,26 @@ function M.toggle (t, on, filter, ...)
         assertn(2, filter==nil, "invalid toggle : unexpected argument")
         assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
         t._.status = nil
-        if t._.filter and t._.filter.task then
-            local g = t._.filter.task
-            meta_task.__close(g)        -- close; task_gc removes the dead guard
-            g._.up._.gc = true          -- (mid-emit safe: no dns mutation here)
-            t._.filter = nil
+        if t._.toggle then
+            meta_task.__close(t._.toggle.task)   -- off-tree: just close it
+            t._.toggle = nil
         end
     else
         assertn(2, t._.status==nil --[[and coroutine.status(t._.th)=='suspended']],
             "invalid toggle : expected awaiting task")
         t._.status = 'toggled'
         if filter ~= nil then
-            -- guard is a plain sibling; on a match it re-injects the event into
-            -- t's subtree through the gate (no dns ordering needed)
-            local g = M.spawn(debug.getinfo(2), t._.up, true, function ()
+            -- hidden gate task (off-tree): emit drives it explicitly before the
+            -- gate check; on a match it stamps t._.toggle.pass = TIME
+            local gate = M.task(debug.getinfo(2), true, function ()
                 while true do
-                    local ev = M.await(filter)
-                    t._.bypass = true
-                    M.emit(false, t, ev)
-                    t._.bypass = false
+                    M.await(filter)
+                    t._.toggle.pass = TIME
                 end
             end)
-            t._.filter = { task = g }
+            gate._.up = t._.up
+            t._.toggle = { task = gate }
+            task_result(gate, coroutine.resume(gate._.th))   -- start (run to first await)
         end
     end
 end
