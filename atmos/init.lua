@@ -58,13 +58,7 @@ function emit (emt, ...)
     return run.emit(true, nil, emt, ...)
 end
 
-function await (awt, ...)
-    assertn(2, awt~=nil and select('#',...)==0,
-        "invalid await : invalid event pattern"
-    )
-    return run.await(awt)
-end
-
+await    = run.await
 clock    = run.clock
 
 toggle   = run.toggle

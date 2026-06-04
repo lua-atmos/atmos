@@ -494,7 +494,19 @@ end
 -------------------------------------------------------------------------------
 
 function M.await (awt, ...)
-    assert(select('#',...) == 0)    -- TODO: remove in the future
+    local mode
+    local n = 0
+    if getmetatable(awt) == meta_tasks then
+        mode = ...
+        assertn(2, mode=='all' or mode=='any' or mode==nil,
+            "invalid await : expected 'any' or 'all'"
+        )
+        n = 1
+    end
+    assertn(2, awt~=nil and select('#',...)<=n,
+        "invalid await : invalid event pattern"
+    )
+
     local me = M.me(true)
     assertn(2, me, "invalid await : expected enclosing task")
 
@@ -528,7 +540,6 @@ function M.await (awt, ...)
         return M.await(spawn(function() return awt() end))
     end
 
-    local mode = ...
     local emt = nil
 
     while true do
@@ -538,9 +549,6 @@ function M.await (awt, ...)
                     return awt
                 end
             else
-                assertn(2, mode=='any' or mode==nil,
-                    "invalid await : expected 'any' or 'all'"
-                )
                 if #awt == 0 then             -- immediate if #awt=0
                     return nil, nil, awt
                 elseif awt.ret then           -- some task terminated
