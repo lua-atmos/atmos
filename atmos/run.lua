@@ -662,7 +662,7 @@ local function emit (time, t, emt, ...)
         if t._.toggle then
             emit(time, t._.toggle.task, emt)
         end
-        if not (t._.toggle and t._.toggle.pass == time) then
+        if not (t._.toggle and t._.toggle.pass==time) then
             return ok, err
         end
     end
