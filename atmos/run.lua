@@ -741,15 +741,34 @@ function M.toggle (t, on, filter, ...)
         assertn(2, filter==nil, "invalid toggle : unexpected argument")
         assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
         t._.status = nil
+        if t._.filter and t._.filter.task then
+            meta_task.__close(t._.filter.task)
+            local dns = t._.up._.dns
+            for i=#dns,1,-1 do
+                if dns[i] == t._.filter.task then
+                    table.remove(dns, i)
+                    break
+                end
+            end
+            t._.filter = nil
+        end
     else
         assertn(2, t._.status==nil --[[and coroutine.status(t._.th)=='suspended']],
             "invalid toggle : expected awaiting task")
         t._.status = 'toggled'
-        -- build the filter at toggle-off time so T.time = TIME is fresh
-        local filter = table.pack(...)
-        if filter.n > 0 then
-            error'TODO'
-            t._.filter = await_to_table(table.unpack(filter, 1, filter.n))
+        if filter ~= nil then
+            local up = t._.up
+            local g = M.spawn(debug.getinfo(2), up, true, function ()
+                while true do
+                    M.await(filter)
+                    t._.filter.pass = TIME
+                end
+            end)
+            -- move guard to just before t in dns (gate ordering); safe outside an emit
+            local dns = up._.dns
+            for i=#dns,1,-1 do if dns[i]==g then table.remove(dns,i) break end end
+            for i=1,#dns     do if dns[i]==t then table.insert(dns,i,g) break end end
+            t._.filter = { task = g }
         end
     end
 end
