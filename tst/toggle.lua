@@ -142,8 +142,8 @@ do
         function T (v)
             toggle('Show', function ()
                 out(v)
-                every('Draw', function (_,v)
-                    out(v)
+                every('Draw', function (e)
+                    out(e[1])
                 end)
             end)
         end
@@ -220,12 +220,12 @@ do
     print("Testing...", "filter 2: block form")
     do
         function T ()
-            toggle('Show', function ()
+            toggle('Show', 'Draw', function ()
                 spawn (function ()
-                    every('Draw', function (_,v) out(v) end)
+                    every('Draw', function (e) out(e[1]) end)
                 end)
-                every('Tick', function (_,v) out(100+v) end)
-            end, 'Draw')
+                every('Tick', function (e) out(100+e[1]) end)
+            end)
         end
         spawn (T)
         emit{tag='Draw', 1}     -- on -> draws
@@ -264,12 +264,12 @@ do
     print("Testing...", "filter 4: block form, 'not' (ignore one event)")
     do
         function T ()
-            toggle('Show', function ()
+            toggle('Show', {tag='not', 'Tick'}, function ()    -- pass all but 'Tick'
                 spawn (function ()
-                    every('Draw', function (_,v) out(v) end)
+                    every('Draw', function (e) out(e[1]) end)
                 end)
-                every('Tick', function (_,v) out(100+v) end)
-            end, {tag='not', 'Tick'})    -- pass all but 'Tick'
+                every('Tick', function (e) out(100+e[1]) end)
+            end)
         end
         spawn (T)
         emit{tag='Show', false} -- off: filter passes everything except 'Tick'

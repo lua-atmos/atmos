@@ -47,6 +47,10 @@ local meta_task = {
         for _,dn in ipairs(t._.dns) do
             getmetatable(dn).__close(dn)
         end
+        if t._.filter and t._.filter.task then
+            -- close the toggle filter guard
+            getmetatable(t._.filter.task).__close(t._.filter.task)
+        end
         local st = coroutine.status(t._.th)
         if st == 'suspended' then
             assert(coroutine.close(t._.th))
@@ -654,8 +658,8 @@ local function emit (time, t, emt, ...)
     local ok, err = true, nil
 
     if t._.status == 'toggled' then
-        -- toggled off: gate the whole subtree, unless a filter matches
-        if not (t._.filter and error'TODO') then
+        -- toggled off: gate the subtree unless the filter passed this emit
+        if not (t._.filter and t._.filter.pass==time) then
             return ok, err
         end
     end
@@ -708,19 +712,21 @@ end
 
 -------------------------------------------------------------------------------
 
-function M.toggle (t, on, ...)
+function M.toggle (t, on, filter, ...)
+    assert(select('#',...) == 0)    -- TODO: remove in the future
     if type(t) == 'string' then
-        --@ derived: spawn; loop { await; toggle; await; toggle; }
-        local e, f = t, on
+        --@ derived: spawn body; loop { await; toggle; await; toggle }
+        local e = t
+        local f = filter or on               -- body is the last arg
+        local p = (filter ~= nil) and on or nil
         assertn(2, type(f)=='function', "invalid toggle : expected task prototype")
-        local filter = table.pack(...)
         do
             local t <close> = M.spawn(debug.getinfo(2), nil, true, f)
             local _ <close> = M.spawn(debug.getinfo(2), nil, true, function ()
                 while true do
-                    M.await(e, false)
-                    M.toggle(t, false, table.unpack(filter, 1, filter.n))
-                    M.await(e, true)
+                    M.await({tag=e, false})
+                    M.toggle(t, false, p)   -- task primitive sets up the filter
+                    M.await({tag=e, true})
                     M.toggle(t, true)
                 end
             end)
@@ -731,8 +737,8 @@ function M.toggle (t, on, ...)
     assertn(2, getmetatable(t)==meta_task or getmetatable(t)==meta_tasks,
         "invalid toggle : expected task")
     assertn(2, type(on) == 'boolean', "invalid toggle : expected bool argument")
-    t._.filter = nil
     if on then
+        assertn(2, filter==nil, "invalid toggle : unexpected argument")
         assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
         t._.status = nil
     else
