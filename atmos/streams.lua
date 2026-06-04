@@ -74,13 +74,13 @@ function S.Debounce (n, src, fctl)
                 )
             end
         end)
-        emit_in(1, n, e)
+        emit_in(1, {tag=n, e})
     end
 end
 
 local function debounce (t)
-    local _,v = await(t.n)
-    return v
+    local e = await(t.n)
+    return e[1]
 end
 
 local function close (t)
@@ -118,13 +118,13 @@ function S.Buffer (n, src, ctl)
                 )
             end
         end)
-        emit_in(1, n, ret)
+        emit_in(1, {tag=n, ret})
     end
 end
 
 local function buffer (t)
-    local _,v = await(t.n)
-    return v
+    local e = await(t.n)
+    return e[1]
 end
 
 local function close (t)
@@ -151,7 +151,7 @@ local function T (n, s)
         if v == nil then
             return
         end
-        emit_in(3, n, v)
+        emit_in(3, {tag=n, v})
     end
 end
 
@@ -178,8 +178,8 @@ end
 -------------------------------------------------------------------------------
 
 local function par (t)
-    local _,v = await(t.n)
-    return v
+    local e = await(t.n)
+    return e[1]
 end
 
 function S.par (...)
@@ -216,11 +216,11 @@ end
 local function paror (t)
     -- await{'or',...} forwards the winner's values: event n -> (n,payload),
     -- pool tsks -> (ret,task,ts); pool win (3rd value is the pool) ends stream
-    local _,v,ts = await {'or', t.n, t.tsks}
+    local e,_,ts = await {tag='or', t.n, t.tsks}
     if ts == t.tsks then
         return nil
     end
-    return v
+    return e[1]
 end
 
 function S.paror (...)

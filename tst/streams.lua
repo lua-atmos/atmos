@@ -15,7 +15,7 @@ do
         assert(#t==2 and t[1]=='E' and t[2]=='E')
     end)
     out 'antes'
-    emit{tag='E', 1}
+    emit('E')
     emit('E')
     out 'depois'
     emit('E')
