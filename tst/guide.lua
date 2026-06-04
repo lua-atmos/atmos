@@ -263,10 +263,10 @@ loop(function ()
             end)
         end)
         print 'off'
-        emit('X', false)    -- body above toggles off
+        emit{tag='X', false}    -- body above toggles off
         await(clock{s=1})
         print 'on'
-        emit('X', true)     -- body above toggles on
+        emit{tag='X', true}     -- body above toggles on
         await(clock{s=1})
     end
 

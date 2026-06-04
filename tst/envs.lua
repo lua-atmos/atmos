@@ -120,11 +120,11 @@ do
     local n = 0
     local function step1 ()
         n = n + 1
-        emit('sensor', n)
-        emit('clock', 100, n*100)
+        emit{tag='sensor', n}
+        emit{tag='clock', ms=100, now=n*100}
     end
     local function step2 ()
-        emit('net', n*10)
+        emit{tag='net', n*10}
     end
     atmos.env { step=step1, mode={ primary=true, secondary=false } }
     atmos.env { step=step2, mode={ primary=false, secondary=true } }

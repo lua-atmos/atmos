@@ -77,7 +77,7 @@ do
         )
         out('ok')
     end)
-    emit('Y',10)
+    emit{tag='Y',10}
     emit('X')
     assertx(out(), "Y\t10\nok\n")
     atmos.stop()
@@ -98,7 +98,7 @@ do
         out(v)
     end)
     emit('Z')
-    emit('Y', 10)
+    emit{tag='Y', 10}
     assertx(out(), "10\n")
     atmos.stop()
 end
@@ -198,7 +198,7 @@ do
         )
         out('ok')
     end)
-    emit('Y',10)
+    emit{tag='Y',10}
     emit('X')
     assertx(out(), "Y\t10\nX\nok\n")
     atmos.stop()
@@ -219,7 +219,7 @@ do
         out(x,y)
     end)
     emit('Z')
-    emit('Y', 10)
+    emit{tag='Y', 10}
     emit('X')
     assertx(out(), "X\t10\n")
     atmos.stop()
@@ -354,8 +354,8 @@ do
         )
         out(v)
     end)
-    emit('X', 20)
-    emit('X', 10)
+    emit{tag='X', 20}
+    emit{tag='X', 10}
     assertx(out(), "10\n")
     atmos.stop()
 end

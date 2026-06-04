@@ -260,10 +260,10 @@ end
 do
     print("Testing...", "await or 2")
     spawn(function ()
-        local v,u = await {'or', {'Y',5}, {'Y',10}}
+        local v,u = await {tag='or', {tag='Y',5}, {tag='Y',10}}
         out(v,u)
     end)
-    emit('Y',10)
+    emit{tag='Y',10}
     assertx(out(), "Y\t10\n")
     atmos.stop()
 end
@@ -275,7 +275,7 @@ do
             await 'X'
             return 10
         end)
-        local v,u = await {'or', t, 'X'}
+        local v,u = await {tag='or', t, 'X'}
         out(v,u==t)
     end)
     emit 'X'
@@ -290,7 +290,7 @@ do
         local t = spawn_in(ts, function ()
             return await 'X'
         end)
-        local v,u,q = await {'or', ts, 'X'}
+        local v,u,q = await {tag='or', ts, 'X'}
         out(v=='X',u==t,q==ts)
     end)
     emit 'X'
@@ -301,11 +301,11 @@ end
 do
     print("Testing...", "await or 5: clock")
     spawn(function ()
-        local v,u = await {'or', 'X', clock{s=1}}
+        local v,u = await {tag='or', 'X', clock{s=1}}
         out(v,u)
     end)
-    emit('clock', 510)
-    emit('clock', 515)
+    emit{tag='clock', ms=510}
+    emit{tag='clock', ms=515}
     emit 'X'
     assertx(out(), "clock\t25\n")
     atmos.stop()
@@ -316,11 +316,11 @@ print "--- AWAIT / _AND_ ---"
 do
     print("Testing...", "await and 1")
     spawn(function ()
-        local v,u = await({'and', 'X', 'Y'})
+        local v,u = await({tag='and', 'X', 'Y'})
         out(v, u)
     end)
-    emit('Y',10)
-    emit('X',20)
+    emit{tag='Y',10}
+    emit{tag='X',20}
     assertx(out(), "X\tY\n")
     atmos.stop()
 end
@@ -328,7 +328,7 @@ end
 do
     print("Testing...", "await and 2")
     spawn(function ()
-        local v,u = await {'and', 'Y', 'Y'}
+        local v,u = await {tag='and', 'Y', 'Y'}
         out(v,u)
     end)
     emit('Y')
@@ -343,7 +343,7 @@ do
             await 'X'
             return 10
         end)
-        local v,u = await {'and', t, 'X'}
+        local v,u = await {tag='and', t, 'X'}
         out(v,u)
     end)
     emit 'X'
@@ -358,7 +358,7 @@ do
         local t = spawn_in(ts, function ()
             return await 'X'
         end)
-        local v,u = await {'and', ts, 'X'}
+        local v,u = await {tag='and', ts, 'X'}
         out(v=='X', u)
     end)
     emit 'X'
@@ -369,11 +369,11 @@ end
 do
     print("Testing...", "await and 5: clock")
     spawn(function ()
-        local v,u = await {'and', 'X', clock{s=1}}
+        local v,u = await {tag='and', 'X', clock{s=1}}
         out(v, u)
     end)
-    emit('clock', 510)
-    emit('clock', 515)
+    emit{tag='clock', ms=510}
+    emit{tag='clock', ms=515}
     emit 'X'
     assertx(out(), "X\tclock\n")
     atmos.stop()
@@ -391,12 +391,12 @@ do
         local T = spawn_in(ts, function ()
             return await('Z')
         end)
-        local v,u = await {'and', {'or', 'X', clock{s=1}}, {'or', ts, t}}
+        local v,u = await {tag='and', {tag='or', 'X', clock{s=1}}, {tag='or', ts, t}}
         out(v, u=='Z')
     end)
-    emit('clock', 510)
+    emit{tag='clock', ms=510}
     emit 'Z'
-    emit('clock', 515)
+    emit{tag='clock', ms=515}
     assertx(out(), "clock\ttrue\n")
     atmos.stop()
 end
@@ -406,11 +406,11 @@ print "--- AWAIT / _NOT_ ---"
 do
     print("Testing...", "await not 1")
     spawn(function ()
-        local v,u = await {'not', 'X'}
+        local v,u = await {tag='not', 'X'}
         out(v,u)
     end)
-    emit('X', 99)
-    emit('Y', 10)
+    emit{tag='X', 99}
+    emit{tag='Y', 10}
     assertx(out(), "Y\t10\n")
     atmos.stop()
 end
@@ -418,11 +418,11 @@ end
 do
     print("Testing...", "await not 2: in or")
     spawn(function ()
-        local v,u = await {'or', {'not', 'X'}, 'Y'}
+        local v,u = await {tag='or', {tag='not', 'X'}, 'Y'}
         out(v,u)
     end)
     emit 'X'
-    emit('Z', 5)
+    emit{tag='Z', 5}
     assertx(out(), "Z\t5\n")
     atmos.stop()
 end

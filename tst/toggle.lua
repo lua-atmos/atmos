@@ -148,13 +148,13 @@ do
             end)
         end
         spawn (T,0)
-        emit('Draw', 1)
-        emit('Show', false)
-        emit('Show', false)
-        emit('Draw', 99)
-        emit('Show', true)
-        emit('Show', true)
-        emit('Draw', 2)
+        emit{tag='Draw', 1}
+        emit{tag='Show', false}
+        emit{tag='Show', false}
+        emit{tag='Draw', 99}
+        emit{tag='Show', true}
+        emit{tag='Show', true}
+        emit{tag='Draw', 2}
     end
     assertx(out(), "0\n1\n2\n")
     atmos.stop()
@@ -228,14 +228,14 @@ do
             end, 'Draw')
         end
         spawn (T)
-        emit('Draw', 1)     -- on -> draws
-        emit('Tick', 1)     -- on -> ticks (101)
-        emit('Show', false) -- toggle off, filter 'Draw'
-        emit('Draw', 2)     -- passes filter while off
-        emit('Tick', 2)     -- gated while off (frozen)
-        emit('Show', true)  -- toggle on
-        emit('Draw', 3)
-        emit('Tick', 3)     -- 103
+        emit{tag='Draw', 1}     -- on -> draws
+        emit{tag='Tick', 1}     -- on -> ticks (101)
+        emit{tag='Show', false} -- toggle off, filter 'Draw'
+        emit{tag='Draw', 2}     -- passes filter while off
+        emit{tag='Tick', 2}     -- gated while off (frozen)
+        emit{tag='Show', true}  -- toggle on
+        emit{tag='Draw', 3}
+        emit{tag='Tick', 3}     -- 103
     end
     assertx(out(), "1\n101\n2\n3\n103\n")
     atmos.stop()
@@ -269,15 +269,15 @@ do
                     every('Draw', function (_,v) out(v) end)
                 end)
                 every('Tick', function (_,v) out(100+v) end)
-            end, {'not', 'Tick'})    -- pass all but 'Tick'
+            end, {tag='not', 'Tick'})    -- pass all but 'Tick'
         end
         spawn (T)
-        emit('Show', false) -- off: filter passes everything except 'Tick'
-        emit('Draw', 1)     -- passes
-        emit('Tick', 1)     -- the one ignored -> frozen
-        emit('Draw', 2)     -- passes
-        emit('Show', true)
-        emit('Tick', 9)     -- on -> 109
+        emit{tag='Show', false} -- off: filter passes everything except 'Tick'
+        emit{tag='Draw', 1}     -- passes
+        emit{tag='Tick', 1}     -- the one ignored -> frozen
+        emit{tag='Draw', 2}     -- passes
+        emit{tag='Show', true}
+        emit{tag='Tick', 9}     -- on -> 109
     end
     -- STUB: pending plan 06-and-or-not (passive not/and/or in check_ret).
     -- Filters allow pure predicates only: ==, bool, func, not, or.
