@@ -244,6 +244,24 @@ do
     atmos.stop()
 end
 
+do
+    print("Testing...", "await 7: task - spurious awake on sibling term")
+    spawn(function ()
+        local function tk ()
+            local e1 = await(true)
+            out(e1.tag or "?")
+            local e2 = await(true)
+            out(e2.tag or "?")
+        end
+        spawn(tk)
+        spawn(tk)
+        emit({tag='t'})          -- both 1st awaits
+        emit({tag='u'})          -- both 2nd awaits
+    end)
+    assertx(out(), "t\nt\nu\n?\n")
+    atmos.stop()
+end
+
 print "--- AWAIT / _OR_ ---"
 
 do

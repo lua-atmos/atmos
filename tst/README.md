@@ -14,12 +14,20 @@ Assumes this directory structure:
 └── f-streams
 ```
 
+Default:
+
 ```bash
 LUA_PATH="../../f-streams/?/init.lua;../?.lua;../?/init.lua;;" lua5.4 all.lua
 ```
 
-In absolute:
+Worktree:
 
 ```bash
-LUA_PATH="/x/lua-atmos/f-streams/?/init.lua;/x/lua-atmos/atmos/.work/XXX/?.lua;/x/lua-atmos/atmos/.work/XXX/?/init.lua;;" lua5.4 all.lua
+LUA_PATH="../../../../f-streams/?/init.lua;../?.lua;../?/init.lua;;" lua5.4 all.lua
+```
+
+Absolute:
+
+```bash
+LUA_PATH="/XXX/f-streams/?/init.lua;/XXX/atmos/XXX/?.lua;/XXX/atmos/XXX/?/init.lua;;" lua5.4 all.lua
 ```
