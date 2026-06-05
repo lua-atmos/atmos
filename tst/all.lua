@@ -1,5 +1,7 @@
 print "===== TASK ====="
 dofile "task.lua"
+print "===== AWAIT ====="
+dofile "await.lua"
 print "===== TOGGLE ====="
 dofile "toggle.lua"
 print "===== TASKS ====="
