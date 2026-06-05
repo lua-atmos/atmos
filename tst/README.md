@@ -18,8 +18,8 @@ Assumes this directory structure:
 LUA_PATH="../../f-streams/?/init.lua;../?.lua;../?/init.lua;;" lua5.4 all.lua
 ```
 
-If in `.work/xxx/`:
+In absolute:
 
 ```bash
-LUA_PATH="../../../../f-streams/?/init.lua;../?.lua;../?/init.lua;;" lua5.4 all.lua
+LUA_PATH="/x/lua-atmos/f-streams/?/init.lua;/x/lua-atmos/atmos/.work/XXX/?.lua;/x/lua-atmos/atmos/.work/XXX/?/init.lua;;" lua5.4 all.lua
 ```
