@@ -1,10 +1,27 @@
-v0.7 (mar/26)
+v0.7 (jun/26)
 -------------
 
 - Additions:
     - `abort` task and tasks
+    - `await(ts, ['any'|'all'])`: await any/all tasks in a pool
+    - `toggle(..., [filter], ...)`: optional filter pattern to keep reacting
+    - Logical combinators for await patterns:
+        - `{ tag='or',  ... }`, `{ tag='and', ... }`, `{ tag='not', x }`
+    - `__atmos` metamethod: custom await matching for user types
+- Removals:
+    - Multi-arg events:
+        - `emit` now only receives one argument
+        - `await` now only receives and returns one argument
+            - exception: `await(ts, ...)` above
+    - `_and_` / `_or_`: see "Logical combinators" above
+- Modifications:
+    - Multi-arg events:
+        - `emit('clock', 10)` -> `{ tag='clock', ms=N }`
+        - `emit('X', 10)` -> `emit { tag='X', v=10 }`
 - Environments:
     - `open`+`close` changed to main body + `quit`
+- Bug fixes:
+    - `break()` inside `every`
 
 v0.6 (mar/26)
 -------------
