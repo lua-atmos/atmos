@@ -184,4 +184,108 @@ do
     atmos.stop()
 end
 
+print "--- AWAIT / _WHERE_ ---"
+
+do
+    print("Testing...", "await where 1: pred true -> event")
+    spawn(function ()
+        local v = await {tag='where', 'X', function (e) return e[1]==10 end}
+        out(v.tag, v[1])
+    end)
+    emit{tag='X', 10}
+    assertx(out(), "X\t10\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "await where 2: pred false -> re-await next")
+    spawn(function ()
+        local v = await {tag='where', 'X', function (e) return e[1]==10 end}
+        out(v[1])
+    end)
+    emit{tag='X', 5}
+    emit{tag='X', 10}
+    assertx(out(), "10\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "await where 3: many preds, all hold")
+    spawn(function ()
+        local v = await {tag='where', 'X',
+            function (e) return e[1]>0 end,
+            function (e) return e[1]<100 end
+        }
+        out(v[1])
+    end)
+    emit{tag='X', 50}
+    assertx(out(), "50\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "await where 4: many preds, one false")
+    spawn(function ()
+        local v = await {tag='where', 'X',
+            function (e) return e[1]>0 end,
+            function (e) return e[1]<100 end
+        }
+        out(v[1])
+    end)
+    emit{tag='X', 200}
+    emit{tag='X', 50}
+    assertx(out(), "50\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "await where 5: over or (full matching reused)")
+    spawn(function ()
+        local v = await {tag='where', {tag='or', 'X', 'Y'},
+            function (e) return e[1]==9 end
+        }
+        out(v.tag, v[1])
+    end)
+    emit{tag='X', 1}
+    emit{tag='Y', 9}
+    assertx(out(), "Y\t9\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "await where 6: pred returns x -> result is x")
+    spawn(function ()
+        local v = await {tag='where', 'X', function (e) return e[1]*2 end}
+        out(v)
+    end)
+    emit{tag='X', 21}
+    assertx(out(), "42\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "await where 7: last pred decides result")
+    spawn(function ()
+        local v = await {tag='where', 'X',
+            function (e) return e[1]>0 end,
+            function (e) return e[1]*2 end
+        }
+        out(v)
+    end)
+    emit{tag='X', 21}
+    assertx(out(), "42\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "await where 8: error: no predicate")
+    local _,err = pcall(function ()
+        spawn(function ()
+            await {tag='where', 'X'}
+        end)
+    end)
+    assertfx(err, "await.lua:284: invalid await : where expects predicates")
+    atmos.stop()
+end
+
 
