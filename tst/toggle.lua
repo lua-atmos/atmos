@@ -279,9 +279,6 @@ do
         emit{tag='Show', true}
         emit{tag='Tick', 9}     -- on -> 109
     end
-    -- STUB: pending plan 06-and-or-not (passive not/and/or in check_ret).
-    -- Filters allow pure predicates only: ==, bool, func, not, or.
-    -- clock and and are stateful -> must error as filters.
-    --assertx(out(), "1\n2\n109\n")
+    assertx(out(), "1\n2\n109\n")
     atmos.stop()
 end
