@@ -262,6 +262,24 @@ do
     atmos.stop()
 end
 
+do
+    print("Testing...", "await 8: one wake per emit")
+    spawn(function ()
+        spawn(function ()
+            await(true)        -- wakes from the emit
+            out("inner")
+        end)                   -- inner terminates here
+        await(true)            -- wakes from inner's termination (nested emit)
+        out("first")
+        await(true)            -- must NOT re-fire from the same emit
+        out("second")          -- bug: fires because await.time stays 0
+    end)
+    emit(true)                 -- a single broadcast
+    out("done")
+    assertx(out(), "inner\nfirst\ndone\n")
+    atmos.stop()
+end
+
 print "--- AWAIT / _OR_ ---"
 
 do

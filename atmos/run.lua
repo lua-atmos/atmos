@@ -431,13 +431,11 @@ function M.task (dbg, tra, f)
             gc  = false,
             dbg = {file=dbg.short_src, line=dbg.currentline},
             ---
-            th  = coroutine.create(f),
-            tra = tra,
-            status = nil, -- aborted, toggled
-            await = {
-                time = 0,
-            },
-            ret = nil,
+            th     = coroutine.create(f),
+            tra    = tra,
+            status = nil,   -- aborted, toggled
+            time   = 0,     -- last await time (emit > time)
+            ret    = nil,
         }
     }
     TASKS._.cache[t._.th] = t
@@ -544,6 +542,10 @@ function M.await (awt, ...)
 
     local mta = getmetatable(awt)
     local emt = nil
+
+    -- stamp await birth time: a task reacts only to broadcasts that begin
+    -- after its current await is established (one wake per emit)
+    me._.time = TIME
 
     while true do
         if mta and mta.__atmos then
@@ -689,7 +691,7 @@ local function emit (time, t, emt, ...)
             end
             assertn(0, ok, err) -- TODO: error in defer?
         else
-            if (t._.await.time < time) and (coroutine.status(t._.th) == 'suspended') then
+            if (t._.time < time) and (coroutine.status(t._.th) == 'suspended') then
                 task_result(t, coroutine.resume(t._.th, nil, emt))
             end
         end
