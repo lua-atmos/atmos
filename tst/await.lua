@@ -200,12 +200,12 @@ do
     atmos.stop()
 end
 
-print "--- AWAIT / _WHERE_ ---"
+print "--- AWAIT / _UNTIL_ ---"
 
 do
-    print("Testing...", "await where 1: pred true -> event")
+    print("Testing...", "await until 1: pred true -> event")
     spawn(function ()
-        local v = await {tag='where', 'X', function (e) return e[1]==10 end}
+        local v = await {tag='until', 'X', function (e) return e[1]==10 end}
         out(v.tag, v[1])
     end)
     emit{tag='X', 10}
@@ -214,9 +214,9 @@ do
 end
 
 do
-    print("Testing...", "await where 2: pred false -> re-await next")
+    print("Testing...", "await until 2: pred false -> re-await next")
     spawn(function ()
-        local v = await {tag='where', 'X', function (e) return e[1]==10 end}
+        local v = await {tag='until', 'X', function (e) return e[1]==10 end}
         out(v[1])
     end)
     emit{tag='X', 5}
@@ -226,9 +226,9 @@ do
 end
 
 do
-    print("Testing...", "await where 3: many preds, all hold")
+    print("Testing...", "await until 3: many preds, all hold")
     spawn(function ()
-        local v = await {tag='where', 'X',
+        local v = await {tag='until', 'X',
             function (e) return e[1]>0 end,
             function (e) return e[1]<100 end
         }
@@ -240,9 +240,9 @@ do
 end
 
 do
-    print("Testing...", "await where 4: many preds, one false")
+    print("Testing...", "await until 4: many preds, one false")
     spawn(function ()
-        local v = await {tag='where', 'X',
+        local v = await {tag='until', 'X',
             function (e) return e[1]>0 end,
             function (e) return e[1]<100 end
         }
@@ -255,9 +255,9 @@ do
 end
 
 do
-    print("Testing...", "await where 5: over or (full matching reused)")
+    print("Testing...", "await until 5: over or (full matching reused)")
     spawn(function ()
-        local v = await {tag='where', {tag='or', 'X', 'Y'},
+        local v = await {tag='until', {tag='or', 'X', 'Y'},
             function (e) return e[1]==9 end
         }
         out(v.tag, v[1])
@@ -269,9 +269,9 @@ do
 end
 
 do
-    print("Testing...", "await where 6: pred returns x -> result is x")
+    print("Testing...", "await until 6: pred returns x -> result is x")
     spawn(function ()
-        local v = await {tag='where', 'X', function (e) return e[1]*2 end}
+        local v = await {tag='until', 'X', function (e) return e[1]*2 end}
         out(v)
     end)
     emit{tag='X', 21}
@@ -280,9 +280,9 @@ do
 end
 
 do
-    print("Testing...", "await where 7: last pred decides result")
+    print("Testing...", "await until 7: last pred decides result")
     spawn(function ()
-        local v = await {tag='where', 'X',
+        local v = await {tag='until', 'X',
             function (e) return e[1]>0 end,
             function (e) return e[1]*2 end
         }
@@ -294,10 +294,10 @@ do
 end
 
 do
-    print("Testing...", "await where 8: error: no predicate")
+    print("Testing...", "await until 8: error: no predicate")
     local _,err = pcall(function ()
         spawn(function ()
-            await {tag='where', 'X'}
+            await {tag='until', 'X'}
         end)
     end)
     assertfx(err, "await.lua:300: invalid await : expected predicate")
@@ -305,13 +305,13 @@ do
 end
 
 do
-    print("Testing...", "await where 9: nested emit must not shadow outer")
+    print("Testing...", "await until 9: nested emit must not shadow outer")
     spawn(function ()
         await 'X'
         emit_in('global', {tag='X', 2})
     end)
     spawn(function ()
-        local v = await {tag='where', 'X', function (e) return e[1]==1 end}
+        local v = await {tag='until', 'X', function (e) return e[1]==1 end}
         out(v[1])
     end)
     emit{tag='X', 1}

@@ -1,7 +1,10 @@
-# Plan: `where` await combinator
+# Plan: `until` await combinator
 
 - Date: 2026-06-05
 - Branch: 06-and-or-not
+- NOTE (2026-06-06): renamed `where` -> `until` (body below predates the
+  rename; tag is now `{ 'until', x, f... }`). `while` (negated gate) is a
+  possible follow-up, not yet implemented.
 
 ## Goal
 
@@ -97,13 +100,15 @@ tasks) vs single `it`; current sketch keeps single value.
     - `where 9`: `emit_in('global',{X,2})` (P may terminate; tag-filtered)
     - `not 3`: `emit_in('global','Y')` + park `P` (avoid term event)
 - [x] fix: pin establishment time via `M.await(time, awt, ...)` param
-    - `time` is 1st arg; body opens `time = time or TIME`; stamp `me._.time = time`
+    - `time` is 1st arg, required (no default); stamp `me._.time = time`
+    - counter is `M.TIME` (was file-local); exposed as `run.TIME`
     - `where`/`not` thread `time` into every re-await (incl. `par_or` children)
     - `or`/`and`/`S.is` forward `time`
-    - public `await` wraps `run.await(nil, awt, ...)`
-    - all internal `M.await` calls updated to lead with `nil`/`time`
-    - `every`/`watching` pass `nil` time (avoid swallowing tasks `mode`)
-- [ ] doc: `api.md` await patterns + `guide.md`
+    - public `await` wraps `run.await(run.TIME, awt, ...)`
+    - non-pinning internal `M.await` calls pass `M.TIME`
+    - `every`/`watching` pass `M.TIME` (avoid swallowing tasks `mode`)
+- [x] ALL TESTS PASS (full suite)
+- [x] doc: `api.md` await pattern list (`where`, own bullet)
 
 ## Time-shadowing bug (where/not)
 

@@ -535,7 +535,7 @@ function M.await (time, awt, ...)
                 return table.unpack(ret, 2, ret.n)
             end
         end
-    elseif tag == 'where' then
+    elseif tag == 'until' then
         assertn(2, #awt >= 2, "invalid await : expected predicate")
         -- pass `time` into each re-await: a rejected predicate keeps the
         -- original birth time, so it does not shadow an in-flight outer emit

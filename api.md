@@ -277,6 +277,10 @@ The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
     - `{ 'not', x }`:  matches any event that does not match `x`
     - `{ 'and', ...}`: if all `...` match (in any order)
     - `{ 'or', ...}`:  if any `...` matches
+- `until`       | re-awaits a pattern until predicates hold
+    - `{ 'until', x, f1, ... }`: matches `x`, then applies each `fi` to
+      the matched event; re-awaits while falsy (`false`/`nil`); the
+      *last* predicate decides the result (`true` -> event, other -> value)
 - `x: meta`     | custom `v=__atmos(x,e,...)` metamethod
     - `v = nil`:    use standard handler
     - `v = false`:  no match
