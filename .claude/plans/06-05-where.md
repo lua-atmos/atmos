@@ -91,7 +91,7 @@ tasks) vs single `it`; current sketch keeps single value.
 ## Status
 
 - [x] tests in `tst/await.lua` (`_WHERE_`, 8 cases)
-- [ ] `where` branch in `run.lua`
+- [x] `where` branch in `run.lua` (falsy gate, last pred decides)
 - [ ] doc: `api.md` await patterns + `guide.md`
 
 ## Open items

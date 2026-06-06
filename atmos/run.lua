@@ -534,6 +534,26 @@ function M.await (awt, ...)
                 return table.unpack(ret, 2, ret.n)
             end
         end
+    elseif tag == 'where' then
+        assertn(2, #awt >= 2, "invalid await : expected predicate")
+        while true do
+            local it = M.await(awt[1])
+            local res, ok = it, true
+            -- predicates gate on falsy; the last one decides the result
+            for i=2, #awt do
+                local r = awt[i](it)
+                if not r then
+                    ok = false
+                    break
+                end
+                if r ~= true then
+                    res = r
+                end
+            end
+            if ok then
+                return res
+            end
+        end
     elseif tag == 'clock' then
         awt._ms = awt.ms
     elseif S.is(awt) then

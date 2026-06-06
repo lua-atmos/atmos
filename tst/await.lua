@@ -284,7 +284,7 @@ do
             await {tag='where', 'X'}
         end)
     end)
-    assertfx(err, "await.lua:284: invalid await : where expects predicates")
+    assertfx(err, "await.lua:284: invalid await : expected predicate")
     atmos.stop()
 end
 
