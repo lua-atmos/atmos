@@ -177,6 +177,18 @@ do
     atmos.stop()
 end
 
+do
+    print("Testing...", "await clock 4: ignores non-clock emit")
+    spawn(function ()
+        await(clock{s=1})
+        out("awake")
+    end)
+    emit()              -- nil wake: must not crash, must not awake
+    out("ok")
+    assertx(out(), "ok\n")
+    atmos.stop()
+end
+
 print "--- AWAIT / TASK ---"
 
 do

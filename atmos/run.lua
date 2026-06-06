@@ -624,7 +624,7 @@ function M.await (time, awt, ...)
             -- never awakes
         elseif tag == 'clock' then
             -- test is up
-            if emt.tag == 'clock' then
+            if type(emt)=='table' and emt.tag=='clock' then
                 awt._ms  = awt._ms - emt.ms
                 awt._now = emt.now
             end
