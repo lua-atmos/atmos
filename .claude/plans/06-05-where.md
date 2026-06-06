@@ -108,7 +108,13 @@ tasks) vs single `it`; current sketch keeps single value.
     - non-pinning internal `M.await` calls pass `M.TIME`
     - `every`/`watching` pass `M.TIME` (avoid swallowing tasks `mode`)
 - [x] ALL TESTS PASS (full suite)
-- [x] doc: `api.md` await pattern list (`where`, own bullet)
+- [x] doc: `api.md` await pattern list (`until`, own bullet)
+- [x] rename `where` -> `until`
+- [x] add `while` (negated gate); merged with `until` in one branch
+    - accept: `until` when all preds hold; `while` when any fails
+    - `until` value-replaces (last pred); `while` returns the event
+    - tests 1/2/5 switched until->while; ALL PASS
+- [x] `api.md`: add `while` bullet (beside `until`)
 
 ## Time-shadowing bug (where/not)
 
