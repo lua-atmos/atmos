@@ -203,9 +203,9 @@ end
 print "--- AWAIT / _UNTIL_ ---"
 
 do
-    print("Testing...", "await until 1: pred true -> event")
+    print("Testing...", "await while 1: pred false -> event")
     spawn(function ()
-        local v = await {tag='until', 'X', function (e) return e[1]==10 end}
+        local v = await {tag='while', 'X', function (e) return e[1]~=10 end}
         out(v.tag, v[1])
     end)
     emit{tag='X', 10}
@@ -214,9 +214,9 @@ do
 end
 
 do
-    print("Testing...", "await until 2: pred false -> re-await next")
+    print("Testing...", "await while 2: pred true -> re-await next")
     spawn(function ()
-        local v = await {tag='until', 'X', function (e) return e[1]==10 end}
+        local v = await {tag='while', 'X', function (e) return e[1]~=10 end}
         out(v[1])
     end)
     emit{tag='X', 5}
@@ -255,10 +255,10 @@ do
 end
 
 do
-    print("Testing...", "await until 5: over or (full matching reused)")
+    print("Testing...", "await while 5: over or (full matching reused)")
     spawn(function ()
-        local v = await {tag='until', {tag='or', 'X', 'Y'},
-            function (e) return e[1]==9 end
+        local v = await {tag='while', {tag='or', 'X', 'Y'},
+            function (e) return e[1]~=9 end
         }
         out(v.tag, v[1])
     end)

@@ -535,26 +535,29 @@ function M.await (time, awt, ...)
                 return table.unpack(ret, 2, ret.n)
             end
         end
-    elseif tag == 'until' then
+    elseif tag=='until' or tag=='while' then
         assertn(2, #awt >= 2, "invalid await : expected predicate")
-        -- pass `time` into each re-await: a rejected predicate keeps the
-        -- original birth time, so it does not shadow an in-flight outer emit
+        -- pass `time` into each re-await: keeps the original birth time, so
+        -- an internal reject does not shadow an in-flight outer emit.
+        -- until: accept when all predicates hold (last one decides result);
+        -- while: accept when any predicate fails (returns the event).
         while true do
             local it = M.await(time, awt[1])
-            local res, ok = it, true
-            -- predicates gate on falsy; the last one decides the result
+            local res, all = it, true
             for i=2, #awt do
                 local r = awt[i](it)
                 if not r then
-                    ok = false
+                    all = false
                     break
                 end
                 if r ~= true then
                     res = r
                 end
             end
-            if ok then
+            if tag=='until' and all then
                 return res
+            elseif tag=='while' and (not all) then
+                return it
             end
         end
     elseif tag == 'clock' then
