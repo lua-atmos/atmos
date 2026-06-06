@@ -139,8 +139,10 @@ Fix scope: `where` + `not` only.
 `not` (and `where` over `or`) re-await via `par_or` sub-tasks, so the
 pin must reach spawned children.
 
-## Open items
+## Open items — none pending (this worktree)
 
-- multi-value return arity for non-event `pat`.
-- `nil` predicate result == `false` ? (assumed yes).
-- compiler desugar + implicit predicate binding name.
+- multi-value return arity for non-event `pat`: DEFERRED by design (single value).
+- `nil` predicate == `false`: RESOLVED (falsy gate `if not r`).
+- compiler desugar + implicit predicate binding: OUT OF SCOPE -> `atmos-lang` repo.
+
+## PLAN COMPLETE (2026-06-06): until/while/tasks done, suite green, api.md synced.
