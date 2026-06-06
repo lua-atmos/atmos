@@ -47,7 +47,7 @@ do
         local t = spawn_in(ts, function ()
             return await 'X'
         end)
-        local v,u,q = await {tag='or', ts, 'X'}
+        local v,u,q = await {tag='or', {tag='tasks', mode='any', tasks=ts}, 'X'}
         out(v=='X',u==t,q==ts)
     end)
     emit 'X'
@@ -115,7 +115,7 @@ do
         local t = spawn_in(ts, function ()
             return await 'X'
         end)
-        local v,u = await {tag='and', ts, 'X'}
+        local v,u = await {tag='and', {tag='tasks', mode='any', tasks=ts}, 'X'}
         out(v=='X', u)
     end)
     emit 'X'
@@ -148,7 +148,7 @@ do
         local T = spawn_in(ts, function ()
             return await('Z')
         end)
-        local v,u = await {tag='and', {tag='or', 'X', clock{s=1}}, {tag='or', ts, t}}
+        local v,u = await {tag='and', {tag='or', 'X', clock{s=1}}, {tag='or', {tag='tasks', mode='any', tasks=ts}, t}}
         out(v, u=='Z')
     end)
     emit{tag='clock', ms=510}

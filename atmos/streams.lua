@@ -216,7 +216,7 @@ end
 local function paror (t)
     -- await{'or',...} forwards the winner's values: event n -> (n,payload),
     -- pool tsks -> (ret,task,ts); pool win (3rd value is the pool) ends stream
-    local e,_,ts = await {tag='or', t.n, t.tsks}
+    local e,_,ts = await {tag='or', t.n, {tag='tasks', mode='any', tasks=t.tsks}}
     if ts == t.tsks then
         return nil
     end

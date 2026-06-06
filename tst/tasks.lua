@@ -173,7 +173,7 @@ do
         local t2 = spawn_in (ts, T, 2)
         local t3 = spawn_in (ts, T, 3)
         spawn (function ()
-            local ret,t,ts2 = await(ts)
+            local ret,t,ts2 = await {tag='tasks', mode='any', tasks=ts}
             assert(ret==2 and t==t2 and ts2==ts)
             out 't2'
         end)
@@ -253,7 +253,7 @@ do
         local t1 = spawn_in (ts, T, 1)
         local t2 = spawn_in (ts, T, 2)
         spawn (function ()
-            local ret,t,ts2 = await(ts)
+            local ret,t,ts2 = await {tag='tasks', mode='any', tasks=ts}
             assert(t == t2)
             assert(ret == 20)
             assert(ts2 == ts)
@@ -276,7 +276,7 @@ do
         local ts = tasks()
         local t1 = spawn_in (ts, T, 1)
         spawn (function ()
-            local ret,t,ts2 = await(ts, "any")
+            local ret,t,ts2 = await {tag='tasks', mode='any', tasks=ts}
             assert(t == t1)
             assert(ret == 1)
             assert(ts2 == ts)
@@ -299,7 +299,7 @@ do
         local t1 = spawn_in (ts, T, 1)
         local t2 = spawn_in (ts, T, 2)
         spawn (function ()
-            local ts2 = await(ts, "all")
+            local ts2 = await {tag='tasks', mode='all', tasks=ts}
             assert(ts2 == ts)
             out 'all'
         end)
@@ -315,7 +315,7 @@ do
     do
         local ts = tasks()
         spawn (function ()
-            local ts2 = await(ts, "all")
+            local ts2 = await {tag='tasks', mode='all', tasks=ts}
             assert(ts2 == ts)
             out 'empty'
         end)
@@ -335,10 +335,10 @@ do
                     await(true)
                 end
             )
-            await(ts, "foo")
+            await {tag='tasks', mode='foo', tasks=ts}
         end)
         emit(true)
     end)
-    assertfx(err, "invalid await : expected 'any' or 'all'")
+    assertfx(err, "invalid await : invalid mode")
     atmos.stop()
 end

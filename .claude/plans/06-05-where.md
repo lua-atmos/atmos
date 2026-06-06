@@ -116,6 +116,15 @@ tasks) vs single `it`; current sketch keeps single value.
     - tests 1/2/5 switched until->while; ALL PASS
 - [x] `api.md`: add `while` bullet (beside `until`)
 
+## tasks-pool await: mandatory tagged form (2026-06-06)
+
+`await(ts[,mode])` replaced by `{ tag='tasks', mode='any'|'all', tasks=ts }`.
+- mode mandatory; carried in-pattern so it composes in `or`/`and`/etc.
+- `M.await`: dropped positional `mode`/`meta_tasks` top-block; bare `ts` -> error;
+  new `tag=='tasks'` validate-branch + pool-state check on `awt.tasks`.
+- migrated 10 sites: `streams.lua:219`; `await.lua` x3; `tasks.lua` x6.
+- bad-mode error keeps msg `invalid await : expected 'any' or 'all'`.
+
 ## Time-shadowing bug (where/not)
 
 A rejected internal re-await re-stamps `me._.time` (`run.lua:568`) to

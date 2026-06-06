@@ -495,16 +495,7 @@ end
 -------------------------------------------------------------------------------
 
 function M.await (time, awt, ...)
-    local mode
-    local n = 0
-    if getmetatable(awt) == meta_tasks then
-        mode = ...
-        assertn(2, mode=='all' or mode=='any' or mode==nil,
-            "invalid await : expected 'any' or 'all'"
-        )
-        n = 1
-    end
-    assertn(2, awt~=nil and select('#',...)<=n,
+    assertn(2, awt~=nil and select('#',...)==0,
         "invalid await : invalid event pattern"
     )
 
@@ -579,17 +570,20 @@ function M.await (time, awt, ...)
             if ok then
                 return ret
             end
-        elseif getmetatable(awt) == meta_tasks then
-            if mode == 'all' then
-                if #awt == 0 then             -- only when #awt=0
-                    return awt
+        elseif tag == 'tasks' then
+            local ts = awt.tasks
+            if awt.mode == 'all' then
+                if #ts == 0 then              -- only when empty
+                    return ts
+                end
+            elseif awt.mode == 'any' then
+                if #ts == 0 then              -- immediate if empty
+                    return nil, nil, ts
+                elseif ts.ret then            -- some task terminated
+                    return ts.ret.ret, ts.ret, ts
                 end
             else
-                if #awt == 0 then             -- immediate if #awt=0
-                    return nil, nil, awt
-                elseif awt.ret then           -- some task terminated
-                    return awt.ret.ret, awt.ret, awt
-                end
+                assertn(2, false, "invalid await : invalid mode")
             end
         elseif getmetatable(awt) == meta_task then
             if coroutine.status(awt._.th) == 'dead' then
@@ -628,7 +622,7 @@ function M.await (time, awt, ...)
                 awt._ms  = awt._ms - emt.ms
                 awt._now = emt.now
             end
-        elseif type(awt)=='table' then
+        elseif type(awt) == 'table' then
             -- tagged pattern: every await field must match (M.is) event
             if awt.tag and (type(emt) == 'table') then
                 local ok = true
