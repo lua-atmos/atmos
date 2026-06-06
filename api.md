@@ -206,7 +206,7 @@ Toggles a task on and off.
 [
     [emit](#emit-e-) |
     [emit_in](#emit_in-to-) |
-    [await](#await)
+    [await](#await-pat)
 ]
 
 `TODO: event tag/payload`
@@ -287,7 +287,7 @@ The task awakes if an `emit(e)` matches the await pattern `pat` as follows:
     - `v = false`:  no match
     - `v = ...`:    matches, replacing the results
 - `{ tag=t, ... }` | if `_is_(e.tag,t)` and `_is_(e[k],v)` for every field
-- `x: any`      | if `_is_(x,e)`
+- `x: any`      | if `_is_(e,x)`
 
 # 4. Errors
 
