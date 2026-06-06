@@ -249,44 +249,45 @@ The following values are accepted as target:
 - `'global'`| all top-level tasks
 - `: task`| the given task
 
-## `await (...)`
+## `await (pat)`
 
 Awaits an event pattern in the running task.
 
 - Parameters:
-    - `...`
+    - `pat`
         | event pattern
 - Returns:
     - `...`
         | arguments of matching emit
 
-The task awakes if an `emit(e,...)` matches the event pattern `...` as follows:
+The task awakes if an `emit(e)` matches the await pattern `pat` as follows:
 
 - `true`        | matches any emit
 - `false`       | never matches an emit
-- `x, ...`      | if `_is_(x,e)` and if `...` match the emit payloads
 - `c: clock`    | if [clock](#TODO) `c` expires
 - `f: function` | if `f(e,...)` is truthy, returning its results
 - `t: task`     | matches when `t` terminates; returns `v,t`, where `v` is the
                   task return value
-- `ts: tasks, [**'any'**|'all']`
-                | matches when any or all tasks in `ts` terminate
-    - `any`: returns `v,t,ts` (`t`: terminated task, `v`: its return value)
-    - `all`: returns `ts`
+- `tasks`       | matches when any or all tasks in `ts` terminate
+    - `{ tag='tasks', mode='any', tasks=ts }`: returns `v,t,ts`
+        (`t`: terminated task, `v`: its return value)
+    - `{ tag='tasks', mode='all', tasks=ts }`: returns `ts`
 - `logical`     | composition of sub-patterns
-    - `{ 'not', x }`:  matches any event that does not match `x`
-    - `{ 'and', ...}`: if all `...` match (in any order)
-    - `{ 'or', ...}`:  if any `...` matches
+    - `{ tag='not', x }`:  matches any event that does not match `x`
+    - `{ tag='and', ...}`: if all `...` match (in any order)
+    - `{ tag='or', ...}`:  if any `...` matches
 - `until|while` | re-awaits a pattern until/while predicates hold
-    - `{ 'until', x, ... }`: matches `x`, then applies each `fi` in `...` to
+    - `{ tag='until', x, ... }`: matches `x`, then applies each `fi` in `...` to
       the event; awakes only when all are non-falsy; returns the event or last
       non-true value
-    - `{ 'while', x, ... }`: analogous to `until`; returns the event when any
+    - `{ tag='while', x, ... }`: analogous to `until`; returns the event when any
       is falsy.
 - `x: meta`     | custom `v=__atmos(x,e,...)` metamethod
     - `v = nil`:    use standard handler
     - `v = false`:  no match
     - `v = ...`:    matches, replacing the results
+- `{ tag=t, ... }` | if `_is_(e.tag,t)` and `_is_(e[k],v)` for every field
+- `x: any`      | if `_is_(x,e)`
 
 # 4. Errors
 

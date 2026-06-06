@@ -116,6 +116,8 @@ tasks) vs single `it`; current sketch keeps single value.
     - tests 1/2/5 switched until->while; ALL PASS
 - [x] `api.md`: add `while` bullet (beside `until`)
 
+## DONE — all green; api.md await-pattern list synced to runtime
+
 ## tasks-pool await: mandatory tagged form (2026-06-06)
 
 `await(ts[,mode])` replaced by `{ tag='tasks', mode='any'|'all', tasks=ts }`.
