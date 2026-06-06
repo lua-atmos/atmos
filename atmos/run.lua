@@ -3,6 +3,7 @@ require "atmos.util"
 local lanes -- lazy require in `spawn`
 
 local M = {
+    TIME = 1,
     thread_modules = {}, -- requires to pass to threads
 }
 
@@ -59,8 +60,6 @@ local meta_task = {
         end
     end
 }
-
-local TIME = 1
 
 local TASKS = setmetatable({
     _ = {
@@ -495,7 +494,7 @@ end
 
 -------------------------------------------------------------------------------
 
-function M.await (awt, ...)
+function M.await (time, awt, ...)
     local mode
     local n = 0
     if getmetatable(awt) == meta_tasks then
@@ -517,18 +516,20 @@ function M.await (awt, ...)
     if tag=='or' or tag=='and' then
         local fs = {}
         for _,sub in ipairs(awt) do
-            fs[#fs+1] = function () return M.await(sub) end
+            fs[#fs+1] = function () return M.await(time, sub) end
         end
         local f = (tag=='or' and M.par_or) or M.par_and
         return f(table.unpack(fs, 1, #awt))
     elseif tag == 'not' then
         assertn(2, #awt==1, "invalid await : too many arguments")
+        -- pass `time` into each re-await: an internal reject keeps the
+        -- original birth time, so it does not shadow an in-flight outer emit
         while true do
             local ret = table.pack(M.par_or(function()
-                M.await(awt[1])
+                M.await(time, awt[1])
                 return false
             end, function()
-                return true, M.await(true)
+                return true, M.await(time, true)
             end))
             if ret[1] then
                 return table.unpack(ret, 2, ret.n)
@@ -536,8 +537,10 @@ function M.await (awt, ...)
         end
     elseif tag == 'where' then
         assertn(2, #awt >= 2, "invalid await : expected predicate")
+        -- pass `time` into each re-await: a rejected predicate keeps the
+        -- original birth time, so it does not shadow an in-flight outer emit
         while true do
-            local it = M.await(awt[1])
+            local it = M.await(time, awt[1])
             local res, ok = it, true
             -- predicates gate on falsy; the last one decides the result
             for i=2, #awt do
@@ -557,7 +560,7 @@ function M.await (awt, ...)
     elseif tag == 'clock' then
         awt._ms = awt.ms
     elseif S.is(awt) then
-        return M.await(spawn(function() return awt() end))
+        return M.await(time, spawn(function() return awt() end))
     end
 
     local mta = getmetatable(awt)
@@ -565,7 +568,7 @@ function M.await (awt, ...)
 
     -- stamp await birth time: a task reacts only to broadcasts that begin
     -- after its current await is established (one wake per emit)
-    me._.time = TIME
+    me._.time = time
 
     while true do
         if mta and mta.__atmos then
@@ -723,9 +726,8 @@ end
 
 function M.emit (stk, to, emt, ...)
     assert(select('#',...) == 0)    -- TODO: remove in the future
-    TIME = TIME + 1
-    local time = TIME
-    local ret = xcall(debug.getinfo(2), stk and "emit", emit, time, fto(M.me(false),to), emt)
+    M.TIME = M.TIME + 1
+    local ret = xcall(debug.getinfo(2), stk and "emit", emit, M.TIME, fto(M.me(false),to), emt)
     local me = M.me(true)
     if me and me._.status=='aborted' then
         -- TODO: lua5.5
@@ -749,13 +751,13 @@ function M.toggle (t, on, filter, ...)
             local t <close> = M.spawn(debug.getinfo(2), nil, true, f)
             local _ <close> = M.spawn(debug.getinfo(2), nil, true, function ()
                 while true do
-                    M.await({tag=e, false})
+                    M.await(M.TIME, {tag=e, false})
                     M.toggle(t, false, p)   -- task primitive sets up the filter
-                    M.await({tag=e, true})
+                    M.await(M.TIME, {tag=e, true})
                     M.toggle(t, true)
                 end
             end)
-            return M.await(t)
+            return M.await(M.TIME, t)
         end
     end
 
@@ -776,11 +778,11 @@ function M.toggle (t, on, filter, ...)
         t._.status = 'toggled'
         if filter ~= nil then
             -- hidden gate task (off-tree): emit drives it explicitly before the
-            -- gate check; on a match it stamps t._.toggle.pass = TIME
+            -- gate check; on a match it stamps t._.toggle.pass = M.TIME
             local gate = M.task(debug.getinfo(2), true, function ()
                 while true do
-                    M.await(filter)
-                    t._.toggle.pass = TIME
+                    M.await(M.TIME, filter)
+                    t._.toggle.pass = M.TIME
                 end
             end)
             gate._.up = t._.up
@@ -834,7 +836,7 @@ function M.thread (f)
                 error(t[2], 0)
             end
         else
-            M.await(true)
+            M.await(M.TIME, true)
         end
     end
 end
@@ -850,7 +852,7 @@ function M.every (...)
     -- abort, and any other throw still propagate past every
     M.catch('atm-loop', function ()
         while true do
-            blk(M.await(table.unpack(t)))
+            blk(M.await(M.TIME, t[1], table.unpack(t, 2, #t)))
         end
     end)
 end
@@ -872,7 +874,7 @@ function M.par (...)
         assertn(2, type(f) == 'function', "invalid par : expected task prototype")
         ts[i] = M.spawn(debug.getinfo(2), nil, true, select(i,...))
     end
-    M.await(false)
+    M.await(M.TIME, false)
 end
 
 --@ derived: throw-based race per plan §4
@@ -889,7 +891,7 @@ function M.par_or (...)
                 M.throw(trap, f())
             end)
         end
-        M.await(false)
+        M.await(M.TIME, false)
     end))
 end
 
@@ -905,7 +907,7 @@ function M.par_and (...)
     end
     local rets = {}
     for i,t in ipairs(ts) do
-        rets[i] = M.await(t)
+        rets[i] = M.await(M.TIME, t)
     end
     return table.unpack(rets, 1, #fs)
 end
@@ -917,7 +919,7 @@ function M.watching (...)
     local f = table.remove(t, #t)
     assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
     return M.par_or(
-        function () return M.await(table.unpack(t)) end,
+        function () return M.await(M.TIME, t[1], table.unpack(t, 2, #t)) end,
         f
     )
 end

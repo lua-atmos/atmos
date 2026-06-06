@@ -58,7 +58,9 @@ function emit (emt, ...)
     return run.emit(true, nil, emt, ...)
 end
 
-await    = run.await
+function await (awt, ...)
+    return run.await(run.TIME, awt, ...)
+end
 clock    = run.clock
 
 toggle   = run.toggle

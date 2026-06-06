@@ -92,7 +92,30 @@ tasks) vs single `it`; current sketch keeps single value.
 
 - [x] tests in `tst/await.lua` (`_WHERE_`, 8 cases)
 - [x] `where` branch in `run.lua` (falsy gate, last pred decides)
+- [x] sync `assertn` msg -> `expected predicate`
+- [x] failing tests: nested-emit shadowing
+    - `where 9`: `emit_in('global',{X,2})` (P may terminate; tag-filtered)
+    - `not 3`: `emit_in('global','Y')` + park `P` (avoid term event)
+- [x] fix: pin establishment time via `M.await(time, awt, ...)` param
+    - `time` is 1st arg; body opens `time = time or TIME`; stamp `me._.time = time`
+    - `where`/`not` thread `time` into every re-await (incl. `par_or` children)
+    - `or`/`and`/`S.is` forward `time`
+    - public `await` wraps `run.await(nil, awt, ...)`
+    - all internal `M.await` calls updated to lead with `nil`/`time`
+    - `every`/`watching` pass `nil` time (avoid swallowing tasks `mode`)
 - [ ] doc: `api.md` await patterns + `guide.md`
+
+## Time-shadowing bug (where/not)
+
+A rejected internal re-await re-stamps `me._.time` (`run.lua:568`) to
+the now-higher global `TIME`, shadowing an in-flight outer emit at a
+lower dispatch-local `time` (`:714`).
+User loops are correct (they matched, from the user's view);
+`where`/`not` reject invisibly, so their establishment time must not
+advance.
+Fix scope: `where` + `not` only.
+`not` (and `where` over `or`) re-await via `par_or` sub-tasks, so the
+pin must reach spawned children.
 
 ## Open items
 

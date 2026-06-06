@@ -184,6 +184,22 @@ do
     atmos.stop()
 end
 
+do
+    print("Testing...", "await not 3: nested emit must not shadow outer")
+    spawn(function ()
+        await 'X'
+        emit_in('global', 'Y')
+        await(false)
+    end)
+    spawn(function ()
+        local v = await {tag='not', 'Y'}
+        out(v.tag, v[1])
+    end)
+    emit{tag='X', 7}
+    assertx(out(), "X\t7\n")
+    atmos.stop()
+end
+
 print "--- AWAIT / _WHERE_ ---"
 
 do
@@ -284,7 +300,22 @@ do
             await {tag='where', 'X'}
         end)
     end)
-    assertfx(err, "await.lua:284: invalid await : expected predicate")
+    assertfx(err, "await.lua:300: invalid await : expected predicate")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "await where 9: nested emit must not shadow outer")
+    spawn(function ()
+        await 'X'
+        emit_in('global', {tag='X', 2})
+    end)
+    spawn(function ()
+        local v = await {tag='where', 'X', function (e) return e[1]==1 end}
+        out(v[1])
+    end)
+    emit{tag='X', 1}
+    assertx(out(), "1\n")
     atmos.stop()
 end
 
