@@ -51,7 +51,7 @@ function S.emitter (s, tgt, as)
     if as == nil then
         tgt, as = nil, tgt
     end
-    return s:tap(function (v) emit_in(tgt, as, v) end)
+    return s:tap(function (v) emit_in(tgt, {tag=as, v}) end)
 end
 
 -------------------------------------------------------------------------------

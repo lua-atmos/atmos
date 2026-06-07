@@ -25,6 +25,21 @@ do
 end
 
 do
+    print("Testing...", "emitter 1")
+    spawn(function()
+        while true do
+            local e = await('x')
+            out(e[1])
+        end
+    end)
+    spawn(function()
+        S.from(1,3):emitter('global','x'):to()
+    end)
+    assertx(out(), "1\n2\n3\n")
+    atmos.stop()
+end
+
+do
     print("Testing...", "task 1")
     local function T ()
         await('E')
