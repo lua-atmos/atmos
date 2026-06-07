@@ -260,22 +260,22 @@ Awaits an event pattern in the running task.
     - `...`
         | arguments of matching emit
 
-The task awakes if an `emit(e)` matches the await pattern `pat` as follows:
+The task awakes when an `emit(e)` matches the given await pattern as follows:
 
-- `true`        | matches any emit
-- `false`       | never matches an emit
-- `c: clock`    | if [clock](#TODO) `c` expires
-- `f: function` | if `f(e,...)` is truthy, returning its results
-- `t: task`     | matches when `t` terminates; returns `v,t`, where `v` is the
+- `true`        | matches any event
+- `false`       | never matches
+- `c: clock`    | when [clock](#TODO) `c` expires
+- `f: function` | when `f(e,...)` is truthy, returning its results
+- `t: task`     | when `t` terminates; returns `v,t`, where `v` is the
                   task return value
-- `tasks`       | matches when any or all tasks in `ts` terminate
+- `tasks`       | when any or all tasks in a pool terminate
     - `{ tag='tasks', mode='any', tasks=ts }`: returns `v,t,ts`
         (`t`: terminated task, `v`: its return value)
     - `{ tag='tasks', mode='all', tasks=ts }`: returns `ts`
 - `logical`     | composition of sub-patterns
     - `{ tag='not', x }`:  matches any event that does not match `x`
-    - `{ tag='and', ...}`: if all `...` match (in any order)
-    - `{ tag='or', ...}`:  if any `...` matches
+    - `{ tag='and', ...}`: when all `...` match (in any order)
+    - `{ tag='or', ...}`:  when any `...` matches
 - `until|while` | re-awaits a pattern until/while predicates hold
     - `{ tag='until', x, ... }`: matches `x`, then applies each `fi` in `...` to
       the event; awakes only when all are non-falsy; returns the event or last
@@ -286,8 +286,8 @@ The task awakes if an `emit(e)` matches the await pattern `pat` as follows:
     - `v = nil`:    use standard handler
     - `v = false`:  no match
     - `v = ...`:    matches, replacing the results
-- `{ tag=t, ... }` | if `_is_(e.tag,t)` and `_is_(e[k],v)` for every field
-- `x: any`      | if `_is_(e,x)`
+- `{ tag=t, ... }` | when `_is_(e.tag,t)` and `_is_(e[k],v)` for every field
+- `x: any`      | when `_is_(e,x)`
 
 # 4. Errors
 
