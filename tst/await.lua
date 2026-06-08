@@ -58,13 +58,13 @@ end
 do
     print("Testing...", "await or 5: clock")
     spawn(function ()
-        local v,u = await {tag='or', 'X', 1*_s_}
-        out(v,u)
+        local v = await {tag='or', 'X', 1*_s_}
+        out(v)
     end)
     emit(510*_ms_)
     emit(515*_ms_)
     emit 'X'
-    assertx(out(), "clock\t25000\n")
+    assertx(out(), "25000\n")
     atmos.stop()
 end
 
@@ -132,7 +132,7 @@ do
     emit(510*_ms_)
     emit(515*_ms_)
     emit 'X'
-    assertx(out(), "X\tclock\n")
+    assertx(out(), "X\t25000\n")
     atmos.stop()
 end
 
@@ -154,7 +154,7 @@ do
     emit(510*_ms_)
     emit 'Z'
     emit(515*_ms_)
-    assertx(out(), "clock\ttrue\n")
+    assertx(out(), "25000\ttrue\n")
     atmos.stop()
 end
 

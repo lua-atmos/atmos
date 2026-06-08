@@ -75,21 +75,6 @@ local TASKS = setmetatable({
 
 -------------------------------------------------------------------------------
 
-function M.clock (t)
-    assertn(2, type(t)=='table', "invalid clock : expected table")
-    return {
-        tag = 'clock',
-        ms  = (
-            (t.ms                       or 0) +
-            (t.s   and t.s  *1000       or 0) +
-            (t.min and t.min*1000*60    or 0) +
-            (t.h   and t.h  *1000*60*60 or 0)
-        ),
-    }
-end
-
--------------------------------------------------------------------------------
-
 local function _me_ (tra, t)
     if t == TASKS then
         return nil
@@ -551,14 +536,17 @@ function M.await (time, awt, ...)
                 return it
             end
         end
-    elseif tag == 'clock' then
-        awt._ms = awt.ms
     elseif S.is(awt) then
         return M.await(time, spawn(function() return awt() end))
     end
 
     local mta = getmetatable(awt)
     local emt = nil
+
+    local clk
+    if type(awt) == 'number' then
+        clk = awt
+    end
 
     -- stamp await birth time: a task reacts only to broadcasts that begin
     -- after its current await is established (one wake per emit)
@@ -589,9 +577,9 @@ function M.await (time, awt, ...)
             if coroutine.status(awt._.th) == 'dead' then
                 return awt.ret, awt
             end
-        elseif tag == 'clock' then
-            if awt._ms <= 0 then
-                return 'clock', -awt._ms, awt._now
+        elseif clk then
+            if clk <= 0 then
+                return -clk
             end
         elseif type(awt) == 'function' then
             local ok, ret = awt(emt)
@@ -616,11 +604,10 @@ function M.await (time, awt, ...)
             return emt
         elseif awt == false then
             -- never awakes
-        elseif tag == 'clock' then
-            -- test is up
-            if type(emt)=='table' and emt.tag=='clock' then
-                awt._ms  = awt._ms - emt.ms
-                awt._now = emt.now
+        elseif clk then
+            -- elapsed time: a bare number advances the countdown
+            if type(emt) == 'number' then
+                clk = clk - emt
             end
         elseif type(awt) == 'table' then
             -- tagged pattern: every await field must match (M.is) event

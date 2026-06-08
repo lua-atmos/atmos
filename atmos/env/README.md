@@ -254,7 +254,7 @@ with any other env.
 
 A primary environment:
 
-- **Generates clock events** (`emit('clock', dt, now)`).
+- **Generates clock events** (`emit(dt)`, a number of elapsed microseconds).
 - **May block in step**, but with a bounded timeout so that secondary envs
   get time slices.
 
