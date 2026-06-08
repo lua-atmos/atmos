@@ -100,7 +100,7 @@ Verified present: single-arg `emit`/`await`,
 
 - [x] Create `atmos-0.7-1.rockspec` (version 0.7-1, branch v0.7,
       `detailed` synced with README)
-- [ ] Install locally (`luarocks make atmos-0.7-1.rockspec`)
+- [x] Install locally (`luarocks make atmos-0.7-1.rockspec`)
 
 ### 4. Release all environments and apps
 
@@ -112,8 +112,8 @@ Each env needs the `open`+`close` -> main body + `quit` migration
 and any `emit`/`await`/clock syntax updates.
 
 **clock** (atmos built-in):
-- [ ] `atmos/env/clock/exs/hello.lua`
-- [ ] `atmos/env/clock/exs/hello-rx.lua`
+- [x] `atmos/env/clock/exs/hello.lua`
+- [x] `atmos/env/clock/exs/hello-rx.lua`
 
 #### 4.1 env-sdl
 
