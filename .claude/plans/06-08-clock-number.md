@@ -69,6 +69,13 @@ NOTE: edit only files under `.work/06-and-or-not/` (the main checkout at
 - docs: `api.md`, `README.md`, `guide.md`, `env/clock/README.md`,
   `env/README.md`.
 
+## Follow-up 2: number-only clock return
+
+`await(<us>)` returns a single number = overshoot in us (was `'clock',
+overshoot`). `run.lua` uses a local `clk` instead of the `{tag='clock'}`
+pattern. `await.lua` clock asserts updated (or5 `25000`, and5 `X\t25000`,
+and/or `25000\ttrue`). Full suite passes.
+
 ## Follow-up: symmetric number ticks (revoke evt.now)
 
 Emit side now mirrors the await side: a clock tick is a **bare number** of
@@ -92,6 +99,9 @@ elapsed microseconds, not a `{tag='clock', us, now}` table.
 - [x] Docs (api.md row + consts table; READMEs; guide.md)
 - [x] Parse-check (luac -p) all edited lua OK
 - [x] Full test suite passes (user-run)
+- [x] api.md await row documents overshoot return
+- [x] HISTORY.md v0.7 entries (consts, clock{} removal, number ticks)
+- [x] COMPLETE
 
 ## Notes
 

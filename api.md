@@ -264,7 +264,8 @@ The task awakes when an `emit(e)` matches the given await pattern as follows:
 
 - `true`        | matches any event
 - `false`       | never matches
-- `us: number`  | when timeout `us` in microseconds expires
+- `us: number`  | when timeout `us` in microseconds expires; returns the
+                  exceeded over time
 - `f: function` | when `f(e,...)` is truthy, returning its results
 - `t: task`     | when `t` terminates; returns `v,t`, where `v` is the
                   task return value

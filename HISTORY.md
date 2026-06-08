@@ -16,8 +16,11 @@ v0.7 (jun/26)
     - `_and_` / `_or_`: see "Logical combinators" above
 - Modifications:
     - Multi-arg events:
-        - `emit('clock', 10)` -> `{ tag='clock', ms=N }`
         - `emit('X', 10)` -> `emit { tag='X', v=10 }`
+    - `clock { ... }` -> simply `dt` in microseconds
+        - `await(5 * _s_)` awaits 5 seconds
+        - constants `_us_`, `_ms_`, `_s_`, `_min_`, `_h_`, `_day_`
+        - `S.from(clock)` -> `S.fr_await(<us>)`
 - Environments:
     - `open`+`close` changed to main body + `quit`
 - Bug fixes:
