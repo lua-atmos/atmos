@@ -61,7 +61,14 @@ end
 function await (awt, ...)
     return run.await(run.TIME, awt, ...)
 end
-clock    = run.clock
+
+-- clock duration constants (base unit = microseconds)
+_us_  = 1
+_ms_  = 1000 * _us_
+_s_   = 1000 * _ms_
+_min_ = 60 * _s_
+_h_   = 60 * _min_
+_day_ = 24 * _h_
 
 toggle   = run.toggle
 thread   = run.thread

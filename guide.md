@@ -85,7 +85,7 @@ require "atmos.env.clock"
 loop(function ()
     print("Counts 5 seconds:")
     for i=1,5 do
-        await(clock{s=1})
+        await(1*_s_)
         print("1 second...")
     end
     print("5 seconds elapsed.")
@@ -237,7 +237,7 @@ Atmos provides many compound statements built on top of tasks:
   beginning of each iteration:
 
 ```
-every(clock{s=1}, function ()
+every(1*_s_, function ()
     print "1 second elapses"    -- prints every second
 end)
 ```
@@ -246,7 +246,7 @@ end)
   first argument occurs:
 
 ```
-watching(clock{s=1}, function ()
+watching(1*_s_, function ()
     await 'X'
     print "X happens before 1s" -- prints unless 1 second elapses
 end)
@@ -293,7 +293,7 @@ When a task terminates, it is automatically removed from the pool.
 function T (id, ms)
     task().id = id
     print('start', id, ms)
-    await(clock{ms=ms})
+    await(ms*_ms_)
     print('stop', id, ms)
 end
 
@@ -302,7 +302,7 @@ do
     for i=1, 10 do
         spawn_in(ts, T, i, math.random(500,1500))
     end
-    await(clock{s=1})
+    await(1*_s_)
 end
 ```
 
@@ -320,7 +320,7 @@ for _,t in pairs(ts) do
 end
 ```
 
-If we include this loop after the `await(clock{s=1})` in the previous example,
+If we include this loop after the `await(1*_s_)` in the previous example,
 it will print the task ids that did not awake.
 
 ## 5.3. Task Toggling
@@ -349,7 +349,7 @@ When receiving `true`, the body toggles on.
 ```
 spawn(function()
     toggle('X', function ()
-        every(clock{s=1}, function ()
+        every(1*_s_, function ()
             print "1s elapses"
         end)
     end)
@@ -461,7 +461,7 @@ spawn(function ()
         :to()
 end)
 for i=1, 10 do
-    await(clock{s=1})
+    await(1*_s_)
     emit { tag='X', v=i }   -- `X` events carrying `v=1`
 end
 ```
@@ -543,7 +543,7 @@ local function cpu (max)
 end
 
 loop(function ()
-    local t = watching(clock{s=20}, function ()
+    local t = watching(20*_s_, function ()
         return par_or(function ()
             local v = thread(function ()
                 return cpu(math.random(10000000000))

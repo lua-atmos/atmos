@@ -166,7 +166,8 @@ do
     print("Testing...", "await tasks 1")
     do
         function T (v)
-            return await(v)
+            await('e'..v)
+            return v
         end
         local ts = tasks()
         local t1 = spawn_in (ts, T, 1)
@@ -177,7 +178,7 @@ do
             assert(ret==2 and t==t2 and ts2==ts)
             out 't2'
         end)
-        emit(2)
+        emit('e2')
     end
     assertx(out(), "t2\n")
     atmos.stop()
@@ -246,7 +247,7 @@ do
     print("Testing...", "pools :any default -> ret,t,ts")
     do
         function T (v)
-            await(v)
+            await('e'..v)
             return v*10
         end
         local ts = tasks()
@@ -259,7 +260,7 @@ do
             assert(ts2 == ts)
             out 'any'
         end)
-        emit(2)
+        emit('e2')
     end
     assertx(out(), "any\n")
     atmos.stop()
@@ -270,7 +271,7 @@ do
     print("Testing...", "pools :any explicit")
     do
         function T (v)
-            await(v)
+            await('e'..v)
             return v
         end
         local ts = tasks()
@@ -282,7 +283,7 @@ do
             assert(ts2 == ts)
             out 'ok'
         end)
-        emit(1)
+        emit('e1')
     end
     assertx(out(), "ok\n")
     atmos.stop()
@@ -292,7 +293,7 @@ do
     print("Testing...", "pools :all -> last to terminate")
     do
         function T (v)
-            await(v)
+            await('e'..v)
             return v
         end
         local ts = tasks()
@@ -303,8 +304,8 @@ do
             assert(ts2 == ts)
             out 'all'
         end)
-        emit(2)
-        emit(1)
+        emit('e2')
+        emit('e1')
     end
     assertx(out(), "all\n")
     atmos.stop()

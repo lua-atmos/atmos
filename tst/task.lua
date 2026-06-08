@@ -136,12 +136,12 @@ do
     print("Testing...", "await clock 1")
     spawn(function ()
         await 'X'
-        await(clock{h=1,min=1,s=1,ms=10})
+        await(1*_h_ + 1*_min_ + 1*_s_ + 10*_ms_)
         out("awake")
     end)
-    emit(clock{h=10})
+    emit{tag='clock', us=10*_h_}
     emit 'X'
-    emit(clock{h=10})
+    emit{tag='clock', us=10*_h_}
     out("ok")
     assertx(out(), "awake\nok\n")
     atmos.stop()
@@ -150,10 +150,10 @@ end
 do
     print("Testing...", "await clock 2")
     spawn(function ()
-        await(clock{h=1,min=1,s=1,ms=10})
+        await(1*_h_ + 1*_min_ + 1*_s_ + 10*_ms_)
         out("awake")
     end)
-    emit { tag='clock', ms=10*60*60*1000, now=0 }
+    emit { tag='clock', us=10*_h_, now=0 }
     out("ok")
     assertx(out(), "awake\nok\n")
     atmos.stop()
@@ -162,7 +162,7 @@ end
 do
     print("Testing...", "await clock 3")
     spawn(function ()
-        every(clock{s=1}, function ()
+        every(1*_s_, function ()
             out("1s elapsed")
         end)
     end)
@@ -180,7 +180,7 @@ end
 do
     print("Testing...", "await clock 4: ignores non-clock emit")
     spawn(function ()
-        await(clock{s=1})
+        await(1*_s_)
         out("awake")
     end)
     emit()              -- nil wake: must not crash, must not awake

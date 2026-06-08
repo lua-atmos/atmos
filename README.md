@@ -81,8 +81,8 @@ During 5 seconds, displays `Hello World!` every second:
 require "atmos.env.clock"
 
 loop(function ()
-    watching(clock{s=5}, function ()
-        every(clock{s=1}, function ()
+    watching(5*_s_, function ()
+        every(1*_s_, function ()
             print("Hello World!")
         end)
     end)

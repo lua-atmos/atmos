@@ -47,7 +47,7 @@ loop(function ()
         print "-=-=- 2.2 -=-=-"
         print("Counts 5 seconds:")
         for i=1,5 do
-            await(clock{ms=100})
+            await(100*_ms_)
             print("1 second...")
         end
         print("5 seconds elapsed.")
@@ -128,8 +128,8 @@ loop(function ()
     -- 4.1
     do
         print "-=-=- 4.1 -=-=-"
-        watching(clock{s=1}, function()
-            every(clock{ms=100}, function ()
+        watching(1*_s_, function()
+            every(100*_ms_, function ()
                 print "100 ms elapses"    -- prints this message every second
             end)
         end)
@@ -139,7 +139,7 @@ loop(function ()
     do
         print "-=-=- 4.2 -=-=-"
         spawn(function()
-            watching(clock{s=1}, function ()
+            watching(1*_s_, function ()
                 await 'X'
                 print "X happens before 1s" -- prints this message unless 1 second elapses
             end)
@@ -178,7 +178,7 @@ loop(function ()
                 :to()
         end)
         for i=1, 10 do
-            await(clock{ms=1})
+            await(1*_ms_)
             emit { tag='X', v=i }
         end
     end
@@ -224,7 +224,7 @@ loop(function ()
         function T (id, ms)
             task().id = id
             print('start', id, ms)
-            await(clock{ms=ms})
+            await(ms*_ms_)
             print('stop', id, ms)
         end
         do
@@ -232,7 +232,7 @@ loop(function ()
             for i=1, 10 do
                 spawn_in(ts, T, i, math.random(500,1500))
             end
-            await(clock{s=1})
+            await(1*_s_)
             for _,t in pairs(ts) do
                 print(t.id)
             end
@@ -257,17 +257,17 @@ loop(function ()
         print "-=-=- 6.4 -=-=-"
         spawn(function()
             toggle('X', function ()
-                every(clock{ms=100}, function ()
+                every(100*_ms_, function ()
                     print "100ms elapses"
                 end)
             end)
         end)
         print 'off'
         emit{tag='X', false}    -- body above toggles off
-        await(clock{s=1})
+        await(1*_s_)
         print 'on'
         emit{tag='X', true}     -- body above toggles on
-        await(clock{s=1})
+        await(1*_s_)
     end
 
 end)

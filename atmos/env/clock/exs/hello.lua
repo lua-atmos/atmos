@@ -2,8 +2,8 @@ local env = require "atmos.env.clock"
 
 loop(function ()
     print("now", env.now)
-    watching(clock{s=5}, function ()
-        every(clock{ms=500}, function ()
+    watching(5*_s_, function ()
+        every(500*_ms_, function ()
             print("Hello World!")
         end)
     end)

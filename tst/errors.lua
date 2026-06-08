@@ -274,7 +274,7 @@ do
             loop(function ()
                 require "atmos.env.clock"
                 local _ <close> = spawn(true, (function ()
-                    await(clock {h=0,min=0,s=0,ms=1 })
+                    await(1*_ms_)
                     emit("X")
                 end))
                 await("X")

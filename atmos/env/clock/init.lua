@@ -4,14 +4,14 @@ local M = {
     now = 0,
 }
 
-local old = math.floor(os.clock() * 1000)
+local old = math.floor(os.clock() * 1000000)
 
 function M.step ()
-    local now = math.floor(os.clock() * 1000)
+    local now = math.floor(os.clock() * 1000000)
     if now > old then
         emit {
             tag = 'clock',
-            ms  = now - old,
+            us  = now - old,
             now = now,
         }
         M.now = now

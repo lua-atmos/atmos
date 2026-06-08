@@ -2,60 +2,99 @@
 
 ## Idea
 
-Allow `await(<number>)` where the number is a **clock duration in
-microseconds**, instead of requiring a clock table (`clock{...}` / `@..`).
+`await(<number>)` where the number is a clock duration in **microseconds**.
+Drop the `clock{...}` table form entirely.
 
 ```
-await(1000000)      ;; wait 1s  (1_000_000 us)
+await(5 * _s_)      ;; wait 5s
+await(500 * _ms_)
 ```
 
-## Current state (lua-atmos/atmos runtime)
+## Worktree model (06-and-or-not branch)
 
-| file                       | place                  | now                                  |
-|----------------------------|------------------------|--------------------------------------|
-| atmos/run.lua              | `clock_to_ms` (l.75)   | clock table -> **milliseconds**      |
-| atmos/run.lua              | `meta_clock` (l.82)    | countdown via `a.cur`, emits `'clock'`|
-| atmos/run.lua              | `await_to_table` (l.628)| `meta_clock` table -> countdown patt |
-| atmos/run.lua              | bare number (l.643)    | falls to `'=='` -> matches `emit(n)` |
-| atmos/env/clock/init.lua   | `step` (l.12)          | `emit('clock', dt_ms, now)` in **ms**|
+NOTE: edit only files under `.work/06-and-or-not/` (the main checkout at
+`/x/lua-atmos/atmos/` is a separate, diverged tree -- do NOT touch).
 
-Clock match works via the `__atmos` metamethod path on `meta_clock`.
-The emit carries `dt` (elapsed) + `now`.
+- clock value = plain table `{ tag='clock', ms=N }` (NO metatable).
+- `M.await` (`atmos/run.lua`) is one unified function:
+    - `tag = (table and awt.tag) or awt`
+    - clock setup `awt._ms = awt.ms`; awake when `awt._ms<=0` returns
+      `'clock', -awt._ms, awt._now`; tick subtracts `emt.ms`.
+- tick event = single table `emit{ tag='clock', ms=dt, now=now }`.
+- clock env emits ms (`os.clock()*1000`).
+- a bare number currently hits the final `M.is(emt,tag)` equality branch.
 
-## Core conflict
+## Decisions (locked)
 
-`await(<number>)` today means "match an emit equal to this number".
-Making a bare number a clock duration is a **breaking semantic change**:
-bare-number event matching would have to go through payloads
-(`await(:tag, n)`) instead.
+1. Microseconds everywhere (rename `ms` field -> `us`, `_ms`/`_now` ->
+   `_us`/`_now`).
+2. Breaking: bare `await(<number>)` = clock duration; no longer matches
+   `emit(<number>)` by equality.
+3. Numbers-only: remove `M.clock` constructor + `clock` global.
 
-## Open decisions
+## Constants (new, base unit = us)  -- `atmos/init.lua`
 
-1. Unit: idea says **microseconds**, but `clock_to_ms` + clock env use
-   **milliseconds**. Options:
-   a. switch whole clock subsystem to microseconds (env emits us, rename
-      `clock_to_ms` -> `clock_to_us`)
-   b. keep ms internally, treat the number arg as us and convert at the
-      boundary
-2. Keep clock tables (`@..` literals / `clock{}`) too, or replace by numbers?
-3. Does `await(<number>)` matching a literal `emit(<number>)` need to stay
-   supported anywhere? (audit tst/ + exs/)
+| name    | value         |
+|---------|---------------|
+| `_us_`  | `1`           |
+| `_ms_`  | `1000 * _us_` |
+| `_s_`   | `1000 * _ms_` |
+| `_min_` | `60 * _s_`    |
+| `_h_`   | `60 * _min_`  |
+| `_day_` | `24 * _h_`    |
 
-## Implementation surface (sketch)
+## Edits
 
-- `await_to_table`: add `type(e)=='number'` branch -> build a clock countdown
-  pattern (carry `cur` = duration), reusing meta_clock countdown logic.
-- Countdown state for a number: wrap in a small clock-like table, or a new
-  numeric pattern tag handled in `check_ret`.
-- `atmos/env/clock/init.lua`: emit duration in chosen unit.
-- `api.md`: update `await` `c: clock` row to document the number form.
-- `manual.md`: doc `@..` <-> number relation -- OUTSIDE worktree, cannot edit.
+### Core
+- `atmos/run.lua`
+    - remove `M.clock` (78-89).
+    - `M.await`: after `tag` line, add
+      `if type(awt)=='number' then awt={tag='clock',us=awt}; tag='clock' end`.
+    - rename clock internals `ms`->`us`: setup, awake-return, tick-subtract.
+- `atmos/init.lua`: drop `clock = run.clock`; add `_us_.._day_`.
+- `atmos/env/clock/init.lua`: `os.clock()*1000000`, emit `us = now-old`.
+- `atmos/streams.lua`: `_is_(v,'clock')` -> `type(v)=='number'`.
+
+### Conversions (clock{...} -> number consts)
+- `clock{s=N}`  -> `N*_s_`,  `clock{ms=N}` -> `N*_ms_`,
+  `clock{h=1,min=1,s=1,ms=10}` -> `1*_h_ + 1*_min_ + 1*_s_ + 10*_ms_`,
+  `clock{ms=ms}` -> `ms*_ms_`.
+- tick emits: `emit(clock{h=10})` -> `emit{tag='clock', us=10*_h_}`;
+  `emit{tag='clock', ms=N, now=M}` -> `emit{tag='clock', us=N*_ms_, now=M}`.
+
+### Tests / examples / docs
+- tst: `await.lua`, `task.lua`, `guide.lua`, `readme.lua`, `envs.lua`.
+    - overshoot assert: `await.lua` "or 5" `25` -> `25000` (us scaling).
+- exs: `env/clock/exs/hello.lua`, `hello-rx.lua`.
+- docs: `api.md`, `README.md`, `guide.md`, `env/clock/README.md`,
+  `env/README.md`.
 
 ## Status
 
-- [x] Located clock await impl (run.lua + clock env)
-- [x] Identified bare-number `'=='` conflict
-- [ ] Resolve open decisions (unit, keep tables?, matching audit)
-- [ ] Implement number branch in `await_to_table` / `check_ret`
-- [ ] Adjust clock env unit
-- [ ] Update api.md
+- [x] Mapped worktree clock model (run.lua/init/env/streams)
+- [x] Core edits (run.lua remove M.clock + number branch + ms->us;
+      init.lua consts; env us; streams number)
+- [x] Conversions in tst/ (task, await, guide, readme, envs) + exs/
+- [x] Docs (api.md row + consts table; READMEs; guide.md)
+- [x] Parse-check (luac -p) all edited lua OK
+- [x] Full test suite passes (user-run)
+
+## Notes
+
+- `await(<number>)` no longer matches `emit(<number>)` (breaking, intended).
+- overshoot now scales x1000 (await.lua "or 5": 25 -> 25000).
+- consider a HISTORY.md entry (clock now number/us) -- not done.
+- breaking-change fallout found at runtime: `tst/tasks.lua` used numeric
+  events via `await(v)` (v=1,2,3) matched by `emit(v)`. Migrated the event
+  vehicle to strings (`await('e'..v)` / `emit('e2')`) while keeping numeric
+  returns, so pool any/all asserts are unchanged. Other numeric `emit(n)` in
+  `task.lua` are consumed by `await(true)`, so unaffected.
+- runtime fallout 2: `tst/errors.lua` "clock external error" used the spaced
+  form `clock {h=0,..,ms=1}` (my first sweep grepped `clock{` w/o space).
+  -> `1*_ms_`. env `init.lua:12` (emit) line unchanged so the trace asserts.
+- runtime fallout 3: STREAMS. `S.from(<number>)` is a base f-streams numeric
+  range/counter (e.g. `S.from(1,3)`, `S.from(1)` for zip), so a number cannot
+  be overloaded as a clock. Removed the `S.from` clock override in
+  `atmos/streams.lua`; clock streams now call `S.fr_await(<us>)` directly
+  (which is what `S.from(clock)` expanded to anyway). Migrated readme.lua and
+  hello-rx.lua clock streams; updated api.md streams source doc.
