@@ -9,11 +9,7 @@ local old = math.floor(os.clock() * 1000000)
 function M.step ()
     local now = math.floor(os.clock() * 1000000)
     if now > old then
-        emit {
-            tag = 'clock',
-            us  = now - old,
-            now = now,
-        }
+        emit(now - old)
         M.now = now
         old = now
     end

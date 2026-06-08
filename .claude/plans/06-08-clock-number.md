@@ -69,6 +69,20 @@ NOTE: edit only files under `.work/06-and-or-not/` (the main checkout at
 - docs: `api.md`, `README.md`, `guide.md`, `env/clock/README.md`,
   `env/README.md`.
 
+## Follow-up: symmetric number ticks (revoke evt.now)
+
+Emit side now mirrors the await side: a clock tick is a **bare number** of
+elapsed microseconds, not a `{tag='clock', us, now}` table.
+
+- `env/clock/init.lua`: `emit(now - old)` (still tracks `M.now`).
+- `run.lua` await loop: tick branch `if type(emt)=='number' then awt._us -= emt`.
+- awake return drops `now`: `'clock', overshoot` (was `..., now`).
+- `evt.now` revoked -- apps read absolute time via `env.now`.
+- test ticks simplified: `emit{tag='clock', us=N, now=M}` -> `emit(N)`
+  (task.lua, await.lua, envs.lua).
+- docs: api.md await row (`returns 'clock', overshoot`), env/README.md
+  (`emit(dt)`).
+
 ## Status
 
 - [x] Mapped worktree clock model (run.lua/init/env/streams)

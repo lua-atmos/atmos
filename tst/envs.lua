@@ -121,7 +121,7 @@ do
     local function step1 ()
         n = n + 1
         emit{tag='sensor', n}
-        emit{tag='clock', ms=100, now=n*100}
+        emit(100*_ms_)
     end
     local function step2 ()
         emit{tag='net', n*10}

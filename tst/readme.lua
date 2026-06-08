@@ -5,8 +5,8 @@ loop(function ()
 
     print "-=- 1 -=-"
     do
-        watching(clock{s=1}, function ()
-            every(clock{ms=200}, function ()
+        watching(1*_s_, function ()
+            every(200*_ms_, function ()
                 print("Hello World!")
             end)
         end)

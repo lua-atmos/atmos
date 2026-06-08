@@ -58,13 +58,13 @@ end
 do
     print("Testing...", "await or 5: clock")
     spawn(function ()
-        local v,u = await {tag='or', 'X', clock{s=1}}
+        local v,u = await {tag='or', 'X', 1*_s_}
         out(v,u)
     end)
-    emit{tag='clock', ms=510}
-    emit{tag='clock', ms=515}
+    emit(510*_ms_)
+    emit(515*_ms_)
     emit 'X'
-    assertx(out(), "clock\t25\n")
+    assertx(out(), "clock\t25000\n")
     atmos.stop()
 end
 
@@ -126,11 +126,11 @@ end
 do
     print("Testing...", "await and 5: clock")
     spawn(function ()
-        local v,u = await {tag='and', 'X', clock{s=1}}
+        local v,u = await {tag='and', 'X', 1*_s_}
         out(v, u)
     end)
-    emit{tag='clock', ms=510}
-    emit{tag='clock', ms=515}
+    emit(510*_ms_)
+    emit(515*_ms_)
     emit 'X'
     assertx(out(), "X\tclock\n")
     atmos.stop()
@@ -148,12 +148,12 @@ do
         local T = spawn_in(ts, function ()
             return await('Z')
         end)
-        local v,u = await {tag='and', {tag='or', 'X', clock{s=1}}, {tag='or', {tag='tasks', mode='any', tasks=ts}, t}}
+        local v,u = await {tag='and', {tag='or', 'X', 1*_s_}, {tag='or', {tag='tasks', mode='any', tasks=ts}, t}}
         out(v, u=='Z')
     end)
-    emit{tag='clock', ms=510}
+    emit(510*_ms_)
     emit 'Z'
-    emit{tag='clock', ms=515}
+    emit(515*_ms_)
     assertx(out(), "clock\ttrue\n")
     atmos.stop()
 end

@@ -139,9 +139,9 @@ do
         await(1*_h_ + 1*_min_ + 1*_s_ + 10*_ms_)
         out("awake")
     end)
-    emit{tag='clock', us=10*_h_}
+    emit(10*_h_)
     emit 'X'
-    emit{tag='clock', us=10*_h_}
+    emit(10*_h_)
     out("ok")
     assertx(out(), "awake\nok\n")
     atmos.stop()
@@ -153,7 +153,7 @@ do
         await(1*_h_ + 1*_min_ + 1*_s_ + 10*_ms_)
         out("awake")
     end)
-    emit { tag='clock', us=10*_h_, now=0 }
+    emit(10*_h_)
     out("ok")
     assertx(out(), "awake\nok\n")
     atmos.stop()
@@ -167,11 +167,11 @@ do
         end)
     end)
     emit 'A'
-    emit { tag='clock', ms=500, now=0 }
+    emit(500*_ms_)
     emit 'B'
-    emit { tag='clock', ms=500, now=0 }
+    emit(500*_ms_)
     emit 'C'
-    emit { tag='clock', ms=500, now=0 }
+    emit(500*_ms_)
     emit 'D'
     assertx(out(), "1s elapsed\n")
     atmos.stop()
