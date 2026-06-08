@@ -67,9 +67,11 @@ Examples already use `_s_` (v0.7-clean); only version strings.
 
 - [x] v0.7 entry drafted (confirm date `jun/26`)
 
-#### 2.3 Rockspec description (pending)
+#### 2.3 Rockspec description (done)
 
-- [ ] Keep in sync with README "About" section
+- [x] Synced `detailed` with README "About": added the
+      Functional Streams / Multithreading block (was missing in
+      0.6 rockspec). Done in `atmos-0.7-1.rockspec` (see §3).
 
 #### 2.4 guide.md (done)
 
@@ -96,8 +98,9 @@ Verified present: single-arg `emit`/`await`,
 
 ### 3. Rockspec
 
-- [ ] Create `atmos-0.7-1.rockspec`
-- [ ] Install locally
+- [x] Create `atmos-0.7-1.rockspec` (version 0.7-1, branch v0.7,
+      `detailed` synced with README)
+- [ ] Install locally (`luarocks make atmos-0.7-1.rockspec`)
 
 ### 4. Release all environments and apps
 
