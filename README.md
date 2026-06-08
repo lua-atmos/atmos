@@ -8,6 +8,7 @@
 ***Structured Event-Driven Concurrency for Lua***
 
 [
+    [`v0.7`](https://github.com/lua-atmos/atmos/tree/v0.7)      |
     [`v0.6`](https://github.com/lua-atmos/atmos/tree/v0.6)      |
     [`v0.5`](https://github.com/lua-atmos/atmos/tree/v0.5)      |
     [`v0.4`](https://github.com/lua-atmos/atmos/tree/v0.4)      |
@@ -16,7 +17,7 @@
     [`v0.1`](https://github.com/lua-atmos/atmos/tree/v0.1)
 ]
 
-Stable branch is [`v0.6`](https://github.com/lua-atmos/atmos/tree/v0.6).
+Stable branch is [`v0.7`](https://github.com/lua-atmos/atmos/tree/v0.7).
 
 [
     [About](#about)                 |
@@ -124,7 +125,7 @@ other, more complex examples.
 ## Luarocks
 
 ```
-sudo luarocks --lua-version=5.4 install atmos 0.6
+sudo luarocks --lua-version=5.4 install atmos 0.7
 lua5.4 <lua-path>/atmos/env/clock/exs/hello.lua
 ```
 

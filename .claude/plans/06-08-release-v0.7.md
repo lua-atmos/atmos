@@ -54,13 +54,13 @@ cd tst && lua5.4 all.lua
 Status (checked 06-08): api.md + HISTORY.md done; guide.md
 mostly done with stale calls; README.md only needs version bumps.
 
-#### 2.1 README.md (pending)
+#### 2.1 README.md (done)
 
 Examples already use `_s_` (v0.7-clean); only version strings.
 
-- [ ] Add `v0.7` to version list (line ~11)
-- [ ] Update stable link from `v0.6` to `v0.7` (line ~19)
-- [ ] Update `Install & Run`: `install atmos 0.7` (line ~127)
+- [x] Add `v0.7` to version list (line 11)
+- [x] Update stable link from `v0.6` to `v0.7` (line 19)
+- [x] Update `Install & Run`: `install atmos 0.7` (line 128)
 - [ ] Re-test examples in the doc
 
 #### 2.2 HISTORY.md (done)
