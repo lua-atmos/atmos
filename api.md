@@ -425,8 +425,8 @@ local S = require "atmos.streams"
         stream of events `evt`
     - `S.fr_await(T)`:
         stream of tasks `T`
-    - `S.from(clk)`:
-        stream of periodic `clk` events
+    - `S.fr_await(dt)`:
+        stream of periodic clock events in microseconds
 
 - Combinators
     - `S.emitter(s,tgt,as)`:

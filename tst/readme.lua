@@ -14,11 +14,11 @@ loop(function ()
 
     print "-=- 2 -=-"
     do
-        local s1 = S.from(clock{ms=200})
+        local s1 = S.fr_await(200*_ms_)
             :tap(function()
                 print("Hello World!")
             end)
-        local s2 = S.from(clock{s=1}):take(1)
+        local s2 = S.fr_await(1*_s_):take(1)
         S.paror(s1,s2):to()
     end
 end)

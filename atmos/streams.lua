@@ -6,15 +6,6 @@ local function N ()
     return 'atmos.streams.' .. n
 end
 
-local from = S.from
-
-function S.from (v, ...)
-    if _is_(v, 'clock') then
-        return S.fr_await(v, ...)
-    end
-    return from(v, ...)
-end
-
 -------------------------------------------------------------------------------
 
 local function fr_await (t)
