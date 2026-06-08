@@ -32,7 +32,7 @@ New since v0.6 (see HISTORY.md):
 
 ### 1. Run tests
 
-- [ ] Automatic tests:
+- [x] Automatic tests: all pass
 
 ```bash
 cd tst && lua5.4 all.lua
@@ -51,43 +51,48 @@ cd tst && lua5.4 all.lua
 - api.md
 - HISTORY.md
 
-#### 2.1 README.md
+Status (checked 06-08): api.md + HISTORY.md done; guide.md
+mostly done with stale calls; README.md only needs version bumps.
 
-- [ ] Add `v0.7` to version list
-- [ ] Update stable link from `v0.6` to `v0.7`
-- [ ] Update `Install & Run` section: `install atmos 0.7`
-- [ ] Update examples for new `await`/`emit`/clock syntax
-- [ ] Test examples in the doc
+#### 2.1 README.md (pending)
 
-#### 2.2 HISTORY.md
+Examples already use `_s_` (v0.7-clean); only version strings.
+
+- [ ] Add `v0.7` to version list (line ~11)
+- [ ] Update stable link from `v0.6` to `v0.7` (line ~19)
+- [ ] Update `Install & Run`: `install atmos 0.7` (line ~127)
+- [ ] Re-test examples in the doc
+
+#### 2.2 HISTORY.md (done)
 
 - [x] v0.7 entry drafted (confirm date `jun/26`)
 
-#### 2.3 Rockspec description
+#### 2.3 Rockspec description (pending)
 
 - [ ] Keep in sync with README "About" section
 
-#### 2.4 guide.md
+#### 2.4 guide.md (done)
 
-- [ ] Update `await`/`emit` to single-arg events
-- [ ] Document clock as `dt` microseconds + constants
-- [ ] Document `abort`
-- [ ] Document `await(ts, 'any'|'all')`
-- [ ] Document `toggle` filter
-- [ ] Document logical combinators `or`/`and`/`not`
-- [ ] Document `__atmos` metamethod
+Already migrated: clock `dt`/`_s_`, `abort`, `toggle`,
+`fr_await`. Stale multi-arg calls fixed:
 
-#### 2.5 api.md
+- [x] line 357 `emit('X', false)` -> `emit { tag='X', false }`
+- [x] line 359 `emit('X', true)` -> `emit { tag='X', true }`
+- [x] line 416 `await('X', id)` -> `await { tag='X', v=id }`
+- [x] line 425 `emit('X', 2)` -> `emit { tag='X', v=2 }`
+- [x] line 499 `S.from(1)`: kept (f-streams counter; only
+      `S.from(clock)` removed; matches `tst/guide.lua:195`)
 
-- [ ] `emit(v)` / `await(v)` single arg
-- [ ] `await(ts, ['any'|'all'])`
-- [ ] clock: `dt` microseconds + constants
-- [ ] `abort`
-- [ ] `toggle(..., [filter], ...)`
-- [ ] combinators `{ tag='or'/'and'/'not' }`
-- [ ] `__atmos`
-- [ ] env API: main body + `quit` (was `open`/`close`)
-- [ ] `S.fr_await` (was `S.from(clock)`)
+Note: toggle uses positional `{ tag='X', false }` because the
+derived statement awaits `{tag=e, false}` (run.lua:738/740);
+trace uses named `v` per the stream idiom.
+
+#### 2.5 api.md (done)
+
+Verified present: single-arg `emit`/`await`,
+`{tag='tasks', mode='any'/'all'}`, `dt`/constants, `abort`,
+`toggle`, `{tag='or'/'and'/'not'}`, `__atmos`, env `quit`,
+`S.fr_await`.
 
 ### 3. Rockspec
 

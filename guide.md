@@ -354,9 +354,9 @@ spawn(function()
         end)
     end)
 end)
-emit('X', false)    -- body above toggles off
+emit { tag='X', false }    -- body above toggles off
 <...>
-emit('X', true)     -- body above toggles on
+emit { tag='X', true }     -- body above toggles on
 <...>
 ```
 
@@ -413,7 +413,7 @@ Only this task awakes and generates an uncaught error:
 
 ```
 function T (id)
-    await('X', id)
+    await { tag='X', v=id }
     throw 'error'
 end
 
@@ -422,7 +422,7 @@ spawn_in(ts, T, 1)
 spawn_in(ts, T, 2)
 spawn_in(ts, T, 3)
 
-emit('X', 2)
+emit { tag='X', v=2 }
 ```
 
 The stack trace identifies that the task lives in `ts` in line 6 and spawns in
