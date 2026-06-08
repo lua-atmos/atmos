@@ -1,5 +1,34 @@
 # Plan: Release v0.7
 
+## RESUME HERE (state @ 2026-06-08)
+
+This (atmos) repo, branch `v0.7`:
+
+- DONE + PUSHED to `origin/v0.7`: §1 tests, §2 docs
+  (README, guide, api, HISTORY), §3 rockspec
+  `atmos-0.7-1.rockspec` (created + `luarocks make`),
+  §4.0 clock examples.
+- `main` is far behind `v0.7` (release to main is §5, not yet).
+- Before switching machines: commit this plan and
+  `git push origin v0.7` (otherwise plan edits don't travel).
+
+Per-env progress lives in EACH env repo's own plan:
+
+- `env-sdl`: `.claude/plans/06-08-release-v0.2.md` — §1-5 done
+  + pushed to `origin/v0.2`; remaining: ff `main`, Phase-2
+  global test, dependent apps (sdl-birds/rocks/pingus).
+- `env-pico`, `env-socket`, `env-iup`, `env-js`: NOT STARTED.
+
+Next actions, in order:
+
+1. Push `v0.7` here (so plan travels).
+2. Finish `env-sdl` (its plan §6-8).
+3. Migrate `env-pico` -> `env-socket` -> `env-iup` -> `env-js`
+   (own plan per repo, mirror env-sdl).
+4. §5 release atmos to `main` + branch.
+5. §6 upload all rockspecs. §7 remote verify. §9 backport
+   learnings to `release.md`.
+
 ## Context
 
 Atmos v0.6 extracted all envs (except clock) to separate repos.
@@ -115,23 +144,26 @@ and any `emit`/`await`/clock syntax updates.
 - [x] `atmos/env/clock/exs/hello.lua`
 - [x] `atmos/env/clock/exs/hello-rx.lua`
 
-#### 4.1 env-sdl
+#### 4.1 env-sdl  (see env-sdl/.claude/plans/06-08-release-v0.2.md)
 
-Env steps:
-1. [ ] Migrate to v0.7 API (`open`/`close` -> body + `quit`)
-2. [ ] Update README (atmos `v0.7`, env bump)
-3. [ ] Phase 1 tests (local)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/across.lua`
-    - [ ] `exs/click-drag-cancel.lua`
-4. [ ] Create rockspec
+NOTE: env API became main-body + `quit` (no `open`); custom
+matching dropped `__atmos` in favor of `tag='sdl'` table
+patterns + `until`. Committed + pushed to `origin/v0.2`.
+
+1. [x] Migrate to v0.7 API (main body + `quit`)
+2. [x] Update README
+3. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+4. [x] Create rockspec (`atmos-env-sdl-0.2-1.rockspec`)
 5. [ ] Make rockspec
 6. [ ] Phase 2 tests (global)
     - [ ] `exs/hello.lua`
     - [ ] `exs/across.lua`
     - [ ] `exs/click-drag-cancel.lua`
-7. [ ] Commit, push main
-8. [ ] Create/update version branch, push
+7. [~] Committed `v0.2` + pushed; `main` still needs ff
+8. [x] Create/update version branch `v0.2`, push
 
 ##### 4.1.1 sdl-birds
 - [ ] Migrate to v0.7 API
