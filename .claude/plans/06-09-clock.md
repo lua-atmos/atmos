@@ -99,8 +99,8 @@ Replace the local `CLK` helper with `'clock'`:
 - [x] Tests added (`tst/await.lua`, end of file: clock 1, clock 2, every clock)
 - [x] Core branch (`run.lua`: merged into `clk` branch as `clk or tag=='clock'`)
 - [x] Full test suite passes (user-run)
-- [x] Docs (api.md await row, guide.md snippet, env/clock + env READMEs)
-- [ ] Downstream `CLK` -> `'clock'`
+- [x] Docs (api.md await row, env/clock + env READMEs)
+      -- guide.md snippet added then reverted by user (skipped)
 
 ## Design note
 
