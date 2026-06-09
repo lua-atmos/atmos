@@ -5,28 +5,27 @@
 Verified by scanning working trees (commit labels are app
 versions and were misleading), not by plan checkboxes.
 
-DONE (v0.7-clean source):
+DONE (v0.7-clean source, committed + pushed):
 
 - atmos core: §1-§4.0, §2 docs, §3 rockspec. §5 released to
   `main` (confirmed final; `main` tip == `origin/v0.7` tip).
-- SDL family fully migrated + pushed:
-    - `env-sdl` (on `main`, `origin/main`==`origin/v0.2`)
-    - `sdl-birds`, `sdl-rocks`, `sdl-pingus`
+- SDL family: `env-sdl` (v0.2), `sdl-birds`, `sdl-rocks`,
+  `sdl-pingus`.
+- PICO family: `env-pico` (v0.3), `pico-birds`, `pico-rocks`.
 
 NOT DONE (still have `clock{`, `M.open/close`, multi-arg):
 
-- `env-pico` (next), then `env-socket`, `env-iup`, `env-js`
-- `pico-birds`, `pico-rocks` (blocked on `env-pico`)
+- `env-socket`, `env-iup`, `env-js`
 - §6 LuaRocks uploads: NOT YET (confirmed by user)
 - §7 remote verify, §9 backport to `release.md`: pending
 
 Next actions, in order:
 
-1. Migrate `env-pico` -> release as `v0.3` (v0.2 already
-   released for pico-sdl v0.5). Plan:
-   `env-pico/.claude/plans/06-08-release-v0.3.md`.
-2. Then `pico-birds` + `pico-rocks` (depend on env-pico).
-3. Migrate `env-socket` -> `env-iup` -> `env-js`.
+1. Migrate `env-socket` (clock emit -> single-arg us; exs
+   `clock{...}` -> constants).
+2. Migrate `env-iup` (same; clock emit `emit('clock',100,now)`).
+3. Migrate `env-js` (`M.open`/`M.close` -> body+`quit`; exs
+   `clock{...}`; rebuild HTML; Puppeteer tests).
 4. §6 upload all rockspecs to LuaRocks.
 5. §7 remote verify. §9 backport learnings to `release.md`.
 
@@ -192,37 +191,28 @@ patterns + `until`. Committed + pushed to `origin/v0.2`.
 - [x] Commit, push; version branch present
 - [ ] Re-confirm README versions (not re-verified)
 
-#### 4.2 env-pico
+#### 4.2 env-pico  -> v0.3 (DONE; see env-pico plan)
 
-Env steps:
-1. [ ] Migrate to v0.7 API
-2. [ ] Update README
-3. [ ] Phase 1 tests (local)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/across.lua`
-    - [ ] `exs/click-drag-cancel.lua`
-4. [ ] Create rockspec
-5. [ ] Make rockspec
-6. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/across.lua`
-    - [ ] `exs/click-drag-cancel.lua`
-7. [ ] Commit, push main
-8. [ ] Create/update version branch, push
+Released as `v0.3` (v0.2 was pico-sdl-v0.5 era). Source clean,
+`origin/v0.3` in sync; `0.3-1.rockspec` = `atmos ~> 0.7`,
+`pico-sdl ~> 0.6`; README has version list + deps.
 
-##### 4.2.1 pico-birds
-- [ ] Migrate to v0.7 API
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `birds-11.lua`
-- [ ] Commit, push main
-- [ ] Create branch, push
+1. [x] Migrate to v0.7 API
+2. [x] Update README (version list + deps)
+3. [x] Phase 1 tests (local)
+4. [x] Create rockspec (`atmos-env-pico-0.3-1.rockspec`)
+5. [x] Make rockspec
+6. [x] Phase 2 tests (global)
+7. [x] Commit, push
+8. [x] Branch `v0.3`, push
 
-##### 4.2.2 pico-rocks
-- [ ] Migrate to v0.7 API
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `main.lua`
-- [ ] Commit, push main
-- [ ] Create branch, push
+##### 4.2.1 pico-birds  (source v0.7-clean, pushed)
+- [x] Migrate to v0.7 API
+- [x] Commit, push; branches v0.4/v0.5/v0.6 in sync
+
+##### 4.2.2 pico-rocks  (source v0.7-clean, pushed)
+- [x] Migrate to v0.7 API
+- [x] Commit, push; v0.5/v0.6 in sync
 
 #### 4.3 env-socket
 
