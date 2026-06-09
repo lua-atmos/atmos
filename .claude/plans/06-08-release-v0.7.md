@@ -22,8 +22,9 @@ NOT DONE (still have `clock{`, `M.open/close`, multi-arg):
 
 Next actions, in order:
 
-1. Migrate `env-pico` (mirror env-sdl: body+`quit`, clock us,
-   `tag='pico'` table patterns; write its own plan).
+1. Migrate `env-pico` -> release as `v0.3` (v0.2 already
+   released for pico-sdl v0.5). Plan:
+   `env-pico/.claude/plans/06-08-release-v0.3.md`.
 2. Then `pico-birds` + `pico-rocks` (depend on env-pico).
 3. Migrate `env-socket` -> `env-iup` -> `env-js`.
 4. §6 upload all rockspecs to LuaRocks.
@@ -140,6 +141,17 @@ Two test phases for each env/app:
 Each env needs the `open`+`close` -> main body + `quit` migration
 and any `emit`/`await`/clock syntax updates.
 
+REQUIREMENT (all envs): every `env-*/README.md` must indicate its
+CURRENT version (a version list + stable link, like the atmos
+README; or a version table like env-js). Today most env READMEs
+show only a bare `luarocks install ...` line with no version.
+
+- [x] `env-sdl`    README shows current version (`v0.2`)
+- [ ] `env-pico`   README shows current version (`v0.3`)
+- [ ] `env-socket` README shows current version (verify number)
+- [ ] `env-iup`    README shows current version (verify number)
+- [ ] `env-js`     README version table updated (`v0.6` -> `v0.7`)
+
 **clock** (atmos built-in):
 - [x] `atmos/env/clock/exs/hello.lua`
 - [x] `atmos/env/clock/exs/hello-rx.lua`
@@ -151,7 +163,7 @@ matching dropped `__atmos` in favor of `tag='sdl'` table
 patterns + `until`. Committed + pushed to `origin/v0.2`.
 
 1. [x] Migrate to v0.7 API (main body + `quit`)
-2. [x] Update README
+2. [x] Update README (+ version list: v0.2 stable)
 3. [x] Phase 1 tests (local)
     - [x] `exs/hello.lua`
     - [x] `exs/across.lua`
@@ -272,7 +284,7 @@ Env steps:
 ```bash
 luarocks upload atmos-0.7-1.rockspec
 luarocks upload atmos-env-sdl-0.2-1.rockspec
-luarocks upload atmos-env-pico-0.2-1.rockspec
+luarocks upload atmos-env-pico-0.3-1.rockspec
 luarocks upload atmos-env-socket-0.2-1.rockspec
 luarocks upload atmos-env-iup-0.2-1.rockspec
 ```
