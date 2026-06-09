@@ -604,10 +604,15 @@ function M.await (time, awt, ...)
             return emt
         elseif awt == false then
             -- never awakes
-        elseif clk then
-            -- elapsed time: a bare number advances the countdown
+        elseif clk or tag=='clock' then
             if type(emt) == 'number' then
-                clk = clk - emt
+                if clk then
+                    -- elapsed time: a bare number advances the countdown
+                    clk = clk - emt
+                else
+                    -- clock tick: wake on any bare-number emit, return the delta
+                    return emt
+                end
             end
         elseif type(awt) == 'table' then
             -- tagged pattern: every await field must match (M.is) event

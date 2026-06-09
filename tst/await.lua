@@ -319,4 +319,50 @@ do
     atmos.stop()
 end
 
+print "--- AWAIT / CLOCK ---"
 
+-- basic: wakes on the next numeric emit, returns the delta
+do
+    print("Testing...", "await clock 1")
+    spawn(function ()
+        local v = await('clock')
+        out(v)
+    end)
+    emit(510*_ms_)
+    assertx(out(), "510000\n")
+    atmos.stop()
+end
+
+-- ignores non-numbers: a string emit (even 'clock') does NOT match
+do
+    print("Testing...", "await clock 2: ignores non-number")
+    spawn(function ()
+        local v = await('clock')
+        out(v)
+    end)
+    emit('X')
+    emit('clock')
+    emit(7*_us_)
+    assertx(out(), "7\n")
+    atmos.stop()
+end
+
+-- every('clock'): per-tick deltas accumulate
+do
+    print("Testing...", "every clock")
+    spawn(function ()
+        local n = 0
+        every('clock', function (us)
+            n = n + us
+            if n >= 30 then
+                _break_()
+            end
+        end)
+        out(n)
+    end)
+    emit(10)
+    emit(10)
+    emit(10)
+    assertx(out(), "30\n")
+    atmos.stop()
+end
