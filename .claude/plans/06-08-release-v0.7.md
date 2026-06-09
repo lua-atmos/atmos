@@ -1,33 +1,33 @@
 # Plan: Release v0.7
 
-## RESUME HERE (state @ 2026-06-08)
+## RESUME HERE (re-checked by source content @ 2026-06-08)
 
-This (atmos) repo, branch `v0.7`:
+Verified by scanning working trees (commit labels are app
+versions and were misleading), not by plan checkboxes.
 
-- DONE + PUSHED to `origin/v0.7`: §1 tests, §2 docs
-  (README, guide, api, HISTORY), §3 rockspec
-  `atmos-0.7-1.rockspec` (created + `luarocks make`),
-  §4.0 clock examples.
-- `main` is far behind `v0.7` (release to main is §5, not yet).
-- Before switching machines: commit this plan and
-  `git push origin v0.7` (otherwise plan edits don't travel).
+DONE (v0.7-clean source):
 
-Per-env progress lives in EACH env repo's own plan:
+- atmos core: §1-§4.0, §2 docs, §3 rockspec. §5 released to
+  `main` (confirmed final; `main` tip == `origin/v0.7` tip).
+- SDL family fully migrated + pushed:
+    - `env-sdl` (on `main`, `origin/main`==`origin/v0.2`)
+    - `sdl-birds`, `sdl-rocks`, `sdl-pingus`
 
-- `env-sdl`: `.claude/plans/06-08-release-v0.2.md` — §1-5 done
-  + pushed to `origin/v0.2`; remaining: ff `main`, Phase-2
-  global test, dependent apps (sdl-birds/rocks/pingus).
-- `env-pico`, `env-socket`, `env-iup`, `env-js`: NOT STARTED.
+NOT DONE (still have `clock{`, `M.open/close`, multi-arg):
+
+- `env-pico` (next), then `env-socket`, `env-iup`, `env-js`
+- `pico-birds`, `pico-rocks` (blocked on `env-pico`)
+- §6 LuaRocks uploads: NOT YET (confirmed by user)
+- §7 remote verify, §9 backport to `release.md`: pending
 
 Next actions, in order:
 
-1. Push `v0.7` here (so plan travels).
-2. Finish `env-sdl` (its plan §6-8).
-3. Migrate `env-pico` -> `env-socket` -> `env-iup` -> `env-js`
-   (own plan per repo, mirror env-sdl).
-4. §5 release atmos to `main` + branch.
-5. §6 upload all rockspecs. §7 remote verify. §9 backport
-   learnings to `release.md`.
+1. Migrate `env-pico` (mirror env-sdl: body+`quit`, clock us,
+   `tag='pico'` table patterns; write its own plan).
+2. Then `pico-birds` + `pico-rocks` (depend on env-pico).
+3. Migrate `env-socket` -> `env-iup` -> `env-js`.
+4. §6 upload all rockspecs to LuaRocks.
+5. §7 remote verify. §9 backport learnings to `release.md`.
 
 ## Context
 
@@ -157,34 +157,28 @@ patterns + `until`. Committed + pushed to `origin/v0.2`.
     - [x] `exs/across.lua`
     - [x] `exs/click-drag-cancel.lua`
 4. [x] Create rockspec (`atmos-env-sdl-0.2-1.rockspec`)
-5. [ ] Make rockspec
-6. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/across.lua`
-    - [ ] `exs/click-drag-cancel.lua`
-7. [~] Committed `v0.2` + pushed; `main` still needs ff
+5. [x] Make rockspec
+6. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+7. [x] Committed + pushed; `origin/main`==`origin/v0.2`
 8. [x] Create/update version branch `v0.2`, push
 
-##### 4.1.1 sdl-birds
-- [ ] Migrate to v0.7 API
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `birds-11.lua`
-- [ ] Commit, push main
-- [ ] Create branch, push
+##### 4.1.1 sdl-birds  (source v0.7-clean, pushed)
+- [x] Migrate to v0.7 API (no old patterns in source)
+- [x] Commit, push; version branch present
+- [ ] Re-confirm README versions (not re-verified)
 
-##### 4.1.2 sdl-rocks
-- [ ] Migrate to v0.7 API
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `main.lua`
-- [ ] Commit, push main
-- [ ] Create branch, push
+##### 4.1.2 sdl-rocks  (source v0.7-clean, pushed)
+- [x] Migrate to v0.7 API (no old patterns in source)
+- [x] Commit, push; version branch present
+- [ ] Re-confirm README versions (not re-verified)
 
-##### 4.1.3 sdl-pingus
-- [ ] Migrate to v0.7 API
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `main.lua`
-- [ ] Commit, push main
-- [ ] Create branch, push
+##### 4.1.3 sdl-pingus  (source v0.7-clean, pushed)
+- [x] Migrate to v0.7 API (no old patterns in source)
+- [x] Commit, push; version branch present
+- [ ] Re-confirm README versions (not re-verified)
 
 #### 4.2 env-pico
 
@@ -267,11 +261,11 @@ Env steps:
 7. [ ] Commit, push main
 8. [ ] Create version branch, push
 
-### 5. Commit, push main, create release branch
+### 5. Commit, push main, create release branch (done)
 
-- [ ] Push main, check GitHub Actions for green CI
-- [ ] Create branch `v0.7`, push
-- [ ] Return to main
+- [x] Push main (main tip == origin/v0.7 tip; confirmed final)
+- [x] Create branch `v0.7`, push
+- [x] Return to main
 
 ### 6. Publish all rockspecs to LuaRocks
 
