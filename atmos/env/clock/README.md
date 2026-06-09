@@ -26,7 +26,8 @@ end)
 
 # Events
 
-- `clock`
+- a bare number: elapsed delta in microseconds (`emit(dt)`)
+    - await via the `'clock'` event: `await('clock')` returns the delta
 
 # Source
 

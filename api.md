@@ -266,6 +266,8 @@ The task awakes when an `emit(e)` matches the given await pattern as follows:
 - `false`       | never matches
 - `us: number`  | when timeout `us` in microseconds expires; returns the
                   exceeded over time
+- `'clock'`     | when any bare-number tick occurs; returns the elapsed
+                  delta in microseconds
 - `f: function` | when `f(e,...)` is truthy, returning its results
 - `t: task`     | when `t` terminates; returns `v,t`, where `v` is the
                   task return value

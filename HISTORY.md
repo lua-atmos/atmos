@@ -19,6 +19,7 @@ v0.7 (jun/26)
         - `emit('X', 10)` -> `emit { tag='X', v=10 }`
     - `clock { ... }` -> simply `dt` in microseconds
         - `await(5 * _s_)` awaits 5 seconds
+        - `await('clock')` awaits any `dt` and returns it
         - constants `_us_`, `_ms_`, `_s_`, `_min_`, `_h_`, `_day_`
         - `S.from(clock)` -> `S.fr_await(<us>)`
 - Environments:

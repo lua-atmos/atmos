@@ -254,7 +254,8 @@ with any other env.
 
 A primary environment:
 
-- **Generates clock events** (`emit(dt)`, a number of elapsed microseconds).
+- **Generates clock events** (`emit(dt)`, a number of elapsed microseconds);
+  tasks await them via the `'clock'` event (`await('clock')` returns `dt`).
 - **May block in step**, but with a bounded timeout so that secondary envs
   get time slices.
 
