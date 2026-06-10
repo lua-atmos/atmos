@@ -291,65 +291,81 @@ Env steps:
 - [x] Create branch `v0.7`, push
 - [x] Return to main
 
-### 6. Publish all rockspecs to LuaRocks
+### 6. Publish all rockspecs to LuaRocks (DONE -- all verified published)
 
 ```bash
-luarocks upload atmos-0.7-1.rockspec
-luarocks upload atmos-env-sdl-0.2-1.rockspec
-luarocks upload atmos-env-pico-0.2-1.rockspec
-luarocks upload atmos-env-socket-0.2-1.rockspec
-luarocks upload atmos-env-iup-0.2-1.rockspec
+luarocks upload atmos-0.7-1.rockspec          # [x] published
+luarocks upload atmos-env-sdl-0.2-1.rockspec  # [x] published
+luarocks upload atmos-env-pico-0.3-1.rockspec # [x] published (0.3, not 0.2)
+luarocks upload atmos-env-socket-0.2-1.rockspec # [x] published
+luarocks upload atmos-env-iup-0.2-1.rockspec  # [x] published
 ```
+
+Verified via `luarocks --lua-version=5.4 search <pkg>`.
+Apps have NO rockspec (git-only; version branches).
 
 ### 7. Verify LuaRocks install + test all examples again (remote)
 
+Installs the PUBLISHED rocks (not local `make`). Each example
+is then run from its repo against the global install (NO
+LUA_PATH trick) -- that exercises the installed env + atmos.
+
 ```bash
-sudo luarocks --lua-version=5.4 remove atmos
+# clean install of the published rocks
+sudo luarocks --lua-version=5.4 remove atmos --force
 sudo luarocks --lua-version=5.4 install atmos 0.7
+sudo luarocks --lua-version=5.4 install atmos-env-sdl 0.2
+sudo luarocks --lua-version=5.4 install atmos-env-pico 0.3
+sudo luarocks --lua-version=5.4 install atmos-env-socket 0.2
+sudo luarocks --lua-version=5.4 install atmos-env-iup 0.2
 ```
 
-**clock** (atmos built-in):
-- [ ] `atmos/env/clock/exs/hello.lua`
-- [ ] `atmos/env/clock/exs/hello-rx.lua`
+Notes:
+- sdl / pico / iup examples need a graphical display.
+- env-sdl needs `DejaVuSans.ttf` in the cwd.
+- env-iup `iup-net.lua` also needs atmos-env-socket installed.
+- apps carry NO rockspec: `git checkout <branch>` then run.
 
-**env-sdl**:
-- [ ] `exs/hello.lua`
-- [ ] `exs/across.lua`
-- [ ] `exs/click-drag-cancel.lua`
+**clock** (atmos built-in, run from atmos repo):
+- [ ] `lua5.4 atmos/env/clock/exs/hello.lua`
+- [ ] `lua5.4 atmos/env/clock/exs/hello-rx.lua`
 
-**sdl-birds**:
-- [ ] `birds-11.lua`
+**env-sdl** (`cd env-sdl`):
+- [ ] `lua5.4 exs/hello.lua`
+- [ ] `lua5.4 exs/across.lua`
+- [ ] `lua5.4 exs/click-drag-cancel.lua`
 
-**sdl-rocks**:
-- [ ] `main.lua`
+**sdl-birds** (`cd sdl-birds && git checkout v0.5`):
+- [ ] `lua5.4 birds-11.lua`
 
-**sdl-pingus**:
-- [ ] `main.lua`
+**sdl-rocks** (`cd sdl-rocks && git checkout v0.5`):
+- [ ] `lua5.4 main.lua`
 
-**env-pico**:
-- [ ] `exs/hello.lua`
-- [ ] `exs/across.lua`
-- [ ] `exs/click-drag-cancel.lua`
+**sdl-pingus** (`cd sdl-pingus && git checkout v0.5`):
+- [ ] `lua5.4 main.lua`
 
-**pico-birds**:
-- [ ] `birds-11.lua`
+**env-pico** (`cd env-pico`):
+- [ ] `pico-lua exs/hello.lua`
+- [ ] `pico-lua exs/across.lua`
+- [ ] `pico-lua exs/click-drag-cancel.lua`
 
-**pico-rocks**:
-- [ ] `main.lua`
+**pico-birds** (`cd pico-birds && git checkout v0.6`):
+- [ ] `pico-lua birds-11.lua`
 
-**env-socket**:
-- [ ] `exs/hello.lua`
-- [ ] `exs/cli-srv.lua`
+**pico-rocks** (`cd pico-rocks && git checkout v0.6`):
+- [ ] `pico-lua main.lua`
 
-**env-iup**:
-- [ ] `exs/hello.lua`
-- [ ] `exs/button-counter.lua`
-- [ ] `exs/iup-net.lua`
+**env-socket** (`cd env-socket`):
+- [ ] `lua5.4 exs/hello.lua`
+- [ ] `lua5.4 exs/cli-srv.lua`
 
-**env-js** (automated via Puppeteer):
-- [ ] `exs/hello.lua`
-- [ ] `exs/hello-atmos.lua`
-- [ ] `exs/hello.atm`
+**env-iup** (`cd env-iup`):
+- [ ] `lua5.4 exs/hello.lua`
+- [ ] `lua5.4 exs/button-counter.lua`
+- [ ] `lua5.4 exs/iup-net.lua`
+
+**env-js**: N/A -- env-js not yet released (§4.5 pending);
+verify after its release.
 
 ### 8. Announce (manual)
 
