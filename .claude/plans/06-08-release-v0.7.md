@@ -1,33 +1,32 @@
 # Plan: Release v0.7
 
-## RESUME HERE (state @ 2026-06-08)
+## RESUME HERE (state @ 2026-06-10)
 
-This (atmos) repo, branch `v0.7`:
+This (atmos) repo:
 
-- DONE + PUSHED to `origin/v0.7`: §1 tests, §2 docs
-  (README, guide, api, HISTORY), §3 rockspec
-  `atmos-0.7-1.rockspec` (created + `luarocks make`),
-  §4.0 clock examples.
-- `main` is far behind `v0.7` (release to main is §5, not yet).
-- Before switching machines: commit this plan and
-  `git push origin v0.7` (otherwise plan edits don't travel).
+- DONE + PUSHED: §1 tests, §2 docs (README, guide, api,
+  HISTORY), §3 rockspec `atmos-0.7-1.rockspec` (+ `luarocks
+  make`), §4.0 clock examples.
+- §5 DONE: `main` released. `origin/main` = `a5fc70e` has
+  `v0.7` fully merged + 3 commits; `v0.7` branch pushed.
+  Local `main` synced to origin.
+- Atmos also gained the `'clock'` await primitive +
+  `_us_.._day_` constants (run.lua / init.lua).
 
 Per-env progress lives in EACH env repo's own plan:
 
-- `env-sdl`: `.claude/plans/06-08-release-v0.2.md` — §1-5 done
-  + pushed to `origin/v0.2`; remaining: ff `main`, Phase-2
-  global test, dependent apps (sdl-birds/rocks/pingus).
-- `env-pico`, `env-socket`, `env-iup`, `env-js`: NOT STARTED.
+- `env-sdl`: DONE (`v0.2`), `main` ff'd, tested. Dependent
+  apps DONE + tested: `sdl-birds` v0.5, `sdl-pingus` v0.5,
+  `sdl-rocks` v0.5. Only luarocks upload left.
+- `env-pico`: DONE at `v0.3` (not v0.2), `main` ff'd, synced.
+- `env-socket`, `env-iup`, `env-js`: NOT STARTED.
 
 Next actions, in order:
 
-1. Push `v0.7` here (so plan travels).
-2. Finish `env-sdl` (its plan §6-8).
-3. Migrate `env-pico` -> `env-socket` -> `env-iup` -> `env-js`
+1. Migrate `env-socket` -> `env-iup` -> `env-js`
    (own plan per repo, mirror env-sdl).
-4. §5 release atmos to `main` + branch.
-5. §6 upload all rockspecs. §7 remote verify. §9 backport
-   learnings to `release.md`.
+2. §6 upload all rockspecs (atmos + sdl + pico). §7 remote
+   verify. §9 backport learnings to `release.md`.
 
 ## Context
 
@@ -157,66 +156,69 @@ patterns + `until`. Committed + pushed to `origin/v0.2`.
     - [x] `exs/across.lua`
     - [x] `exs/click-drag-cancel.lua`
 4. [x] Create rockspec (`atmos-env-sdl-0.2-1.rockspec`)
-5. [ ] Make rockspec
-6. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/across.lua`
-    - [ ] `exs/click-drag-cancel.lua`
-7. [~] Committed `v0.2` + pushed; `main` still needs ff
+5. [x] Make rockspec
+6. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+7. [x] Committed `v0.2` + pushed; `main` ff'd to `v0.2`
 8. [x] Create/update version branch `v0.2`, push
 
-##### 4.1.1 sdl-birds
-- [ ] Migrate to v0.7 API
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `birds-11.lua`
-- [ ] Commit, push main
-- [ ] Create branch, push
+##### 4.1.1 sdl-birds (DONE, v0.5)
+- [x] Migrate to v0.7 API
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `birds-11.lua` (11 exs)
+- [x] Commit, push main
+- [x] Create branch, push
 
-##### 4.1.2 sdl-rocks
-- [ ] Migrate to v0.7 API
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `main.lua`
-- [ ] Commit, push main
-- [ ] Create branch, push
+##### 4.1.2 sdl-rocks (DONE, v0.5*; *master)
+- [x] Migrate to v0.7 API
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
-##### 4.1.3 sdl-pingus
-- [ ] Migrate to v0.7 API
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `main.lua`
-- [ ] Commit, push main
-- [ ] Create branch, push
+##### 4.1.3 sdl-pingus (DONE, v0.5)
+- [x] Migrate to v0.7 API
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
-#### 4.2 env-pico
+#### 4.2 env-pico (DONE at v0.3; see env-pico done/06-08-release-v0.3.md)
+
+NOTE: bumped to `v0.3` (not v0.2). `main` ff'd + synced;
+rockspec `atmos-env-pico-0.3-1.rockspec`.
 
 Env steps:
-1. [ ] Migrate to v0.7 API
-2. [ ] Update README
-3. [ ] Phase 1 tests (local)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/across.lua`
-    - [ ] `exs/click-drag-cancel.lua`
-4. [ ] Create rockspec
-5. [ ] Make rockspec
-6. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/across.lua`
-    - [ ] `exs/click-drag-cancel.lua`
-7. [ ] Commit, push main
-8. [ ] Create/update version branch, push
+1. [x] Migrate to v0.7 API
+2. [x] Update README
+3. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+4. [x] Create rockspec (`atmos-env-pico-0.3-1.rockspec`)
+5. [x] Make rockspec
+6. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+7. [x] Commit, push main
+8. [x] Create/update version branch `v0.3`, push
 
-##### 4.2.1 pico-birds
-- [ ] Migrate to v0.7 API
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `birds-11.lua`
-- [ ] Commit, push main
-- [ ] Create branch, push
+##### 4.2.1 pico-birds (DONE)
+- [x] Migrate to v0.7 API
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `birds-11.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
-##### 4.2.2 pico-rocks
-- [ ] Migrate to v0.7 API
-- [ ] Check README.md: app, atmos, env versions
-- [ ] Test `main.lua`
-- [ ] Commit, push main
-- [ ] Create branch, push
+##### 4.2.2 pico-rocks (DONE)
+- [x] Migrate to v0.7 API
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
 #### 4.3 env-socket
 
@@ -267,11 +269,12 @@ Env steps:
 7. [ ] Commit, push main
 8. [ ] Create version branch, push
 
-### 5. Commit, push main, create release branch
+### 5. Commit, push main, create release branch (DONE)
 
-- [ ] Push main, check GitHub Actions for green CI
-- [ ] Create branch `v0.7`, push
-- [ ] Return to main
+- [x] Push main (`origin/main` = `a5fc70e`, v0.7 merged + 3),
+      check GitHub Actions for green CI
+- [x] Create branch `v0.7`, push
+- [x] Return to main
 
 ### 6. Publish all rockspecs to LuaRocks
 
