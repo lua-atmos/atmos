@@ -264,3 +264,85 @@ sudo luarocks --lua-version=5.4 install atmos 0.6
 - Twitter / BlueSky
 - Mailing list
 - Students
+
+-------------------------------------------------------------------------------
+
+## Release Learnings (added after v0.7)
+
+Reusable conventions surfaced during the v0.7 release. Apply
+these to future releases; they extend the steps above.
+
+### When core has breaking changes, each env needs a MIGRATION
+
+A version bump + README edit is not enough. Insert a
+"Migrate to vX API" step (init.lua + examples) BEFORE the
+README step, per env. v0.7 broke the env API, the event
+syntax, and the clock all at once.
+
+### Env API evolution
+
+- v0.6: `open` + `mode` introduced.
+- v0.7: `open`+`close` -> main body + optional `quit`.
+    - `loop` no longer calls `open`; `stop` calls `env.quit`.
+    - `quit` is OPTIONAL (run.lua guards `if env.quit`): omit
+      it when the env frees nothing global (e.g. env-socket).
+
+### Event / await syntax (v0.7): single-arg + `{tag, h, v}`
+
+- `emit`/`await` take ONE arg. Multi-arg `emit(x,'e',v)` ->
+  a single table.
+- Established idiom: `{ tag=<selector>, h=<handle>, v=<payload> }`
+    - `tag` is a STRING selector (readable trace; enables a
+      catch-all `await{tag='recv'}` and `M.is` prefix match).
+    - `h` is the source handle, matched by `==` equality
+      (socket userdata; IUP widget handle).
+    - `v` carries the payload.
+- Custom matching removed: the `__atmos` metamethod is gone.
+  Use core table patterns matched field-by-field
+  (run.lua:617-630), plus `{tag='until'|'while', <pat>, pred}`
+  for predicates.
+- IUP gotcha: key on the handle DIRECTLY (`h=but`). iuplua
+  caches one Lua wrapper per widget, so the callback `self`
+  equals the user's handle -- no `.atm` proxy needed.
+
+### Clock (v0.7)
+
+- Envs emit a BARE NUMBER in microseconds; the core `'clock'`
+  await primitive consumes it (no `'clock'` tag, no `clock{}`).
+- Examples use constants `_us_ _ms_ _s_ _min_ _h_ _day_`:
+  `clock{s=5}` -> `5 * _s_`. Stream: `S.from(clock)` ->
+  `S.fr_await(<us>)`.
+
+### Version-branch convention (per-env, INDEPENDENT)
+
+Each env/app bumps to ITS OWN next version, not lockstep with
+atmos. v0.7 cut: env-sdl `v0.2`, env-pico `v0.3` (already had
+a `v0.2`), env-socket `v0.2`, env-iup `v0.2`; apps sdl-* and
+pico-birds `v0.5`. Rule: next unused `vN` for that repo.
+
+### Rockspec convention (two per env)
+
+- `atmos-env-X-<ver>-1.rockspec`: `source.branch = vN`,
+  pinned dep `atmos ~> 0.7`.
+- `atmos-env-X-dev-1.rockspec`: `source.branch = main`,
+  unversioned `atmos`.
+
+### `main` fast-forward (easy to forget)
+
+Develop + commit on the release branch `vN`, push it, THEN ff
+`main`:
+`git checkout main && git merge --ff-only vN && git push`.
+Always verify `main == vN == origin/main` before calling a
+repo done.
+
+### Per-env plans + master RESUME
+
+Each repo keeps its own `.claude/plans/MM-DD-release-vN.md`;
+mirror the reference env (env-sdl). The atmos master plan only
+tracks cross-repo state in a RESUME block.
+
+### Gotcha: "global" Phase-2 != remote
+
+Phase-2 via `luarocks make` is a LOCAL install. §7 remote
+verify (`luarocks install <pkg> <ver>`) against the published
+rock is a SEPARATE step -- do not assume Phase-2 covers it.

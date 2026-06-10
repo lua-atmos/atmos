@@ -19,12 +19,17 @@ Per-env progress lives in EACH env repo's own plan:
   apps DONE + tested: `sdl-birds` v0.5, `sdl-pingus` v0.5,
   `sdl-rocks` v0.5. Only luarocks upload left.
 - `env-pico`: DONE at `v0.3` (not v0.2), `main` ff'd, synced.
-- `env-socket`, `env-iup`, `env-js`: NOT STARTED.
+- `env-socket`: DONE at `v0.2`, rock uploaded, `main` ff'd +
+  synced. Events re-keyed to string tag + `h` handle.
+- `env-iup`: DONE at `v0.2`, rock uploaded, `main` ff'd +
+  synced. Events key on the IUP handle directly (no `__atmos`,
+  no `.atm`).
+- `env-js`: NOT STARTED.
 
 Next actions, in order:
 
-1. Migrate `env-socket` -> `env-iup` -> `env-js`
-   (own plan per repo, mirror env-sdl).
+1. Migrate `env-js` (own plan; Puppeteer build/test, not a
+   plain syntax migration -- see §4.5).
 2. §6 upload all rockspecs (atmos + sdl + pico). §7 remote
    verify. §9 backport learnings to `release.md`.
 
@@ -220,39 +225,49 @@ Env steps:
 - [x] Commit, push main
 - [x] Create branch, push
 
-#### 4.3 env-socket
+#### 4.3 env-socket (DONE at v0.2, rock uploaded, main ff'd)
+
+See env-socket/.claude/plans/06-10-release-v0.2.md.
+NOTE: socket events re-keyed to string tag + handle:
+`{tag='recv'|'send'|'closed', h=<sock>, v=<data>}`.
 
 Env steps:
-1. [ ] Migrate to v0.7 API
-2. [ ] Update README
-3. [ ] Phase 1 tests (local)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/cli-srv.lua`
-4. [ ] Create rockspec
-5. [ ] Make rockspec
-6. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/cli-srv.lua`
-7. [ ] Commit, push main
-8. [ ] Create/update version branch, push
+1. [x] Migrate to v0.7 API
+2. [x] Update README
+3. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/cli-srv.lua`
+4. [x] Create rockspec (`atmos-env-socket-0.2-1` + `-dev-1`)
+5. [x] Make rockspec
+6. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/cli-srv.lua`
+7. [x] Commit, push, uploaded; `main` ff'd to `v0.2`
+8. [x] Create/update version branch `v0.2`, push
 
-#### 4.4 env-iup
+#### 4.4 env-iup (DONE at v0.2, rock uploaded, main ff'd)
+
+See env-iup/.claude/plans/06-10-release-v0.2.md.
+NOTE: dropped `__atmos` + `.atm` proxy; widget events key on
+the IUP handle directly: `{tag='action'|'value'|'close',
+h=<handle>, v=<data>}` (iuplua caches one wrapper per widget).
+`iup-net.lua` depends on env-socket v0.2.
 
 Env steps:
-1. [ ] Migrate to v0.7 API
-2. [ ] Update README
-3. [ ] Phase 1 tests (local)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/button-counter.lua`
-    - [ ] `exs/iup-net.lua`
-4. [ ] Create rockspec
-5. [ ] Make rockspec
-6. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/button-counter.lua`
-    - [ ] `exs/iup-net.lua`
-7. [ ] Commit, push main
-8. [ ] Create/update version branch, push
+1. [x] Migrate to v0.7 API
+2. [x] Update README
+3. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/button-counter.lua`
+    - [x] `exs/iup-net.lua`
+4. [x] Create rockspec (`atmos-env-iup-0.2-1`; `-dev-1` exists)
+5. [x] Make rockspec
+6. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/button-counter.lua`
+    - [x] `exs/iup-net.lua`
+7. [x] Commit + push + uploaded; `main` ff'd to `v0.2`
+8. [x] Create/update version branch `v0.2`, push
 
 #### 4.5 env-js
 
@@ -344,10 +359,9 @@ sudo luarocks --lua-version=5.4 install atmos 0.7
 
 ### 9. Update original release plan
 
-- [ ] Edit `.claude/plans/release.md` at the end with anything
-      relevant learned during the v0.7 release, so it stays a
-      useful template for future releases. Candidates:
-    - New/changed steps (e.g. env API migration, syntax migration)
-    - Version-branch naming conventions
-    - Per-env rockspec bump conventions
-    - Any gotchas found during this release
+- [x] Edited `.claude/plans/release.md` -- appended a "Release
+      Learnings (added after v0.7)" section covering: per-env
+      migration step, env API `quit`, `{tag,h,v}` event idiom
+      (+ `__atmos`/`.atm` removal), bare-us clock, independent
+      version-branch convention, two-rockspec convention,
+      `main` ff reminder, per-env plans, Phase-2 != remote.
