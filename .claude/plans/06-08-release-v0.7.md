@@ -327,66 +327,72 @@ Apps have NO rockspec (git-only; version branches).
 
 ### 7. Verify LuaRocks install + test all examples again (remote)
 
-Installs the PUBLISHED rocks (not local `make`). Each example
-is then run from its repo against the global install (NO
-LUA_PATH trick) -- that exercises the installed env + atmos.
+Smoke-test the PUBLISHED rocks (not local `make`). Examples
+ship AS MODULES, so run them with `-e 'require "<mod>"'` from
+ANY dir -- cwd cannot shadow the rock, so it truly exercises
+the installed env + atmos. Apps have NO rock: run from the
+repo on its version branch.
 
+#### 7.0 Prerequisites
+- `lua5.4`, `luarocks` (5.4 tree)
+- `pico-lua`/`pico-sdl` (env-pico + pico apps), `lua-sdl2`
+  (env-sdl), `iuplua` (env-iup)
+- a graphical display for sdl/pico/iup (or `Xvfb` for the
+  non-interactive ones)
+
+#### 7.1 Clean install of the published rocks
 ```bash
-# clean install of the published rocks
-sudo luarocks --lua-version=5.4 remove atmos --force
+sudo luarocks --lua-version=5.4 remove atmos --force  # drops local make
 sudo luarocks --lua-version=5.4 install atmos 0.7
 sudo luarocks --lua-version=5.4 install atmos-env-sdl 0.2
 sudo luarocks --lua-version=5.4 install atmos-env-pico 0.3
 sudo luarocks --lua-version=5.4 install atmos-env-socket 0.2
 sudo luarocks --lua-version=5.4 install atmos-env-iup 0.2
 ```
+Order matters: envs pin `atmos ~> 0.7`, so atmos lands first.
 
-Notes:
-- sdl / pico / iup examples need a graphical display.
-- env-sdl needs `DejaVuSans.ttf` in the cwd.
-- env-iup `iup-net.lua` also needs atmos-env-socket installed.
-- apps carry NO rockspec: `git checkout <branch>` then run.
+#### 7.2 Phase A -- HEADLESS (no display; check terminal output)
+- [ ] clock hello    `lua5.4 -e 'require "atmos.env.clock.exs.hello"'`
+- [ ] clock hello-rx `lua5.4 -e 'require "atmos.env.clock.exs.hello-rx"'`
+- [ ] socket hello   `lua5.4 -e 'require "atmos.env.socket.exs.hello"'`
+- [ ] socket cli-srv `lua5.4 -e 'require "atmos.env.socket.exs.cli-srv"'`
 
-**clock** (atmos built-in, run from atmos repo):
-- [ ] `lua5.4 atmos/env/clock/exs/hello.lua`
-- [ ] `lua5.4 atmos/env/clock/exs/hello-rx.lua`
+Expect: clock/socket hello print ~every 0.5-1 s for ~5 s then
+exit; cli-srv prints `xxx oi` / `xxx 123` then exits.
 
-**env-sdl** (`cd env-sdl`):
-- [ ] `lua5.4 exs/hello.lua`
-- [ ] `lua5.4 exs/across.lua`
-- [ ] `lua5.4 exs/click-drag-cancel.lua`
+#### 7.3 Phase B -- NEEDS DISPLAY (launch, observe, close)
 
-**sdl-birds** (`cd sdl-birds && git checkout v0.5`):
-- [ ] `lua5.4 birds-11.lua`
+envs (run from anywhere):
+- [ ] env-sdl   `lua5.4 -e 'require "atmos.env.sdl.exs.hello"'`
+- [ ] env-sdl   `... .across`
+- [ ] env-sdl   `... .click-drag-cancel`  (interactive)
+- [ ] env-pico  `pico-lua exs/hello.lua`  (from `cd env-pico`)
+- [ ] env-pico  `pico-lua exs/across.lua`
+- [ ] env-pico  `pico-lua exs/click-drag-cancel.lua`
+- [ ] env-iup   `lua5.4 -e 'require "atmos.env.iup.exs.hello"'`
+- [ ] env-iup   `... .button-counter`  (interactive)
+- [ ] env-iup   `... .iup-net`  (needs env-socket)
 
-**sdl-rocks** (`cd sdl-rocks && git checkout v0.5`):
-- [ ] `lua5.4 main.lua`
+apps (NO rock -- checkout the version branch, then run):
+- [ ] sdl-birds  `cd sdl-birds  && git checkout v0.5 && lua5.4 birds-11.lua`
+- [ ] sdl-rocks  `cd sdl-rocks  && git checkout v0.5 && lua5.4 main.lua`
+- [ ] sdl-pingus `cd sdl-pingus && git checkout v0.5 && lua5.4 main.lua`
+- [ ] pico-birds `cd pico-birds && git checkout v0.6 && pico-lua birds-11.lua`
+- [ ] pico-rocks `cd pico-rocks && git checkout v0.6 && pico-lua main.lua`
 
-**sdl-pingus** (`cd sdl-pingus && git checkout v0.5`):
-- [ ] `lua5.4 main.lua`
+#### 7.4 Gotchas
+- These are SMOKE tests (launch + behaves), judged visually --
+  not asserts.
+- env-sdl needs `DejaVuSans.ttf` in cwd.
+- pico uses the `pico-lua` binary, not `lua5.4`.
+- env-iup `iup-net` needs atmos-env-socket installed.
+- `--force` remove wipes your local dev `make`: restore later
+  with `luarocks make` per repo if you keep developing.
+- after app runs, `git checkout main`/`master` to leave the
+  version branch.
 
-**env-pico** (`cd env-pico`):
-- [ ] `pico-lua exs/hello.lua`
-- [ ] `pico-lua exs/across.lua`
-- [ ] `pico-lua exs/click-drag-cancel.lua`
-
-**pico-birds** (`cd pico-birds && git checkout v0.6`):
-- [ ] `pico-lua birds-11.lua`
-
-**pico-rocks** (`cd pico-rocks && git checkout v0.6`):
-- [ ] `pico-lua main.lua`
-
-**env-socket** (`cd env-socket`):
-- [ ] `lua5.4 exs/hello.lua`
-- [ ] `lua5.4 exs/cli-srv.lua`
-
-**env-iup** (`cd env-iup`):
-- [ ] `lua5.4 exs/hello.lua`
-- [ ] `lua5.4 exs/button-counter.lua`
-- [ ] `lua5.4 exs/iup-net.lua`
-
-**env-js**: N/A -- env-js not yet released (§4.5 pending);
-verify after its release.
+**env-js**: N/A -- not yet released (§4.5 postponed); verify
+after its release.
 
 ### 8. Announce (manual)
 
