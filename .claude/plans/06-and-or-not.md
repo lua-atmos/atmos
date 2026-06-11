@@ -78,13 +78,25 @@ Filter via an **off-tree hidden gate task**: `t._.toggle = {task=gate, pass=}`.
 
 ## Pending
 
-- [ ] uncomment filter 4 assert (tst/toggle.lua) -> `"1\n2\n109\n"`
-- [ ] drop the `-- TODO: remove` arity asserts (emit / M.emit / M.toggle)
-- [ ] decide on the commented `__atmos` nil-opt-out tests (tst/envs.lua)
-- [ ] env-iup / env-pico / env-sdl: 3-arg clock emit, `__atmos` nil->false +
-      self-first args, old `{'==',...}` patterns, exs/ (separate repos)
-- [ ] Language (atmos repo): `and`/`or`/`not` + event sugar -> `{tag=...}`,
-      clock stdlib, document passive-match vs `par_*`
+- [ ] decide on the commented `__atmos` nil-opt-out tests (tst/envs.lua):
+      two `--[[ ]]` blocks ("atmos nil opt-out" L142, "atmos mta nil
+      opt-out" L200) encode the REMOVED fall-through semantics. Under the
+      new model nil == no-match (same as false), already covered by the
+      "false short-circuit" tests -> recommend DELETE both dead blocks.
+
+Resolved:
+
+- [x] uncomment filter 4 assert (tst/toggle.lua) -> already active
+      (`assertx(out(), "1\n2\n109\n")`)
+- [x] drop the `-- TODO: remove` arity asserts (emit / M.emit / M.toggle)
+      -- removed from run.lua (2026-06-10)
+- [x] env-iup / env-pico / env-sdl migration -- DONE via v0.7 release
+      (sdl/pico/socket/iup; clock now bare-us, `__atmos` dropped); env-js
+      postponed
+- [x] Language (atmos repo): assumed DONE (per user 2026-06-10)
+
+Note: this doc's clock model (`{tag='clock', ms=N}` table) is STALE --
+v0.7 shipped bare-number microseconds + `_us_/_ms_/_s_` constants.
 
 ## Done
 

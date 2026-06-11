@@ -668,7 +668,6 @@ local function fto (me, to)
 end
 
 local function emit (time, t, emt, ...)
-    assert(select('#',...) == 0)    -- TODO: remove in the future
     local ok, err = true, nil
 
     if t._.status == 'toggled' then
@@ -714,7 +713,6 @@ local function emit (time, t, emt, ...)
 end
 
 function M.emit (stk, to, emt, ...)
-    assert(select('#',...) == 0)    -- TODO: remove in the future
     M.TIME = M.TIME + 1
     local ret = xcall(debug.getinfo(2), stk and "emit", emit, M.TIME, fto(M.me(false),to), emt)
     local me = M.me(true)
@@ -729,7 +727,6 @@ end
 -------------------------------------------------------------------------------
 
 function M.toggle (t, on, filter, ...)
-    assert(select('#',...) == 0)    -- TODO: remove in the future
     if type(t) == 'string' then
         --@ derived: spawn body; loop { await; toggle; await; toggle }
         local e = t
