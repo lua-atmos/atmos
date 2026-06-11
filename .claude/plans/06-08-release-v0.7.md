@@ -1,33 +1,37 @@
 # Plan: Release v0.7
 
-## RESUME HERE (re-checked by source content @ 2026-06-08)
+## RESUME HERE (state @ 2026-06-10)
 
-Verified by scanning working trees (commit labels are app
-versions and were misleading), not by plan checkboxes.
+This (atmos) repo:
 
-DONE (v0.7-clean source, committed + pushed):
+- DONE + PUSHED: §1 tests, §2 docs (README, guide, api,
+  HISTORY), §3 rockspec `atmos-0.7-1.rockspec` (+ `luarocks
+  make`), §4.0 clock examples.
+- §5 DONE: `main` released. `origin/main` = `a5fc70e` has
+  `v0.7` fully merged + 3 commits; `v0.7` branch pushed.
+  Local `main` synced to origin.
+- Atmos also gained the `'clock'` await primitive +
+  `_us_.._day_` constants (run.lua / init.lua).
 
-- atmos core: §1-§4.0, §2 docs, §3 rockspec. §5 released to
-  `main` (confirmed final; `main` tip == `origin/v0.7` tip).
-- SDL family: `env-sdl` (v0.2), `sdl-birds`, `sdl-rocks`,
-  `sdl-pingus`.
-- PICO family: `env-pico` (v0.3), `pico-birds`, `pico-rocks`.
+Per-env progress lives in EACH env repo's own plan:
 
-NOT DONE (still have `clock{`, `M.open/close`, multi-arg):
-
-- `env-socket`, `env-iup`, `env-js`
-- §6 LuaRocks uploads: NOT YET (confirmed by user)
-- §7 remote verify, §9 backport to `release.md`: pending
+- `env-sdl`: DONE (`v0.2`), `main` ff'd, tested. Dependent
+  apps DONE + tested: `sdl-birds` v0.5, `sdl-pingus` v0.5,
+  `sdl-rocks` v0.5. Only luarocks upload left.
+- `env-pico`: DONE at `v0.3` (not v0.2), `main` ff'd, synced.
+- `env-socket`: DONE at `v0.2`, rock uploaded, `main` ff'd +
+  synced. Events re-keyed to string tag + `h` handle.
+- `env-iup`: DONE at `v0.2`, rock uploaded, `main` ff'd +
+  synced. Events key on the IUP handle directly (no `__atmos`,
+  no `.atm`).
+- `env-js`: NOT STARTED.
 
 Next actions, in order:
 
-1. Migrate `env-socket` (clock emit -> single-arg us; exs
-   `clock{...}` -> constants).
-2. Migrate `env-iup` (same; clock emit `emit('clock',100,now)`).
-3. Migrate `env-js` (`M.open`/`M.close` -> body+`quit`; exs
-   `clock{...}`; rebuild HTML; Puppeteer tests).
-4. §6 upload all rockspecs to LuaRocks.
-5. §7 remote verify. §9 backport learnings to `release.md`.
+1. Migrate `env-js` (own plan; Puppeteer build/test, not a
+   plain syntax migration -- see §4.5).
+2. §6 upload all rockspecs (atmos + sdl + pico). §7 remote
+   verify. §9 backport learnings to `release.md`.
 
 ## Context
 
@@ -162,7 +166,7 @@ matching dropped `__atmos` in favor of `tag='sdl'` table
 patterns + `until`. Committed + pushed to `origin/v0.2`.
 
 1. [x] Migrate to v0.7 API (main body + `quit`)
-2. [x] Update README (+ version list: v0.2 stable)
+2. [x] Update README
 3. [x] Phase 1 tests (local)
     - [x] `exs/hello.lua`
     - [x] `exs/across.lua`
@@ -173,80 +177,108 @@ patterns + `until`. Committed + pushed to `origin/v0.2`.
     - [x] `exs/hello.lua`
     - [x] `exs/across.lua`
     - [x] `exs/click-drag-cancel.lua`
-7. [x] Committed + pushed; `origin/main`==`origin/v0.2`
+7. [x] Committed `v0.2` + pushed; `main` ff'd to `v0.2`
 8. [x] Create/update version branch `v0.2`, push
 
-##### 4.1.1 sdl-birds  (source v0.7-clean, pushed)
-- [x] Migrate to v0.7 API (no old patterns in source)
-- [x] Commit, push; version branch present
-- [ ] Re-confirm README versions (not re-verified)
+##### 4.1.1 sdl-birds (DONE, v0.5)
+- [x] Migrate to v0.7 API
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `birds-11.lua` (11 exs)
+- [x] Commit, push main
+- [x] Create branch, push
 
-##### 4.1.2 sdl-rocks  (source v0.7-clean, pushed)
-- [x] Migrate to v0.7 API (no old patterns in source)
-- [x] Commit, push; version branch present
-- [ ] Re-confirm README versions (not re-verified)
+##### 4.1.2 sdl-rocks (DONE, v0.5*; *master)
+- [x] Migrate to v0.7 API
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
-##### 4.1.3 sdl-pingus  (source v0.7-clean, pushed)
-- [x] Migrate to v0.7 API (no old patterns in source)
-- [x] Commit, push; version branch present
-- [ ] Re-confirm README versions (not re-verified)
+##### 4.1.3 sdl-pingus (DONE, v0.5)
+- [x] Migrate to v0.7 API
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
-#### 4.2 env-pico  -> v0.3 (DONE; see env-pico plan)
+#### 4.2 env-pico (DONE at v0.3; see env-pico done/06-08-release-v0.3.md)
 
-Released as `v0.3` (v0.2 was pico-sdl-v0.5 era). Source clean,
-`origin/v0.3` in sync; `0.3-1.rockspec` = `atmos ~> 0.7`,
-`pico-sdl ~> 0.6`; README has version list + deps.
+NOTE: bumped to `v0.3` (not v0.2). `main` ff'd + synced;
+rockspec `atmos-env-pico-0.3-1.rockspec`.
 
+Env steps:
 1. [x] Migrate to v0.7 API
-2. [x] Update README (version list + deps)
+2. [x] Update README
 3. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
 4. [x] Create rockspec (`atmos-env-pico-0.3-1.rockspec`)
 5. [x] Make rockspec
 6. [x] Phase 2 tests (global)
-7. [x] Commit, push
-8. [x] Branch `v0.3`, push
+    - [x] `exs/hello.lua`
+    - [x] `exs/across.lua`
+    - [x] `exs/click-drag-cancel.lua`
+7. [x] Commit, push main
+8. [x] Create/update version branch `v0.3`, push
 
-##### 4.2.1 pico-birds  (source v0.7-clean, pushed)
+##### 4.2.1 pico-birds (DONE)
 - [x] Migrate to v0.7 API
-- [x] Commit, push; branches v0.4/v0.5/v0.6 in sync
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `birds-11.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
-##### 4.2.2 pico-rocks  (source v0.7-clean, pushed)
+##### 4.2.2 pico-rocks (DONE)
 - [x] Migrate to v0.7 API
-- [x] Commit, push; v0.5/v0.6 in sync
+- [x] Check README.md: app, atmos, env versions
+- [x] Test `main.lua`
+- [x] Commit, push main
+- [x] Create branch, push
 
-#### 4.3 env-socket
+#### 4.3 env-socket (DONE at v0.2, rock uploaded, main ff'd)
+
+See env-socket/.claude/plans/06-10-release-v0.2.md.
+NOTE: socket events re-keyed to string tag + handle:
+`{tag='recv'|'send'|'closed', h=<sock>, v=<data>}`.
 
 Env steps:
-1. [ ] Migrate to v0.7 API
-2. [ ] Update README
-3. [ ] Phase 1 tests (local)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/cli-srv.lua`
-4. [ ] Create rockspec
-5. [ ] Make rockspec
-6. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/cli-srv.lua`
-7. [ ] Commit, push main
-8. [ ] Create/update version branch, push
+1. [x] Migrate to v0.7 API
+2. [x] Update README
+3. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/cli-srv.lua`
+4. [x] Create rockspec (`atmos-env-socket-0.2-1` + `-dev-1`)
+5. [x] Make rockspec
+6. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/cli-srv.lua`
+7. [x] Commit, push, uploaded; `main` ff'd to `v0.2`
+8. [x] Create/update version branch `v0.2`, push
 
-#### 4.4 env-iup
+#### 4.4 env-iup (DONE at v0.2, rock uploaded, main ff'd)
+
+See env-iup/.claude/plans/06-10-release-v0.2.md.
+NOTE: dropped `__atmos` + `.atm` proxy; widget events key on
+the IUP handle directly: `{tag='action'|'value'|'close',
+h=<handle>, v=<data>}` (iuplua caches one wrapper per widget).
+`iup-net.lua` depends on env-socket v0.2.
 
 Env steps:
-1. [ ] Migrate to v0.7 API
-2. [ ] Update README
-3. [ ] Phase 1 tests (local)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/button-counter.lua`
-    - [ ] `exs/iup-net.lua`
-4. [ ] Create rockspec
-5. [ ] Make rockspec
-6. [ ] Phase 2 tests (global)
-    - [ ] `exs/hello.lua`
-    - [ ] `exs/button-counter.lua`
-    - [ ] `exs/iup-net.lua`
-7. [ ] Commit, push main
-8. [ ] Create/update version branch, push
+1. [x] Migrate to v0.7 API
+2. [x] Update README
+3. [x] Phase 1 tests (local)
+    - [x] `exs/hello.lua`
+    - [x] `exs/button-counter.lua`
+    - [x] `exs/iup-net.lua`
+4. [x] Create rockspec (`atmos-env-iup-0.2-1`; `-dev-1` exists)
+5. [x] Make rockspec
+6. [x] Phase 2 tests (global)
+    - [x] `exs/hello.lua`
+    - [x] `exs/button-counter.lua`
+    - [x] `exs/iup-net.lua`
+7. [x] Commit + push + uploaded; `main` ff'd to `v0.2`
+8. [x] Create/update version branch `v0.2`, push
 
 #### 4.5 env-js
 
@@ -263,71 +295,88 @@ Env steps:
 7. [ ] Commit, push main
 8. [ ] Create version branch, push
 
-### 5. Commit, push main, create release branch (done)
+### 5. Commit, push main, create release branch (DONE)
 
-- [x] Push main (main tip == origin/v0.7 tip; confirmed final)
+- [x] Push main (`origin/main` = `a5fc70e`, v0.7 merged + 3),
+      check GitHub Actions for green CI
 - [x] Create branch `v0.7`, push
 - [x] Return to main
 
-### 6. Publish all rockspecs to LuaRocks
+### 6. Publish all rockspecs to LuaRocks (DONE -- all verified published)
 
 ```bash
-luarocks upload atmos-0.7-1.rockspec
-luarocks upload atmos-env-sdl-0.2-1.rockspec
-luarocks upload atmos-env-pico-0.3-1.rockspec
-luarocks upload atmos-env-socket-0.2-1.rockspec
-luarocks upload atmos-env-iup-0.2-1.rockspec
+luarocks upload atmos-0.7-1.rockspec          # [x] published
+luarocks upload atmos-env-sdl-0.2-1.rockspec  # [x] published
+luarocks upload atmos-env-pico-0.3-1.rockspec # [x] published (0.3, not 0.2)
+luarocks upload atmos-env-socket-0.2-1.rockspec # [x] published
+luarocks upload atmos-env-iup-0.2-1.rockspec  # [x] published
 ```
+
+Verified via `luarocks --lua-version=5.4 search <pkg>`.
+Apps have NO rockspec (git-only; version branches).
 
 ### 7. Verify LuaRocks install + test all examples again (remote)
 
+Installs the PUBLISHED rocks (not local `make`). Each example
+is then run from its repo against the global install (NO
+LUA_PATH trick) -- that exercises the installed env + atmos.
+
 ```bash
-sudo luarocks --lua-version=5.4 remove atmos
+# clean install of the published rocks
+sudo luarocks --lua-version=5.4 remove atmos --force
 sudo luarocks --lua-version=5.4 install atmos 0.7
+sudo luarocks --lua-version=5.4 install atmos-env-sdl 0.2
+sudo luarocks --lua-version=5.4 install atmos-env-pico 0.3
+sudo luarocks --lua-version=5.4 install atmos-env-socket 0.2
+sudo luarocks --lua-version=5.4 install atmos-env-iup 0.2
 ```
 
-**clock** (atmos built-in):
-- [ ] `atmos/env/clock/exs/hello.lua`
-- [ ] `atmos/env/clock/exs/hello-rx.lua`
+Notes:
+- sdl / pico / iup examples need a graphical display.
+- env-sdl needs `DejaVuSans.ttf` in the cwd.
+- env-iup `iup-net.lua` also needs atmos-env-socket installed.
+- apps carry NO rockspec: `git checkout <branch>` then run.
 
-**env-sdl**:
-- [ ] `exs/hello.lua`
-- [ ] `exs/across.lua`
-- [ ] `exs/click-drag-cancel.lua`
+**clock** (atmos built-in, run from atmos repo):
+- [ ] `lua5.4 atmos/env/clock/exs/hello.lua`
+- [ ] `lua5.4 atmos/env/clock/exs/hello-rx.lua`
 
-**sdl-birds**:
-- [ ] `birds-11.lua`
+**env-sdl** (`cd env-sdl`):
+- [ ] `lua5.4 exs/hello.lua`
+- [ ] `lua5.4 exs/across.lua`
+- [ ] `lua5.4 exs/click-drag-cancel.lua`
 
-**sdl-rocks**:
-- [ ] `main.lua`
+**sdl-birds** (`cd sdl-birds && git checkout v0.5`):
+- [ ] `lua5.4 birds-11.lua`
 
-**sdl-pingus**:
-- [ ] `main.lua`
+**sdl-rocks** (`cd sdl-rocks && git checkout v0.5`):
+- [ ] `lua5.4 main.lua`
 
-**env-pico**:
-- [ ] `exs/hello.lua`
-- [ ] `exs/across.lua`
-- [ ] `exs/click-drag-cancel.lua`
+**sdl-pingus** (`cd sdl-pingus && git checkout v0.5`):
+- [ ] `lua5.4 main.lua`
 
-**pico-birds**:
-- [ ] `birds-11.lua`
+**env-pico** (`cd env-pico`):
+- [ ] `pico-lua exs/hello.lua`
+- [ ] `pico-lua exs/across.lua`
+- [ ] `pico-lua exs/click-drag-cancel.lua`
 
-**pico-rocks**:
-- [ ] `main.lua`
+**pico-birds** (`cd pico-birds && git checkout v0.6`):
+- [ ] `pico-lua birds-11.lua`
 
-**env-socket**:
-- [ ] `exs/hello.lua`
-- [ ] `exs/cli-srv.lua`
+**pico-rocks** (`cd pico-rocks && git checkout v0.6`):
+- [ ] `pico-lua main.lua`
 
-**env-iup**:
-- [ ] `exs/hello.lua`
-- [ ] `exs/button-counter.lua`
-- [ ] `exs/iup-net.lua`
+**env-socket** (`cd env-socket`):
+- [ ] `lua5.4 exs/hello.lua`
+- [ ] `lua5.4 exs/cli-srv.lua`
 
-**env-js** (automated via Puppeteer):
-- [ ] `exs/hello.lua`
-- [ ] `exs/hello-atmos.lua`
-- [ ] `exs/hello.atm`
+**env-iup** (`cd env-iup`):
+- [ ] `lua5.4 exs/hello.lua`
+- [ ] `lua5.4 exs/button-counter.lua`
+- [ ] `lua5.4 exs/iup-net.lua`
+
+**env-js**: N/A -- env-js not yet released (§4.5 pending);
+verify after its release.
 
 ### 8. Announce (manual)
 
@@ -337,10 +386,9 @@ sudo luarocks --lua-version=5.4 install atmos 0.7
 
 ### 9. Update original release plan
 
-- [ ] Edit `.claude/plans/release.md` at the end with anything
-      relevant learned during the v0.7 release, so it stays a
-      useful template for future releases. Candidates:
-    - New/changed steps (e.g. env API migration, syntax migration)
-    - Version-branch naming conventions
-    - Per-env rockspec bump conventions
-    - Any gotchas found during this release
+- [x] Edited `.claude/plans/release.md` -- appended a "Release
+      Learnings (added after v0.7)" section covering: per-env
+      migration step, env API `quit`, `{tag,h,v}` event idiom
+      (+ `__atmos`/`.atm` removal), bare-us clock, independent
+      version-branch convention, two-rockspec convention,
+      `main` ff reminder, per-env plans, Phase-2 != remote.

@@ -36,7 +36,7 @@ function M.tostring (v)
             fst = false
         end
         --local tag = v.tag and (':'..v.tag..' ') or ''
-        return --[[tag ..]] "@{" .. vs .. "}"
+        return --[[tag ..]] "{" .. vs .. "}"
     end
 end
 
