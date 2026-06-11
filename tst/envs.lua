@@ -139,25 +139,6 @@ end
 
 print "--- ENVS: __ATMOS ---"
 
---[[
-do
-    print("Testing...", "atmos nil opt-out")
-    do
-        local meta = { __atmos = function () return nil end }
-        atmos.env { step = function ()
-            emit(setmetatable({tag='X'}, meta))
-        end }
-        local v = loop(function ()
-            await 'X'
-            return 1
-        end)
-        out(v)
-    end
-    assertx(out(), "1\n")
-    atmos.stop()
-end
-]]
-
 do
     print("Testing...", "atmos true")
     do
@@ -196,26 +177,6 @@ do
     assertx(out(), "2\n")
     atmos.stop()
 end
-
---[[
-do
-    print("Testing...", "atmos mta nil opt-out")
-    do
-        local meta = { __atmos = function () return nil end }
-        atmos.env { step = function ()
-            emit 'X'
-        end }
-        local pat = setmetatable({'==', 'X'}, meta)
-        local v = loop(function ()
-            await(pat)
-            return 1
-        end)
-        out(v)
-    end
-    assertx(out(), "1\n")
-    atmos.stop()
-end
-]]
 
 do
     print("Testing...", "atmos mta true")

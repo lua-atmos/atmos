@@ -78,13 +78,13 @@ Filter via an **off-tree hidden gate task**: `t._.toggle = {task=gate, pass=}`.
 
 ## Pending
 
-- [ ] decide on the commented `__atmos` nil-opt-out tests (tst/envs.lua):
-      two `--[[ ]]` blocks ("atmos nil opt-out" L142, "atmos mta nil
-      opt-out" L200) encode the REMOVED fall-through semantics. Under the
-      new model nil == no-match (same as false), already covered by the
-      "false short-circuit" tests -> recommend DELETE both dead blocks.
+- (none)
 
 Resolved:
+
+- [x] `__atmos` nil-opt-out tests -- DELETED both dead `--[[ ]]` blocks
+      from tst/envs.lua (option A; behavior removed, nil==false already
+      covered by the "false short-circuit" tests)
 
 - [x] uncomment filter 4 assert (tst/toggle.lua) -> already active
       (`assertx(out(), "1\n2\n109\n")`)
