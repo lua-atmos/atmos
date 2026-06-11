@@ -15,23 +15,33 @@ This (atmos) repo:
 
 Per-env progress lives in EACH env repo's own plan:
 
-- `env-sdl`: DONE (`v0.2`), `main` ff'd, tested. Dependent
-  apps DONE + tested: `sdl-birds` v0.5, `sdl-pingus` v0.5,
-  `sdl-rocks` v0.5. Only luarocks upload left.
-- `env-pico`: DONE at `v0.3` (not v0.2), `main` ff'd, synced.
+- `env-sdl`: DONE (`v0.2`), `main` ff'd, tested, rock `0.2-1`
+  published. Dependent apps DONE + tested: `sdl-birds` v0.5,
+  `sdl-pingus` v0.5, `sdl-rocks` v0.5.
+- `env-pico`: DONE at `v0.3`, `main` ff'd, synced, rock
+  `0.3-1` published. Apps `pico-birds`/`pico-rocks` at `v0.6`
+  (READMEs corrected to atmos 0.7 / env-pico 0.3 this session).
 - `env-socket`: DONE at `v0.2`, rock uploaded, `main` ff'd +
   synced. Events re-keyed to string tag + `h` handle.
 - `env-iup`: DONE at `v0.2`, rock uploaded, `main` ff'd +
   synced. Events key on the IUP handle directly (no `__atmos`,
   no `.atm`).
-- `env-js`: NOT STARTED.
+- `env-js`: POSTPONED (this session).
+
+DONE this session: §6 uploads (all 5 rocks verified
+published), §9 learnings backported to `release.md`,
+env-socket + env-iup README version blocks, pico app READMEs
+corrected to atmos 0.7 / env-pico 0.3 and pushed (`v0.6`),
+§7 checklist filled in.
 
 Next actions, in order:
 
-1. Migrate `env-js` (own plan; Puppeteer build/test, not a
-   plain syntax migration -- see §4.5).
-2. §6 upload all rockspecs (atmos + sdl + pico). §7 remote
-   verify. §9 backport learnings to `release.md`.
+1. §7 remote verify: clean `luarocks install` of the
+   published rocks, then re-run all env + app examples (needs
+   a display for sdl/pico/iup). Checklist in §7.
+2. §8 announce (manual).
+3. `env-js` (§4.5) -- postponed; resume when ready (gated on
+   atmos-lang/atmos v0.7 for the `.atm` tier).
 
 ## Context
 
@@ -150,9 +160,9 @@ README; or a version table like env-js). Today most env READMEs
 show only a bare `luarocks install ...` line with no version.
 
 - [x] `env-sdl`    README shows current version (`v0.2`)
-- [ ] `env-pico`   README shows current version (`v0.3`)
-- [ ] `env-socket` README shows current version (verify number)
-- [ ] `env-iup`    README shows current version (verify number)
+- [x] `env-pico`   README shows current version (`v0.3`)
+- [x] `env-socket` README shows current version (`v0.2`)
+- [x] `env-iup`    README shows current version (`v0.2`)
 - [ ] `env-js`     README version table updated (`v0.6` -> `v0.7`)
 
 **clock** (atmos built-in):
@@ -222,14 +232,14 @@ Env steps:
 7. [x] Commit, push main
 8. [x] Create/update version branch `v0.3`, push
 
-##### 4.2.1 pico-birds (DONE)
+##### 4.2.1 pico-birds (DONE, v0.6; README fixed this session)
 - [x] Migrate to v0.7 API
 - [x] Check README.md: app, atmos, env versions
 - [x] Test `birds-11.lua`
 - [x] Commit, push main
 - [x] Create branch, push
 
-##### 4.2.2 pico-rocks (DONE)
+##### 4.2.2 pico-rocks (DONE, v0.6/master; README fixed this session)
 - [x] Migrate to v0.7 API
 - [x] Check README.md: app, atmos, env versions
 - [x] Test `main.lua`
