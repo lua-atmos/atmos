@@ -47,8 +47,9 @@ paragraph).
 ## Decision (2026-06-14): per-doc `Pattern` table, mirrored semantics
 
 The Lua API and Atmos are DIFFERENT surfaces (`{tag='or'}` vs `||`), so
-each doc shows ONLY its own surface, as a single `Pattern` column. Layout
-(both files, between `<!-- AWAIT-PATTERNS -->` markers):
+each doc shows ONLY its own surface, as a single `Pattern` column.
+(Marker comments were dropped; the table just sits under the `pre` line.)
+Layout (both files):
 
     | Group | Pattern | matches | returns |
 
@@ -64,8 +65,7 @@ each doc shows ONLY its own surface, as a single `Pattern` column. Layout
 
 Conventions:
 - ASCII `...` (not `…`); `(none)` Pattern = no surface on that side
-  (clock-tick + `__atmos` have none in Atmos -> 2 `(none)` rows in
-  manual.md; api.md's Lua column is full).
+  (only the clock-tick row is `(none)` in manual.md; Meta uses `mt`).
 - `or` row escapes the pipe: `` `p1 \|\| p2` `` (GFM renders `||`).
 - `returns` = Lua/runtime tuples (`v,t,ts`); Atmos `await` evaluates to
   the single event value (manual line 2087 already states this).
