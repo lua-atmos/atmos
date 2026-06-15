@@ -1,6 +1,6 @@
 # Plan: Release v0.7
 
-## RESUME HERE (state @ 2026-06-10)
+## RESUME HERE (state @ 2026-06-15) -- NEXT = §7 (remote verify)
 
 This (atmos) repo:
 
@@ -36,12 +36,22 @@ corrected to atmos 0.7 / env-pico 0.3 and pushed (`v0.6`),
 
 Next actions, in order:
 
-1. §7 remote verify: clean `luarocks install` of the
-   published rocks, then re-run all env + app examples (needs
-   a display for sdl/pico/iup). Checklist in §7.
-2. §8 announce (manual).
-3. `env-js` (§4.5) -- postponed; resume when ready (gated on
-   atmos-lang/atmos v0.7 for the `.atm` tier).
+>>> NEXT — continuing on ANOTHER MACHINE: run §7 remote verify.
+    Needs a graphical display (sdl / pico / iup). The §7 runbook
+    below is self-contained: §7.1 clean `luarocks install` of the
+    PUBLISHED rocks (atmos 0.7, sdl 0.2, pico 0.3, socket 0.2,
+    iup 0.2), then §7.2 headless checks (clock + socket) and §7.3
+    display checks (sdl/pico/iup envs + the 5 apps, each on its
+    version branch: sdl-* `v0.5`, pico-* `v0.6`). Tick the boxes
+    in §7 as you go.
+
+After §7:
+1. §8 announce (manual: Twitter/BlueSky, mailing list, students).
+2. `env-js` (§4.5) — POSTPONED; gated on `atmos-lang/atmos` v0.7
+   for the `.atm` tier.
+
+(All else DONE: core, env-sdl/pico/socket/iup + 5 apps released,
+5 rocks published, §9 learnings backported.)
 
 ## Context
 
