@@ -44,33 +44,31 @@ paragraph).
   (`!:X`, `{ 'not', x }`).
 - api.md has 3 patterns manual lacks.
 
-## Decision (2026-06-14): two-surface shared table
+## Decision (2026-06-14): per-doc `Pattern` table, mirrored semantics
 
-The Lua API and the Atmos language are DIFFERENT surfaces (`{tag='or'}`
-vs `||`), so a concrete-syntax list can never be byte-identical. Instead
-the `in` list is ONE shared block, fenced by markers, byte-identical in
-both files: a GFM TABLE with four columns
-`Group | Atmos | Lua API | matches | returns`, source-aligned. Rows are
-grouped+reordered: Boolean, Value (`[tag=:T]` + `x`, both `M.is`-based),
-Time, Tasks, Condition (function + `until`/`while`), Logical, Meta
-(`__atmos`, last). The `Group` label sits
-on each group's first row, blank below (markdown-native approx of a
-rowspan). TABLE-ONLY: `until`/`while` semantics live in their `matches`
-cells; no `pos`. Only `pre` stays per-side. (The `or` row's `\|\|` escape
-makes that one cell 1 char wider -- unavoidable.)
+The Lua API and Atmos are DIFFERENT surfaces (`{tag='or'}` vs `||`), so
+each doc shows ONLY its own surface, as a single `Pattern` column. Layout
+(both files, between `<!-- AWAIT-PATTERNS -->` markers):
 
-CANONICAL BLOCK = the table in `api.md` between the
-`<!-- AWAIT-PATTERNS ... -->` markers (single source of truth -- do NOT
-duplicate it here; copy it from there to avoid drift).
+    | Group | Pattern | matches | returns |
 
-Table conventions (so it stays copy/paste-identical):
-- ASCII only: `...` (not `…`), `(none)` for an absent surface (clock-tick
-  / `__atmos` are lua-atmos runtime-level).
-- the `or` row escapes the pipe: `` `p1 \|\| p2` `` (GFM renders `||`).
-- the atmos-lang owner confirms/fills the Atmos column when pasting (esp.
-  the two `(none)` rows).
-- the `returns` column is Lua/runtime tuples (`v,t,ts`); Atmos `await`
-  evaluates to the single event value -- note this on the manual side.
+- `Pattern` = THIS doc's surface (Lua in api.md, Atmos in manual.md).
+- `Group | matches | returns` MIRROR across both files -- keep these in
+  sync; the block is NOT byte-identical anymore (only these 3 columns).
+- Rows grouped+reordered: Boolean, Value (`[tag=:T]`/`{tag=t}` + `x`, both
+  `M.is`-based), Time, Tasks, Condition (function + `until`/`while`),
+  Logical, Meta (`__atmos`, last). `Group` label on each group's first
+  row, blank below (markdown approx of a rowspan).
+- TABLE-ONLY: `until`/`while` semantics live in their `matches` cells; no
+  `pos`. Only `pre` stays per-side.
+
+Conventions:
+- ASCII `...` (not `…`); `(none)` Pattern = no surface on that side
+  (clock-tick + `__atmos` have none in Atmos -> 2 `(none)` rows in
+  manual.md; api.md's Lua column is full).
+- `or` row escapes the pipe: `` `p1 \|\| p2` `` (GFM renders `||`).
+- `returns` = Lua/runtime tuples (`v,t,ts`); Atmos `await` evaluates to
+  the single event value (manual line 2087 already states this).
 
 This also FIXES the manual's stale list: positional `{'not',x}` ->
 combinators, adds clock-tick / `until`-`while` / meta coverage.

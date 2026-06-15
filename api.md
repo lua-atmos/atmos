@@ -262,25 +262,25 @@ Awaits an event pattern in the running task.
 
 The task awakes when an `emit(e)` matches the given await pattern as follows:
 
-<!-- AWAIT-PATTERNS: keep identical in lua-atmos/api.md and atmos-lang/doc/manual.md -->
-| Group     | Atmos       | Lua API                             | matches        | returns  |
-|-----------|-------------|-------------------------------------|----------------|----------|
-| Boolean   | `true`      | `true`                              | any event      | `e`      |
-|           | `false`     | `false`                             | never          | —        |
-| Value     | `[tag=:T]`  | `{tag=t,...}`                       | tag + fields   | `e`      |
-|           | `x`         | `x: any`                            | `is(e,x)`      | `e`      |
-| Time      | `5s`        | `us: number`                        | timeout        | overrun  |
-|           | `(none)`    | `'clock'`                           | clock tick     | delta    |
-| Tasks     | `t`         | `t: task`                           | `t` ends       | `v,t`    |
-|           | `:any ts`   | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts` |
-|           | `:all ts`   | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `ts`     |
-| Condition | `\{...}`    | `f: function`                       | `f(e)` truthy  | result   |
-|           | `p until c` | `{tag='until',x,...}`               | until all hold | `e`      |
-|           | `p while c` | `{tag='while',x,...}`               | while any fail | `e`      |
-| Logical   | `!p`        | `{tag='not',x}`                     | not `p`        | `e`      |
-|           | `p1 && p2`  | `{tag='and',...}`                   | all subs       | `e`      |
-|           | `p1 \|\| p2`| `{tag='or',...}`                    | any sub        | `e`      |
-| Meta      | `(none)`    | `x: meta`                           | via `__atmos`  | result   |
+<!-- AWAIT-PATTERNS: Group/matches/returns mirror atmos-lang manual.md; Pattern is per-doc -->
+| Group     | Pattern                             | matches        | returns  |
+|-----------|-------------------------------------|----------------|----------|
+| Boolean   | `true`                              | any event      | `e`      |
+|           | `false`                             | never          | —        |
+| Value     | `{tag=t,...}`                       | tag + fields   | `e`      |
+|           | `x: any`                            | `is(e,x)`      | `e`      |
+| Time      | `us: number`                        | timeout        | overrun  |
+|           | `'clock'`                           | clock tick     | delta    |
+| Tasks     | `t: task`                           | `t` ends       | `v,t`    |
+|           | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts` |
+|           | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `ts`     |
+| Condition | `f: function`                       | `f(e)` truthy  | result   |
+|           | `{tag='until',x,...}`               | until all hold | `e`      |
+|           | `{tag='while',x,...}`               | while any fail | `e`      |
+| Logical   | `{tag='not',x}`                     | not `p`        | `e`      |
+|           | `{tag='and',...}`                   | all subs       | `e`      |
+|           | `{tag='or',...}`                    | any sub        | `e`      |
+| Meta      | `x: meta`                           | via `__atmos`  | result   |
 <!-- /AWAIT-PATTERNS -->
 
 # 4. Errors
