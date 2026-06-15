@@ -262,7 +262,6 @@ Awaits an event pattern in the running task.
 
 The task awakes when an `emit(e)` matches the given await pattern as follows:
 
-<!-- AWAIT-PATTERNS: Group/matches/returns mirror atmos-lang manual.md; Pattern is per-doc -->
 | Group     | Pattern                             | matches        | returns  |
 |-----------|-------------------------------------|----------------|----------|
 | Boolean   | `true`                              | any event      | `e`      |
@@ -280,8 +279,7 @@ The task awakes when an `emit(e)` matches the given await pattern as follows:
 | Logical   | `{tag='not',x}`                     | not `p`        | `e`      |
 |           | `{tag='and',...}`                   | all subs       | `e`      |
 |           | `{tag='or',...}`                    | any sub        | `e`      |
-| Meta      | `x: meta`                           | via `__atmos`  | result   |
-<!-- /AWAIT-PATTERNS -->
+| Meta      | `mt: meta`                          | via `__atmos`  | result   |
 
 # 4. Errors
 
