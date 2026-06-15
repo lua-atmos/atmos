@@ -49,48 +49,42 @@ paragraph).
 The Lua API and the Atmos language are DIFFERENT surfaces (`{tag='or'}`
 vs `||`), so a concrete-syntax list can never be byte-identical. Instead
 the `in` list is ONE shared block, fenced by markers, byte-identical in
-both files: a fenced code block (so `||` pipes stay literal) with three
-columns `Atmos | Lua | matches`. `pre`/`pos` stay per-side; api.md keeps
-its Lua return-value/`__atmos` details in `pos`.
+both files: a GFM TABLE with four columns
+`Group | Atmos | Lua API | matches | returns`, source-aligned. Rows are
+grouped+reordered: Boolean, Value (`[tag=:T]` + `x`, both `M.is`-based),
+Time, Tasks, Condition (function + `until`/`while`), Logical, Meta
+(`__atmos`, last). The `Group` label sits
+on each group's first row, blank below (markdown-native approx of a
+rowspan). TABLE-ONLY: `until`/`while` semantics live in their `matches`
+cells; no `pos`. Only `pre` stays per-side. (The `or` row's `\|\|` escape
+makes that one cell 1 char wider -- unavoidable.)
 
-Canonical block (paste verbatim into BOTH files between the markers):
+CANONICAL BLOCK = the table in `api.md` between the
+`<!-- AWAIT-PATTERNS ... -->` markers (single source of truth -- do NOT
+duplicate it here; copy it from there to avoid drift).
 
-    <!-- AWAIT-PATTERNS: keep identical in lua-atmos/api.md and atmos-lang/doc/manual.md -->
-    ```
-    Atmos         Lua API                                 matches
-    -----         -------                                 -------
-    true          true                                    any event
-    false         false                                   never
-    5s            us: number                              after `us` microseconds (timer)
-    —             'clock'                                 any bare-number clock tick
-    \{…}          f: function                             when `f(e)` is truthy
-    t             t: task                                 when task `t` terminates
-    :any ts       { tag='tasks', mode='any', tasks=ts }   when any pool task terminates
-    :all ts       { tag='tasks', mode='all', tasks=ts }   when all pool tasks terminate
-    !p            { tag='not', x }                        when the event does not match `p`
-    p1 && p2      { tag='and', … }                        when all sub-patterns match (any order)
-    p1 || p2      { tag='or', … }                         when any sub-pattern matches
-    p until c,…   { tag='until', x, … }                   re-awaits `p`, filtering until predicates
-    p while c,…   { tag='while', x, … }                   re-awaits `p`, filtering while predicates
-    [tag=:T, …]   { tag=t, … }                            when the tag and every field match
-    x             x: any                                  when `e` is equivalent to `x`
-    —             x: meta                                 custom `__atmos(x,e,…)` (runtime-only)
-    ```
-    <!-- /AWAIT-PATTERNS -->
+Table conventions (so it stays copy/paste-identical):
+- ASCII only: `...` (not `…`), `(none)` for an absent surface (clock-tick
+  / `__atmos` are lua-atmos runtime-level).
+- the `or` row escapes the pipe: `` `p1 \|\| p2` `` (GFM renders `||`).
+- the atmos-lang owner confirms/fills the Atmos column when pasting (esp.
+  the two `(none)` rows).
+- the `returns` column is Lua/runtime tuples (`v,t,ts`); Atmos `await`
+  evaluates to the single event value -- note this on the manual side.
 
-Notes:
-- `—` cells = no clean surface on that side (clock-tick / `__atmos` are
-  lua-atmos runtime-level). The atmos-lang owner confirms/fills the Atmos
-  column when pasting (esp. these two rows).
-- This also FIXES the manual's stale list: positional `{'not',x}` ->
-  combinators, adds clock-tick / `until`-`while` / meta coverage.
+This also FIXES the manual's stale list: positional `{'not',x}` ->
+combinators, adds clock-tick / `until`-`while` / meta coverage.
 
 ## Status
 
 - [x] Located both await sections
 - [x] Diffed pre / in / pos
-- [x] Decide sync scope -> two-surface shared table (option above)
-- [x] Apply to api.md (this worktree): fenced block + Lua-detail `pos`
-- [ ] Apply SAME block to manual.md (atmos-lang) -- CANNOT edit from here;
-      tracked under atmos-lang `.claude/plans/06-11-await.md` "Manual
-      combinator subsection". Sequence: land there, then both are in sync.
+- [x] Decide sync scope -> two-surface shared GFM table (option above)
+- [x] Apply to api.md (this worktree): GFM table + Lua-detail `pos`
+- [x] Apply SAME block to manual.md (atmos-lang `v0.7`): replaced the old
+      bulleted list at `doc/manual.md:2092`; `diff` of the two
+      AWAIT-PATTERNS blocks = IDENTICAL; both render (pandoc) with `||`
+      restored + 4 columns. Manual keeps its own `pre`/returns caveat.
+      NOTE: manual.md edit is UNCOMMITTED on atmos-lang `v0.7`.
+
+PLAN COMPLETE.

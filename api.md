@@ -262,35 +262,26 @@ Awaits an event pattern in the running task.
 
 The task awakes when an `emit(e)` matches the given await pattern as follows:
 
-- `true`        | matches any event
-- `false`       | never matches
-- `us: number`  | when timeout `us` in microseconds expires; returns the
-                  exceeded over time
-- `'clock'`     | when any bare-number tick occurs; returns the elapsed
-                  delta in microseconds
-- `f: function` | when `f(e,...)` is truthy, returning its results
-- `t: task`     | when `t` terminates; returns `v,t`, where `v` is the
-                  task return value
-- `tasks`       | when any or all tasks in a pool terminate
-    - `{ tag='tasks', mode='any', tasks=ts }`: returns `v,t,ts`
-        (`t`: terminated task, `v`: its return value)
-    - `{ tag='tasks', mode='all', tasks=ts }`: returns `ts`
-- `logical`     | composition of sub-patterns
-    - `{ tag='not', x }`:  matches any event that does not match `x`
-    - `{ tag='and', ...}`: when all `...` match (in any order)
-    - `{ tag='or', ...}`:  when any `...` matches
-- `until|while` | re-awaits a pattern until/while predicates hold
-    - `{ tag='until', x, ... }`: matches `x`, then applies each `fi` in `...` to
-      the event; awakes only when all are non-falsy; returns the event or last
-      non-true value
-    - `{ tag='while', x, ... }`: analogous to `until`; returns the event when any
-      is falsy.
-- `x: meta`     | custom `v=__atmos(x,e,...)` metamethod
-    - `v = nil`:    use standard handler
-    - `v = false`:  no match
-    - `v = ...`:    matches, replacing the results
-- `{ tag=t, ... }` | when `_is_(e.tag,t)` and `_is_(e[k],v)` for every field
-- `x: any`      | when `_is_(e,x)`
+<!-- AWAIT-PATTERNS: keep identical in lua-atmos/api.md and atmos-lang/doc/manual.md -->
+| Group     | Atmos       | Lua API                             | matches        | returns  |
+|-----------|-------------|-------------------------------------|----------------|----------|
+| Boolean   | `true`      | `true`                              | any event      | `e`      |
+|           | `false`     | `false`                             | never          | —        |
+| Value     | `[tag=:T]`  | `{tag=t,...}`                       | tag + fields   | `e`      |
+|           | `x`         | `x: any`                            | `is(e,x)`      | `e`      |
+| Time      | `5s`        | `us: number`                        | timeout        | overrun  |
+|           | `(none)`    | `'clock'`                           | clock tick     | delta    |
+| Tasks     | `t`         | `t: task`                           | `t` ends       | `v,t`    |
+|           | `:any ts`   | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts` |
+|           | `:all ts`   | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `ts`     |
+| Condition | `\{...}`    | `f: function`                       | `f(e)` truthy  | result   |
+|           | `p until c` | `{tag='until',x,...}`               | until all hold | `e`      |
+|           | `p while c` | `{tag='while',x,...}`               | while any fail | `e`      |
+| Logical   | `!p`        | `{tag='not',x}`                     | not `p`        | `e`      |
+|           | `p1 && p2`  | `{tag='and',...}`                   | all subs       | `e`      |
+|           | `p1 \|\| p2`| `{tag='or',...}`                    | any sub        | `e`      |
+| Meta      | `(none)`    | `x: meta`                           | via `__atmos`  | result   |
+<!-- /AWAIT-PATTERNS -->
 
 # 4. Errors
 
