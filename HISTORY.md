@@ -3,20 +3,23 @@ v0.7 (jun/26)
 
 - Additions:
     - `abort` task and tasks
-    - `await(ts, ['any'|'all'])`: await any/all tasks in a pool
+    - `await` patterns:
+        - any/all tasks in a pool
+            - `await(ts, ['any'|'all'])`
+        - logical combinators:
+            - `{ tag='or',  ... }`, `{ tag='and', ... }`, `{ tag='not', x }`
+        - predicates:
+            - `{ tag='until', pat, ... }`, `{ tag='while', pat, ... }`
     - `toggle(..., [filter], ...)`: optional filter pattern to keep reacting
-    - Logical combinators for await patterns:
-        - `{ tag='or',  ... }`, `{ tag='and', ... }`, `{ tag='not', x }`
     - `__atmos` metamethod: custom await matching for user types
 - Removals:
-    - Multi-arg events:
+    - multi-arg events:
         - `emit` now only receives one argument
+            - `emit('X', 10)` -> `emit { tag='X', v=10 }`
         - `await` now only receives and returns one argument
             - exception: `await(ts, ...)` above
-    - `_and_` / `_or_`: see "Logical combinators" above
+    - `_and_` / `_or_`: see "logical combinators" above
 - Modifications:
-    - Multi-arg events:
-        - `emit('X', 10)` -> `emit { tag='X', v=10 }`
     - `clock { ... }` -> simply `dt` in microseconds
         - `await(5 * _s_)` awaits 5 seconds
         - `await('clock')` awaits any `dt` and returns it
