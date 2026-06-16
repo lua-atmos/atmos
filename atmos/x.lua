@@ -8,18 +8,18 @@ function M._metas (task, tasks)
 end
 
 function M.is (v, x)
+    local tv = type(v)
+    local tx = type(x)
+    local mv = getmetatable(v)
     if v == x then
         return true
-    end
-    local tp = type(v)
-    local mt = getmetatable(v)
-    if tp == x then
+    elseif tv == x then
         return true
-    elseif mt==meta_task and x=='task' then
+    elseif x=='task' and mv==meta_task then
         return true
-    elseif mt==meta_tasks and x=='tasks' then
+    elseif x=='tasks' and mv==meta_tasks then
         return true
-    elseif tp=='table' and type(x)=='string' and type(v.tag)=='string' then
+    elseif tv=='table' and tx=='string' and type(v.tag)=='string' then
         return M.gte(x, v.tag)
     else
         return M.gte(v, x)
@@ -35,19 +35,18 @@ function M.gte (a, b)
         return true
     elseif getmetatable(a) ~= getmetatable(b) then
         return false
-    elseif ta=='number' and tb=='number' then
-        return a >= b
     elseif ta=='string' and tb=='string' then
         return (string.find(b, '^'..a..'%.') == 1)
-    elseif type(a) ~= 'table' then
+    elseif ta== 'table' and tb=='table' then
+        for k,va in pairs(a) do
+            if not M.gte(va,b[k]) then
+                return false
+            end
+        end
+        return true
+    else
         return false
     end
-    for k,va in pairs(a) do
-        if not M.gte(va,b[k]) then
-            return false
-        end
-    end
-    return true
 end
 
 function M.eq (a, b)
