@@ -82,6 +82,11 @@ local function fx (t, k)
     end
 end
 
+-- generic-for iterator over `t`; yield arity depends on the source:
+--   number / (n,m) / nil : one value (the index)
+--   table / __pairs      : key, value
+--   function / __call    : generator values, until nil
+-- NOTE: consumers must handle per-source arity (e.g. `xin` checks `y`).
 function M.iter (t, ...)
     local mt = getmetatable(t)
     if mt and mt.__pairs then
@@ -108,9 +113,20 @@ function M.iter (t, ...)
 end
 
 function M.xin (v, t)
-    for x,y in M.iter(t) do
-        if (type(x)~='number' and x==v) or (M.eq(y,v)) then
-            return true
+    for a,b,c in M.iter(t) do
+        assert(c == nil)
+        if b == nil then
+            if M.gte(v, a) then
+                return true
+            end
+        elseif type(a) == 'number' then
+            if M.gte(v,b) then
+                return true
+            end
+        else
+            if M.gte(v,a) or M.gte(v,b) then
+                return true
+            end
         end
     end
     return false
@@ -125,16 +141,26 @@ function M.cat (v1, v2)
     end
 
     local ret = {}
-    for k,x in M.iter(v1) do
-        ret[k] = x
+    for a,b,c in M.iter(v1) do
+        assert(c == nil)
+        if b == nil then
+            ret[#ret+1] = a
+        else
+            ret[a] = b
+        end
     end
     local n = 1
-    for k,x in M.iter(v2) do
-        if k == n then
-            ret[#ret+1] = x
-            n = n + 1
+    for a,b,c in M.iter(v2) do
+        assert(c == nil)
+        if b == nil then
+            ret[#ret+1] = a
         else
-            ret[k] = x
+            if a == n then
+                ret[#ret+1] = b
+                n = n + 1
+            else
+                ret[a] = b
+            end
         end
     end
     return ret
