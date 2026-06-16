@@ -266,8 +266,8 @@ The task awakes when an `emit(e)` matches the given await pattern as follows:
 |-----------|-------------------------------------|----------------|----------|
 | Boolean   | `true`                              | any event      | `e`      |
 |           | `false`                             | never          | —        |
-| Value     | `{tag=t,...}`                       | tag + fields   | `e`      |
-|           | `x: any`                            | `_is_(e,x)`    | `e`      |
+| Value     | `{tag=t,...}`                       | `X.gte(pat,e)` | `e`      |
+|           | `x: any`                            | `X.is(e,x)`    | `e`      |
 | Time      | `us: number`                        | timeout        | overrun  |
 |           | `'clock'`                           | clock tick     | delta    |
 | Tasks     | `t: task`                           | `t` ends       | `v,t`    |
