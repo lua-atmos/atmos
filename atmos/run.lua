@@ -63,8 +63,7 @@ local meta_task = {
     end
 }
 
--- inject task/tasks metatables into `X.is` (one-way require: run -> x)
-X._metas(meta_task, meta_tasks)
+X._metas(meta_task, meta_tasks) -- inject task/tasks metatables into `X.is`
 
 local TASKS = setmetatable({
     _ = {

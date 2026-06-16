@@ -15,58 +15,48 @@ function M.is (v, x)
     local mt = getmetatable(v)
     if tp == x then
         return true
-    elseif tp=='string' and type(x)=='string' then
-        return (string.find(v, '^'..x..'%.') == 1)
     elseif mt==meta_task and x=='task' then
         return true
     elseif mt==meta_tasks and x=='tasks' then
         return true
     elseif tp=='table' and type(x)=='string' and type(v.tag)=='string' then
-        return (string.find(v.tag or '', '^'..x) == 1)
+        return M.gte(x, v.tag)
     else
-        return false
+        return M.gte(v, x)
     end
 end
 
-function M.eq (v1, v2)
-    if v1 == v2 then
+function M.gte (a, b)
+    local ta = type(a)
+    local tb = type(b)
+    if ta ~= tb then
+        return false
+    elseif a == b then
         return true
-    end
-
-    local t1 = type(v1)
-    local t2 = type(v2)
-    if t1 ~= t2 then
+    elseif getmetatable(a) ~= getmetatable(b) then
+        return false
+    elseif ta=='number' and tb=='number' then
+        return a >= b
+    elseif ta=='string' and tb=='string' then
+        return (string.find(b, '^'..a..'%.') == 1)
+    elseif type(a) ~= 'table' then
         return false
     end
-
-    local mt1 = getmetatable(v1)
-    local mt2 = getmetatable(v2)
-    if mt1 ~= mt2 then
-        return false
-    end
-
-    if t1 == 'table' then
-        for k1,x1 in pairs(v1) do
-            local x2 = v2[k1]
-            if not M.eq(x1,x2) then
-                return false
-            end
+    for k,va in pairs(a) do
+        if not M.gte(va,b[k]) then
+            return false
         end
-        for k2,x2 in pairs(v2) do
-            local x1 = v1[k2]
-            if not M.eq(x2,x1) then
-                return false
-            end
-        end
-        return true
     end
+    return true
+end
 
-    return false
+function M.eq (a, b)
+    return M.gte(a,b) and M.gte(b,a)
 end
 
 function M.xin (v, t)
     for x,y in iter(t) do
-        if (x==v and type(x)~='number') or (y == v) then
+        if (type(x)~='number' and x==v) or (M.eq(y,v)) then
             return true
         end
     end
