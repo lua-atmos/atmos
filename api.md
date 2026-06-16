@@ -7,6 +7,7 @@
 5. [Compounds](#5-compounds)
 6. [Streams](#6-streams)
 7. [Threads](#7-threads)
+8. [Utilities](#8-utilities)
 
 # 1. Basic
 
@@ -456,3 +457,31 @@ Spawns a function to execute in an OS thread and awaits its termination.
 
 The function receives copies of its upvalues, but cannot access Atmos
 primitives (`await`, `emit`, `spawn`).
+
+# 8. Utilities
+
+The module `atmos.x` provides value relations and helpers:
+
+```
+local X = require "atmos.x"
+```
+
+| function          | result      | meaning                                     |
+|-------------------|-------------|---------------------------------------------|
+| `X.gte(a,b)`      | `boolean`   | `a` is a supertype of/conforms to `b`       |
+| `X.eq(a,b)`       | `boolean`   | deep equality: `gte(a,b) and gte(b,a)`      |
+| `X.is(v,x)`       | `boolean`   | `v` is-a `x` (identity / type / tag / task) |
+| `X.xin(v,t)`      | `boolean`   | `v` is a member of `t` (as key or value)    |
+| `X.cat(a,b)`      | `str/table` | `a .. b`, else a new table merging both     |
+| `X.iter(t,...)`   | `iterator`  | generic-for over `t` (arity below)          |
+| `X.tostring(v)`   | `string`    | stable rendering (table keys sorted)        |
+| `X.print(...)`    | —           | `print` via `X.tostring`                    |
+| `X.copy(v)`       | `value`     | deep copy                                   |
+
+- TODO
+    - `X.gte`:  `a == b`, same types/metas, subtags, subsumes fields
+    - `X.is`:   type name, task/tasks, table tag
+    - `X.iter`: arity by source
+        - 1: `number` / `(n,m)` / `nil`
+        - 2: `table` / `__pairs`
+        - n: `function` / `__call`
