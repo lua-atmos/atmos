@@ -22,7 +22,7 @@ function M.is (v, x)
     elseif tv=='table' and tx=='string' and type(v.tag)=='string' then
         return M.gte(x, v.tag)
     else
-        return M.gte(v, x)
+        return M.gte(x, v)
     end
 end
 
@@ -53,8 +53,51 @@ function M.eq (a, b)
     return M.gte(a,b) and M.gte(b,a)
 end
 
+local function fi (N, i)
+    i = i + 1
+    if i>N then
+        return nil
+    end
+    return i
+end
+
+function M.iter (t, ...)
+    local mt = getmetatable(t)
+    if mt and mt.__pairs then
+        return mt.__pairs(t)
+    elseif mt and mt.__call then
+        return t
+    elseif t == nil then
+        return fi, math.maxinteger, 0
+    elseif type(t) == 'function' then
+        return t
+    elseif type(t) == 'number' then
+        local fr, to
+        if ... then
+            fr, to = t-1, ...
+        else
+            fr, to = 0, t
+        end
+        return fi, to, fr
+    elseif type(t) == 'table' then
+        -- TODO: xnext
+        return coroutine.wrap(function()
+            for i=1, #t do
+                coroutine.yield(i, t[i])
+            end
+            for k,v in pairs(t) do
+                if type(k)~='number' or k<=0 or k>#t then
+                    coroutine.yield(k,v)
+                end
+            end
+        end)
+    else
+        error("TODO - iter(t)")
+    end
+end
+
 function M.xin (v, t)
-    for x,y in iter(t) do
+    for x,y in M.iter(t) do
         if (type(x)~='number' and x==v) or (M.eq(y,v)) then
             return true
         end
@@ -71,11 +114,11 @@ function M.cat (v1, v2)
     end
 
     local ret = {}
-    for k,x in iter(v1) do
+    for k,x in M.iter(v1) do
         ret[k] = x
     end
     local n = 1
-    for k,x in iter(v2) do
+    for k,x in M.iter(v2) do
         if k == n then
             ret[#ret+1] = x
             n = n + 1
