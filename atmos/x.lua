@@ -61,6 +61,27 @@ local function fi (N, i)
     return i
 end
 
+-- stateless table iterator: array part (1..#t) then non-array keys,
+-- skipping numeric keys already covered by the array part
+local function fx (t, k)
+    local n = #t
+    if k == nil then
+        if n >= 1 then
+            return 1, t[1]
+        end
+    elseif math.type(k)=='integer' and k>=1 and k<n then
+        return k+1, t[k+1]
+    elseif math.type(k)=='integer' and k==n then
+        k = nil
+    end
+    repeat
+        k = next(t, k)
+    until (k==nil) or not (type(k)=='number' and k>0 and k<=n)
+    if k ~= nil then
+        return k, t[k]
+    end
+end
+
 function M.iter (t, ...)
     local mt = getmetatable(t)
     if mt and mt.__pairs then
@@ -80,17 +101,7 @@ function M.iter (t, ...)
         end
         return fi, to, fr
     elseif type(t) == 'table' then
-        -- TODO: xnext
-        return coroutine.wrap(function()
-            for i=1, #t do
-                coroutine.yield(i, t[i])
-            end
-            for k,v in pairs(t) do
-                if type(k)~='number' or k<=0 or k>#t then
-                    coroutine.yield(k,v)
-                end
-            end
-        end)
+        return fx, t, nil
     else
         error("TODO - iter(t)")
     end
