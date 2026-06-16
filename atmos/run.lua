@@ -554,7 +554,7 @@ function M.await (time, awt, ...)
             else
                 assertn(2, false, "invalid await : invalid mode")
             end
-        elseif getmetatable(awt) == meta_task then
+        elseif mta == meta_task then
             if coroutine.status(awt._.th) == 'dead' then
                 return awt.ret, awt
             end
@@ -595,19 +595,9 @@ function M.await (time, awt, ...)
                     return emt
                 end
             end
-        elseif type(awt) == 'table' then
-            -- tagged pattern: every await field must match (M.is) event
-            if awt.tag and (type(emt) == 'table') then
-                local ok = true
-                for k, v in pairs(awt) do
-                    if not X.is(emt[k], v) then
-                        ok = false
-                        break
-                    end
-                end
-                if ok then
-                    return emt
-                end
+        elseif type(awt)=='table' then
+            if mta~=meta_task and X.gte(awt, emt) then
+                return emt
             end
         else
             -- string, number
