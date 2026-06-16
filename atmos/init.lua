@@ -24,13 +24,15 @@ defer   = run.defer
 tasks   = run.tasks
 abort   = run.abort
 
-function task (tra, ...)
-    if tra == nil then
+function task (f)
+    return run.task(debug.getinfo(2), f)
+end
+
+function xtask (T)
+    if T == nil then
         return run.me()
-    elseif type(tra) == 'boolean' then
-        return run.task(debug.getinfo(2), tra, ...)
     else
-        return run.task(debug.getinfo(2), false, tra, ...)
+        return run.xtask(debug.getinfo(2), false, T)
     end
 end
 

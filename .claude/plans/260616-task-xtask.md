@@ -45,7 +45,27 @@ lua-atmos users all share one vocabulary.
 
 ## 2. Runtime — lua-atmos (separate repo, lands FIRST)
 
-### 2.1 New public API
+### 2.1 New public API — DONE (lua-atmos)
+
+Implemented. Metatable naming chosen: prototype = `meta_task` (new,
+non-callable), instance = `meta_xtask` (renamed from old `meta_task`),
+pool = `meta_tasks`. `_is_` is `X.is` here.
+
+| file          | change                                                  |
+|---------------|---------------------------------------------------------|
+| atmos/run.lua | `meta_task`(instance) renamed -> `meta_xtask`           |
+| atmos/run.lua | new `meta_task = {}` non-callable prototype marker      |
+| atmos/run.lua | `M.task(dbg,f)` -> prototype builder                    |
+| atmos/run.lua | old `M.task` body -> `M.xtask(dbg,tra,T)`, unwraps proto|
+| atmos/run.lua | `M.spawn` accepts proto -> `M.xtask`; asserts instance  |
+| atmos/run.lua | toggle gate uses `M.xtask`                              |
+| atmos/x.lua   | `_metas(task,xtask,tasks)`; `M.is` adds `'xtask'` branch|
+| atmos/init.lua| `task(f)` proto builder + new `xtask(T)` (me / instance)|
+
+NOTE: §2.2 dispatch-hardening (error on raw-function public spawn) and
+the `tst/` sweep are NOT done -- raw-function spawn still works.
+
+
 
 | Call            | Before                  | After                          |
 | --------------- | ----------------------- | ------------------------------ |

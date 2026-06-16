@@ -33,7 +33,11 @@ local function _ipairs (ts)
     return _next, {ts=ts,max=#ts._.dns}, 0, close
 end
 
-local meta_tasks; meta_tasks = {
+local meta_task = {}
+local meta_tasks
+local meta_xtask
+
+meta_tasks = {
     __close = function (ts)
         for _,dn in ipairs(ts._.dns) do
             getmetatable(dn).__close(dn)
@@ -45,7 +49,7 @@ local meta_tasks; meta_tasks = {
     __pairs = _ipairs,
 }
 
-local meta_task = {
+meta_xtask = {
     __close = function (t)
         for _,dn in ipairs(t._.dns) do
             getmetatable(dn).__close(dn)
@@ -63,7 +67,7 @@ local meta_task = {
     end
 }
 
-X._metas(meta_task, meta_tasks) -- inject task/tasks metatables into `X.is`
+X._metas(meta_task, meta_xtask, meta_tasks) -- inject metatables into `X.is`
 
 local TASKS = setmetatable({
     _ = {
@@ -126,7 +130,7 @@ local function task_result (t, ok, err)
             end
             M.emit(false, up, t)
         --end
-        meta_task.__close(t)
+        meta_xtask.__close(t)
     end
 end
 
@@ -135,7 +139,7 @@ task_gc = function (t)
         t._.gc = false
         for i=#t._.dns, 1, -1 do
             local s = t._.dns[i]
-            if getmetatable(s)==meta_task and coroutine.status(s._.th)=='dead' then
+            if getmetatable(s)==meta_xtask and coroutine.status(s._.th)=='dead' then
                 table.remove(t._.dns, i)
             end
         end
@@ -173,7 +177,7 @@ local function trace ()
     local x = M.me(true)
     while x and x~=TASKS do
         ret[#ret+1] = {
-            msg = (getmetatable(x)==meta_task and 'task') or 'tasks',
+            msg = (getmetatable(x)==meta_xtask and 'task') or 'tasks',
             dbg = x._.dbg,
         }
         x = x._.up
@@ -381,8 +385,22 @@ function M.tasks (max)
     return ts
 end
 
-function M.task (dbg, tra, f)
-    assertn(3, type(f)=='function', "invalid task : expected function")
+-- prototype: bless any function into a non-callable spawnable value
+function M.task (dbg, f)
+    assertn(2, type(f)=='function', "invalid task : expected function")
+    return setmetatable({
+        _ = {
+            dbg = {file=dbg.short_src, line=dbg.currentline},
+            f   = f,
+        }
+    }, meta_task)
+end
+
+-- instance: unstarted executing task from a prototype (or raw function,
+-- the transparent-combinator path)
+function M.xtask (dbg, tra, T)
+    local f = (getmetatable(T)==meta_task and T._.f) or T
+    assertn(3, type(f)=='function', "invalid xtask : expected task prototype")
     local f = function (...)
         local _no_tco_ <close> = nil
         return f(...)
@@ -404,12 +422,12 @@ function M.task (dbg, tra, f)
         }
     }
     TASKS._.cache[t._.th] = t
-    setmetatable(t, meta_task)
+    setmetatable(t, meta_xtask)
     return t
 end
 
 function M.abort (t)
-    assertn(2, getmetatable(t)==meta_task or getmetatable(t)==meta_tasks, "invalid abort : expected task")
+    assertn(2, getmetatable(t)==meta_xtask or getmetatable(t)==meta_tasks, "invalid abort : expected task")
     getmetatable(t).__close(t)
     if t._.up then
         t._.up._.gc = true
@@ -423,15 +441,15 @@ function M.abort (t)
 end
 
 function M.spawn (dbg, up, tra, t, ...)
-    if type(t) == 'function' then
-        t = M.task(dbg, tra, t)
+    if type(t)=='function' or getmetatable(t)==meta_task then
+        t = M.xtask(dbg, tra, t)
         if t == nil then
             return nil
         else
             return M.spawn(dbg, up, tra, t, ...)
         end
     end
-    assertn(2, getmetatable(t)==meta_task, "invalid spawn : expected task prototype")
+    assertn(2, getmetatable(t)==meta_xtask, "invalid spawn : expected task instance")
     assertn(2, t._.tra == tra, "invalid spawn : transparent modifier mismatch")
 
     up = up or M.me(true) or TASKS
@@ -554,7 +572,7 @@ function M.await (time, awt, ...)
             else
                 assertn(2, false, "invalid await : invalid mode")
             end
-        elseif mta == meta_task then
+        elseif mta == meta_xtask then
             if coroutine.status(awt._.th) == 'dead' then
                 return awt.ret, awt
             end
@@ -596,7 +614,7 @@ function M.await (time, awt, ...)
                 end
             end
         elseif type(awt)=='table' then
-            if mta~=meta_task and X.gte(awt, emt) then
+            if mta~=meta_xtask and X.gte(awt, emt) then
                 return emt
             end
         else
@@ -629,7 +647,7 @@ local function fto (me, to)
             assertn(3, to~=nil, "invalid emit : invalid target")
             n = n - 1
         end
-    elseif getmetatable(to)==meta_task or getmetatable(to)==meta_tasks then
+    elseif getmetatable(to)==meta_xtask or getmetatable(to)==meta_tasks then
         to = to
     else
         error("invalid emit : invalid target", 3)
@@ -663,7 +681,7 @@ local function emit (time, t, emt, ...)
 
     task_gc(t)
 
-    if getmetatable(t) == meta_task then
+    if getmetatable(t) == meta_xtask then
         if not ok then
             if coroutine.status(t._.th) == 'suspended' then
                 ok, err = coroutine.resume(t._.th, 'atm_error', err)
@@ -718,7 +736,7 @@ function M.toggle (t, on, filter, ...)
         end
     end
 
-    assertn(2, getmetatable(t)==meta_task or getmetatable(t)==meta_tasks,
+    assertn(2, getmetatable(t)==meta_xtask or getmetatable(t)==meta_tasks,
         "invalid toggle : expected task")
     assertn(2, type(on) == 'boolean', "invalid toggle : expected bool argument")
     if on then
@@ -726,7 +744,7 @@ function M.toggle (t, on, filter, ...)
         assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
         t._.status = nil
         if t._.toggle then
-            meta_task.__close(t._.toggle.task)   -- off-tree: just close it
+            meta_xtask.__close(t._.toggle.task)   -- off-tree: just close it
             t._.toggle = nil
         end
     else
@@ -736,7 +754,7 @@ function M.toggle (t, on, filter, ...)
         if filter ~= nil then
             -- hidden gate task (off-tree): emit drives it explicitly before the
             -- gate check; on a match it stamps t._.toggle.pass = M.TIME
-            local gate = M.task(debug.getinfo(2), true, function ()
+            local gate = M.xtask(debug.getinfo(2), true, function ()
                 while true do
                     M.await(M.TIME, filter)
                     t._.toggle.pass = M.TIME
@@ -817,7 +835,7 @@ end
 local meta_par = {
     __close = function (ts)
         for _, t in ipairs(ts) do
-            meta_task.__close(t)
+            meta_xtask.__close(t)
         end
     end
 }

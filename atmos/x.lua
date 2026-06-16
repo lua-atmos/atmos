@@ -1,10 +1,10 @@
 local M = {}
 
--- task/tasks metatables are injected by `run.lua` to avoid a require cycle
-local meta_task, meta_tasks
+-- metatables are injected by `run.lua` to avoid a require cycle
+local meta_task, meta_xtask, meta_tasks
 
-function M._metas (task, tasks)
-    meta_task, meta_tasks = task, tasks
+function M._metas (task, xtask, tasks)
+    meta_task, meta_xtask, meta_tasks = task, xtask, tasks
 end
 
 function M.is (v, x)
@@ -16,6 +16,8 @@ function M.is (v, x)
     elseif tv == x then
         return true
     elseif x=='task' and mv==meta_task then
+        return true
+    elseif x=='xtask' and mv==meta_xtask then
         return true
     elseif x=='tasks' and mv==meta_tasks then
         return true
