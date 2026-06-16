@@ -350,7 +350,7 @@ end
 do
     print("Testing...", "watching 6")
     spawn (function ()
-        local v = watching (function (e) return e and e.tag=='X' and e[1]==10, e and e[1] end,
+        local v = watching (function (e) return e and e.tag=='X' and e[1]==10 and e[1] end,
             function ()
                 await(false)
             end

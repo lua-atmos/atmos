@@ -554,9 +554,9 @@ function M.await (time, awt, ...)
 
     while true do
         if mta and mta.__atmos then
-            local ok, ret = mta.__atmos(awt, emt)
-            if ok then
-                return ret
+            local ret = mta.__atmos(awt, emt)
+            if ret then
+                return (ret~=true and ret) or emt
             end
         elseif tag == 'tasks' then
             local ts = awt.tasks
@@ -582,9 +582,9 @@ function M.await (time, awt, ...)
                 return -clk
             end
         elseif type(awt) == 'function' then
-            local ok, ret = awt(emt)
-            if ok then
-                return ret
+            local ret = awt(emt)
+            if ret then
+                return (ret~=true and ret) or emt
             end
         end
 
@@ -596,9 +596,9 @@ function M.await (time, awt, ...)
 
         local mte = getmetatable(emt)
         if mte and mte.__atmos then
-            local ok, ret = mte.__atmos(emt, awt)
-            if ok then
-                return ret
+            local ret = mte.__atmos(emt, awt)
+            if ret then
+                return (ret~=true and ret) or emt
             end
         elseif awt == true then
             return emt
