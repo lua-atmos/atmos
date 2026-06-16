@@ -36,7 +36,7 @@ function M.gte (a, b)
     elseif getmetatable(a) ~= getmetatable(b) then
         return false
     elseif ta=='string' and tb=='string' then
-        return (string.find(b, '^'..a..'%.') == 1)
+        return (string.sub(b, 1, #a+1) == a..'.')
     elseif ta== 'table' and tb=='table' then
         for k,va in pairs(a) do
             if not M.gte(va,b[k]) then
