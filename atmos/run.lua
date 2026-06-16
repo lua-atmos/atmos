@@ -210,20 +210,20 @@ function M.catch (...)
         if ok then
             return ok,err,...
         elseif getmetatable(err) == meta_throw then
-            local X = cnd[1]
+            local v = cnd[1]
             if false then
-            elseif X == false then
+            elseif v == false then
                 error(err, 0)
-            elseif X == true then
+            elseif v == true then
                 return false, table.unpack(err)
-            elseif type(X) == 'function' then
+            elseif type(v) == 'function' then
                 return (function (ok, ...)
                     if ok then
                         return false, ...
                     else
                         error(err, 0)
                     end
-                end)(X(table.unpack(err)))
+                end)(v(table.unpack(err)))
             else
                 for i=1, #cnd do
                     if not X.is(err[i],cnd[i]) then
