@@ -257,8 +257,8 @@ Awaits an event pattern in the running task.
     - `pat`
         | event pattern
 - Returns:
-    - `...`
-        | arguments of matching emit
+    - `e`
+        | argument of matching emit
 
 The task awakes when an `emit(e)` matches the given await pattern as follows:
 
@@ -267,19 +267,25 @@ The task awakes when an `emit(e)` matches the given await pattern as follows:
 | Boolean   | `true`                              | any event      | `e`      |
 |           | `false`                             | never          | —        |
 | Value     | `{tag=t,...}`                       | tag + fields   | `e`      |
-|           | `x: any`                            | `is(e,x)`      | `e`      |
+|           | `x: any`                            | `_is_(e,x)`    | `e`      |
 | Time      | `us: number`                        | timeout        | overrun  |
 |           | `'clock'`                           | clock tick     | delta    |
 | Tasks     | `t: task`                           | `t` ends       | `v,t`    |
 |           | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts` |
 |           | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `ts`     |
-| Condition | `f: function`                       | `f(e)` truthy  | result   |
-|           | `{tag='until',x,...}`               | until all hold | `e`      |
+| Condition | `f: function`                       | `f(e)` truthy  | `e / res`|
+|           | `{tag='until',x,...}`               | until all hold | `e / res`|
 |           | `{tag='while',x,...}`               | while any fail | `e`      |
 | Logical   | `{tag='not',x}`                     | not `p`        | `e`      |
 |           | `{tag='and',...}`                   | all subs       | `e`      |
 |           | `{tag='or',...}`                    | any sub        | `e`      |
-| Meta      | `mt: meta`                          | via `__atmos`  | result   |
+| Meta      | `mt: meta`                          | via `__atmos`  | `e / res`|
+
+Note that some patterns may modify the final result:
+
+- Time: difference between the time elapsed and expected
+- Tasks: task result, terminating task, and task pool
+- Condition, Meta: function result (defaults to `e` if `true`)
 
 # 4. Errors
 
