@@ -1,5 +1,102 @@
 local M = {}
 
+-- task/tasks metatables are injected by `run.lua` to avoid a require cycle
+local meta_task, meta_tasks
+
+function M._metas (task, tasks)
+    meta_task, meta_tasks = task, tasks
+end
+
+function M.is (v, x)
+    if v == x then
+        return true
+    end
+    local tp = type(v)
+    local mt = getmetatable(v)
+    if tp == x then
+        return true
+    elseif tp=='string' and type(x)=='string' then
+        return (string.find(v, '^'..x..'%.') == 1)
+    elseif mt==meta_task and x=='task' then
+        return true
+    elseif mt==meta_tasks and x=='tasks' then
+        return true
+    elseif tp=='table' and type(x)=='string' and type(v.tag)=='string' then
+        return (string.find(v.tag or '', '^'..x) == 1)
+    else
+        return false
+    end
+end
+
+function M.eq (v1, v2)
+    if v1 == v2 then
+        return true
+    end
+
+    local t1 = type(v1)
+    local t2 = type(v2)
+    if t1 ~= t2 then
+        return false
+    end
+
+    local mt1 = getmetatable(v1)
+    local mt2 = getmetatable(v2)
+    if mt1 ~= mt2 then
+        return false
+    end
+
+    if t1 == 'table' then
+        for k1,x1 in pairs(v1) do
+            local x2 = v2[k1]
+            if not M.eq(x1,x2) then
+                return false
+            end
+        end
+        for k2,x2 in pairs(v2) do
+            local x1 = v1[k2]
+            if not M.eq(x2,x1) then
+                return false
+            end
+        end
+        return true
+    end
+
+    return false
+end
+
+function M.xin (v, t)
+    for x,y in iter(t) do
+        if (x==v and type(x)~='number') or (y == v) then
+            return true
+        end
+    end
+    return false
+end
+
+function M.cat (v1, v2)
+    local ok, v = pcall(function()
+        return v1 .. v2
+    end)
+    if ok then
+        return v
+    end
+
+    local ret = {}
+    for k,x in iter(v1) do
+        ret[k] = x
+    end
+    local n = 1
+    for k,x in iter(v2) do
+        if k == n then
+            ret[#ret+1] = x
+            n = n + 1
+        else
+            ret[k] = x
+        end
+    end
+    return ret
+end
+
 function M.tostring (v)
     if type(v) ~= 'table' then
         return tostring(v)

@@ -1,4 +1,5 @@
 local S = require "atmos.streams"
+local X = require "atmos.x"
 require "atmos.util"
 local lanes -- lazy require in `spawn`
 
@@ -43,6 +44,7 @@ local meta_tasks; meta_tasks = {
     end,
     __pairs = _ipairs,
 }
+
 local meta_task = {
     __close = function (t)
         for _,dn in ipairs(t._.dns) do
@@ -60,6 +62,9 @@ local meta_task = {
         end
     end
 }
+
+-- inject task/tasks metatables into `X.is` (one-way require: run -> x)
+X._metas(meta_task, meta_tasks)
 
 local TASKS = setmetatable({
     _ = {
@@ -88,29 +93,6 @@ end
 function M.me (tra)
     local th = coroutine.running()
     return th and TASKS._.cache[th] and _me_(tra, TASKS._.cache[th])
-end
-
--------------------------------------------------------------------------------
-
-function M.is (v, x)
-    if v == x then
-        return true
-    end
-    local tp = type(v)
-    local mt = getmetatable(v)
-    if tp == x then
-        return true
-    elseif tp=='string' and type(x)=='string' then
-        return (string.find(v, '^'..x..'%.') == 1)
-    elseif mt==meta_task and x=='task' then
-        return true
-    elseif mt==meta_tasks and x=='tasks' then
-        return true
-    elseif tp=='table' and type(x)=='string' and type(v.tag)=='string' then
-        return (string.find(v.tag or '', '^'..x) == 1)
-    else
-        return false
-    end
 end
 
 function M.status (t)
@@ -245,7 +227,7 @@ function M.catch (...)
                 end)(X(table.unpack(err)))
             else
                 for i=1, #cnd do
-                    if not M.is(err[i],cnd[i]) then
+                    if not X.is(err[i],cnd[i]) then
                         error(err, 0)
                     end
                 end
@@ -619,7 +601,7 @@ function M.await (time, awt, ...)
             if awt.tag and (type(emt) == 'table') then
                 local ok = true
                 for k, v in pairs(awt) do
-                    if not M.is(emt[k], v) then
+                    if not X.is(emt[k], v) then
                         ok = false
                         break
                     end
@@ -630,7 +612,7 @@ function M.await (time, awt, ...)
             end
         else
             -- string, number
-            if M.is(emt,tag) then
+            if X.is(emt,tag) then
                 return emt
             end
         end

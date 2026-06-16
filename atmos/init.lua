@@ -17,7 +17,6 @@ loop  = run.loop
 start = run.start
 stop  = run.stop
 
-_is_    = run.is
 _break_ = run._break_
 throw   = run.throw
 catch   = run.catch
