@@ -22,7 +22,7 @@ function M.is (v, x)
     elseif tv=='table' and tx=='string' and type(v.tag)=='string' then
         return M.gte(x, v.tag)
     else
-        return M.gte(x, v)
+        return false
     end
 end
 
