@@ -110,7 +110,17 @@ The `spawn(false, f, ...)` form emitted by the compiler today
 (`src/prim.lua:72`) is dropped from the public surface (may remain as
 an internal `run.spawn` detail).
 
-### 2.3 Internal changes
+### 2.3 Internal changes — MOSTLY DONE (lua-atmos)
+
+Done: instance meta-tag rename (`meta_xtask`, `X.is` `'xtask'`),
+`trace()` label `'task'`->`'xtask'`, `__tostring` `task: %p` (proto) /
+`xtask: %p` (instance) / `tasks: %p` (pool). Combinators / `await(spw)`
+unchanged.
+
+Deferred (wording, with the `tst/` sweep): `abort`/`toggle`
+`"expected task"` and combinator `"expected task prototype"` messages.
+
+
 
 | Concern           | Change                                          |
 | ----------------- | ----------------------------------------------- |

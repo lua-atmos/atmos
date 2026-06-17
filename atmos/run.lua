@@ -33,11 +33,14 @@ local function _ipairs (ts)
     return _next, {ts=ts,max=#ts._.dns}, 0, close
 end
 
-local meta_task = {}
+local meta_task = {
+    __tostring = function (t) return string.format('task: %p', t) end,
+}
 local meta_tasks
 local meta_xtask
 
 meta_tasks = {
+    __tostring = function (ts) return string.format('tasks: %p', ts) end,
     __close = function (ts)
         for _,dn in ipairs(ts._.dns) do
             getmetatable(dn).__close(dn)
@@ -50,6 +53,7 @@ meta_tasks = {
 }
 
 meta_xtask = {
+    __tostring = function (t) return string.format('xtask: %p', t) end,
     __close = function (t)
         for _,dn in ipairs(t._.dns) do
             getmetatable(dn).__close(dn)
@@ -177,7 +181,7 @@ local function trace ()
     local x = M.me(true)
     while x and x~=TASKS do
         ret[#ret+1] = {
-            msg = (getmetatable(x)==meta_xtask and 'task') or 'tasks',
+            msg = (getmetatable(x)==meta_xtask and 'xtask') or 'tasks',
             dbg = x._.dbg,
         }
         x = x._.up
