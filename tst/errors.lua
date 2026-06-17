@@ -54,16 +54,16 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn(function ()
+                spawn_task(task(function ()
                     local x,y,z = catch('Z', function ()
-                        spawn (function ()
+                        spawn_task(task(function ()
                             await(true)
                             throw('X',10)
-                        end)
+                        end))
                         await(false)
                     end)
                     out(x, y, z)
-                end)
+                end))
                 emit()
             end)
             out('ok')
@@ -73,8 +73,8 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
          |  /tmp/err.lua:2 (loop)
-         |  /tmp/err.lua:13 (emit) <- /tmp/err.lua:2 (task)
-         v  /tmp/err.lua:7 (throw) <- /tmp/err.lua:5 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+         |  /tmp/err.lua:13 (emit) <- /tmp/err.lua:2 (xtask)
+         v  /tmp/err.lua:7 (throw) <- /tmp/err.lua:5 (xtask) <- /tmp/err.lua:3 (xtask) <- /tmp/err.lua:2 (xtask)
         ==> X, 10
     ]])
 end
@@ -84,15 +84,15 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn(function ()
-                    spawn(function ()
-                        await(spawn(function ()
+                spawn_task(task(function ()
+                    spawn_task(task(function ()
+                        await(spawn_task(task(function ()
                             await(true)
-                        end))
+                        end)))
                         throw "OK"
-                    end)
+                    end))
                     await(false)
-                end)
+                end))
                 emit('X')
             end)
         end)
@@ -101,8 +101,8 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
          |  /tmp/err.lua:2 (loop)
-         |  /tmp/err.lua:12 (emit) <- /tmp/err.lua:2 (task)
-         v  /tmp/err.lua:8 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+         |  /tmp/err.lua:12 (emit) <- /tmp/err.lua:2 (xtask)
+         v  /tmp/err.lua:8 (throw) <- /tmp/err.lua:4 (xtask) <- /tmp/err.lua:3 (xtask) <- /tmp/err.lua:2 (xtask)
         ==> OK
     ]])
 end
@@ -111,19 +111,19 @@ do
     print("Testing...", "throw 3")
     local out = exec [[
         local _, err = pcall(function () loop(function ()
-            spawn(function ()
-                spawn(true,function ()
-                    await(spawn(function ()
+            spawn_task(task(function ()
+                spawn_anon(function ()
+                    await(spawn_task(task(function ()
                         await('Y')
-                    end))
+                    end)))
                     throw "OK"
                 end)
-                spawn(true,function ()
+                spawn_anon(function ()
                     await('X')
                     emit('Y')
                 end)
                 await(false)
-            end)
+            end))
             emit('X')
         end) end)
         print(err)
@@ -131,9 +131,9 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
         |  /tmp/err.lua:1 (loop)
-        |  /tmp/err.lua:15 (emit) <- /tmp/err.lua:1 (task)
-        |  /tmp/err.lua:11 (emit) <- /tmp/err.lua:9 (task) <- /tmp/err.lua:2 (task) <- /tmp/err.lua:1 (task)
-        v  /tmp/err.lua:7 (throw) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task) <- /tmp/err.lua:1 (task)
+        |  /tmp/err.lua:15 (emit) <- /tmp/err.lua:1 (xtask)
+        |  /tmp/err.lua:11 (emit) <- /tmp/err.lua:9 (xtask) <- /tmp/err.lua:2 (xtask) <- /tmp/err.lua:1 (xtask)
+        v  /tmp/err.lua:7 (throw) <- /tmp/err.lua:3 (xtask) <- /tmp/err.lua:2 (xtask) <- /tmp/err.lua:1 (xtask)
         ==> OK
     ]])
 end
@@ -143,25 +143,25 @@ do
 
     local out = exec [[
         local _, err = pcall(function () function T ()
-            spawn (function ()
+            spawn_task(task(function ()
                 throw 'X'
-            end)
+            end))
         end
 
         loop(function ()
-            spawn(function ()
+            spawn_task(task(function ()
                 local ok, err = catch('Y', function ()
-                    spawn(T)
+                    spawn_task(task(T))
                 end)
                 print(ok, err)
-            end)
+            end))
         end) end)
         print(err)
     ]]
     assertx(trim(out), trim [[
         ==> ERROR:
         |  /tmp/err.lua:7 (loop)
-        v  /tmp/err.lua:3 (throw) <- /tmp/err.lua:2 (task) <- /tmp/err.lua:10 (task) <- /tmp/err.lua:8 (task) <- /tmp/err.lua:7 (task)
+        v  /tmp/err.lua:3 (throw) <- /tmp/err.lua:2 (xtask) <- /tmp/err.lua:10 (xtask) <- /tmp/err.lua:8 (xtask) <- /tmp/err.lua:7 (xtask)
         ==> X
     ]])
 end
@@ -170,9 +170,9 @@ do
     print("Testing...", "tasks 1")
     local out = exec [[
         local _, err = pcall(function () function T ()
-            await(spawn(function ()
+            await(spawn_task(task(function ()
                 await('Y')
-            end))
+            end)))
             local function f ()
                 throw 'OK'
             end
@@ -181,18 +181,18 @@ do
             --throw "OK"
         end
         loop(function ()
-            spawn(function ()
+            spawn_task(task(function ()
                 local ts = tasks()
-                spawn(true,function ()
-                    spawn_in(ts, T)
+                spawn_anon(function ()
+                    spawn_in(ts, task(T))
                     await(false)
                 end)
-                spawn(true,function ()
+                spawn_anon(function ()
                     await('X')
                     emit('Y')
                 end)
                 await(false)
-            end)
+            end))
             emit('X') end)
         end)
         print(err)
@@ -200,9 +200,9 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
         |  /tmp/err.lua:12 (loop)
-        |  /tmp/err.lua:25 (emit) <- /tmp/err.lua:12 (task)
-        |  /tmp/err.lua:21 (emit) <- /tmp/err.lua:19 (task) <- /tmp/err.lua:13 (task) <- /tmp/err.lua:12 (task)
-        v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:16 (task) <- /tmp/err.lua:14 (tasks) <- /tmp/err.lua:13 (task) <- /tmp/err.lua:12 (task)
+        |  /tmp/err.lua:25 (emit) <- /tmp/err.lua:12 (xtask)
+        |  /tmp/err.lua:21 (emit) <- /tmp/err.lua:19 (xtask) <- /tmp/err.lua:13 (xtask) <- /tmp/err.lua:12 (xtask)
+        v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:16 (xtask) <- /tmp/err.lua:14 (tasks) <- /tmp/err.lua:13 (xtask) <- /tmp/err.lua:12 (xtask)
         ==> OK
     ]])
 end
@@ -249,10 +249,10 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn(function ()
-                    await(spawn(function() await('X') end))
+                spawn_task(task(function ()
+                    await(spawn_task(task(function() await('X') end)))
                     print(1+true)
-                end)
+                end))
                 emit 'X'
             end)
         end)
@@ -261,8 +261,8 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
          |  /tmp/err.lua:2 (loop)
-         |  /tmp/err.lua:7 (emit) <- /tmp/err.lua:2 (task)
-         v  /tmp/err.lua:5 (throw) <- /tmp/err.lua:2 (task)
+         |  /tmp/err.lua:7 (emit) <- /tmp/err.lua:2 (xtask)
+         v  /tmp/err.lua:5 (throw) <- /tmp/err.lua:2 (xtask)
         ==> attempt to perform arithmetic on a boolean value
     ]])
 end
@@ -273,7 +273,7 @@ do
         local _, err = pcall(function ()
             loop(function ()
                 require "atmos.env.clock"
-                local _ <close> = spawn(true, (function ()
+                local _ <close> = spawn_anon((function ()
                     await(1*_ms_)
                     emit("X")
                 end))
@@ -287,8 +287,8 @@ do
         ==> ERROR:
          |  /tmp/err.lua:2 (loop)
          |  ../atmos/env/clock/init.lua:12 (emit)
-         |  /tmp/err.lua:6 (emit) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:2 (task)
-         v  /tmp/err.lua:9 (throw) <- /tmp/err.lua:2 (task)
+         |  /tmp/err.lua:6 (emit) <- /tmp/err.lua:4 (xtask) <- /tmp/err.lua:2 (xtask)
+         v  /tmp/err.lua:9 (throw) <- /tmp/err.lua:2 (xtask)
         ==> err
     ]])
 end
@@ -298,7 +298,7 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn(function ()
+                spawn_task(task(function ()
                     par_or(
                         function ()
                             throw('err')
@@ -307,7 +307,7 @@ do
                             await(false)
                         end
                     )
-                end)
+                end))
             end)
         end)
         print(err)
@@ -315,7 +315,7 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
          |  /tmp/err.lua:2 (loop)
-         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (xtask) <- /tmp/err.lua:3 (xtask) <- /tmp/err.lua:2 (xtask)
         ==> err
     ]])
 end
@@ -325,7 +325,7 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn(function ()
+                spawn_task(task(function ()
                     par_and(
                         function ()
                             throw('err')
@@ -334,7 +334,7 @@ do
                             await(false)
                         end
                     )
-                end)
+                end))
             end)
         end)
         print(err)
@@ -342,7 +342,7 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
          |  /tmp/err.lua:2 (loop)
-         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (xtask) <- /tmp/err.lua:3 (xtask) <- /tmp/err.lua:2 (xtask)
         ==> err
     ]])
 end
@@ -352,13 +352,13 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn(function ()
+                spawn_task(task(function ()
                     watching(true,
                         function ()
                             throw('err')
                         end
                     )
-                end)
+                end))
             end)
         end)
         print(err)
@@ -366,7 +366,7 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
          |  /tmp/err.lua:2 (loop)
-         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (xtask) <- /tmp/err.lua:3 (xtask) <- /tmp/err.lua:2 (xtask)
         ==> err
     ]])
 end
@@ -376,13 +376,13 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn(function ()
+                spawn_task(task(function ()
                     toggle('X',
                         function ()
                             throw('err')
                         end
                     )
-                end)
+                end))
             end)
         end)
         print(err)
@@ -390,7 +390,7 @@ do
     assertx(trim(out), trim [[
         ==> ERROR:
          |  /tmp/err.lua:2 (loop)
-         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (task) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+         v  /tmp/err.lua:6 (throw) <- /tmp/err.lua:4 (xtask) <- /tmp/err.lua:3 (xtask) <- /tmp/err.lua:2 (xtask)
         ==> err
     ]])
 end
@@ -403,9 +403,9 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn(function ()
+                spawn_task(task(function ()
                     return throw('err')
-                end)
+                end))
             end)
         end)
         print(err)
@@ -413,7 +413,7 @@ do
     assertfx(trim(out), trim [[
         ==> ERROR:
          |  /tmp/err.lua:2 %(loop%)
-         v  ../atmos/run.lua:%d+ %(throw%) <%- /tmp/err.lua:3 %(task%) <%- /tmp/err.lua:2 %(task%)
+         v  ../atmos/run.lua:%d+ %(throw%) <%- /tmp/err.lua:3 %(xtask%) <%- /tmp/err.lua:2 %(xtask%)
         ==> err
     ]])
 end
@@ -423,7 +423,7 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn(function ()
+                spawn_task(task(function ()
                     par_or(
                         function ()
                             return throw('err')
@@ -432,7 +432,7 @@ do
                             await(false)
                         end
                     )
-                end)
+                end))
             end)
         end)
         print(err)
@@ -440,7 +440,7 @@ do
     assertfx(trim(out), trim [[
         ==> ERROR:
          |  /tmp/err.lua:2 %(loop%)
-         v  ../atmos/run.lua:%d+ %(throw%) <%- /tmp/err.lua:4 %(task%) <%- /tmp/err.lua:3 %(task%) <%- /tmp/err.lua:2 %(task%)
+         v  ../atmos/run.lua:%d+ %(throw%) <%- /tmp/err.lua:4 %(xtask%) <%- /tmp/err.lua:3 %(xtask%) <%- /tmp/err.lua:2 %(xtask%)
         ==> err
     ]])
 end

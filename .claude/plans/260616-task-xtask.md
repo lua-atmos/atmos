@@ -192,7 +192,9 @@ tested, not just the happy path.
 |               | `(task)`->`(xtask)`.                                      |
 | tst/par.lua   | DONE: outer spawn -> spawn_task(task(..)); par*/watching |
 |               | arg-fns kept raw; pins :51/:60 intact.                   |
-| others        | TODO: spawn sweep (errors, streams, thread, envs,        |
+| tst/errors.lua| DONE: heredoc-code spawns swept (verified via load());   |
+|               | expected trace labels `(task)`->`(xtask)`, `(tasks)` kept.|
+| others        | TODO: spawn sweep (streams, thread, envs,                |
 |               | readme, guide); x.lua already clean                       |
 |               | -------                                                   |
 | docs          | TODO: api.md (task/xtask/spawn_task/spawn_anon/tostring)  |
