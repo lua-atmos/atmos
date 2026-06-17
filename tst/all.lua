@@ -1,3 +1,5 @@
+print "===== PROTO ====="
+dofile "proto.lua"
 print "===== TASK ====="
 dofile "task.lua"
 print "===== AWAIT ====="

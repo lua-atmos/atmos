@@ -144,6 +144,26 @@ Deferred (wording, with the `tst/` sweep): `abort`/`toggle`
 | `task()` (me)           | `xtask()`                      |
 | `_is_(t, 'task')`       | `_is_(t, 'xtask')`             |
 
+### 2.5 tst/ sweep (lua-atmos) — IN PROGRESS
+
+Strategy: file-by-file; user runs the suite after each. New errors are
+tested, not just the happy path.
+
+| file          | status                                                   |
+|---------------|----------------------------------------------------------|
+| tst/proto.lua | NEW: proto/instance/me, spawn, `__tostring`, 4 failures  |
+| tst/all.lua   | registers `proto.lua` first (before unmigrated task.lua) |
+| tst/task.lua  | TODO: ~40 `spawn(rawfn)`->`spawn(task(rawfn))`; `task()`->|
+|               | `xtask()` (l.300..434); assert l.556 -> "transparent     |
+|               | task prototype"; keep l.54 (proto+spawn), l.330 (err)    |
+| tst/toggle.lua| TODO: l.18,47 target -> `xtask(task(...))`; spawn sweep   |
+| tst/abort.lua | TODO: l.40 `task()`->`xtask()`; spawn sweep               |
+| tst/guide.lua | TODO: l.215,225 `task()`->`xtask()`; spawn sweep          |
+| others        | TODO: spawn(rawfn) sweep (par, tasks, errors, ...)        |
+
+Sweep rule: `spawn(rawfn)` / `spawn(false, rawfn)` -> `spawn(task(rawfn))`;
+`par*`/`watching`/`every` args stay raw (transparent). 226 sites total.
+
 ## 3. Compiler — atmos (this repo, lands SECOND)
 
 Because the runtime is prepared natively, the compiler layer needs **no
