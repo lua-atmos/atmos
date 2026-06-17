@@ -179,10 +179,21 @@ tested, not just the happy path.
 | tst/task.lua  | DONE: ~40 `spawn(rawfn)`->`spawn(task(rawfn))`; `task()`->|
 |               | `xtask()`; assert l.561 -> "transparent task prototype"; |
 |               | kept l.54 (proto+spawn), l.330/556 (err). luac -p clean. |
-| tst/toggle.lua| TODO: l.18,47 target -> `xtask(task(...))`; spawn sweep   |
+| tst/toggle.lua| DONE: spawn sweep; instance cases -> `xtask(task(..))`    |
+|               | (toggle 2/3); toggle string-form bodies kept raw.        |
 | tst/abort.lua | TODO: l.40 `task()`->`xtask()`; spawn sweep               |
 | tst/guide.lua | TODO: l.215,225 `task()`->`xtask()`; spawn sweep          |
-| others        | TODO: spawn(rawfn) sweep (par, tasks, errors, ...)        |
+| tst/await.lua | DONE: all opaque -> `spawn_task(task(..))`; `spawn_in`  |
+|               | -> `spawn_in(ts, task(..))`. luac clean, l.300 pin kept. |
+| tst/tasks.lua | DONE: spawn/spawn_in sweep; pool tostring assert -> tasks:|
+|               | 0x; trace labels `(task)`->`(xtask)`; `task()`->`xtask()`.|
+| tst/abort.lua | DONE: spawn/spawn_in sweep; `task()`->`xtask()`.          |
+| tst/others.lua| DONE: spawn/spawn_anon/pcall-forms sweep; trace labels    |
+|               | `(task)`->`(xtask)`.                                      |
+| others        | TODO: spawn sweep (par, guide, errors,                   |
+|               | streams, thread, envs, readme); x.lua already clean       |
+|               | -------                                                   |
+| docs          | TODO: api.md (task/xtask/spawn_task/spawn_anon/tostring)  |
 
 Sweep rule: `spawn(rawfn)` / `spawn(false, rawfn)` -> `spawn(task(rawfn))`;
 `par*`/`watching`/`every` args stay raw (transparent). 226 sites total.

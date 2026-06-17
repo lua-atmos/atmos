@@ -5,10 +5,10 @@ print "--- AWAIT / _OR_ ---"
 
 do
     print("Testing...", "await or 1")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await({tag='or', 'X', 'Y'})
         out(v.tag,v[1])
-    end)
+    end))
     emit { tag='Y', 10 }
     assertx(out(), "Y\t10\n")
     atmos.stop()
@@ -16,10 +16,10 @@ end
 
 do
     print("Testing...", "await or 2")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await {tag='or', {tag='Y',5}, {tag='Y',10}}
         out(v.tag, v[1])
-    end)
+    end))
     emit{tag='Y',10}
     assertx(out(), "Y\t10\n")
     atmos.stop()
@@ -27,14 +27,14 @@ end
 
 do
     print("Testing...", "await or 3: task")
-    spawn(function ()
-        local t = spawn(function ()
+    spawn_task(task(function ()
+        local t = spawn_task(task(function ()
             await 'X'
             return 10
-        end)
+        end))
         local v,u = await {tag='or', t, 'X'}
         out(v,u==t)
-    end)
+    end))
     emit 'X'
     assertx(out(), "10\ttrue\n")
     atmos.stop()
@@ -42,14 +42,14 @@ end
 
 do
     print("Testing...", "await or 4: tasks")
-    spawn(function ()
+    spawn_task(task(function ()
         local ts = tasks()
-        local t = spawn_in(ts, function ()
+        local t = spawn_in(ts, task(function ()
             return await 'X'
-        end)
+        end))
         local v,u,q = await {tag='or', {tag='tasks', mode='any', tasks=ts}, 'X'}
         out(v=='X',u==t,q==ts)
-    end)
+    end))
     emit 'X'
     assertx(out(), "true\ttrue\ttrue\n")
     atmos.stop()
@@ -57,10 +57,10 @@ end
 
 do
     print("Testing...", "await or 5: clock")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await {tag='or', 'X', 1*_s_}
         out(v)
-    end)
+    end))
     emit(510*_ms_)
     emit(515*_ms_)
     emit 'X'
@@ -72,10 +72,10 @@ print "--- AWAIT / _AND_ ---"
 
 do
     print("Testing...", "await and 1")
-    spawn(function ()
+    spawn_task(task(function ()
         local v,u = await({tag='and', 'X', 'Y'})
         out(v.tag, u.tag)
-    end)
+    end))
     emit{tag='Y',10}
     emit{tag='X',20}
     assertx(out(), "X\tY\n")
@@ -84,10 +84,10 @@ end
 
 do
     print("Testing...", "await and 2")
-    spawn(function ()
+    spawn_task(task(function ()
         local v,u = await {tag='and', 'Y', 'Y'}
         out(v,u)
-    end)
+    end))
     emit('Y')
     assertx(out(), "Y\tY\n")
     atmos.stop()
@@ -95,14 +95,14 @@ end
 
 do
     print("Testing...", "await and 3: task")
-    spawn(function ()
-        local t = spawn(function ()
+    spawn_task(task(function ()
+        local t = spawn_task(task(function ()
             await 'X'
             return 10
-        end)
+        end))
         local v,u = await {tag='and', t, 'X'}
         out(v,u)
-    end)
+    end))
     emit 'X'
     assertx(out(), "10\tX\n")
     atmos.stop()
@@ -110,14 +110,14 @@ end
 
 do
     print("Testing...", "await and 4: tasks")
-    spawn(function ()
+    spawn_task(task(function ()
         local ts = tasks()
-        local t = spawn_in(ts, function ()
+        local t = spawn_in(ts, task(function ()
             return await 'X'
-        end)
+        end))
         local v,u = await {tag='and', {tag='tasks', mode='any', tasks=ts}, 'X'}
         out(v=='X', u)
-    end)
+    end))
     emit 'X'
     assertx(out(), "true\tX\n")
     atmos.stop()
@@ -125,10 +125,10 @@ end
 
 do
     print("Testing...", "await and 5: clock")
-    spawn(function ()
+    spawn_task(task(function ()
         local v,u = await {tag='and', 'X', 1*_s_}
         out(v, u)
-    end)
+    end))
     emit(510*_ms_)
     emit(515*_ms_)
     emit 'X'
@@ -140,17 +140,17 @@ print '--- AND / OR ---'
 
 do
     print("Testing...", "await and/or: clock")
-    spawn(function ()
+    spawn_task(task(function ()
         local ts = tasks()
-        local t = spawn_in(ts, function ()
+        local t = spawn_in(ts, task(function ()
             await(false)
-        end)
-        local T = spawn_in(ts, function ()
+        end))
+        local T = spawn_in(ts, task(function ()
             return await('Z')
-        end)
+        end))
         local v,u = await {tag='and', {tag='or', 'X', 1*_s_}, {tag='or', {tag='tasks', mode='any', tasks=ts}, t}}
         out(v, u=='Z')
-    end)
+    end))
     emit(510*_ms_)
     emit 'Z'
     emit(515*_ms_)
@@ -162,10 +162,10 @@ print "--- AWAIT / _NOT_ ---"
 
 do
     print("Testing...", "await not 1")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await {tag='not', 'X'}
         out(v.tag, v[1])
-    end)
+    end))
     emit{tag='X', 99}
     emit{tag='Y', 10}
     assertx(out(), "Y\t10\n")
@@ -174,10 +174,10 @@ end
 
 do
     print("Testing...", "await not 2: in or")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await {tag='or', {tag='not', 'X'}, 'Y'}
         out(v.tag, v[1])
-    end)
+    end))
     emit 'X'
     emit{tag='Z', 5}
     assertx(out(), "Z\t5\n")
@@ -186,15 +186,15 @@ end
 
 do
     print("Testing...", "await not 3: nested emit must not shadow outer")
-    spawn(function ()
+    spawn_task(task(function ()
         await 'X'
         emit_in('global', 'Y')
         await(false)
-    end)
-    spawn(function ()
+    end))
+    spawn_task(task(function ()
         local v = await {tag='not', 'Y'}
         out(v.tag, v[1])
-    end)
+    end))
     emit{tag='X', 7}
     assertx(out(), "X\t7\n")
     atmos.stop()
@@ -204,10 +204,10 @@ print "--- AWAIT / _UNTIL_ ---"
 
 do
     print("Testing...", "await while 1: pred false -> event")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await {tag='while', 'X', function (e) return e[1]~=10 end}
         out(v.tag, v[1])
-    end)
+    end))
     emit{tag='X', 10}
     assertx(out(), "X\t10\n")
     atmos.stop()
@@ -215,10 +215,10 @@ end
 
 do
     print("Testing...", "await while 2: pred true -> re-await next")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await {tag='while', 'X', function (e) return e[1]~=10 end}
         out(v[1])
-    end)
+    end))
     emit{tag='X', 5}
     emit{tag='X', 10}
     assertx(out(), "10\n")
@@ -227,13 +227,13 @@ end
 
 do
     print("Testing...", "await until 3: many preds, all hold")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await {tag='until', 'X',
             function (e) return e[1]>0 end,
             function (e) return e[1]<100 end
         }
         out(v[1])
-    end)
+    end))
     emit{tag='X', 50}
     assertx(out(), "50\n")
     atmos.stop()
@@ -241,13 +241,13 @@ end
 
 do
     print("Testing...", "await until 4: many preds, one false")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await {tag='until', 'X',
             function (e) return e[1]>0 end,
             function (e) return e[1]<100 end
         }
         out(v[1])
-    end)
+    end))
     emit{tag='X', 200}
     emit{tag='X', 50}
     assertx(out(), "50\n")
@@ -256,12 +256,12 @@ end
 
 do
     print("Testing...", "await while 5: over or (full matching reused)")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await {tag='while', {tag='or', 'X', 'Y'},
             function (e) return e[1]~=9 end
         }
         out(v.tag, v[1])
-    end)
+    end))
     emit{tag='X', 1}
     emit{tag='Y', 9}
     assertx(out(), "Y\t9\n")
@@ -270,10 +270,10 @@ end
 
 do
     print("Testing...", "await until 6: pred returns x -> result is x")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await {tag='until', 'X', function (e) return e[1]*2 end}
         out(v)
-    end)
+    end))
     emit{tag='X', 21}
     assertx(out(), "42\n")
     atmos.stop()
@@ -281,13 +281,13 @@ end
 
 do
     print("Testing...", "await until 7: last pred decides result")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await {tag='until', 'X',
             function (e) return e[1]>0 end,
             function (e) return e[1]*2 end
         }
         out(v)
-    end)
+    end))
     emit{tag='X', 21}
     assertx(out(), "42\n")
     atmos.stop()
@@ -296,9 +296,9 @@ end
 do
     print("Testing...", "await until 8: error: no predicate")
     local _,err = pcall(function ()
-        spawn(function ()
+        spawn_task(task(function ()
             await {tag='until', 'X'}
-        end)
+        end))
     end)
     assertfx(err, "await.lua:300: invalid await : expected predicate")
     atmos.stop()
@@ -306,14 +306,14 @@ end
 
 do
     print("Testing...", "await until 9: nested emit must not shadow outer")
-    spawn(function ()
+    spawn_task(task(function ()
         await 'X'
         emit_in('global', {tag='X', 2})
-    end)
-    spawn(function ()
+    end))
+    spawn_task(task(function ()
         local v = await {tag='until', 'X', function (e) return e[1]==1 end}
         out(v[1])
-    end)
+    end))
     emit{tag='X', 1}
     assertx(out(), "1\n")
     atmos.stop()
@@ -324,10 +324,10 @@ print "--- AWAIT / CLOCK ---"
 -- basic: wakes on the next numeric emit, returns the delta
 do
     print("Testing...", "await clock 1")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await('clock')
         out(v)
-    end)
+    end))
     emit(510*_ms_)
     assertx(out(), "510000\n")
     atmos.stop()
@@ -336,10 +336,10 @@ end
 -- ignores non-numbers: a string emit (even 'clock') does NOT match
 do
     print("Testing...", "await clock 2: ignores non-number")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = await('clock')
         out(v)
-    end)
+    end))
     emit('X')
     emit('clock')
     emit(7*_us_)
@@ -350,7 +350,7 @@ end
 -- every('clock'): per-tick deltas accumulate
 do
     print("Testing...", "every clock")
-    spawn(function ()
+    spawn_task(task(function ()
         local n = 0
         every('clock', function (us)
             n = n + us
@@ -359,7 +359,7 @@ do
             end
         end)
         out(n)
-    end)
+    end))
     emit(10)
     emit(10)
     emit(10)

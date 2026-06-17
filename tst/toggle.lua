@@ -15,7 +15,7 @@ end
 do
     print("Testing...", "toggle 2")
     local _,err = pcall(function ()
-        local f = task(function () end)
+        local f = xtask(task(function () end))
         toggle(f)
     end)
     assertfx(err, "toggle.lua:%d+: invalid toggle : expected bool argument")
@@ -27,7 +27,7 @@ do
     --local _,err = pcall(function ()
         function T ()
         end
-        local t = spawn (T)
+        local t = spawn_task(task(T))
         toggle (t,false)
         out 'ok'
     --end)
@@ -44,14 +44,14 @@ do
             await(true)
             out '2'
         end
-        local t = task(T)
+        local t = xtask(task(T))
 
         out 'A'
         toggle (t, false)
         emit 'X'
 
         out 'B'
-        spawn (t)
+        spawn_task(t)
         emit 'X'
 
         out 'C'
@@ -69,7 +69,7 @@ do
             await(true)
             out(10)
         end
-        local t = spawn (T)
+        local t = spawn_task(task(T))
         toggle (t, false)
         out(1)
         emit('X')
@@ -92,7 +92,7 @@ do
             await(true)
             out(999)
         end
-        local t <close> = spawn (T)
+        local t <close> = spawn_task(task(T))
         toggle (t, false)
         out(1)
         emit ('')
@@ -106,15 +106,15 @@ do
     print("Testing...", "toggle 6")
     do
         function T ()
-            spawn (function ()
+            spawn_task(task(function ()
                 await('nil')
                 out(3)
-            end)
+            end))
             await('nil')
             out(4)
         end
         out(1)
-        local t = spawn (T)
+        local t = spawn_task(task(T))
         toggle (t,false)
         emit ('nil')
         out(2)
@@ -147,7 +147,7 @@ do
                 end)
             end)
         end
-        spawn (T,0)
+        spawn_task(task(T),0)
         emit{tag='Draw', 1}
         emit{tag='Show', false}
         emit{tag='Show', false}
@@ -163,12 +163,12 @@ end
 do
     print("Testing...", "toggle block 3")
     do
-        spawn (function ()
+        spawn_task(task(function ()
             local x = toggle('Show', function ()
                 return 10
             end)
             out(x)
-        end)
+        end))
         out('ok')
     end
     assertx(out(), "10\nok\n")
@@ -178,7 +178,7 @@ end
 do
     print("Testing...", "toggle block 4: error")
     do
-        spawn (function ()
+        spawn_task(task(function ()
             local x,v = catch('err', function ()
                 toggle('Show', function ()
                     await(true)
@@ -186,7 +186,7 @@ do
                 end)
             end)
             out(x, v)
-        end)
+        end))
         emit()
         out('ok')
     end
@@ -200,12 +200,12 @@ do
     print("Testing...", "filter 1: task form")
     do
         function T ()
-            spawn (function ()
+            spawn_task(task(function ()
                 every ('Draw', function () out(10) end)
-            end)
+            end))
             every ('Tick', function () out(20) end)
         end
-        local t = spawn (T)
+        local t = spawn_task(task(T))
         toggle (t, false, 'Draw')
         emit ('Draw')   -- passes filter -> subtree draws
         emit ('Tick')   -- gated -> frozen
@@ -221,13 +221,13 @@ do
     do
         function T ()
             toggle('Show', 'Draw', function ()
-                spawn (function ()
+                spawn_task(task(function ()
                     every('Draw', function (e) out(e[1]) end)
-                end)
+                end))
                 every('Tick', function (e) out(100+e[1]) end)
             end)
         end
-        spawn (T)
+        spawn_task(task(T))
         emit{tag='Draw', 1}     -- on -> draws
         emit{tag='Tick', 1}     -- on -> ticks (101)
         emit{tag='Show', false} -- toggle off, filter 'Draw'
@@ -247,7 +247,7 @@ do
         function T ()
             every ('Draw', function () out(1) end)
         end
-        local t = spawn (T)
+        local t = spawn_task(task(T))
         toggle (t, false, 'Draw')
         emit ('Draw')       -- passes filter
         toggle (t, true)    -- clears filter
@@ -265,13 +265,13 @@ do
     do
         function T ()
             toggle('Show', {tag='not', 'Tick'}, function ()    -- pass all but 'Tick'
-                spawn (function ()
+                spawn_task(task(function ()
                     every('Draw', function (e) out(e[1]) end)
-                end)
+                end))
                 every('Tick', function (e) out(100+e[1]) end)
             end)
         end
-        spawn (T)
+        spawn_task(task(T))
         emit{tag='Show', false} -- off: filter passes everything except 'Tick'
         emit{tag='Draw', 1}     -- passes
         emit{tag='Tick', 1}     -- the one ignored -> frozen
