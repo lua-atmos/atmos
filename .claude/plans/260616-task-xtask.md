@@ -85,7 +85,14 @@ the `tst/` sweep are NOT done -- raw-function spawn still works.
 - `xtask()` / `xtask(T)` absorb the two old overloads of `task()`,
   resolving the constructor/query pun.
 
-### 2.2 `spawn` dispatch
+### 2.2 `spawn` dispatch — DONE (lua-atmos)
+
+`M.spawn` branches: raw function requires `tra` (else "expected task
+prototype"); prototype requires `not tra` (else "transparent task
+prototype"); instance asserted `meta_xtask`. `spawn_in` (`tra=false`)
+rejects raw functions for free.
+
+
 
 `tra` is still required — `par*`/`watching`/`every` create transparent
 tasks underneath via `run.spawn(true, f, ...)`, which is unchanged.

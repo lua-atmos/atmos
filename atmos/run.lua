@@ -441,13 +441,16 @@ function M.abort (t)
 end
 
 function M.spawn (dbg, up, tra, t, ...)
-    if type(t)=='function' or getmetatable(t)==meta_task then
+    if type(t) == 'function' then
+        -- raw function: only the transparent inline-body path
+        assertn(2, tra, "invalid spawn : expected task prototype")
         t = M.xtask(dbg, tra, t)
-        if t == nil then
-            return nil
-        else
-            return M.spawn(dbg, up, tra, t, ...)
-        end
+        return M.spawn(dbg, up, tra, t, ...)
+    elseif getmetatable(t) == meta_task then
+        -- prototype: never transparent (transparency = no identity)
+        assertn(2, not tra, "invalid spawn : transparent task prototype")
+        t = M.xtask(dbg, tra, t)
+        return M.spawn(dbg, up, tra, t, ...)
     end
     assertn(2, getmetatable(t)==meta_xtask, "invalid spawn : expected task instance")
     assertn(2, t._.tra == tra, "invalid spawn : transparent modifier mismatch")
