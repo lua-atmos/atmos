@@ -194,8 +194,14 @@ tested, not just the happy path.
 |               | arg-fns kept raw; pins :51/:60 intact.                   |
 | tst/errors.lua| DONE: heredoc-code spawns swept (verified via load());   |
 |               | expected trace labels `(task)`->`(xtask)`, `(tasks)` kept.|
-| others        | TODO: spawn sweep (streams, thread, envs,                |
-|               | readme, guide); x.lua already clean                       |
+| streams.lua   | DONE: LIBRARY atmos/streams.lua internal spawns wrapped  |
+|  (lib+test)   | (fr_spawn/Debounce/Buffer/par/xpar -> spawn_task(task)/  |
+|               | spawn_in(ts,task)); test active spawns swept; commented  |
+|               | --[[]] blocks left as-is. (lua-atmos covers §4 streams.) |
+| tst/thread.lua| DONE: outer spawns -> spawn_task(task); lane-isolation    |
+|               | spawn/par_or (forbidden tests) left raw; thread() raw.   |
+| others        | TODO: spawn sweep (envs, readme, guide);                 |
+|               | x.lua already clean                                       |
 |               | -------                                                   |
 | docs          | TODO: api.md (task/xtask/spawn_task/spawn_anon/tostring)  |
 

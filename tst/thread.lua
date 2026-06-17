@@ -17,9 +17,9 @@ end
 do
     print("Testing...", "thread 2: error - no body function")
     local _,err = pcall(function ()
-        spawn(function ()
+        spawn_task(task(function ()
             thread(10)
-        end)
+        end))
     end)
     assertfx(err, "invalid thread : expected body function")
     atmos.stop()
@@ -28,11 +28,11 @@ end
 do
     print("Testing...", "thread 3: error - await in thread")
     local _,err = catch(function ()
-        spawn(function ()
+        spawn_task(task(function ()
             thread(function()
                 await(false)
             end)
-        end)
+        end))
         os.execute("sleep 0.1")
         emit()
     end)
@@ -44,11 +44,11 @@ print "--- THREAD / BASIC ---"
 
 do
     print("Testing...", "thread 3: basic - no return")
-    spawn(function ()
+    spawn_task(task(function ()
         thread(function ()
         end)
         out("done")
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "done\n")
@@ -57,12 +57,12 @@ end
 
 do
     print("Testing...", "thread 4: basic - return value")
-    spawn(function ()
+    spawn_task(task(function ()
         local v,x = thread(function ()
             return 42, 99
         end)
         out(v,x)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "42\t99\n")
@@ -71,13 +71,13 @@ end
 
 do
     print("Testing...", "thread 5: parameters - upvalues")
-    spawn(function ()
+    spawn_task(task(function ()
         local data, factor = 10, 3
         local v = thread(function ()
             return data * factor
         end)
         out(v)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "30\n")
@@ -86,7 +86,7 @@ end
 
 do
     print("Testing...", "thread 6: parameters - table copy")
-    spawn(function ()
+    spawn_task(task(function ()
         local t = { 1, 2, 3 }
         local v = thread(function ()
             local sum = 0
@@ -96,7 +96,7 @@ do
             return sum
         end)
         out(v)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "6\n")
@@ -105,13 +105,13 @@ end
 
 do
     print("Testing...", "thread 7: string operations (string lib available)")
-    spawn(function ()
+    spawn_task(task(function ()
         local s = "hello world"
         local v = thread(function ()
             return string.upper(s)
         end)
         out(v)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "HELLO WORLD\n")
@@ -120,13 +120,13 @@ end
 
 do
     print("Testing...", "thread 8: math operations (math lib available)")
-    spawn(function ()
+    spawn_task(task(function ()
         local n = 9
         local v = thread(function ()
             return math.sqrt(n)
         end)
         out(v)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "3.0\n")
@@ -137,7 +137,7 @@ print "--- THREAD / UPVALUES ---"
 
 do
     print("Testing...", "thread 9: upvalue - pure function")
-    spawn(function ()
+    spawn_task(task(function ()
         local function double (n)
             return n * 2
         end
@@ -145,7 +145,7 @@ do
             return double(21)
         end)
         out(v)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "42\n")
@@ -154,14 +154,14 @@ end
 
 do
     print("Testing...", "thread 10: upvalue - value")
-    spawn(function ()
+    spawn_task(task(function ()
         local multiplier = 3
         local n = 10
         local v = thread(function ()
             return n * multiplier
         end)
         out(v)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "30\n")
@@ -174,11 +174,11 @@ do
     print("Testing...",
         "thread 11: error inside lane propagates")
     local _,err = pcall(function ()
-        spawn(function ()
+        spawn_task(task(function ()
             thread(function ()
                 error("lane error")
             end)
-        end)
+        end))
         os.execute("sleep 0.1")
         emit()
     end)
@@ -191,7 +191,7 @@ print "--- THREAD / LIFECYCLE ---"
 do
     print("Testing...",
         "thread 12: parent task suspends during thread")
-    spawn(function ()
+    spawn_task(task(function ()
         out("before")
         thread(function ()
             local sum = 0
@@ -201,7 +201,7 @@ do
             return sum
         end)
         out("after")
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "before\nafter\n")
@@ -210,7 +210,7 @@ end
 
 do
     print("Testing...", "thread 13: sequential threads")
-    spawn(function ()
+    spawn_task(task(function ()
         local a = thread(function ()
             return 10 + 1
         end)
@@ -218,7 +218,7 @@ do
             return 20 + 2
         end)
         out(a, b)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     os.execute("sleep 0.1")
@@ -229,7 +229,7 @@ end
 
 do
     print("Testing...", "thread 14: thread inside par_or")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = par_or(
             function ()
                 return thread(function ()
@@ -241,7 +241,7 @@ do
             end
         )
         out(v)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "from thread\n")
@@ -252,7 +252,7 @@ print "--- THREAD / ISOLATION ---"
 
 do
     print("Testing...", "thread 15: table isolation - mutation in lane does not affect parent")
-    spawn(function ()
+    spawn_task(task(function ()
         local t = { 1, 2, 3 }
         local v = thread(function ()
             t[1] = 999
@@ -260,7 +260,7 @@ do
         end)
         out(v)
         out(t[1])
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "999\n1\n")
@@ -271,14 +271,14 @@ print "--- THREAD / REUSE ---"
 
 do
     print("Testing...", "thread 16: prototype reuse (same fn, multiple calls)")
-    spawn(function ()
+    spawn_task(task(function ()
         local function square (n)
             return n * n
         end
         local a = thread(function () return square(3) end)
         local b = thread(function () return square(7) end)
         out(a, b)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     os.execute("sleep 0.1")
@@ -289,7 +289,7 @@ end
 
 do
     print("Testing...", "thread 17: cache hit with updated upvalue")
-    spawn(function ()
+    spawn_task(task(function ()
         local x = 10
         local function compute (n) return n + x end
 
@@ -299,7 +299,7 @@ do
         x = 20
         local b = thread(function () return compute(5) end)
         out(b)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     os.execute("sleep 0.1")
@@ -314,11 +314,11 @@ do
     print("Testing...",
         "thread 18: await forbidden inside thread")
     local _,err = pcall(function ()
-        spawn(function ()
+        spawn_task(task(function ()
             thread(function ()
                 await(true)
             end)
-        end)
+        end))
         os.execute("sleep 0.1")
         emit()
     end)
@@ -330,11 +330,11 @@ do
     print("Testing...",
         "thread 19: spawn forbidden inside thread")
     local _,err = pcall(function ()
-        spawn(function ()
+        spawn_task(task(function ()
             thread(function ()
                 spawn(function () end)
             end)
-        end)
+        end))
         os.execute("sleep 0.1")
         emit()
     end)
@@ -346,14 +346,14 @@ do
     print("Testing...",
         "thread 20: par_or forbidden inside thread")
     local _,err = pcall(function ()
-        spawn(function ()
+        spawn_task(task(function ()
             thread(function ()
                 par_or(
                     function () end,
                     function () end
                 )
             end)
-        end)
+        end))
         os.execute("sleep 0.1")
         emit()
     end)
@@ -365,7 +365,7 @@ print "--- THREAD / CANCEL ---"
 
 do
     print("Testing...", "thread 21: cancel - par_or cancels sleeping thread")
-    spawn(function ()
+    spawn_task(task(function ()
         local cleaned = false
         local v = par_or(
             function ()
@@ -383,7 +383,7 @@ do
         )
         out(v)
         out(cleaned)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit()
     assertx(out(), "fast\ntrue\n")
@@ -392,7 +392,7 @@ end
 
 do
     print("Testing...", "thread 22: cancel - watching cancels sleeping thread")
-    spawn(function ()
+    spawn_task(task(function ()
         local cleaned = false
         local v = watching("stop",
             function ()
@@ -407,7 +407,7 @@ do
         )
         out(v)
         out(cleaned)
-    end)
+    end))
     os.execute("sleep 0.1")
     emit("stop")
     assertx(out(), "stop\ntrue\n")
@@ -417,8 +417,8 @@ end
 do
     print("Testing...", "thread 23: cancel - parent death cancels thread")
     local cleaned = false
-    spawn(function ()
-        spawn(function ()
+    spawn_task(task(function ()
+        spawn_task(task(function ()
             local _ <close> = defer(function ()
                 cleaned = true
             end)
@@ -426,9 +426,9 @@ do
                 os.execute("sleep 1")
                 return "slow"
             end)
-        end)
+        end))
         out("parent done")
-    end)
+    end))
     out(cleaned)
     assertx(out(), "parent done\ntrue\n")
     atmos.stop()
@@ -436,7 +436,7 @@ end
 
 do
     print("Testing...", "thread 24: cancel - defer fires inside lane body")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = thread(function ()
             local log = { "start" }
             do
@@ -452,7 +452,7 @@ do
             return table.concat(log, ",")
         end)
         out(v)
-    end)
+    end))
     os.execute("sleep 0.3")
     emit()
     assertx(out(), "start,done,cleanup\n")
