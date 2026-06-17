@@ -329,7 +329,7 @@ function M.loop (body, ...)
         local _ <close> = M.defer(function ()
             M.stop()
         end)
-        local t <close> = M.spawn(debug.getinfo(4), nil, false, body, ...)
+        local t <close> = M.spawn(debug.getinfo(4), nil, false, M.task(debug.getinfo(4), body), ...)
         while true do
             if coroutine.status(t._.th) == 'dead' then
                 break
@@ -352,7 +352,7 @@ end
 function M.start (body, ...)
     assertn(2, type(body)=='function', "invalid start : expected body function")
     assertn(2, #_envs_==1 and _envs_[1].mode==nil, "invalid start : expected single-mode env only")
-    M.spawn(debug.getinfo(2), nil, false, body, ...)
+    M.spawn(debug.getinfo(2), nil, false, M.task(debug.getinfo(2), body), ...)
 end
 
 function M.stop ()
@@ -391,7 +391,7 @@ end
 
 -- prototype: bless any function into a non-callable spawnable value
 function M.task (dbg, f)
-    assertn(2, type(f)=='function', "invalid task : expected function")
+    assertn(3, type(f)=='function', "invalid task : expected function")
     return setmetatable({
         _ = {
             dbg = {file=dbg.short_src, line=dbg.currentline},
@@ -456,7 +456,7 @@ function M.spawn (dbg, up, tra, t, ...)
         t = M.xtask(dbg, tra, t)
         return M.spawn(dbg, up, tra, t, ...)
     end
-    assertn(2, getmetatable(t)==meta_xtask, "invalid spawn : expected task instance")
+    assertn(2, getmetatable(t)==meta_xtask, "invalid spawn : expected task prototype")
     assertn(2, t._.tra == tra, "invalid spawn : transparent modifier mismatch")
 
     up = up or M.me(true) or TASKS
@@ -543,7 +543,7 @@ function M.await (time, awt, ...)
             end
         end
     elseif S.is(awt) then
-        return M.await(time, spawn(function() return awt() end))
+        return M.await(time, M.spawn(debug.getinfo(2), nil, false, M.task(debug.getinfo(2), function () return awt() end)))
     end
 
     local mta = getmetatable(awt)

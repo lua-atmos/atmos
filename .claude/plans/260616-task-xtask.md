@@ -85,12 +85,34 @@ the `tst/` sweep are NOT done -- raw-function spawn still works.
 - `xtask()` / `xtask(T)` absorb the two old overloads of `task()`,
   resolving the constructor/query pun.
 
+### 2.2b spawn split — DONE (lua-atmos)
+
+Public `spawn(tra,…)` boolean removed; replaced by two named wrappers
+(intent-in-name, like task/xtask):
+
+| call               | tra   | accepts                         |
+|--------------------|-------|---------------------------------|
+| `spawn_task(t,…)`  | false | prototype or instance (opaque)  |
+| `spawn_anon(f,…)`  | true  | raw function (transparent body) |
+| `spawn_in(ts,t,…)` | false | prototype into a pool (kept)    |
+
+`run.spawn` keeps `tra` internally (no dispatch change). Errors:
+`spawn_task(rawfn)` -> "expected task prototype"; `spawn_anon(proto)`
+-> "transparent task prototype". Combinators unchanged.
+
 ### 2.2 `spawn` dispatch — DONE (lua-atmos)
 
 `M.spawn` branches: raw function requires `tra` (else "expected task
 prototype"); prototype requires `not tra` (else "transparent task
 prototype"); instance asserted `meta_xtask`. `spawn_in` (`tra=false`)
 rejects raw functions for free.
+
+Internal raw-fn spawns also had to bless their body (§2.2 fallout):
+`M.loop`, `M.start`, and the `await(stream)` path now wrap body in
+`M.task(...)` before `M.spawn(..., false, ...)`. Final spawn-assert
+message unified to "expected task prototype" (so `spawn()` / garbage
+read the same). `M.task` keeps `assertn(3)` (no file:line prefix, as
+before).
 
 
 
@@ -151,11 +173,12 @@ tested, not just the happy path.
 
 | file          | status                                                   |
 |---------------|----------------------------------------------------------|
-| tst/proto.lua | NEW: proto/instance/me, spawn, `__tostring`, 4 failures  |
+| tst/proto.lua | NEW + split: `spawn_task`/`spawn_anon`, `__tostring`, 5 fail |
+| atmos/init.lua| spawn split: `spawn_task` + `spawn_anon`; bare `spawn` gone |
 | tst/all.lua   | registers `proto.lua` first (before unmigrated task.lua) |
-| tst/task.lua  | TODO: ~40 `spawn(rawfn)`->`spawn(task(rawfn))`; `task()`->|
-|               | `xtask()` (l.300..434); assert l.556 -> "transparent     |
-|               | task prototype"; keep l.54 (proto+spawn), l.330 (err)    |
+| tst/task.lua  | DONE: ~40 `spawn(rawfn)`->`spawn(task(rawfn))`; `task()`->|
+|               | `xtask()`; assert l.561 -> "transparent task prototype"; |
+|               | kept l.54 (proto+spawn), l.330/556 (err). luac -p clean. |
 | tst/toggle.lua| TODO: l.18,47 target -> `xtask(task(...))`; spawn sweep   |
 | tst/abort.lua | TODO: l.40 `task()`->`xtask()`; spawn sweep               |
 | tst/guide.lua | TODO: l.215,225 `task()`->`xtask()`; spawn sweep          |

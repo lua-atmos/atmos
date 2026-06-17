@@ -40,12 +40,12 @@ function spawn_in (up, t, ...)
     return run.spawn(debug.getinfo(2), up, false, t, ...)
 end
 
-function spawn (tra, t, ...)
-    if type(tra) == 'boolean' then
-        return run.spawn(debug.getinfo(2), nil, tra, t, ...)
-    else
-        return run.spawn(debug.getinfo(2), nil, false, tra, t, ...)
-    end
+function spawn_task (t, ...)
+    return run.spawn(debug.getinfo(2), nil, false, t, ...)
+end
+
+function spawn_anon (f, ...)
+    return run.spawn(debug.getinfo(2), nil, true, f, ...)
 end
 
 function emit_in (to, emt, ...)
