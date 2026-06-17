@@ -5,11 +5,11 @@ print '--- PAR ---'
 
 do
     print("Testing...", "par 1")
-    spawn (function ()
+    spawn_task(task(function ()
         par (
             function () end
         )
-    end)
+    end))
     out("ok")
     assertx(out(), "ok\n")
     atmos.stop()
@@ -17,7 +17,7 @@ end
 
 do
     print("Testing...", "par 2")
-    spawn (function ()
+    spawn_task(task(function ()
         par (
             function ()
                 while true do
@@ -35,7 +35,7 @@ do
                 end
             end
         )
-    end)
+    end))
     emit 'X'
     emit 'Z'
     emit 'Z'
@@ -47,9 +47,9 @@ end
 do
     print("Testing...", "par 3: err")
     local _,err = pcall(function ()
-        spawn (function ()
+        spawn_task(task(function ()
             par(10)
-        end)
+        end))
     end)
     assertfx(err, "par.lua:51: invalid par : expected task prototype")
 end
@@ -66,7 +66,7 @@ print '--- PAR_OR ---'
 
 do
     print("Testing...", "par_or 1")
-    spawn(function ()
+    spawn_task(task(function ()
         par_or (
             function ()
                 local e = await('X')
@@ -78,7 +78,7 @@ do
             end
         )
         out('ok')
-    end)
+    end))
     emit{tag='Y',10}
     emit('X')
     assertx(out(), "Y\t10\nok\n")
@@ -87,7 +87,7 @@ end
 
 do
     print("Testing...", "par_or 2")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = par_or (
             function ()
                 return await('X')
@@ -98,7 +98,7 @@ do
             end
         )
         out(v)
-    end)
+    end))
     emit('Z')
     emit{tag='Y', 10}
     assertx(out(), "10\n")
@@ -107,7 +107,7 @@ end
 
 do
     print("Testing...", "par_or 3")
-    spawn(function ()
+    spawn_task(task(function ()
         local v = par_or (
             function ()
                 return await('X')
@@ -117,14 +117,14 @@ do
             end
         )
         out(v)
-    end)
+    end))
     assertx(out(), "Y\n")
     atmos.stop()
 end
 
 do
     print("Testing...", "par_or 4")
-    spawn (function ()
+    spawn_task(task(function ()
         par_or (
             function ()
                 await 'X'
@@ -135,7 +135,7 @@ do
                 out 'no'
             end
         )
-    end)
+    end))
     emit 'X'
     assertx(out(), "ok\n")
     atmos.stop()
@@ -143,7 +143,7 @@ end
 
 do
     print("Testing...", "par_or 5")
-    spawn (function ()
+    spawn_task(task(function ()
         par_or (
             function ()
                 await(true)
@@ -154,7 +154,7 @@ do
                 out 'no'
             end
         )
-    end)
+    end))
     emit()
     assertx(out(), "ok\n")
     atmos.stop()
@@ -189,7 +189,7 @@ print '--- PAR_AND ---'
 
 do
     print("Testing...", "par_and 1")
-    spawn(function ()
+    spawn_task(task(function ()
         par_and (
             function ()
                 out(await('X'))
@@ -200,7 +200,7 @@ do
             end
         )
         out('ok')
-    end)
+    end))
     emit{tag='Y',10}
     emit('X')
     assertx(out(), "Y\t10\nX\nok\n")
@@ -209,7 +209,7 @@ end
 
 do
     print("Testing...", "par_and 2")
-    spawn(function ()
+    spawn_task(task(function ()
         local x,y = par_and (
             function ()
                 return await('X')
@@ -220,7 +220,7 @@ do
             end
         )
         out(x,y)
-    end)
+    end))
     emit('Z')
     emit{tag='Y', 10}
     emit('X')
@@ -230,7 +230,7 @@ end
 
 do
     print("Testing...", "par_and 3")
-    spawn(function ()
+    spawn_task(task(function ()
         local x,y = par_and (
             function ()
                 return await('X')
@@ -240,7 +240,7 @@ do
             end
         )
         out(x,y)
-    end)
+    end))
     emit 'X'
     assertx(out(), "X\tY\n")
     atmos.stop()
@@ -250,14 +250,14 @@ print '--- WATCHING ---'
 
 do
     print("Testing...", "watching 1")
-    spawn (function ()
+    spawn_task(task(function ()
         local v = watching (true,
             function ()
                 await(false)
             end
         )
         out(v)
-    end)
+    end))
     emit 'X'
     assertx(out(), "X\n")
     atmos.stop()
@@ -265,7 +265,7 @@ end
 
 do
     print("Testing...", "watching 2 (par_or)")
-    spawn (function ()
+    spawn_task(task(function ()
         local v = par_or (
             function ()
                 return await('X')
@@ -275,7 +275,7 @@ do
             end
         )
         out(v)
-    end)
+    end))
     emit 'X'
     assertx(out(), "Y\n")
     atmos.stop()
@@ -283,7 +283,7 @@ end
 
 do
     print("Testing...", "watching 2 (par_or)")
-    spawn (function ()
+    spawn_task(task(function ()
         local v = par_or (
             function ()
                 return await(true)
@@ -293,7 +293,7 @@ do
             end
         )
         out(v)
-    end)
+    end))
     emit 'X'
     assertfx(out(), "Y\n")
     atmos.stop()
@@ -301,14 +301,14 @@ end
 
 do
     print("Testing...", "watching 2")
-    spawn (function ()
+    spawn_task(task(function ()
         local v = watching ('X',
             function ()
                 return 'Y'
             end
         )
         out(v)
-    end)
+    end))
     emit 'X'
     assertx(out(), "Y\n")
     atmos.stop()
@@ -316,14 +316,14 @@ end
 
 do
     print("Testing...", "watching 3")
-    spawn (function ()
+    spawn_task(task(function ()
         local v = watching (false,
             function ()
                 return await('X')
             end
         )
         out(v)
-    end)
+    end))
     emit 'X'
     assertx(out(), "X\n")
     atmos.stop()
@@ -340,23 +340,23 @@ end
 do
     print("Testing...", "watching 5: error")
     local _,err = pcall(function ()
-        spawn(function ()
+        spawn_task(task(function ()
             watching (false, 'no')
-        end)
+        end))
     end)
     assertfx(err, "par.lua:%d+: invalid watching : expected task prototype")
 end
 
 do
     print("Testing...", "watching 6")
-    spawn (function ()
+    spawn_task(task(function ()
         local v = watching (function (e) return e and e.tag=='X' and e[1]==10 and e[1] end,
             function ()
                 await(false)
             end
         )
         out(v)
-    end)
+    end))
     emit{tag='X', 20}
     emit{tag='X', 10}
     assertx(out(), "10\n")
@@ -365,7 +365,7 @@ end
 
 do
     print("Testing...", "watching 7")
-    spawn (function ()
+    spawn_task(task(function ()
         watching (true,
             function ()
                 await(true)
@@ -373,7 +373,7 @@ do
             end
         )
         out 'ok'
-    end)
+    end))
     emit()
     assertx(out(), "ok\n")
     atmos.stop()
@@ -381,7 +381,7 @@ end
 
 do
     print("Testing...", "watching 8")
-    spawn (function ()
+    spawn_task(task(function ()
         watching ('X',
             function ()
                 await('X')
@@ -389,7 +389,7 @@ do
             end
         )
         out 'ok'
-    end)
+    end))
     emit 'X'
     assertx(out(), "ok\n")
     atmos.stop()

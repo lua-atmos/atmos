@@ -33,12 +33,12 @@ end
 
 do
     print("Testing...", "tasks 4")
-    local function T ()
+    local T = task(function ()
         out "ok"
-    end
+    end)
     local ts = tasks(2)
-    spawn_in(ts, task(T))
-    spawn_in(ts, task(T))
+    spawn_in(ts, T)
+    spawn_in(ts, T)
     assertx(#ts, 0)
     assertx(out(), "ok\nok\n")
     atmos.stop()
@@ -46,13 +46,13 @@ end
 
 do
     print("Testing...", "tasks 5: limit")
-    function T (v)
+    local T = task(function (v)
         out(v)
         await(true)
-    end
+    end)
     local ts = tasks(1)
-    local ok1 = spawn_in(ts, task(T), 1)
-    local ok2 = spawn_in(ts, task(T), 2)
+    local ok1 = spawn_in(ts, T, 1)
+    local ok2 = spawn_in(ts, T, 2)
     out(ok1==nil, ok2==nil)
     assertx(#ts, 1)
     assertx(out(), "1\nfalse\ttrue\n")
@@ -82,17 +82,17 @@ end
 
 do
     print("Testing...", "tasks 6: limit")
-    function T (v)
+    local T = task(function (v)
         out(v)
         await(true)
         out(v)
-    end
+    end)
     local ts = tasks(1)
-    local ok1 = spawn_in(ts, task(T), 1)
+    local ok1 = spawn_in(ts, T, 1)
     assertx(#ts, 1)
     emit(true)
     assertx(#ts, 0)
-    local ok2 = spawn_in(ts, task(T), 2)
+    local ok2 = spawn_in(ts, T, 2)
     assertx(#ts, 1)
     out(ok1==nil, ok2==nil)
     assertx(out(), "1\n1\n2\nfalse\tfalse\n")
@@ -117,18 +117,18 @@ end
 
 do
     print("Testing...", "tasks 8: pairs gc: (now ok)")
-    function T ()
+    local T = task(function ()
         await(true)
         out 'ok'
-    end
+    end)
     local ts = tasks(1)
-    spawn_in(ts, task(T))
+    spawn_in(ts, T)
     for _, t in getmetatable(ts).__pairs(ts) do
         emit(true)                      -- kills t
-        local ok = spawn_in(ts, task(T))  -- (no) failure b/c ts.ing>0
+        local ok = spawn_in(ts, T)  -- (no) failure b/c ts.ing>0
         out(ok ~= nil)
     end
-    local ok = spawn_in(ts, task(T))      -- (no) success b/c ts.ing=0
+    local ok = spawn_in(ts, T)      -- (no) success b/c ts.ing=0
     out(ok ~= nil)
     assertx(out(), "ok\ntrue\nfalse\n")
     atmos.stop()
@@ -139,14 +139,14 @@ print "--- TOGGLE ---"
 do
     print("Testing...", "toggle 1")
     do
-        function T (v)
+        local T = task(function (v)
             every(true, function ()
                 out(v)
             end)
-        end
+        end)
         local ts = tasks()
-        local t = spawn_in (ts, task(T), 1)
-        local t = spawn_in (ts, task(T), 2)
+        local t = spawn_in (ts, T, 1)
+        local t = spawn_in (ts, T, 2)
         emit('X')
         toggle (ts, false)
         out("---")
@@ -165,14 +165,14 @@ print("--- AWAIT / TASKS ---")
 do
     print("Testing...", "await tasks 1")
     do
-        function T (v)
+        local T = task(function (v)
             await('e'..v)
             return v
-        end
+        end)
         local ts = tasks()
-        local t1 = spawn_in (ts, task(T), 1)
-        local t2 = spawn_in (ts, task(T), 2)
-        local t3 = spawn_in (ts, task(T), 3)
+        local t1 = spawn_in (ts, T, 1)
+        local t2 = spawn_in (ts, T, 2)
+        local t3 = spawn_in (ts, T, 3)
         spawn_task(task(function ()
             local ret,t,ts2 = await {tag='tasks', mode='any', tasks=ts}
             assert(ret==2 and t==t2 and ts2==ts)
@@ -246,13 +246,13 @@ end
 do
     print("Testing...", "pools :any default -> ret,t,ts")
     do
-        function T (v)
+        local T = task(function (v)
             await('e'..v)
             return v*10
-        end
+        end)
         local ts = tasks()
-        local t1 = spawn_in (ts, task(T), 1)
-        local t2 = spawn_in (ts, task(T), 2)
+        local t1 = spawn_in (ts, T, 1)
+        local t2 = spawn_in (ts, T, 2)
         spawn_task(task(function ()
             local ret,t,ts2 = await {tag='tasks', mode='any', tasks=ts}
             assert(t == t2)
@@ -292,13 +292,13 @@ end
 do
     print("Testing...", "pools :all -> last to terminate")
     do
-        function T (v)
+        local T = task(function (v)
             await('e'..v)
             return v
-        end
+        end)
         local ts = tasks()
-        local t1 = spawn_in (ts, task(T), 1)
-        local t2 = spawn_in (ts, task(T), 2)
+        local t1 = spawn_in (ts, T, 1)
+        local t2 = spawn_in (ts, T, 2)
         spawn_task(task(function ()
             local ts2 = await {tag='tasks', mode='all', tasks=ts}
             assert(ts2 == ts)
