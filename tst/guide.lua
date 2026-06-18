@@ -225,7 +225,7 @@ loop(function ()
     -- 5.4
     do
         print "-=-=- 5.4 -=-=-"
-        do_spawn(function()
+        local _ <close> = do_spawn(function()
             toggle('X', function ()
                 loop_on(100*_ms_, function ()
                     print "100ms elapses"
