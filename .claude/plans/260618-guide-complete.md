@@ -2,8 +2,9 @@
 
 ## Status
 
-PENDING -- deferred. guide.lua now mirrors guide.md section numbering
-1:1 (see `260616-task-xtask.md`), so the coverage gaps are explicit.
+SKIPPED -- intentionally not pursued. guide.lua mirrors guide.md 1:1
+for sections 1-5 and 7.1; §6 (Errors) and §7.2 (thread) stay doc-only by
+choice. Kept as a record in case coverage is revisited later.
 
 ## Context
 
