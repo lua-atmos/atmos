@@ -1,7 +1,11 @@
 v0.7 (jun/26)
 -------------
 
+Major refactoring with the distinction between `task` (the prototype) vs
+`xtask` (the eXecuting task).
+
 - Additions:
+    - `task` / `xtask` / `tasks`: prototype vs instance vs pool
     - `abort` task and tasks
     - `await` patterns:
         - any/all tasks in a pool
@@ -20,6 +24,11 @@ v0.7 (jun/26)
             - exception: `await(ts, ...)` above
     - `_and_` / `_or_`: see "logical combinators" above
 - Modifications:
+    - `spawn(f)` -> `do_spawn(f)`
+        - returns close-only handle (not task handle)
+    - `every` -> `loop_on`
+    - `atmos.x` consolidation:
+        - `X.is`, `X.eq`, `X.xin`, `X.cat`, `X.gte`
     - `clock { ... }` -> simply `dt` in microseconds
         - `await(5 * _s_)` awaits 5 seconds
         - `await('clock')` awaits any `dt` and returns it
@@ -28,7 +37,7 @@ v0.7 (jun/26)
 - Environments:
     - `open`+`close` changed to main body + `quit`
 - Bug fixes:
-    - `break()` inside `every`
+    - `break()` inside `loop_on`
 
 v0.6 (mar/26)
 -------------

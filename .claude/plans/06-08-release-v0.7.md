@@ -97,10 +97,10 @@ Examples use `_s_` (v0.7-clean). Re-check for the new API
 
 Add under v0.7 (these 4 are not yet recorded):
 
-- [ ] Additions: `task`/`xtask`/`tasks`; `spawn`/`spawn_in`/`do_spawn`
-- [ ] Modification: `every` -> `loop_on`
-- [ ] Modification: `atmos.x` (`X`) consolidation
-- [ ] Fix the stale `break() inside every` line (now `loop_on`)
+- [x] Additions: `task`/`xtask`/`tasks`; `spawn`/`spawn_in`/`do_spawn`
+- [x] Modification: `every` -> `loop_on`
+- [x] Modification: `atmos.x` (`X`) consolidation
+- [x] Fix the stale `break() inside every` line (now `loop_on`)
 
 #### 2.3 Rockspec description
 
