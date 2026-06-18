@@ -1,27 +1,65 @@
 # Plan: Release v0.7 (next rev)
 
-## RESUME HERE (state @ 2026-06-18) -- NEXT = §2 (docs re-sync)
+## RESUME HERE (state @ 2026-06-18) -- continuing on another machine
 
 PRIOR CUT (frozen, do NOT redo): rock `atmos-0.7-1` was
 published 2026-06-09 from `a5fc70e` (main), together with
 env-sdl `v0.2`, env-pico `v0.3`, env-socket `v0.2`,
-env-iup `v0.2`, and the 5 apps. That cut was never announced
-(§8 stayed open), so it never reached users.
-
+env-iup `v0.2`, and the 5 apps. That cut was never announced.
 Since 0.7-1, the `v0.7` branch grew ~85 commits of further
-breaking changes (see "New since 0.7-1" below) that are NOT in
-the published rock and NOT in HISTORY.md. This plan is reset to
-re-cut the release including them.
+breaking changes (`every`->`loop_on`, `task()`->`xtask()`,
+`spawn(fn)`->`do_spawn`, `task`/`xtask`/`tasks`, `atmos.x`).
+This plan re-cuts the release including them.
 
->>> NEXT — §2: re-sync the docs.
-    - HISTORY.md is missing the 4 entries listed in §2.2.
-    - api.md already carries the new API; guide.md needs a pass.
-    Then: §3 bump the rockspec rev, §1 re-run tests, §5 re-merge
-    + push, §6 re-publish, §7 remote verify, §8 announce.
+BRANCH-TRACKING NOTE (drives every decision below): all rocks
+pin `source.branch` (atmos -> `v0.7`, envs -> `vX.Y`), NOT a
+tag. So pushing migrated code to a version branch ALREADY serves
+it under the EXISTING rock rev. A new rev (0.7-2, 0.3-2, ...)
+only re-publishes corrected METADATA -- it ships no new code.
 
-Still pending from the prior cut (carry forward):
+### DONE
+- §1 automatic tests pass (`cd tst && lua5.4 all.lua`).
+- §2 docs all synced (HISTORY, README, guide, api, rockspec desc).
+- §3 `atmos-0.7-2.rockspec` + `atmos-dev-3.rockspec` created
+  (loop_on desc fix; `branch=v0.7` kept; dev-2 removed).
+- env-socket: migrated + DONE (rock stays 0.2-1, bump SKIPPED).
+- env-sdl:    migrated + DONE (rock stays 0.2-1, bump SKIPPED).
+- sdl-birds:  migrated, committed, pushed (v0.5, main==origin).
+
+### OPEN DECISION (resolve before any env/atmos upload)
+env-socket + env-sdl SKIPPED the rock-rev bump (branch-track
+serves the loop_on fix under the existing rev). For consistency,
+env-pico (0.3-2) and env-iup (0.2-2) should ALSO skip the bump
+-- UNLESS a repo's PUBLISHED `detailed` text still says `every`
+(then a rev is the only fix, which is exactly why atmos needs
+0.7-2). DEFAULT: skip env bumps; keep atmos 0.7-2 (its published
+desc is wrong). Re-decide per repo by checking its published desc.
+
+### NEXT (ordered, each line self-contained)
+1. [atmos, THIS repo] `luarocks make atmos-0.7-2.rockspec`
+   (local install). -> §3 last box.
+2. [sdl-rocks + sdl-pingus] already migrated + tested; just
+   `git commit` + `git push` (branch `v0.5`). -> §4 apps.
+3. [env-pico] migrate per `env-pico/.claude/plans/260618-release
+   -v0.3.md` (loop_on x3 + do_spawn x1), test, push `v0.3`,
+   ff `main`. Rock: SKIP 0.3-2 unless desc-fix needed.
+4. [pico-birds + pico-rocks] migrate + test + push (branch `v0.6`).
+5. [env-iup] migrate per `env-iup/.claude/plans/260618-release
+   -v0.2.md` (loop_on x4 + do_spawn x1), test, push `v0.2`,
+   ff `main` (clears old loose end). iup-net needs env-socket.
+6. [iup-7guis] TIER C: rewrite multi-arg `every(h,'e',f)` ->
+   `loop_on({tag='e', h=h}, f)`; test vs env-iup v0.2; push.
+7. [atmos, THIS repo] commit + push the v0.7 work; CI green;
+   refresh `v0.7` branch. -> §5.
+8. [atmos] `luarocks upload atmos-0.7-2.rockspec` +
+   `atmos-dev-3.rockspec`. -> §6. (env uploads only if the OPEN
+   DECISION resolved to bump that env.)
+9. §7 remote verify: clean install + smoke all exs/apps.
+10. §8 announce.
+
+### CARRY-FORWARD / POSTPONED
 - §4.5 env-js: POSTPONED (gated on `atmos-lang/atmos` v0.7).
-- §7 remote verify, §8 announce: never done.
+- env-iup `main` stale on `0.1-1`: verify branch/ff in step 5.
 
 ## Context
 
@@ -66,7 +104,8 @@ Already shipped in 0.7-1 (for reference, in HISTORY.md):
 
 ### 1. Run tests
 
-- [ ] Automatic tests: all pass
+- [x] Automatic tests: all pass (after relabeling error traces
+      `xtask`->`task` in errors/others/tasks.lua)
 
 ```bash
 cd tst && lua5.4 all.lua
@@ -188,9 +227,11 @@ Envs (tier A mechanical: every/task()/spawn) -- have plans:
       0.2-1 -- 0.2-2 bump SKIPPED, branch-track serves loop_on fix)
 - [x] env-sdl     `260618-release-v0.2.md`   (DONE; rock stays
       0.2-1 -- 0.2-2 bump SKIPPED, branch-track serves loop_on fix)
-- [ ] env-pico    `260618-release-v0.3.md`   (-> rock 0.3-2)
-- [ ] env-iup     `260618-release-v0.2.md`   (-> rock 0.2-2; exs
-      already 0.7, only every->loop_on + 1 spawn->do_spawn)
+- [ ] env-pico    `260618-release-v0.3.md`   (loop_on x3 +
+      do_spawn x1; rock bump 0.3-2 -> SEE OPEN DECISION, default SKIP)
+- [ ] env-iup     `260618-release-v0.2.md`   (loop_on x4 +
+      do_spawn x1; exs already 0.7; rock bump 0.2-2 -> SEE OPEN
+      DECISION, default SKIP; also ff `main`)
 
 Downstream apps (NO own plan -- migrate/test under their env):
 - [~] sdl-birds DONE (v0.5, committed+pushed; main==v0.5==origin).
