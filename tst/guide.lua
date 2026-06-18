@@ -176,47 +176,6 @@ loop(function ()
         emit 'Y'
     end
 
-    -- 5. Functional Streams
-
-    -- 5.1
-    do
-        print "-=-=- 5.1 -=-=-"
-        local _ <close> = do_spawn(function ()
-            S.fr_await('X')
-                :filter(function(x) return x.v%2 == 1 end)
-                :map(function(x) return x.v end)
-                :tap(print)
-                :to()
-        end)
-        for i=1, 10 do
-            await(1*_ms_)
-            emit { tag='X', v=i }
-        end
-    end
-
-    -- 5.2
-    do
-        print "-=-=- 5.2 -=-=-"
-        function T ()
-            await('X')
-            await('Y')
-        end
-        local _ <close> = do_spawn(function ()
-            S.fr_await(T)                           -- XY, XY, ...
-                :zip(S.from(1))                     -- {XY,1}, {XY,2} , ...
-                :map(function (t) return t[2] end)  -- 1, 2, ...
-                :take(2)                            -- 1, 2
-                :tap(print)
-                :to()
-        end)
-        emit('X')
-        emit('X')
-        emit('Y')   -- 1
-        emit('X')
-        emit('Y')   -- 2
-        emit('Y')
-    end
-
     -- 6. More about Tasks
 
     -- 6.1
@@ -279,6 +238,47 @@ loop(function ()
         print 'on'
         emit{tag='X', true}     -- body above toggles on
         await(1*_s_)
+    end
+
+    -- 5. Functional Streams
+
+    -- 5.1
+    do
+        print "-=-=- 5.1 -=-=-"
+        local _ <close> = do_spawn(function ()
+            S.fr_await('X')
+                :filter(function(x) return x.v%2 == 1 end)
+                :map(function(x) return x.v end)
+                :tap(print)
+                :to()
+        end)
+        for i=1, 10 do
+            await(1*_ms_)
+            emit { tag='X', v=i }
+        end
+    end
+
+    -- 5.2
+    do
+        print "-=-=- 5.2 -=-=-"
+        function T ()
+            await('X')
+            await('Y')
+        end
+        local _ <close> = do_spawn(function ()
+            S.fr_await(T)                           -- XY, XY, ...
+                :zip(S.from(1))                     -- {XY,1}, {XY,2} , ...
+                :map(function (t) return t[2] end)  -- 1, 2, ...
+                :take(2)                            -- 1, 2
+                :tap(print)
+                :to()
+        end)
+        emit('X')
+        emit('X')
+        emit('Y')   -- 1
+        emit('X')
+        emit('Y')   -- 2
+        emit('Y')
     end
 
 end)
