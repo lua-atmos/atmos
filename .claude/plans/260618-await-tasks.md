@@ -60,7 +60,7 @@ know an expression is a pool and reject it statically.
 ## Status
 
 - [x] add the `meta_tasks` guard in `M.await`.
-- [ ] run the suite; confirm bare-pool error + no regressions.
+- [x] run the suite; confirm bare-pool error + no regressions.
 
 ## Cross-refs
 
