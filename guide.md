@@ -128,13 +128,13 @@ Consider the code that spawns two tasks concurrently and await the same event
 <tr><td>
 <pre>
 print "1"
-spawn(function ()
+spawn_anon(function ()
     print "a1"
     await 'X'
     print "a2"
 end)
 print "2"
-spawn(function ()
+spawn_anon(function ()
     print "b1"
     await 'X'
     print "b2"
@@ -180,8 +180,8 @@ In the next example, the outer task terminates and aborts the inner task before
 it has the chance to awake:
 
 ```
-spawn(function ()
-    spawn(function ()
+spawn_anon(function ()
+    spawn_anon(function ()
         await 'Y'   -- never awakes after 'X' occurs
         print "never prints"
     end)
@@ -197,8 +197,8 @@ A task can register deferred statements to execute when they terminate or abort
 within its hierarchy:
 
 ```
-spawn(function ()
-    spawn(function ()
+spawn_anon(function ()
+    spawn_anon(function ()
         local _ <close> = defer(function ()
             print "nested task aborted"
         end)
@@ -219,9 +219,9 @@ blocks:
 
 ```
 do
-    local _ <close> = spawn(function ()
+    local _ <close> = spawn_task(task(function ()
         <...>   -- aborted with the enclosing `do`
-    end)
+    end))
     local _ <close> = defer(function ()
         <...>   -- aborted with the enclosing `do`
     end)
@@ -284,13 +284,14 @@ print "X, Y, and Z occurred"
 ## 5.1. Public Data
 
 A task is a Lua table, and can hold public data fields as usual.
-It is also possible to self refer to the running task with a call to `task()`:
+It is also possible to self refer to the running instance with a call to
+`xtask()`:
 
 ```
-function T ()
-    task().v = 10
-end
-local t = spawn(T)
+local T = task(function ()
+    xtask().v = 10
+end)
+local t = spawn_task(T)
 print(t.v)  -- 10
 ```
 
@@ -302,12 +303,12 @@ When the pool goes out of scope, all attached tasks are aborted.
 When a task terminates, it is automatically removed from the pool.
 
 ```
-function T (id, ms)
-    task().id = id
+local T = task(function (id, ms)
+    xtask().id = id
     print('start', id, ms)
     await(ms*_ms_)
     print('stop', id, ms)
-end
+end)
 
 do
     local ts <close> = tasks()
@@ -341,10 +342,10 @@ A task can be toggled off (and back to on) to remain alive but unresponsive
 (and back to responsive) to upcoming events:
 
 ```
-local t = spawn (function ()
+local t = spawn_task(task(function ()
     await 'X'
     print "awakes from X"
-end)
+end))
 toggle(t, false)
 emit 'X'    -- ignored
 toggle(t, true)
@@ -359,13 +360,13 @@ When receiving `false`, the body toggles off.
 When receiving `true`, the body toggles on.
 
 ```
-spawn(function()
+spawn_task(task(function()
     toggle('X', function ()
         every(1*_s_, function ()
             print "1s elapses"
         end)
     end)
-end)
+end))
 emit { tag='X', false }    -- body above toggles off
 <...>
 emit { tag='X', true }     -- body above toggles on
@@ -379,21 +380,21 @@ consideration the task hierarchy, i.e., a parent task catches errors from child
 tasks.
 
 ```
-function T ()
-    spawn (function ()
+local T = task(function ()
+    spawn_anon(function ()
         await 'X'
         throw 'Y'
     end)
     await(false)
-end
+end)
 
-spawn(function ()
+spawn_task(task(function ()
     local ok, err = catch('Y', function ()
-        spawn(T)
+        spawn_task(T)
         await(false)
     end)
     print(ok, err)
-end)
+end))
 
 emit 'X'
 
@@ -424,10 +425,10 @@ targeting the task with `id=2`.
 Only this task awakes and generates an uncaught error:
 
 ```
-function T (id)
+local T = task(function (id)
     await { tag='X', v=id }
     throw 'error'
-end
+end)
 
 local ts <close> = tasks()
 spawn_in(ts, T, 1)
@@ -443,7 +444,7 @@ line 8, before throwing the error in line 3:
 ```
 ==> ERROR:
  |  x.lua:11 (emit)
- v  x.lua:3 (throw) <- x.lua:8 (task) <- x.lua:6 (tasks)
+ v  x.lua:3 (throw) <- x.lua:8 (xtask) <- x.lua:6 (tasks)
 ==> error
 ```
 
@@ -465,7 +466,7 @@ The next example creates a stream that awaits occurrences of event `X`:
 
 ```
 local S = require "atmos.streams"
-spawn(function ()
+spawn_anon(function ()
     S.fr_await('X')                                 -- X1, X2, ...
         :filter(function(x) return x.v%2 == 1 end)  -- X1, X3, ...
         :map(function(x) return x.v end)            -- 1, 3, ...
@@ -502,11 +503,11 @@ The next example creates a task stream that packs awaits to `X` and `Y` in
 sequence:
 
 ```
-function T ()
+function T ()           -- raw function: `S.fr_await` blesses it
     await('X')
     await('Y')
 end
-spawn(function ()
+spawn_anon(function ()
     S.fr_await(T)                           -- XY, XY, ...
         :zip(S.from(1))                     -- {XY,1}, {XY,2} , ...
         :map(function (t) return t[2] end)  -- 1, 2, ...
@@ -586,4 +587,4 @@ Also, if none of the threads complete, they are automatically aborted by the
 enclosing timeout `watching`.
 
 Threads are isolated: they may receive copies of upvalues, but cannot use Atmos
-standard primitives like `await`, `emit`, or `spawn`.
+standard primitives like `await`, `emit`, or `spawn_task`.
