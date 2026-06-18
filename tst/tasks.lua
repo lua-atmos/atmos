@@ -343,3 +343,17 @@ do
     assertfx(err, "invalid await : invalid mode")
     atmos.stop()
 end
+
+-- a bare pool await is rejected: ':any' / ':all' required
+do
+    print("Testing...", "pools bare await")
+    local _,err = pcall(function ()
+        spawn (function ()
+            local ts = tasks()
+            await(ts)
+        end)
+        emit(true)
+    end)
+    assertfx(err, "invalid await : unexpected tasks pool : expected ':any' or ':all'")
+    atmos.stop()
+end
