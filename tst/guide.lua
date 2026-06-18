@@ -8,26 +8,26 @@ loop(function ()
     -- 1.1
     do
         print "-=-=- 1.1 -=-=-"
-        function T ()
+        local T = task(function ()
             await(false)
-        end
-        local t1 = spawn(task(T))   -- starts `t1`
-        local t2 = spawn(task(T))   -- starts `t2`
+        end)
+        local t1 = spawn(T)         -- starts `t1`
+        local t2 = spawn(T)         -- starts `t2`
         print(t1, t2)               -- t1 & t2 started and are now suspended
     end
 
     -- 1.2
     do
         print "-=-=- 1.2 -=-=-"
-        function T (i)
+        local T = task(function (i)
             await('X')
-            print("task " .. i .. " awakes from X")
-        end
-        spawn(task(T), 1)
-        spawn(task(T), 2)
+            print("task " .. i .. " awakes on X")
+        end)
+        spawn(T, 1)
+        spawn(T, 2)
         emit('X')
-            -- "task 1 awakes from X"
-            -- "task 2 awakes from X"
+            -- "task 1 awakes on X"
+            -- "task 2 awakes on X"
     end
 
     -- 1.3
@@ -70,17 +70,17 @@ loop(function ()
     do
         print "-=-=- 3.1 -=-=-"
         print "1"
-        spawn(task(function ()
+        do_spawn(function ()
             print "a1"
             await 'X'
             print "a2"
-        end))
+        end)
         print "2"
-        spawn(task(function ()
+        do_spawn(function ()
             print "b1"
             await 'X'
             print "b2"
-        end))
+        end)
         print "3"
         emit 'X'
         print "4"
@@ -89,14 +89,14 @@ loop(function ()
     -- 3.2
     do
         print "-=-=- 3.2 -=-=-"
-        local _ <close> = spawn(task(function ()
-            spawn(task(function ()
+        do_spawn(function ()
+            do_spawn(function ()
                 await 'Y'   -- never awakes after 'X' occurs
                 print "never prints"
-            end))
+            end)
             await 'X'       -- awakes and aborts the whole task hierarchy
             print "awakes from X"
-        end))
+        end)
         emit 'X'
         emit 'Y'
     end
@@ -104,15 +104,15 @@ loop(function ()
     -- 3.3
     do
         print "-=-=- 3.3 -=-=-"
-        spawn(task(function ()
-            spawn(task(function ()
+        do_spawn(function ()
+            do_spawn(function ()
                 local _ <close> = defer(function ()
                     print "nested task aborted"
                 end)
                 await(false) -- never awakes
-            end))
+            end)
             -- will abort nested task
-        end))
+        end)
     end
 
     -- 3.4
@@ -181,13 +181,13 @@ loop(function ()
     -- 5.1
     do
         print "-=-=- 5.1 -=-=-"
-        local _ <close> = spawn(task(function ()
+        local _ <close> = do_spawn(function ()
             S.fr_await('X')
                 :filter(function(x) return x.v%2 == 1 end)
                 :map(function(x) return x.v end)
                 :tap(print)
                 :to()
-        end))
+        end)
         for i=1, 10 do
             await(1*_ms_)
             emit { tag='X', v=i }
@@ -201,14 +201,14 @@ loop(function ()
             await('X')
             await('Y')
         end
-        local _ <close> = spawn(task(function ()
+        local _ <close> = do_spawn(function ()
             S.fr_await(T)                           -- XY, XY, ...
                 :zip(S.from(1))                     -- {XY,1}, {XY,2} , ...
                 :map(function (t) return t[2] end)  -- 1, 2, ...
                 :take(2)                            -- 1, 2
                 :tap(print)
                 :to()
-        end))
+        end)
         emit('X')
         emit('X')
         emit('Y')   -- 1
@@ -222,26 +222,26 @@ loop(function ()
     -- 6.1
     do
         print "-=-=- 6.1 -=-=-"
-        function T ()
+        local T = task(function ()
             xtask().v = 10
-        end
-        local t = spawn(task(T))
+        end)
+        local t = spawn(T)
         print(t.v)  -- 10
     end
 
     -- 6.2
     do
         print "-=-=- 6.2 -=-=-"
-        function T (id, ms)
+        local T = task(function (id, ms)
             xtask().id = id
             print('start', id, ms)
             await(ms*_ms_)
             print('stop', id, ms)
-        end
+        end)
         do
             local ts <close> = tasks()
             for i=1, 10 do
-                spawn_in(ts, task(T), i, math.random(500,1500))
+                spawn_in(ts, T, i, math.random(500,1500))
             end
             await(1*_s_)
             for _,t in pairs(ts) do

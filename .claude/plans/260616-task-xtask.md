@@ -10,7 +10,7 @@ rename (see §B).
 
 Three threads remain, in priority order:
 
-### A. Finish the guide "non-reused → do_spawn" pass (IN PROGRESS)
+### A. Finish the guide "non-reused → do_spawn" pass — DONE
 
 Rule: convert `spawn(task(function() … end))` ->
 `do_spawn(function() … end)` ONLY when the body is **self-contained**:
@@ -30,11 +30,14 @@ catch task all converted to `do_spawn` (§6 inner `spawn(T)` of the
 named proto kept). guide.lua §3.4 do-block converted; §6.4 toggle-stmt
 already `do_spawn`; guide.lua has no Errors/catch section.
 
-| file          | still TODO                                   |
-|---------------|----------------------------------------------|
-| tst/guide.lua | §3.1 (2 tasks); §3.2 (outer `<close>` +inner,| 
-|               | outer becomes close-token); §3.3 (defer, 2); |
-|               | §5.1 (`<close>` stream); §5.2 (`<close>`)     |
+DONE: tst/guide.lua §3.1 (2), §3.2 (outer `<close>` close-token +
+inner), §3.3 (defer, 2), §5.1 (`<close>` stream), §5.2 (`<close>`) all
+converted to `do_spawn` (8 sites). KEEP sites verified: §1.1/§1.2 reused
+proto `T`; §6.1 `xtask().v` handle; §6.2 `spawn_in` pool; §6.3 toggle
+handle. guide.md provenance markers (`<!-- tst/guide.lua : X.Y -->`)
+added for all 20 covered examples.
+
+Pass (A) COMPLETE — no `spawn(task(fn))` self-contained sites remain.
 
 After editing: run `lua guide.lua` (and `lua all.lua`) to confirm green.
 
