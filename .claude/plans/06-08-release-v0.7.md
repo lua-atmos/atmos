@@ -125,7 +125,8 @@ Verified present (0.7-1): single-arg `emit`/`await`,
 New API also present: `task`/`xtask`/`tasks`, `spawn`,
 `spawn_in`, `do_spawn`, `loop_on`, `X` helpers.
 
-- [ ] Final consistency pass vs guide.md
+- [x] Final consistency pass vs guide.md (added backticks to
+      `toggle (tsk, on)` header; `emit_in` left guide-undocumented)
 
 ### 3. Rockspec
 

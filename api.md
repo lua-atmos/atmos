@@ -192,7 +192,7 @@ Spawns a task prototype into a pool.
     - `: xtask`
         | task instance just spawned (or `nil` if the pool is full)
 
-## toggle (tsk, on)
+## `toggle (tsk, on)`
 
 Toggles a task instance (or pool) on and off.
 
