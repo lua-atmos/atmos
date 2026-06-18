@@ -269,13 +269,13 @@ its enclosing task, which is the typical case.
 
 Atmos provides many compound statements built on top of tasks:
 
-- The `every` statement expands to a loop that awaits its first argument at the
-  beginning of each iteration:
+- The `loop_on` statement expands to a loop that awaits its first argument at
+  the beginning of each iteration:
 
 <!-- tst/guide.lua : 4.1 -->
 
 ```
-every(1*_s_, function ()
+loop_on(1*_s_, function ()
     print "1 second elapses"    -- prints every second
 end)
 ```
@@ -402,7 +402,7 @@ When receiving `true`, the body toggles on.
 ```
 do_spawn(function()
     toggle('X', function ()
-        every(1*_s_, function ()
+        loop_on(1*_s_, function ()
             print "1s elapses"
         end)
     end)
@@ -442,9 +442,9 @@ emit 'X'
 ```
 
 In the example, we spawn a parent task that catches errors of type `Y`.
-Then we spawn a named task `T`, which spawns an anonymous task, which awaits
-`X` to finally throw `Y`.
-Outside the task hierarchy, we `emit X`, which only awakes the nested task.
+Then we spawn a named task `T`, which spawns a block, which awaits `X` to
+finally throw `Y`.
+Outside the task hierarchy, we `emit X`, which only awakes the nested block.
 Nevertheless, the error propagates up in the task hierarchy until it is caught
 by the top-level task, returning `false` and the error `Y`.
 

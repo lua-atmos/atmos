@@ -348,10 +348,10 @@ end
 do
     print("Testing...", "pools bare await")
     local _,err = pcall(function ()
-        spawn (function ()
+        spawn (task(function ()
             local ts = tasks()
             await(ts)
-        end)
+        end))
         emit(true)
     end)
     assertfx(err, "invalid await : unexpected tasks pool : expected ':any' or ':all'")

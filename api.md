@@ -335,7 +335,7 @@ Note that some patterns may modify the final result:
 # 5. Compounds
 
 [
-    [every](#every--f) |
+    [loop_on](#loop_on--f) |
     [watching](#watching--f) |
     [toggle](#toggle-evt-f) |
     [par](#par-) |
@@ -346,7 +346,7 @@ Note that some patterns may modify the final result:
 Compound statements combine tasks, awaits, and other primitive to provide
 higher-level constructs.
 
-## `every (..., f)`
+## `loop_on (..., f)`
 
 Executes the given body, in a loop, after every occurrence of the given event
 pattern.
@@ -359,7 +359,7 @@ pattern.
 - Returns:
     - never returns
 
-An `every` is equivalent to the code as follows:
+A `loop_on` is equivalent to the code as follows:
 
 ```
 while true do
