@@ -149,19 +149,46 @@ PRIOR CUT (all DONE + published for 0.7-1):
 - [x] `env-sdl`    `v0.2`, rock `0.2-1`, apps `v0.5`
 - [x] `env-pico`   `v0.3`, rock `0.3-1`, apps `v0.6`
 - [x] `env-socket` `v0.2`, rock `0.2-1`
-- [x] `env-iup`    `v0.2`, rock `0.2-1`
+- [x] `env-iup`    `v0.2`, rock `0.2-1` (migrated + uploaded per
+      its plan; on the `v0.2` branch; only `main` ff was pending.
+      `main` itself is stale on `0.1-1` -- verify branch/ff).
 - [ ] `env-js`     POSTPONED (v0.6 -> v0.7)
 
-RE-SMOKE for this rev: the post-0.7-1 core changes
-(`spawn`/`do_spawn`, `loop_on`, `task`/`xtask`, `X`) may affect
-env behaviour. Re-run each env's smoke examples against the new
-core before re-publishing (no env rock bump unless an env source
-changed).
+BREAKING: the post-0.7-1 core changes are NOT a re-smoke. Apps
+and envs hard-break on 0.7-2 (no `every` alias; `spawn(fn)` now
+rejects bare functions; `task()` me-accessor moved to `xtask()`).
+Every sibling repo must be migrated + re-released (mirrors the
+0.7-1 §4 effort).
 
-- [ ] env-sdl re-smoke   (hello / across / click-drag-cancel)
-- [ ] env-pico re-smoke  (hello / across / click-drag-cancel)
-- [ ] env-socket re-smoke (hello / cli-srv)
-- [ ] env-iup re-smoke   (hello / button-counter / iup-net)
+Mechanical migration (per repo):
+- `every(`  -> `loop_on(`            (120 sites across repos)
+- `task()` / `task().f` -> `xtask()` (52 sites)
+- `spawn(function...` -> judgment:
+    - `do_spawn(function...` if self-contained
+    - `spawn(task(function...))` if identity reused (~15 sites)
+
+Per-repo breaking counts (every / spawn(fn)):
+env-sdl 3/1, env-pico 4/1, env-socket 1/0, env-iup 4/1,
+sdl-birds 34/0, sdl-rocks 15/5, sdl-pingus 6/2, pico-birds 34/0,
+pico-rocks 15/5, iup-7guis 3/0. (`task()` accessor extra.)
+
+NOTE: these repos are outside this worktree -- migrate each in
+its own checkout/session. Only the 4 `env-*` have a `260618-*`
+plan; the apps + iup-7guis are tracked as downstream targets
+INSIDE their associated env plan (no own plan file).
+
+Envs (tier A mechanical: every/task()/spawn) -- have plans:
+- [ ] env-socket  `260618-release-v0.2.md`   (-> rock 0.2-2)
+- [ ] env-sdl     `260618-release-v0.2.md`   (-> rock 0.2-2)
+- [ ] env-pico    `260618-release-v0.3.md`   (-> rock 0.3-2)
+- [ ] env-iup     `260618-release-v0.2.md`   (-> rock 0.2-2; exs
+      already 0.7, only every->loop_on + 1 spawn->do_spawn)
+
+Downstream apps (NO own plan -- migrate/test under their env):
+- [ ] sdl-birds / sdl-rocks / sdl-pingus  (v0.5) -- under env-sdl
+- [ ] pico-birds / pico-rocks             (v0.6) -- under env-pico
+- [ ] iup-7guis  (tier C: multi-arg events -> `loop_on({tag,h})`)
+      -- under env-iup
 
 **clock** (atmos built-in):
 - [ ] `atmos/env/clock/exs/hello.lua`
