@@ -14,15 +14,22 @@ Rule: convert `spawn_task(task(function() … end))` ->
 `spawn_anon(function() … end)` ONLY when the body is **self-contained**:
 no `emit` / `emit_in`-levels / `xtask()` / `pub` inside, result not
 captured for identity. KEEP: reused prototypes, `spawn_task(T)` of a
-named proto, pub/pool/toggle-handle, and the `<close>`-handle LESSON
-(guide.md §3.2.1 second example / guide.lua §3.4).
+named proto, pub/pool/toggle-handle. NOTE: a `<close>`-bound handle does
+NOT count as "captured for identity" — `spawn_anon` returns a close-only
+handle that still binds `<close>` and aborts with the block, so
+`local _ <close> = spawn_anon(fn)` is preferred for self-contained
+bodies (DONE: guide.md §3.2.1 do-block / guide.lua §3.4). Identity is
+only truly used at §5.1/§5.3.
 
 Remaining sites to convert (others already done):
 
+DONE: guide.md §3.2.1 do-block, §5.3 toggle-*statement*, and §6 outer
+catch task all converted to `spawn_anon` (§6 inner `spawn_task(T)` of the
+named proto kept). guide.lua §3.4 do-block converted; §6.4 toggle-stmt
+already `spawn_anon`; guide.lua has no Errors/catch section.
+
 | file          | still TODO                                   |
 |---------------|----------------------------------------------|
-| guide.md      | §5.3 toggle-*statement* example; §6 outer    |
-|               | catch task (keep `spawn_task(T)` + inner)    |
 | tst/guide.lua | §3.1 (2 tasks); §3.2 (outer `<close>` +inner,| 
 |               | outer becomes close-token); §3.3 (defer, 2); |
 |               | §5.1 (`<close>` stream); §5.2 (`<close>`)     |

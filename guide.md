@@ -219,9 +219,9 @@ blocks:
 
 ```
 do
-    local _ <close> = spawn_task(task(function ()
+    local _ <close> = spawn_anon(function ()
         <...>   -- aborted with the enclosing `do`
-    end))
+    end)
     local _ <close> = defer(function ()
         <...>   -- aborted with the enclosing `do`
     end)
@@ -360,13 +360,13 @@ When receiving `false`, the body toggles off.
 When receiving `true`, the body toggles on.
 
 ```
-spawn_task(task(function()
+spawn_anon(function()
     toggle('X', function ()
         every(1*_s_, function ()
             print "1s elapses"
         end)
     end)
-end))
+end)
 emit { tag='X', false }    -- body above toggles off
 <...>
 emit { tag='X', true }     -- body above toggles on
@@ -388,13 +388,13 @@ local T = task(function ()
     await(false)
 end)
 
-spawn_task(task(function ()
+spawn_anon(function ()
     local ok, err = catch('Y', function ()
         spawn_task(T)
         await(false)
     end)
     print(ok, err)
-end))
+end)
 
 emit 'X'
 

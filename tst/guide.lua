@@ -120,12 +120,12 @@ loop(function ()
         print "-=-=- 3.4 -=-=-"
         print '1'
         do
-            local _ <close> = spawn_task(task(function ()
+            local _ <close> = spawn_anon(function ()
                 local _ <close> = defer(function ()
                     print 'x'
                 end)
                 await(false)
-            end))
+            end)
             local _ <close> = defer(function ()
                 print 'y'
             end)
