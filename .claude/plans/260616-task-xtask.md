@@ -6,9 +6,15 @@ lua-atmos side is DONE and the suite is GREEN (`all.lua` + `guide.lua`):
 runtime §2.1–2.3, spawn split (`spawn`/`do_spawn`), `do_spawn`
 close-only handle, `atmos/streams.lua` lib, `api.md`, `guide.md`.
 Final naming `spawn` / `do_spawn` / `spawn_in` verified GREEN after the
-rename (see §B).
+rename (see §B). Also renamed `every` -> `loop_on` (see
+`260618-loop-on.md`). guide.md and guide.lua are aligned 1:1
+(renumbered, provenance markers, leak-free).
 
-Three threads remain, in priority order:
+Sibling plans: `260618-spawn-block.md` (superseded -> do_spawn),
+`260618-loop-on.md` (DONE), `done/260618-await-tasks.md` (DONE,
+bare-pool guard), `260618-guide-complete.md` (SKIPPED).
+
+Status of threads (A & B DONE; C deferred):
 
 ### A. Finish the guide "non-reused → do_spawn" pass — DONE
 
@@ -27,19 +33,18 @@ Remaining sites to convert (others already done):
 
 DONE: guide.md §3.2.1 do-block, §5.3 toggle-*statement*, and §6 outer
 catch task all converted to `do_spawn` (§6 inner `spawn(T)` of the
-named proto kept). guide.lua §3.4 do-block converted; §6.4 toggle-stmt
-already `do_spawn`; guide.lua has no Errors/catch section.
+named proto kept). guide.lua §3.4 do-block converted; §5.4 toggle-stmt
+already `do_spawn`; guide.lua has no Errors/catch section (doc-only, see
+`260618-guide-complete.md`).
 
-DONE: tst/guide.lua §3.1 (2), §3.2 (outer `<close>` close-token +
-inner), §3.3 (defer, 2), §5.1 (`<close>` stream), §5.2 (`<close>`) all
-converted to `do_spawn` (8 sites). KEEP sites verified: §1.1/§1.2 reused
-proto `T`; §6.1 `xtask().v` handle; §6.2 `spawn_in` pool; §6.3 toggle
-handle. guide.md provenance markers (`<!-- tst/guide.lua : X.Y -->`)
-added for all 20 covered examples.
+DONE: tst/guide.lua converted (8 sites) and RENUMBERED to mirror
+guide.md: 1-4 shared, §5 More-about-Tasks (5.1 public, 5.2 pools, 5.3
+toggle-handle, 5.4 toggle-stmt), §7.1/§7.2 streams. KEEP sites: 1.1/1.2
+reused proto; 5.1 `xtask().v`; 5.2 `spawn_in` pool; 5.3 toggle handle.
+Provenance markers added for all covered examples; §5.4 toggle task
+bound with `<close>` to stop a cross-section leak. GREEN.
 
 Pass (A) COMPLETE — no `spawn(task(fn))` self-contained sites remain.
-
-After editing: run `lua guide.lua` (and `lua all.lua`) to confirm green.
 
 ### B. Public spawn naming — DONE
 
