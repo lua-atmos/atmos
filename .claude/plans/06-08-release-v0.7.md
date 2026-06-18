@@ -104,7 +104,9 @@ Add under v0.7 (these 4 are not yet recorded):
 
 #### 2.3 Rockspec description
 
-- [ ] Re-confirm `detailed` description still matches README.
+- [x] Re-confirm `detailed` matches README: fixed `every` ->
+      `loop_on` in `atmos-dev-2.rockspec`. `atmos-0.7-1.rockspec`
+      left frozen; §3 new rev must carry `loop_on`.
 
 #### 2.4 guide.md
 
@@ -130,10 +132,15 @@ New API also present: `task`/`xtask`/`tasks`, `spawn`,
 
 ### 3. Rockspec
 
-New rev needed (0.7-1 is published and frozen):
+New rev required: luarocks.org rejects overwriting a published
+version, so the `every`->`loop_on` description fix can only ship
+via fresh revisions.
 
-- [ ] Create next rockspec rev (e.g. `atmos-0.7-2.rockspec`)
-- [ ] Install locally (`luarocks make`)
+- [x] Create `atmos-0.7-2.rockspec` (copy of 0.7-1, `loop_on`
+      fix, `source.branch=v0.7` kept). 0.7-1 left untouched.
+- [x] Create `atmos-dev-3.rockspec` (replaces dev-2; `loop_on`
+      fix; dev-2 removed -- single dev spec convention).
+- [ ] Install locally (`luarocks make atmos-0.7-2.rockspec`)
 
 ### 4. Release all environments and apps
 
