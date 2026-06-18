@@ -6,6 +6,8 @@ Major refactoring with the distinction between `task` (the prototype) vs
 
 - Additions:
     - `task` / `xtask` / `tasks`: prototype vs instance vs pool
+        - `task(f) -> T`: prototype
+        - `xtask(T) -> t`: instance
     - `abort` task and tasks
     - `await` patterns:
         - any/all tasks in a pool
@@ -24,8 +26,8 @@ Major refactoring with the distinction between `task` (the prototype) vs
             - exception: `await(ts, ...)` above
     - `_and_` / `_or_`: see "logical combinators" above
 - Modifications:
-    - `spawn(f)` -> `do_spawn(f)`
-        - returns close-only handle (not task handle)
+    - `spawn(...)` -> `spawn(T)`, `do_spawn(f)`
+        - `do_spawn` returns close-only handle (not task handle)
     - `every` -> `loop_on`
     - `atmos.x` consolidation:
         - `X.is`, `X.eq`, `X.xin`, `X.cat`, `X.gte`
