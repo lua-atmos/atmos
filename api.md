@@ -98,6 +98,9 @@ An *task instance* (`xtask`) is a spawned protoype with its own identity.
 
 A *pool of task instances* (`tasks`) holds a set of spawned prototypes.
 
+Task values render distinctly: `task: 0x...` (prototype), `xtask: 0x...`
+(instance), `tasks: 0x...` (pool).
+
 ## `task (f)`
 
 Creates a task prototype from a function.
@@ -161,62 +164,65 @@ Aborts a task instance or task pool.
 All nested tasks are also aborted.
 All nested [deferred](#defer-f) blocks execute.
 
-## `spawn (tsk, ...)`
+## `spawn_task (t, ...)`
 
-Spawns a task.
+Spawns a prototype as a task instance with its own identity.
 
 - Parameters:
-    - `tsk: task`
-        | task to spawn
+    - `t: task | xtask`
+        | prototype to instantiate, or a pre-built instance to start
     - `...`
-        | extra arguments to pass to the task prototype
+        | extra arguments to pass to the body
 - Returns:
-    - `: task`
-        | reference to task just spawned
+    - `: xtask`
+        | task instance just spawned
 
-## `spawn ([tra,] f, ...)`
+## `spawn_anon (f, ...)`
 
-Spawns a function prototype as a task.
+Spawns a raw function as an anonymous transparent nested task.
 
 - Parameters:
-    - `tra: boolean = false`
-        | if the task should become transparent in the hierarchy
     - `f: function`
-        | task to spawn as a function
+        | inline task body
     - `...`
-        | extra arguments to pass to the function
+        | extra arguments to pass to the body
 - Returns:
-    - `: task`
-        | reference to task just spawned
+    - `: handle`
+        | close-only lifetime handle
 
-A function spawn is equivalent to the call as follows:
+A transparent task has no identity, so the return is a close-only handle:
+it cannot be awaited, toggled, or aborted, but it can bind the body to a
+lexical block:
 
 ```
-spawn(task(tra,f), ...)
+do
+    local _ <close> = spawn_anon(function () ... end)   -- aborted at block end
+    ...
+end
 ```
 
-## `spawn_in (tsks, tsk, ...)`
+## `spawn_in (tsks, t, ...)`
 
-Spawns a task in a task pool.
+Spawns a task prototype into a pool.
 
 - Parameters:
-    - `tsks: task pool`
-        | pool to spawn
-    - `tsk: task`
-        | task to spawn
+    - `tsks: tasks`
+        | pool to spawn into
+    - `t: task`
+        | task prototype
     - `...`
-        | extra arguments to pass to the task prototype
+        | extra arguments to pass to the body
 - Returns:
-    - `: task`
-        | reference to task just spawned
+    - `: xtask`
+        | task instance just spawned (or `nil` if the pool is full)
 
 ## toggle (tsk, on)
 
-Toggles a task on and off.
+Toggles a task instance (or pool) on and off.
 
 - Parameters:
-    - `tsk: task`
-        | task to toggle
+    - `tsk: xtask | tasks`
+        | task instance or pool to toggle
     - `on: boolean`
         | toggle on (`true`) or off (`false`)
 - Returns:
@@ -291,7 +297,7 @@ The task awakes when an `emit(e)` matches the given await pattern as follows:
 |           | `x: any`                            | `X.is(e,x)`    | `e`      |
 | Time      | `us: number`                        | timeout        | overrun  |
 |           | `'clock'`                           | clock tick     | delta    |
-| Tasks     | `t: task`                           | `t` ends       | `v,t`    |
+| Tasks     | `t: xtask`                          | `t` ends       | `v,t`    |
 |           | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts` |
 |           | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `ts`     |
 | Condition | `f: function`                       | `f(e)` truthy  | `e / res`|
@@ -490,7 +496,7 @@ local X = require "atmos.x"
 |-------------------|-------------|---------------------------------------------|
 | `X.gte(a,b)`      | `boolean`   | `a` is a supertype of/conforms to `b`       |
 | `X.eq(a,b)`       | `boolean`   | deep equality: `gte(a,b) and gte(b,a)`      |
-| `X.is(v,x)`       | `boolean`   | `v` is-a `x` (identity / type / tag / task) |
+| `X.is(v,x)`       | `boolean`   | `v` is-a `x` (identity / type / tag / kind) |
 | `X.xin(v,t)`      | `boolean`   | `v` is a member of `t` (as key or value)    |
 | `X.cat(a,b)`      | `str/table` | `a .. b`, else a new table merging both     |
 | `X.iter(t,...)`   | `iterator`  | generic-for over `t` (arity below)          |
@@ -500,7 +506,8 @@ local X = require "atmos.x"
 
 - TODO
     - `X.gte`:  `a == b`, same types/metas, subtags, subsumes fields
-    - `X.is`:   type name, task/tasks, table tag
+    - `X.is`:   type name, proto `task` / instance `xtask` / pool `tasks`,
+                table tag
     - `X.iter`: arity by source
         - 1: `number` / `(n,m)` / `nil`
         - 2: `table` / `__pairs`
