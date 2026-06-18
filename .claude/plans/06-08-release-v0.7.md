@@ -90,8 +90,8 @@ cd tst && lua5.4 all.lua
 Examples use `_s_` (v0.7-clean). Re-check for the new API
 (`spawn`/`do_spawn`, `loop_on`) and version strings.
 
-- [ ] Re-check examples against new API
-- [ ] Confirm version strings still correct
+- [x] Re-check examples against new API (`every` -> `loop_on`)
+- [x] Confirm version strings still correct (v0.7 stable)
 
 #### 2.2 HISTORY.md (MISSING the post-0.7-1 entries)
 

@@ -40,7 +40,7 @@ structured programming with two main functionalities:
     - A `task` primitive with deterministic scheduling provides predictable
       behavior and safe abortion.
     - Structured primitives compose concurrent tasks with lexical scope (e.g.,
-      `watching`, `every`, `par_or`).
+      `watching`, `loop_on`, `par_or`).
     - A `tasks` container primitive holds attached tasks and controls their
       lifecycle.
 - Event Signaling Mechanisms:
@@ -83,7 +83,7 @@ require "atmos.env.clock"
 
 loop(function ()
     watching(5*_s_, function ()
-        every(1*_s_, function ()
+        loop_on(1*_s_, function ()
             print("Hello World!")
         end)
     end)
@@ -96,7 +96,7 @@ The `loop` primitive receives a function with the application logic in Atmos,
 as follows:
 
 - The `watching` command will execute its inner function during 5 seconds.
-- The `every` loop will execute its inner function every second.
+- The `loop_on` will execute its inner function every second.
 - Once the `watching` terminates, the `loop` returns back to Lua.
 
 In Atmos, the lifetimes and schedules of tasks are determined by lexical
@@ -109,10 +109,10 @@ Tasks that abort also abort their inner tasks, which have a "last chance" to
 execute if applicable.
 Applying this to the above example:
 
-- On the first, second, third, and fourth second, `every` awakes and prints
+- On the first, second, third, and fourth second, `loop_on` awakes and prints
   `"Hello World!"`
-- On the fifth second, `watching` and `every` are both scheduled to awake.
-- The `every` awakes before the enclosing `watching`, printing `"Hello World!"`
+- On the fifth second, `watching` and `loop_on` are both scheduled to awake.
+- The `loop_on` awakes before the enclosing `watching`, printing `"Hello World!"`
   for the fifth (and last) time.
 - Therefore, `loop` returns after five seconds having printed `"Hello World!"`
   five times.
