@@ -85,6 +85,16 @@ the `tst/` sweep are NOT done -- raw-function spawn still works.
 - `xtask()` / `xtask(T)` absorb the two old overloads of `task()`,
   resolving the constructor/query pun.
 
+### 2.2c spawn_anon close-only handle — DONE (lua-atmos)
+
+`spawn_anon` returns a close-only handle, not the `xtask`: a transparent
+task has no identity to manipulate. The handle carries only `__close`
+(`getmetatable(t).__close(t)`, same as binding the xtask directly) with
+`t` hidden in the closure. So `local _ <close> = spawn_anon(..)` still
+binds the body to a block, but `await`/`toggle`/`abort` on the handle
+fail with "expected task". Verified: no test captures the return except
+`errors.lua:276` (`<close>`), which works.
+
 ### 2.2b spawn split — DONE (lua-atmos)
 
 Public `spawn(tra,…)` boolean removed; replaced by two named wrappers
@@ -200,8 +210,17 @@ tested, not just the happy path.
 |               | --[[]] blocks left as-is. (lua-atmos covers §4 streams.) |
 | tst/thread.lua| DONE: outer spawns -> spawn_task(task); lane-isolation    |
 |               | spawn/par_or (forbidden tests) left raw; thread() raw.   |
-| others        | TODO: spawn sweep (envs, readme, guide);                 |
-|               | x.lua already clean                                       |
+| tst/envs.lua  | clean (no direct spawn) -- passes.                       |
+| tst/readme.lua| clean (no direct spawn) -- passes (standalone).          |
+| all.lua       | **ALL GREEN** (proto/task/await/x/toggle/tasks/abort/    |
+|               | others/par/errors/streams/thread/envs).                  |
+| tst/guide.lua | DONE: ~19 spawns -> spawn_task(task); spawn_in -> task;   |
+|               | `task()`->`xtask()` (6.1/6.2). luac clean. (standalone)  |
+| docs          | DONE: api.md (task/xtask/spawn_task/spawn_anon/spawn_in/ |
+|               | tostring/abort/toggle/await-table/X.is).                 |
+| guide.md      | DONE: prose + all examples -> task proto / spawn_task /  |
+|               | xtask / spawn_in(ts,T); fr_await(T) kept raw; trace      |
+|               | label (xtask). Clean.                                    |
 |               | -------                                                   |
 | docs          | TODO: api.md (task/xtask/spawn_task/spawn_anon/tostring)  |
 

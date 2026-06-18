@@ -44,8 +44,17 @@ function spawn_task (t, ...)
     return run.spawn(debug.getinfo(2), nil, false, t, ...)
 end
 
+-- a transparent task has no identity to manipulate, so we return a
+-- close-only handle instead of the instance: it carries `__close` (to
+-- bind the body to a lexical block via `<close>`) and hides the xtask.
+-- `t` is kept in the closure, inaccessible from the handle.
 function spawn_anon (f, ...)
-    return run.spawn(debug.getinfo(2), nil, true, f, ...)
+    local t = run.spawn(debug.getinfo(2), nil, true, f, ...)
+    return setmetatable({}, {
+        __close = function ()
+            getmetatable(t).__close(t)
+        end
+    })
 end
 
 function emit_in (to, emt, ...)

@@ -24,7 +24,7 @@ Calls the given body as a task, passing control to Atmos.
 
 - Parameters:
     - `f: function`
-        | task prototype as a function
+        | body as a function
 - Returns:
     - `...`
         | return values from the task
@@ -69,11 +69,11 @@ Registers an environment table with Atmos.
 
 ## `atmos.status (tsk)`
 
-Returns the status of the given task.
+Returns the status of the given task instance.
 
 - Parameters:
-    - `tsk: task`
-        | task to check
+    - `tsk: xtask`
+        | task instance to check
 - Returns:
     - `: string`
         | task status: 'running', 'suspended', 'normal', 'dead'
@@ -81,41 +81,61 @@ Returns the status of the given task.
 # 2. Tasks
 
 [
-    [task(f)](#task-tra-f) |
-    [task()](#task-) |
+    [task(f)](#task-f) |
+    [xtask()](#xtask-) |
+    [xtask(T)](#xtask-t) |
     [tasks](#tasks-n) |
     [abort](#abort-t) |
-    [spawn(tsk)](#spawn-tsk-) |
-    [spawn(f)](#spawn-tra-f-) |
-    [spawn_in](#spawn_in-tsks-tsk-) |
+    [spawn_task](#spawn_task-t-) |
+    [spawn_anon](#spawn_anon-f-) |
+    [spawn_in](#spawn_in-tsks-t-) |
     [toggle](#toggle-tsk-on)
 ]
 
-## `task ([tra,] f)`
+A *task prototype* (`task`) is an abstract, spawnable definition.
 
-Creates a task from a given prototype.
+An *task instance* (`xtask`) is a spawned protoype with its own identity.
+
+A *pool of task instances* (`tasks`) holds a set of spawned prototypes.
+
+## `task (f)`
+
+Creates a task prototype from a function.
 
 - Parameters:
-    - `tra: boolean = false`
-        | if the task should become transparent in the hierarchy
     - `f: function`
-        | task prototype as a function
+        | task body as a function
 - Returns:
     - `: task`
-        | reference to task just created
+        | task prototype
 
-A transparent task (`tra=true`) is substituted by its parent in the context
-of [task()](#task-) and [emit](#emit) calls.
+<!--
+See also:
+- [xtask](#xtask) to create a task instance from a prototype.
+- [spawn_task](#spawn_task-t-) to create and start a task instance from a prototype.
+- [spawn_in](#spawn_in-tsks-t-) to spawn an task instance into a pool.
+-->
 
-## `task ()`
+## `xtask ()`
 
-Returns a self-reference to the running task.
+Returns a self-reference to the running task instance.
 
 - Parameters:
     - none
 - Returns:
-    - `: task`
-        | reference to running task
+    - `: xtask`
+        | running task instance
+
+## `xtask (T)`
+
+Creates a task instance from a prototype.
+
+- Parameters:
+    - `T: task`
+        | task prototype
+- Returns:
+    - `: xtask`
+        | task instance
 
 ## `tasks (n)`
 
@@ -123,18 +143,18 @@ Creates a task pool.
 
 - Parameters:
     - `n: number`
-        | maximum number instances
+        | maximum number of instances
 - Returns:
-    - `: task`
+    - `: tasks`
         | task pool
 
 ## `abort (t)`
 
-Aborts a task or task pool.
+Aborts a task instance or task pool.
 
 - Parameters:
-    - `t: task|tasks`
-        | task or task pool to abort
+    - `t: xtask|tasks`
+        | task instance or task pool to abort
 - Returns:
     - `nil`
 
