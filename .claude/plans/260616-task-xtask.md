@@ -71,7 +71,8 @@ See `260617-stream-protos.md`. Quality/allocation only.
 ### External (other repo / release)
 
 - §3 atmos-lang compiler: `task` keyword, desugaring, its `tst/` +
-  manual. (separate repo)
+  manual. (separate repo) -> planned in
+  `/x/atmos-lang/atmos/.claude/plans/260618-task-xtask.md` (PENDING).
 - §2.4 rockspec/CI major version bump.
 
 ## 1. Context
