@@ -1,5 +1,49 @@
 # Task Prototypes vs Instances — `task` / `xtask`
 
+## 0. RESUME — next steps (picking up on another machine)
+
+lua-atmos side is DONE and the suite is GREEN (`all.lua` + `guide.lua`):
+runtime §2.1–2.3, spawn split (`spawn_task`/`spawn_anon`), `spawn_anon`
+close-only handle, `atmos/streams.lua` lib, `api.md`, `guide.md`.
+
+Three threads remain, in priority order:
+
+### A. Finish the guide "non-reused → spawn_anon" pass (IN PROGRESS)
+
+Rule: convert `spawn_task(task(function() … end))` ->
+`spawn_anon(function() … end)` ONLY when the body is **self-contained**:
+no `emit` / `emit_in`-levels / `xtask()` / `pub` inside, result not
+captured for identity. KEEP: reused prototypes, `spawn_task(T)` of a
+named proto, pub/pool/toggle-handle, and the `<close>`-handle LESSON
+(guide.md §3.2.1 second example / guide.lua §3.4).
+
+Remaining sites to convert (others already done):
+
+| file          | still TODO                                   |
+|---------------|----------------------------------------------|
+| guide.md      | §5.3 toggle-*statement* example; §6 outer    |
+|               | catch task (keep `spawn_task(T)` + inner)    |
+| tst/guide.lua | §3.1 (2 tasks); §3.2 (outer `<close>` +inner,| 
+|               | outer becomes close-token); §3.3 (defer, 2); |
+|               | §5.1 (`<close>` stream); §5.2 (`<close>`)     |
+
+After editing: run `lua guide.lua` (and `lua all.lua`) to confirm green.
+
+### B. Rename `spawn_anon` -> `spawn_block` (DEFERRED)
+
+See `260618-spawn-block.md`. Mechanical global rename + fix one api.md
+anchor. Do AFTER (A) so it sweeps the new sites too.
+
+### C. Streams worker prototypes lazy cache (DEFERRED)
+
+See `260617-stream-protos.md`. Quality/allocation only.
+
+### External (other repo / release)
+
+- §3 atmos-lang compiler: `task` keyword, desugaring, its `tst/` +
+  manual. (separate repo)
+- §2.4 rockspec/CI major version bump.
+
 ## 1. Context
 
 Today a "task prototype" is just a `func` — a plain Lua function by the
