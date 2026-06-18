@@ -55,18 +55,22 @@ emit('X')
     -- "task 2 awakes on X"
 ```
 
-If a task is not reused, we can omit the `task` call and spawn it anonymously:
+If a task is not reused, we can omit the `task` call and spawn it as an
+anonymous block:
 
 <!-- tst/guide.lua : 1.3 -->
 
 ```
 do_spawn(function()
     await('X')
-    print("anon task awakes on X")
+    print("spawned block awakes on X")
 end)
 emit('X')
-    -- "anon task awakes on X"
+    -- "spawned block awakes on X"
 ```
+
+A spawned block is still a task, but anonymous and transparent from the user
+point of view, and which Atmos handles automatically.
 
 Although explicit suspension points are still required, note that Atmos
 provides *reactive scheduling* for tasks based on `await` and `emit`
@@ -133,7 +137,7 @@ The reactive scheduler of Atmos is deterministic and cooperative:
     When a task spawns or awakes, it takes full control of the application and
     executes until it awaits or terminates.
 
-Consider the code that spawns two tasks concurrently and await the same event
+Consider the code that spawns two blocks concurrently and await the same event
 `X` as follows:
 
 <!-- tst/guide.lua : 3.1 -->
@@ -174,14 +178,14 @@ print "4"
 
 In the example, the scheduling behaves as follows:
 
-- Main application prints `1` and spawns the first task.
-- The first task takes control, prints `a1`, and suspends, returning the
+- Main application prints `1` and spawns the first block.
+- The first block takes control, prints `a1`, and suspends, returning the
   control back to the main application.
-- The main application prints `2` and spawns the second task.
-- The second task starts, prints `b1`, and suspends.
+- The main application prints `2` and spawns the second block.
+- The second block starts, prints `b1`, and suspends.
 - The main application prints `3`, and broadcasts `X`.
-- The first task awakes, prints `a2`, and suspends.
-- The second task awakes, prints `b2`, and suspends.
+- The first block awakes, prints `a2`, and suspends.
+- The second block awakes, prints `b2`, and suspends.
 - The main application prints `4`.
 
 ## 3.2. Lexical Hierarchy
@@ -190,8 +194,8 @@ Tasks form a hierarchy based on the source position in which they are spawned.
 Therefore, the lexical structure of the program determines the lifetime of
 tasks.
 
-In the next example, the outer task terminates and aborts the inner task before
-it has the chance to awake:
+In the next example, the outer block terminates and aborts the inner block
+before it has the chance to awake:
 
 <!-- tst/guide.lua : 3.2 -->
 
@@ -218,15 +222,15 @@ within its hierarchy:
 do_spawn(function ()
     do_spawn(function ()
         local _ <close> = defer(function ()
-            print "nested task aborted"
+            print "nested block aborted"
         end)
         await(false) -- never awakes
     end)
-    -- will abort nested task
+    -- will abort nested block
 end)
 ```
 
-The nested spawned task never awakes, but executes its `defer` clause when
+The nested spawned block never awakes, but executes its `defer` clause when
 its enclosing hierarchy terminates.
 
 Since Atmos is a pure-Lua library, note that the annotation `local _ <close> =`
@@ -249,17 +253,17 @@ do
 end
 ```
 
-In the example, we attach a `spawn` and a `defer` to an explicit block.
-When the block goes out of scope, it automatically aborts the task and executes
-the deferred statement.
-The aborted task may also have pending defers, which also execute immediately.
+In the example, we attach a `do_spawn` and a `defer` to an explicit block.
+When the outer block goes out of scope, it automatically aborts the nested
+spawned block and executes the deferred statement.
+The aborted block may also have pending defers, which also execute immediately.
 The defers execute in the reverse order in which they appear in the source
 code.
 
 Note that the annotation `local _ <close> =` is also required to attach a task
 to an explicit block.
-We can omit this annotation only when we want to attach the `spawn` to its
-enclosing task.
+Nevertheless, we can omit this annotation when we want to attach the `spawn` to
+its enclosing task, which is the typical case.
 
 # 4. Compound Statements
 
