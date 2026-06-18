@@ -111,9 +111,9 @@ Add under v0.7 (these 4 are not yet recorded):
 Migrated for 0.7-1 (clock `dt`/`_s_`, `abort`, `toggle`,
 `fr_await`). Now needs a pass for the new API:
 
-- [ ] `spawn(task(...))` / `do_spawn(...)` usage consistent
-- [ ] `every` -> `loop_on` everywhere
-- [ ] `task`/`xtask` terminology aligned with api.md
+- [x] `spawn(task(...))` / `do_spawn(...)` usage consistent
+- [x] `every` -> `loop_on` everywhere
+- [x] `task`/`xtask` terminology aligned with api.md
 
 #### 2.5 api.md (already ahead -- verify only)
 
