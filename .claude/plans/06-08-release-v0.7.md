@@ -162,10 +162,16 @@ Every sibling repo must be migrated + re-released (mirrors the
 
 Mechanical migration (per repo):
 - `every(`  -> `loop_on(`            (120 sites across repos)
+    - PITFALL: spaced `every (` / `spawn (` are MISSED by a
+      `\bevery\(` sed; use `\s*` before `\(`. Verify `luac -p`.
 - `task()` / `task().f` -> `xtask()` (52 sites)
 - `spawn(function...` -> judgment:
     - `do_spawn(function...` if self-contained
     - `spawn(task(function...))` if identity reused (~15 sites)
+- `spawn`/`spawn_in` of a NAMED proto ALSO breaks (bare fn
+  rejected at runtime): wrap the DEFINITION once, not each call
+  site: `function Bird(a)..end` -> `Bird = task(function(a)..end)`
+  (preserve scope; keep any `return Bird`). Spawn sites stay bare.
 
 Per-repo breaking counts (every / spawn(fn)):
 env-sdl 3/1, env-pico 4/1, env-socket 1/0, env-iup 4/1,
@@ -178,14 +184,18 @@ plan; the apps + iup-7guis are tracked as downstream targets
 INSIDE their associated env plan (no own plan file).
 
 Envs (tier A mechanical: every/task()/spawn) -- have plans:
-- [ ] env-socket  `260618-release-v0.2.md`   (-> rock 0.2-2)
-- [ ] env-sdl     `260618-release-v0.2.md`   (-> rock 0.2-2)
+- [x] env-socket  `260618-release-v0.2.md`   (DONE; rock stays
+      0.2-1 -- 0.2-2 bump SKIPPED, branch-track serves loop_on fix)
+- [x] env-sdl     `260618-release-v0.2.md`   (DONE; rock stays
+      0.2-1 -- 0.2-2 bump SKIPPED, branch-track serves loop_on fix)
 - [ ] env-pico    `260618-release-v0.3.md`   (-> rock 0.3-2)
 - [ ] env-iup     `260618-release-v0.2.md`   (-> rock 0.2-2; exs
       already 0.7, only every->loop_on + 1 spawn->do_spawn)
 
 Downstream apps (NO own plan -- migrate/test under their env):
-- [ ] sdl-birds / sdl-rocks / sdl-pingus  (v0.5) -- under env-sdl
+- [~] sdl-birds DONE (v0.5, committed+pushed; main==v0.5==origin).
+      sdl-rocks / sdl-pingus migrated+tested, commit/push PENDING
+      (v0.5) -- under env-sdl
 - [ ] pico-birds / pico-rocks             (v0.6) -- under env-pico
 - [ ] iup-7guis  (tier C: multi-arg events -> `loop_on({tag,h})`)
       -- under env-iup
