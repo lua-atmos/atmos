@@ -142,7 +142,7 @@ do
         function T (v)
             toggle('Show', function ()
                 out(v)
-                every('Draw', function (e)
+                loop_on('Draw', function (e)
                     out(e[1])
                 end)
             end)
@@ -201,9 +201,9 @@ do
     do
         function T ()
             spawn(task(function ()
-                every ('Draw', function () out(10) end)
+                loop_on ('Draw', function () out(10) end)
             end))
-            every ('Tick', function () out(20) end)
+            loop_on ('Tick', function () out(20) end)
         end
         local t = spawn(task(T))
         toggle (t, false, 'Draw')
@@ -222,9 +222,9 @@ do
         function T ()
             toggle('Show', 'Draw', function ()
                 spawn(task(function ()
-                    every('Draw', function (e) out(e[1]) end)
+                    loop_on('Draw', function (e) out(e[1]) end)
                 end))
-                every('Tick', function (e) out(100+e[1]) end)
+                loop_on('Tick', function (e) out(100+e[1]) end)
             end)
         end
         spawn(task(T))
@@ -245,7 +245,7 @@ do
     print("Testing...", "filter 3: on clears filter")
     do
         function T ()
-            every ('Draw', function () out(1) end)
+            loop_on ('Draw', function () out(1) end)
         end
         local t = spawn(task(T))
         toggle (t, false, 'Draw')
@@ -266,9 +266,9 @@ do
         function T ()
             toggle('Show', {tag='not', 'Tick'}, function ()    -- pass all but 'Tick'
                 spawn(task(function ()
-                    every('Draw', function (e) out(e[1]) end)
+                    loop_on('Draw', function (e) out(e[1]) end)
                 end))
-                every('Tick', function (e) out(100+e[1]) end)
+                loop_on('Tick', function (e) out(100+e[1]) end)
             end)
         end
         spawn(task(T))

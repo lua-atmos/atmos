@@ -83,7 +83,7 @@ _day_ = 24 * _h_
 toggle   = run.toggle
 thread   = run.thread
 
-every    = run.every
+loop_on  = run.loop_on
 par      = run.par
 par_or   = run.par_or
 par_and  = run.par_and

@@ -162,7 +162,7 @@ end
 do
     print("Testing...", "await clock 3")
     spawn(task(function ()
-        every(1*_s_, function ()
+        loop_on(1*_s_, function ()
             out("1s elapsed")
         end)
     end))
@@ -360,9 +360,9 @@ do
 end
 
 do
-    print("Testing...", "every 1")
+    print("Testing...", "loop_on 1")
     spawn(task(function ()
-        every(true, function (e)
+        loop_on(true, function (e)
             out(e)
         end)
     end))
@@ -374,9 +374,9 @@ do
 end
 
 do
-    print("Testing...", "every 2")
+    print("Testing...", "loop_on 2")
     spawn(task(function ()
-        every(function (v) return v and v>10 and v end,
+        loop_on(function (v) return v and v>10 and v end,
             function (e)
                 out(e)
             end
@@ -391,9 +391,9 @@ do
 end
 
 do
-    print("Testing...", "every 3: break")
+    print("Testing...", "loop_on 3: break")
     spawn(task(function ()
-        every(true, function ()
+        loop_on(true, function ()
             _break_()
         end)
         out("ok")
@@ -404,10 +404,10 @@ do
 end
 
 do
-    print("Testing...", "every 4: return passes through")
+    print("Testing...", "loop_on 4: return passes through")
     spawn(task(function ()
         catch('atm-func', function ()
-            every(true, function ()
+            loop_on(true, function ()
                 throw('atm-func')   -- compiled return()
             end)
             out("never")

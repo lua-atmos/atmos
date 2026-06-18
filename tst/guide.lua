@@ -140,7 +140,7 @@ loop(function ()
     do
         print "-=-=- 4.1 -=-=-"
         watching(1*_s_, function()
-            every(100*_ms_, function ()
+            loop_on(100*_ms_, function ()
                 print "100 ms elapses"    -- prints this message every second
             end)
         end)
@@ -268,7 +268,7 @@ loop(function ()
         print "-=-=- 6.4 -=-=-"
         do_spawn(function()
             toggle('X', function ()
-                every(100*_ms_, function ()
+                loop_on(100*_ms_, function ()
                     print "100ms elapses"
                 end)
             end)

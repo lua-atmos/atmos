@@ -6,7 +6,7 @@ loop(function ()
     print "-=- 1 -=-"
     do
         watching(1*_s_, function ()
-            every(200*_ms_, function ()
+            loop_on(200*_ms_, function ()
                 print("Hello World!")
             end)
         end)

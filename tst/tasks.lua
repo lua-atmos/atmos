@@ -140,7 +140,7 @@ do
     print("Testing...", "toggle 1")
     do
         local T = task(function (v)
-            every(true, function ()
+            loop_on(true, function ()
                 out(v)
             end)
         end)

@@ -347,12 +347,12 @@ do
     atmos.stop()
 end
 
--- every('clock'): per-tick deltas accumulate
+-- loop_on('clock'): per-tick deltas accumulate
 do
-    print("Testing...", "every clock")
+    print("Testing...", "loop_on clock")
     spawn(task(function ()
         local n = 0
-        every('clock', function (us)
+        loop_on('clock', function (us)
             n = n + us
             if n >= 30 then
                 _break_()
