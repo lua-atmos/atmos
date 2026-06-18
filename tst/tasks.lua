@@ -67,7 +67,7 @@ do
         n = n + 1
     end
     local ts = tasks(1)
-    spawn_task(task(function()
+    spawn(task(function()
         local ok1 = spawn_in(ts, task(T))
         await(ok1)
         local ok2 = spawn_in(ts, task(T))
@@ -173,7 +173,7 @@ do
         local t1 = spawn_in (ts, T, 1)
         local t2 = spawn_in (ts, T, 2)
         local t3 = spawn_in (ts, T, 3)
-        spawn_task(task(function ()
+        spawn(task(function ()
             local ret,t,ts2 = await {tag='tasks', mode='any', tasks=ts}
             assert(ret==2 and t==t2 and ts2==ts)
             out 't2'
@@ -190,7 +190,7 @@ do
     print("Testing...", "error 1")
     local _, err = pcall(function ()
         function T ()
-            await(spawn_task(task(function ()
+            await(spawn(task(function ()
                 await('Y')
             end)))
             local function f ()
@@ -201,13 +201,13 @@ do
             --throw "OK"
         end
         loop(function ()
-            spawn_task(task(function ()
+            spawn(task(function ()
                 local ts = tasks()
-                spawn_anon(function ()
+                do_spawn(function ()
                     spawn_in(ts, task(T))
                     await(false)
                 end)
-                spawn_anon(function ()
+                do_spawn(function ()
                     await('X')
                     emit('Y')
                 end)
@@ -253,7 +253,7 @@ do
         local ts = tasks()
         local t1 = spawn_in (ts, T, 1)
         local t2 = spawn_in (ts, T, 2)
-        spawn_task(task(function ()
+        spawn(task(function ()
             local ret,t,ts2 = await {tag='tasks', mode='any', tasks=ts}
             assert(t == t2)
             assert(ret == 20)
@@ -276,7 +276,7 @@ do
         end
         local ts = tasks()
         local t1 = spawn_in (ts, task(T), 1)
-        spawn_task(task(function ()
+        spawn(task(function ()
             local ret,t,ts2 = await {tag='tasks', mode='any', tasks=ts}
             assert(t == t1)
             assert(ret == 1)
@@ -299,7 +299,7 @@ do
         local ts = tasks()
         local t1 = spawn_in (ts, T, 1)
         local t2 = spawn_in (ts, T, 2)
-        spawn_task(task(function ()
+        spawn(task(function ()
             local ts2 = await {tag='tasks', mode='all', tasks=ts}
             assert(ts2 == ts)
             out 'all'
@@ -315,7 +315,7 @@ do
     print("Testing...", "pools empty -> ts")
     do
         local ts = tasks()
-        spawn_task(task(function ()
+        spawn(task(function ()
             local ts2 = await {tag='tasks', mode='all', tasks=ts}
             assert(ts2 == ts)
             out 'empty'
@@ -329,7 +329,7 @@ end
 do
     print("Testing...", "pools bad mode")
     local _,err = pcall(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             local ts = tasks()
             spawn_in(ts, task(
                 function ()

@@ -14,15 +14,15 @@
 
 Tasks are the basic units of execution in Atmos.
 
-The `task` primitive creates a task prototype from a function, and the
-`spawn_task` primitive starts an instance from it:
+The `task` primitive creates a task prototype from a function, and the `spawn`
+primitive starts an instance from it:
 
 ```
 local T = task(function (...)
     ...
 end)
-local t1 = spawn_task(T, ...)    -- starts `t1`
-local t2 = spawn_task(T, ...)    -- starts `t2`
+local t1 = spawn(T, ...)    -- starts `t1`
+local t2 = spawn(T, ...)    -- starts `t2`
 ...                              -- t1 & t2 started and are now waiting
 ```
 
@@ -42,8 +42,8 @@ end)
 The `emit` primitive broadcasts an event, awaking all tasks awaiting it:
 
 ```
-spawn_task(T, 1)
-spawn_task(T, 2)
+spawn(T, 1)
+spawn(T, 2)
 emit('X')
     -- "task 1 awakes on X"
     -- "task 2 awakes on X"
@@ -52,7 +52,7 @@ emit('X')
 If a task is not reused, we can omit the `task` call and spawn it anonymously:
 
 ```
-spawn_anon(function()
+do_spawn(function()
     await('X')
     print("anon task awakes on X")
 end)
@@ -128,13 +128,13 @@ Consider the code that spawns two tasks concurrently and await the same event
 <tr><td>
 <pre>
 print "1"
-spawn_anon(function ()
+do_spawn(function ()
     print "a1"
     await 'X'
     print "a2"
 end)
 print "2"
-spawn_anon(function ()
+do_spawn(function ()
     print "b1"
     await 'X'
     print "b2"
@@ -180,8 +180,8 @@ In the next example, the outer task terminates and aborts the inner task before
 it has the chance to awake:
 
 ```
-spawn_anon(function ()
-    spawn_anon(function ()
+do_spawn(function ()
+    do_spawn(function ()
         await 'Y'   -- never awakes after 'X' occurs
         print "never prints"
     end)
@@ -197,8 +197,8 @@ A task can register deferred statements to execute when they terminate or abort
 within its hierarchy:
 
 ```
-spawn_anon(function ()
-    spawn_anon(function ()
+do_spawn(function ()
+    do_spawn(function ()
         local _ <close> = defer(function ()
             print "nested task aborted"
         end)
@@ -219,7 +219,7 @@ blocks:
 
 ```
 do
-    local _ <close> = spawn_anon(function ()
+    local _ <close> = do_spawn(function ()
         <...>   -- aborted with the enclosing `do`
     end)
     local _ <close> = defer(function ()
@@ -291,7 +291,7 @@ It is also possible to self refer to the running instance with a call to
 local T = task(function ()
     xtask().v = 10
 end)
-local t = spawn_task(T)
+local t = spawn(T)
 print(t.v)  -- 10
 ```
 
@@ -342,7 +342,7 @@ A task can be toggled off (and back to on) to remain alive but unresponsive
 (and back to responsive) to upcoming events:
 
 ```
-local t = spawn_task(task(function ()
+local t = spawn(task(function ()
     await 'X'
     print "awakes from X"
 end))
@@ -360,7 +360,7 @@ When receiving `false`, the body toggles off.
 When receiving `true`, the body toggles on.
 
 ```
-spawn_anon(function()
+do_spawn(function()
     toggle('X', function ()
         every(1*_s_, function ()
             print "1s elapses"
@@ -381,16 +381,16 @@ tasks.
 
 ```
 local T = task(function ()
-    spawn_anon(function ()
+    do_spawn(function ()
         await 'X'
         throw 'Y'
     end)
     await(false)
 end)
 
-spawn_anon(function ()
+do_spawn(function ()
     local ok, err = catch('Y', function ()
-        spawn_task(T)
+        spawn(T)
         await(false)
     end)
     print(ok, err)
@@ -466,7 +466,7 @@ The next example creates a stream that awaits occurrences of event `X`:
 
 ```
 local S = require "atmos.streams"
-spawn_anon(function ()
+do_spawn(function ()
     S.fr_await('X')                                 -- X1, X2, ...
         :filter(function(x) return x.v%2 == 1 end)  -- X1, X3, ...
         :map(function(x) return x.v end)            -- 1, 3, ...
@@ -507,7 +507,7 @@ function T ()           -- raw function: `S.fr_await` blesses it
     await('X')
     await('Y')
 end
-spawn_anon(function ()
+do_spawn(function ()
     S.fr_await(T)                           -- XY, XY, ...
         :zip(S.from(1))                     -- {XY,1}, {XY,2} , ...
         :map(function (t) return t[2] end)  -- 1, 2, ...
@@ -587,4 +587,4 @@ Also, if none of the threads complete, they are automatically aborted by the
 enclosing timeout `watching`.
 
 Threads are isolated: they may receive copies of upvalues, but cannot use Atmos
-standard primitives like `await`, `emit`, or `spawn_task`.
+standard primitives like `await`, `emit`, or `spawn`.

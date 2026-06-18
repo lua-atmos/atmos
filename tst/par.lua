@@ -5,7 +5,7 @@ print '--- PAR ---'
 
 do
     print("Testing...", "par 1")
-    spawn_task(task(function ()
+    spawn(task(function ()
         par (
             function () end
         )
@@ -17,7 +17,7 @@ end
 
 do
     print("Testing...", "par 2")
-    spawn_task(task(function ()
+    spawn(task(function ()
         par (
             function ()
                 while true do
@@ -47,7 +47,7 @@ end
 do
     print("Testing...", "par 3: err")
     local _,err = pcall(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             par(10)
         end))
     end)
@@ -66,7 +66,7 @@ print '--- PAR_OR ---'
 
 do
     print("Testing...", "par_or 1")
-    spawn_task(task(function ()
+    spawn(task(function ()
         par_or (
             function ()
                 local e = await('X')
@@ -87,7 +87,7 @@ end
 
 do
     print("Testing...", "par_or 2")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = par_or (
             function ()
                 return await('X')
@@ -107,7 +107,7 @@ end
 
 do
     print("Testing...", "par_or 3")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = par_or (
             function ()
                 return await('X')
@@ -124,7 +124,7 @@ end
 
 do
     print("Testing...", "par_or 4")
-    spawn_task(task(function ()
+    spawn(task(function ()
         par_or (
             function ()
                 await 'X'
@@ -143,7 +143,7 @@ end
 
 do
     print("Testing...", "par_or 5")
-    spawn_task(task(function ()
+    spawn(task(function ()
         par_or (
             function ()
                 await(true)
@@ -189,7 +189,7 @@ print '--- PAR_AND ---'
 
 do
     print("Testing...", "par_and 1")
-    spawn_task(task(function ()
+    spawn(task(function ()
         par_and (
             function ()
                 out(await('X'))
@@ -209,7 +209,7 @@ end
 
 do
     print("Testing...", "par_and 2")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local x,y = par_and (
             function ()
                 return await('X')
@@ -230,7 +230,7 @@ end
 
 do
     print("Testing...", "par_and 3")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local x,y = par_and (
             function ()
                 return await('X')
@@ -250,7 +250,7 @@ print '--- WATCHING ---'
 
 do
     print("Testing...", "watching 1")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = watching (true,
             function ()
                 await(false)
@@ -265,7 +265,7 @@ end
 
 do
     print("Testing...", "watching 2 (par_or)")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = par_or (
             function ()
                 return await('X')
@@ -283,7 +283,7 @@ end
 
 do
     print("Testing...", "watching 2 (par_or)")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = par_or (
             function ()
                 return await(true)
@@ -301,7 +301,7 @@ end
 
 do
     print("Testing...", "watching 2")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = watching ('X',
             function ()
                 return 'Y'
@@ -316,7 +316,7 @@ end
 
 do
     print("Testing...", "watching 3")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = watching (false,
             function ()
                 return await('X')
@@ -340,7 +340,7 @@ end
 do
     print("Testing...", "watching 5: error")
     local _,err = pcall(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             watching (false, 'no')
         end))
     end)
@@ -349,7 +349,7 @@ end
 
 do
     print("Testing...", "watching 6")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = watching (function (e) return e and e.tag=='X' and e[1]==10 and e[1] end,
             function ()
                 await(false)
@@ -365,7 +365,7 @@ end
 
 do
     print("Testing...", "watching 7")
-    spawn_task(task(function ()
+    spawn(task(function ()
         watching (true,
             function ()
                 await(true)
@@ -381,7 +381,7 @@ end
 
 do
     print("Testing...", "watching 8")
-    spawn_task(task(function ()
+    spawn(task(function ()
         watching ('X',
             function ()
                 await('X')

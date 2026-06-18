@@ -17,7 +17,7 @@ end
 do
     print("Testing...", "thread 2: error - no body function")
     local _,err = pcall(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             thread(10)
         end))
     end)
@@ -28,7 +28,7 @@ end
 do
     print("Testing...", "thread 3: error - await in thread")
     local _,err = catch(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             thread(function()
                 await(false)
             end)
@@ -44,7 +44,7 @@ print "--- THREAD / BASIC ---"
 
 do
     print("Testing...", "thread 3: basic - no return")
-    spawn_task(task(function ()
+    spawn(task(function ()
         thread(function ()
         end)
         out("done")
@@ -57,7 +57,7 @@ end
 
 do
     print("Testing...", "thread 4: basic - return value")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v,x = thread(function ()
             return 42, 99
         end)
@@ -71,7 +71,7 @@ end
 
 do
     print("Testing...", "thread 5: parameters - upvalues")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local data, factor = 10, 3
         local v = thread(function ()
             return data * factor
@@ -86,7 +86,7 @@ end
 
 do
     print("Testing...", "thread 6: parameters - table copy")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local t = { 1, 2, 3 }
         local v = thread(function ()
             local sum = 0
@@ -105,7 +105,7 @@ end
 
 do
     print("Testing...", "thread 7: string operations (string lib available)")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local s = "hello world"
         local v = thread(function ()
             return string.upper(s)
@@ -120,7 +120,7 @@ end
 
 do
     print("Testing...", "thread 8: math operations (math lib available)")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local n = 9
         local v = thread(function ()
             return math.sqrt(n)
@@ -137,7 +137,7 @@ print "--- THREAD / UPVALUES ---"
 
 do
     print("Testing...", "thread 9: upvalue - pure function")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local function double (n)
             return n * 2
         end
@@ -154,7 +154,7 @@ end
 
 do
     print("Testing...", "thread 10: upvalue - value")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local multiplier = 3
         local n = 10
         local v = thread(function ()
@@ -174,7 +174,7 @@ do
     print("Testing...",
         "thread 11: error inside lane propagates")
     local _,err = pcall(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             thread(function ()
                 error("lane error")
             end)
@@ -191,7 +191,7 @@ print "--- THREAD / LIFECYCLE ---"
 do
     print("Testing...",
         "thread 12: parent task suspends during thread")
-    spawn_task(task(function ()
+    spawn(task(function ()
         out("before")
         thread(function ()
             local sum = 0
@@ -210,7 +210,7 @@ end
 
 do
     print("Testing...", "thread 13: sequential threads")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local a = thread(function ()
             return 10 + 1
         end)
@@ -229,7 +229,7 @@ end
 
 do
     print("Testing...", "thread 14: thread inside par_or")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = par_or(
             function ()
                 return thread(function ()
@@ -252,7 +252,7 @@ print "--- THREAD / ISOLATION ---"
 
 do
     print("Testing...", "thread 15: table isolation - mutation in lane does not affect parent")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local t = { 1, 2, 3 }
         local v = thread(function ()
             t[1] = 999
@@ -271,7 +271,7 @@ print "--- THREAD / REUSE ---"
 
 do
     print("Testing...", "thread 16: prototype reuse (same fn, multiple calls)")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local function square (n)
             return n * n
         end
@@ -289,7 +289,7 @@ end
 
 do
     print("Testing...", "thread 17: cache hit with updated upvalue")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local x = 10
         local function compute (n) return n + x end
 
@@ -314,7 +314,7 @@ do
     print("Testing...",
         "thread 18: await forbidden inside thread")
     local _,err = pcall(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             thread(function ()
                 await(true)
             end)
@@ -330,7 +330,7 @@ do
     print("Testing...",
         "thread 19: spawn forbidden inside thread")
     local _,err = pcall(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             thread(function ()
                 spawn(function () end)
             end)
@@ -346,7 +346,7 @@ do
     print("Testing...",
         "thread 20: par_or forbidden inside thread")
     local _,err = pcall(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             thread(function ()
                 par_or(
                     function () end,
@@ -365,7 +365,7 @@ print "--- THREAD / CANCEL ---"
 
 do
     print("Testing...", "thread 21: cancel - par_or cancels sleeping thread")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local cleaned = false
         local v = par_or(
             function ()
@@ -392,7 +392,7 @@ end
 
 do
     print("Testing...", "thread 22: cancel - watching cancels sleeping thread")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local cleaned = false
         local v = watching("stop",
             function ()
@@ -417,8 +417,8 @@ end
 do
     print("Testing...", "thread 23: cancel - parent death cancels thread")
     local cleaned = false
-    spawn_task(task(function ()
-        spawn_task(task(function ()
+    spawn(task(function ()
+        spawn(task(function ()
             local _ <close> = defer(function ()
                 cleaned = true
             end)
@@ -436,7 +436,7 @@ end
 
 do
     print("Testing...", "thread 24: cancel - defer fires inside lane body")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = thread(function ()
             local log = { "start" }
             do

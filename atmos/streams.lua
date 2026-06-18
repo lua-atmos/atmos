@@ -13,7 +13,7 @@ local function fr_await (t)
 end
 
 local function fr_spawn (t)
-    local x <close> = spawn_task(task(t.T), table.unpack(t.args))
+    local x <close> = spawn(task(t.T), table.unpack(t.args))
     return await(x) or false
 end
 
@@ -82,7 +82,7 @@ function S.debounce (src, fctl)
     local n = N()
     local t = {
         n   = n,
-        tsk = spawn_task(task(S.Debounce), n, src, fctl),
+        tsk = spawn(task(S.Debounce), n, src, fctl),
         f   = debounce,
         clo = close,
     }
@@ -126,7 +126,7 @@ function S.buffer (src, ctl)
     local n = N()
     local t = {
         n   = n,
-        tsk = spawn_task(task(S.Buffer), n, src, ctl),
+        tsk = spawn(task(S.Buffer), n, src, ctl),
         f   = buffer,
         clo = close,
     }
@@ -195,7 +195,7 @@ function S.xpar (ss)
     local t = {
         n    = n,
         tsks = tsks,
-        tsk  = spawn_task(task(TT), n, tsks, ss),
+        tsk  = spawn(task(TT), n, tsks, ss),
         f    = par,
         clo  = clo_tsk,
     }
@@ -236,7 +236,7 @@ function S.xparor (ss)
     local t = {
         n    = n,
         tsks = tsks,
-        tsk  = spawn_task(task(TT), n, tsks, ss),
+        tsk  = spawn(task(TT), n, tsks, ss),
         f    = paror,
         clo  = clo_tsk,
     }

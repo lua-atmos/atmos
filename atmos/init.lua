@@ -40,7 +40,7 @@ function spawn_in (up, t, ...)
     return run.spawn(debug.getinfo(2), up, false, t, ...)
 end
 
-function spawn_task (t, ...)
+function spawn (t, ...)
     return run.spawn(debug.getinfo(2), nil, false, t, ...)
 end
 
@@ -48,7 +48,7 @@ end
 -- close-only handle instead of the instance: it carries `__close` (to
 -- bind the body to a lexical block via `<close>`) and hides the xtask.
 -- `t` is kept in the closure, inaccessible from the handle.
-function spawn_anon (f, ...)
+function do_spawn (f, ...)
     local t = run.spawn(debug.getinfo(2), nil, true, f, ...)
     return setmetatable({}, {
         __close = function ()

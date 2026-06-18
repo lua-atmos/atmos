@@ -5,7 +5,7 @@ print "--- AWAIT / _OR_ ---"
 
 do
     print("Testing...", "await or 1")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await({tag='or', 'X', 'Y'})
         out(v.tag,v[1])
     end))
@@ -16,7 +16,7 @@ end
 
 do
     print("Testing...", "await or 2")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='or', {tag='Y',5}, {tag='Y',10}}
         out(v.tag, v[1])
     end))
@@ -27,8 +27,8 @@ end
 
 do
     print("Testing...", "await or 3: task")
-    spawn_task(task(function ()
-        local t = spawn_task(task(function ()
+    spawn(task(function ()
+        local t = spawn(task(function ()
             await 'X'
             return 10
         end))
@@ -42,7 +42,7 @@ end
 
 do
     print("Testing...", "await or 4: tasks")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local ts = tasks()
         local t = spawn_in(ts, task(function ()
             return await 'X'
@@ -57,7 +57,7 @@ end
 
 do
     print("Testing...", "await or 5: clock")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='or', 'X', 1*_s_}
         out(v)
     end))
@@ -72,7 +72,7 @@ print "--- AWAIT / _AND_ ---"
 
 do
     print("Testing...", "await and 1")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v,u = await({tag='and', 'X', 'Y'})
         out(v.tag, u.tag)
     end))
@@ -84,7 +84,7 @@ end
 
 do
     print("Testing...", "await and 2")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v,u = await {tag='and', 'Y', 'Y'}
         out(v,u)
     end))
@@ -95,8 +95,8 @@ end
 
 do
     print("Testing...", "await and 3: task")
-    spawn_task(task(function ()
-        local t = spawn_task(task(function ()
+    spawn(task(function ()
+        local t = spawn(task(function ()
             await 'X'
             return 10
         end))
@@ -110,7 +110,7 @@ end
 
 do
     print("Testing...", "await and 4: tasks")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local ts = tasks()
         local t = spawn_in(ts, task(function ()
             return await 'X'
@@ -125,7 +125,7 @@ end
 
 do
     print("Testing...", "await and 5: clock")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v,u = await {tag='and', 'X', 1*_s_}
         out(v, u)
     end))
@@ -140,7 +140,7 @@ print '--- AND / OR ---'
 
 do
     print("Testing...", "await and/or: clock")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local ts = tasks()
         local t = spawn_in(ts, task(function ()
             await(false)
@@ -162,7 +162,7 @@ print "--- AWAIT / _NOT_ ---"
 
 do
     print("Testing...", "await not 1")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='not', 'X'}
         out(v.tag, v[1])
     end))
@@ -174,7 +174,7 @@ end
 
 do
     print("Testing...", "await not 2: in or")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='or', {tag='not', 'X'}, 'Y'}
         out(v.tag, v[1])
     end))
@@ -186,12 +186,12 @@ end
 
 do
     print("Testing...", "await not 3: nested emit must not shadow outer")
-    spawn_task(task(function ()
+    spawn(task(function ()
         await 'X'
         emit_in('global', 'Y')
         await(false)
     end))
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='not', 'Y'}
         out(v.tag, v[1])
     end))
@@ -204,7 +204,7 @@ print "--- AWAIT / _UNTIL_ ---"
 
 do
     print("Testing...", "await while 1: pred false -> event")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='while', 'X', function (e) return e[1]~=10 end}
         out(v.tag, v[1])
     end))
@@ -215,7 +215,7 @@ end
 
 do
     print("Testing...", "await while 2: pred true -> re-await next")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='while', 'X', function (e) return e[1]~=10 end}
         out(v[1])
     end))
@@ -227,7 +227,7 @@ end
 
 do
     print("Testing...", "await until 3: many preds, all hold")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='until', 'X',
             function (e) return e[1]>0 end,
             function (e) return e[1]<100 end
@@ -241,7 +241,7 @@ end
 
 do
     print("Testing...", "await until 4: many preds, one false")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='until', 'X',
             function (e) return e[1]>0 end,
             function (e) return e[1]<100 end
@@ -256,7 +256,7 @@ end
 
 do
     print("Testing...", "await while 5: over or (full matching reused)")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='while', {tag='or', 'X', 'Y'},
             function (e) return e[1]~=9 end
         }
@@ -270,7 +270,7 @@ end
 
 do
     print("Testing...", "await until 6: pred returns x -> result is x")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='until', 'X', function (e) return e[1]*2 end}
         out(v)
     end))
@@ -281,7 +281,7 @@ end
 
 do
     print("Testing...", "await until 7: last pred decides result")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='until', 'X',
             function (e) return e[1]>0 end,
             function (e) return e[1]*2 end
@@ -296,7 +296,7 @@ end
 do
     print("Testing...", "await until 8: error: no predicate")
     local _,err = pcall(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             await {tag='until', 'X'}
         end))
     end)
@@ -306,11 +306,11 @@ end
 
 do
     print("Testing...", "await until 9: nested emit must not shadow outer")
-    spawn_task(task(function ()
+    spawn(task(function ()
         await 'X'
         emit_in('global', {tag='X', 2})
     end))
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await {tag='until', 'X', function (e) return e[1]==1 end}
         out(v[1])
     end))
@@ -324,7 +324,7 @@ print "--- AWAIT / CLOCK ---"
 -- basic: wakes on the next numeric emit, returns the delta
 do
     print("Testing...", "await clock 1")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await('clock')
         out(v)
     end))
@@ -336,7 +336,7 @@ end
 -- ignores non-numbers: a string emit (even 'clock') does NOT match
 do
     print("Testing...", "await clock 2: ignores non-number")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local v = await('clock')
         out(v)
     end))
@@ -350,7 +350,7 @@ end
 -- every('clock'): per-tick deltas accumulate
 do
     print("Testing...", "every clock")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local n = 0
         every('clock', function (us)
             n = n + us

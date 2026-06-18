@@ -2,8 +2,18 @@
 
 ## Status
 
-DEFERRED -- not renaming now; the suite passes with `spawn_anon`.
-Tracked separately from `260616-task-xtask` (the task/xtask split).
+SUPERSEDED -- `spawn_block` was further shortened to `do_spawn`, and the
+opaque `spawn_task` reverted to the unmarked `spawn` (common case). Final
+pair: `spawn` (task, identity) / `do_spawn` (block, close-only). The body
+below documents the intermediate `spawn_block` step; see
+`260616-task-xtask.md` §B for the final naming.
+
+DONE -- global token-rename `spawn_anon` -> `spawn_block` applied across
+atmos/init.lua, api.md (header + TOC anchor `#spawn_block-f-`), guide.md,
+and tst/ (proto, task, guide, others, errors, tasks). api.md anchor was
+fixed automatically by the same sed (token included). Plan files updated
+by hand (sed skipped, to keep the "rename X -> Y" sentences intact). Run
+the suite to confirm behaviour unchanged.
 
 ## Decision
 

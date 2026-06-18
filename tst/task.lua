@@ -15,7 +15,7 @@ end
 do
     print("Testing...", "await 2: error")
     local _,err = pcall(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             await()
         end))
     end)
@@ -24,7 +24,7 @@ do
 
     print("Testing...", "await 2: error")
     local _,err = pcall(function ()
-        spawn_task(task(function ()
+        spawn(task(function ()
             await(1,2)
         end))
     end)
@@ -52,7 +52,7 @@ do
         out(b)
     end
     local t = task(T)
-    spawn_task(t, 10)
+    spawn(t, 10)
     emit('X')
     assertx(out(), "10\nX\n")
     atmos.stop()
@@ -65,7 +65,7 @@ do
         local b = await(true)
         out(b)
     end
-    spawn_task(task(T),10)
+    spawn(task(T),10)
     emit('ok')
     assertx(out(), "10\nok\n")
     atmos.stop()
@@ -79,7 +79,7 @@ do
         local e2 = await(true)
         out(2, e2)
     end
-    spawn_task(task(tk))
+    spawn(task(tk))
     emit(1)
     emit(2)
     emit(3)
@@ -89,7 +89,7 @@ end
 
 do
     print("Testing...", "await 1: true")
-    spawn_task(task(function ()
+    spawn(task(function ()
         await(true)
         out("awake")
     end))
@@ -101,7 +101,7 @@ end
 
 do
     print("Testing...", "await 2: false")
-    spawn_task(task(function ()
+    spawn(task(function ()
         await(false)
         out("awake")
     end))
@@ -116,11 +116,11 @@ print "--- EMIT / SCOPE ---"
 do
     print("Testing...", "emit scope 1")
     do
-        spawn_anon(function ()
+        do_spawn(function ()
             await 'X'
             emit 'Y'
         end)
-        spawn_anon(function ()
+        do_spawn(function ()
             await 'Y'
             out 'OK'
         end)
@@ -134,7 +134,7 @@ print "--- AWAIT / CLOCK ---"
 
 do
     print("Testing...", "await clock 1")
-    spawn_task(task(function ()
+    spawn(task(function ()
         await 'X'
         await(1*_h_ + 1*_min_ + 1*_s_ + 10*_ms_)
         out("awake")
@@ -149,7 +149,7 @@ end
 
 do
     print("Testing...", "await clock 2")
-    spawn_task(task(function ()
+    spawn(task(function ()
         await(1*_h_ + 1*_min_ + 1*_s_ + 10*_ms_)
         out("awake")
     end))
@@ -161,7 +161,7 @@ end
 
 do
     print("Testing...", "await clock 3")
-    spawn_task(task(function ()
+    spawn(task(function ()
         every(1*_s_, function ()
             out("1s elapsed")
         end)
@@ -179,7 +179,7 @@ end
 
 do
     print("Testing...", "await clock 4: ignores non-clock emit")
-    spawn_task(task(function ()
+    spawn(task(function ()
         await(1*_s_)
         out("awake")
     end))
@@ -193,8 +193,8 @@ print "--- AWAIT / TASK ---"
 
 do
     print("Testing...", "await 4: task")
-    spawn_task(task(function ()
-        local t = spawn_task(task(function ()
+    spawn(task(function ()
+        local t = spawn(task(function ()
         end))
         await(t)
         out("awake")
@@ -206,8 +206,8 @@ end
 
 do
     print("Testing...", "await 5: task")
-    spawn_task(task(function ()
-        local t = spawn_task(task(function ()
+    spawn(task(function ()
+        local t = spawn(task(function ()
             await(true)
         end))
         await(t)
@@ -221,11 +221,11 @@ end
 
 do
     print("Testing...", "await 5: task - no awake")
-    spawn_task(task(function ()
-        local x = spawn_task(task(function ()
+    spawn(task(function ()
+        local x = spawn(task(function ()
             await(true)
         end))
-        local y = spawn_task(task(function ()
+        local y = spawn(task(function ()
             await(false)
         end))
         await(y)
@@ -239,11 +239,11 @@ end
 
 do
     print("Testing...", "await 6: task - return")
-    spawn_task(task(function ()
-        local x = spawn_task(task(function (v)
+    spawn(task(function ()
+        local x = spawn(task(function (v)
             return v
         end), 10)
-        local y = spawn_task(task(function (v)
+        local y = spawn(task(function (v)
             await(true)
             return v
         end), 20)
@@ -258,15 +258,15 @@ end
 
 do
     print("Testing...", "await 7: task - spurious awake on sibling term")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local function tk ()
             local e1 = await(true)
             out(e1.tag or "?")
             local e2 = await(true)
             out(e2.tag or "?")
         end
-        spawn_task(task(tk))
-        spawn_task(task(tk))
+        spawn(task(tk))
+        spawn(task(tk))
         emit({tag='t'})          -- both 1st awaits
         emit({tag='u'})          -- both 2nd awaits
     end))
@@ -276,8 +276,8 @@ end
 
 do
     print("Testing...", "await 8: one wake per emit")
-    spawn_task(task(function ()
-        spawn_task(task(function ()
+    spawn(task(function ()
+        spawn(task(function ()
             await(true)        -- wakes from the emit
             out("inner")
         end))                  -- inner terminates here
@@ -296,7 +296,7 @@ print '--- PUB ---'
 
 do
     print("Testing...", "pub 1")
-    spawn_task(task(function ()
+    spawn(task(function ()
         xtask().v = 10
         out(xtask().v)
     end))
@@ -316,7 +316,7 @@ end
 
 do
     print("Testing...", "pub 3")
-    local t = spawn_task(task(function ()
+    local t = spawn(task(function ()
         xtask().v = 10
     end))
     out(t.v)
@@ -345,7 +345,7 @@ do
             out(e)
         end
     end
-    spawn_task(task(T))
+    spawn(task(T))
     emit(10)
     emit(20)
     out("ok")
@@ -361,7 +361,7 @@ end
 
 do
     print("Testing...", "every 1")
-    spawn_task(task(function ()
+    spawn(task(function ()
         every(true, function (e)
             out(e)
         end)
@@ -375,7 +375,7 @@ end
 
 do
     print("Testing...", "every 2")
-    spawn_task(task(function ()
+    spawn(task(function ()
         every(function (v) return v and v>10 and v end,
             function (e)
                 out(e)
@@ -392,7 +392,7 @@ end
 
 do
     print("Testing...", "every 3: break")
-    spawn_task(task(function ()
+    spawn(task(function ()
         every(true, function ()
             _break_()
         end)
@@ -405,7 +405,7 @@ end
 
 do
     print("Testing...", "every 4: return passes through")
-    spawn_task(task(function ()
+    spawn(task(function ()
         catch('atm-func', function ()
             every(true, function ()
                 throw('atm-func')   -- compiled return()
@@ -427,13 +427,13 @@ do
         function T ()
             xtask().pub = 10
             out(xtask().pub)
-            spawn_anon(function ()
+            do_spawn(function ()
                 xtask().pub = 20
                 out(xtask().pub)
             end)
             out(xtask().pub)
         end
-        spawn_task(task(T))
+        spawn(task(T))
     end
     assertx(out(), "10\n20\n20\n")
     atmos.stop()
@@ -445,9 +445,9 @@ do
     print("Testing...", "abort 1")
     do
         loop(function ()
-            spawn_task(task(function ()
-                spawn_task(task(function ()
-                    spawn_task(task(function ()
+            spawn(task(function ()
+                spawn(task(function ()
+                    spawn(task(function ()
                         out(0)
                         await(true)
                         out(2)
@@ -472,8 +472,8 @@ end
 do
     print("Testing...", "abort 2")
     do
-        spawn_anon(function ()
-            local _ <close> = spawn_task(task(function ()
+        do_spawn(function ()
+            local _ <close> = spawn(task(function ()
                 await(true)
                 return emit_in("global", "true")
             end))
@@ -489,8 +489,8 @@ end
 do
     print("Testing...", "abort 3")
     do
-        local _ <close> = spawn_task(task(function ()
-            local _ <close> = spawn_task(task(function ()
+        local _ <close> = spawn(task(function ()
+            local _ <close> = spawn(task(function ()
                 await(true)
                 local _ <close> = setmetatable({}, {__close=function ()
                     out("1")
@@ -510,7 +510,7 @@ end
 do
     print("Testing...", "abort 4")
     do
-        spawn_anon(function ()
+        do_spawn(function ()
             par_or (
                 function ()
                     await(false)
@@ -545,7 +545,7 @@ print "--- ERRORS ---"
 do
     print("Testing...", "spawn 1: err")
     local _,err = pcall(function ()
-        spawn_task()
+        spawn()
     end)
     assertfx(err, "invalid spawn : expected task prototype")
 end
@@ -554,7 +554,7 @@ do
     print("Testing...", "spawn 2: err")
     local _,err = pcall(function ()
         local t = task(function()end)
-        spawn_anon(t)
+        do_spawn(t)
     end)
     --assertfx(err, "task.lua:%d+: invalid spawn : expected function prototype")
     --assertfx(err, "task.lua:%d+: invalid spawn : transparent modifier mismatch")

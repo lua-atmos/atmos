@@ -22,7 +22,7 @@ end
 
 do
     print("Testing...", "xtask 2: me")
-    spawn_task(task(function ()
+    spawn(task(function ()
         out(xtask() ~= nil)     -- current executing task
     end))
     assertx(out(), "true\n")
@@ -32,14 +32,14 @@ end
 do
     print("Testing...", "spawn 1: prototype runs")
     local T = task(function () out 'ran' end)
-    spawn_task(T)
+    spawn(T)
     assertx(out(), "ran\n")
     atmos.stop()
 end
 
 do
     print("Testing...", "spawn 2: anon runs transparently")
-    spawn_anon(function () out 'anon' end)
+    do_spawn(function () out 'anon' end)
     assertx(out(), "anon\n")
     atmos.stop()
 end
@@ -75,15 +75,15 @@ do
 end
 
 do
-    print("Testing...", "err 2: spawn_task a raw function (must wrap in task)")
-    local _,err = pcall(function () spawn_task(function () end) end)
+    print("Testing...", "err 2: spawn a raw function (must wrap in task)")
+    local _,err = pcall(function () spawn(function () end) end)
     assertfx(err, "invalid spawn : expected task prototype")
 end
 
 do
-    print("Testing...", "err 3: spawn_anon a prototype (transparent contradiction)")
+    print("Testing...", "err 3: do_spawn a prototype (transparent contradiction)")
     local T = task(function () end)
-    local _,err = pcall(function () spawn_anon(T) end)
+    local _,err = pcall(function () do_spawn(T) end)
     assertfx(err, "invalid spawn : transparent task prototype")
 end
 

@@ -22,7 +22,7 @@ do
     out(1)
     do
         out(2)
-        local _ <close> = spawn_task(task(function ()
+        local _ <close> = spawn(task(function ()
             local _ <close> = defer(function ()
                 out("defer")
             end)
@@ -40,7 +40,7 @@ do
     out(1)
     do
         out(2)
-        local _ <close> = spawn_task(task(function ()
+        local _ <close> = spawn(task(function ()
             local _ <close> = defer(function ()
                 out("defer")
             end)
@@ -56,8 +56,8 @@ end
 do
     print("Testing...", "nested task 1")
     loop(function ()
-        spawn_task(task(function ()
-            spawn_task(task(function ()
+        spawn(task(function ()
+            spawn(task(function ()
                 local _ <close> = defer(function ()
                     out "nested task aborted"
                 end)
@@ -71,8 +71,8 @@ end
 
 do
     print("Testing...", "nested task 2")
-    spawn_task(task(function ()
-        spawn_task(task(function ()
+    spawn(task(function ()
+        spawn(task(function ()
             local _ <close> = defer(function ()
                 out "nested task aborted"
             end)
@@ -85,7 +85,7 @@ end
 
 do
     print("Testing...", "defer - throw 1")
-    local _,err = pcall(spawn_task, task(function ()
+    local _,err = pcall(spawn, task(function ()
         local _ <close> = defer(function ()
             out("defer")
         end)
@@ -98,7 +98,7 @@ end
 
 do
     print("Testing...", "defer - error 1")
-    local _,err = pcall(loop, spawn_task, task(function ()
+    local _,err = pcall(loop, spawn, task(function ()
         local _ <close> = defer(function ()
             out("defer")
             error('ok')
@@ -332,7 +332,7 @@ print "--- TASK ---"
 do
     print("Testing...", "task 1")
     do
-        spawn_task(task(function ()
+        spawn(task(function ()
             local x,y,z = catch('X', function ()
                 await(true)
                 throw('X',10)
@@ -349,9 +349,9 @@ end
 do
     print("Testing...", "task 2")
     do
-        spawn_task(task(function ()
+        spawn(task(function ()
             local x,y,z = catch('X', function ()
-                spawn_task(task(function ()
+                spawn(task(function ()
                     await(true)
                     throw('X',10)
                 end))
@@ -465,9 +465,9 @@ do
     print("Testing...", "throw 1")
     local _, err = pcall(function ()
         loop(function ()
-            spawn_task(task(function ()
+            spawn(task(function ()
                 local x,y,z = catch('Z', function ()
-                    spawn_task(task(function ()
+                    spawn(task(function ()
                         await(true)
                         throw('X',10)
                     end))
@@ -493,9 +493,9 @@ do
     print("Testing...", "throw 2")
     local _, err = pcall(function ()
         loop(function ()
-            spawn_task(task(function ()
-                spawn_task(task(function ()
-                    await(spawn_task(task(function ()
+            spawn(task(function ()
+                spawn(task(function ()
+                    await(spawn(task(function ()
                         await(true)
                     end)))
                     throw "OK"
@@ -519,14 +519,14 @@ do
     print("Testing...", "throw 3")
     local _, err = pcall(function ()
         loop(function ()
-            spawn_task(task(function ()
-                spawn_anon(function ()
-                    await(spawn_task(task(function ()
+            spawn(task(function ()
+                do_spawn(function ()
+                    await(spawn(task(function ()
                         await('Y')
                     end)))
                     throw "OK"
                 end)
-                spawn_anon(function ()
+                do_spawn(function ()
                     await('X')
                     emit('Y')
                 end)
@@ -550,15 +550,15 @@ do
 
     local _, err = pcall(function ()
         function T ()
-            spawn_task(task(function ()
+            spawn(task(function ()
                 throw 'X'
             end))
         end
 
         loop(function ()
-            spawn_task(task(function ()
+            spawn(task(function ()
                 local ok, err = catch('Y', function ()
-                    spawn_task(task(T))
+                    spawn(task(T))
                 end)
                 print(ok, err)
             end))

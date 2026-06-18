@@ -86,10 +86,10 @@ Returns the status of the given task instance.
     [xtask(T)](#xtask-t) |
     [tasks](#tasks-n) |
     [abort](#abort-t) |
-    [spawn_task](#spawn_task-t-) |
-    [spawn_anon](#spawn_anon-f-) |
+    [spawn](#spawn-t-) |
     [spawn_in](#spawn_in-tsks-t-) |
     [toggle](#toggle-tsk-on)
+    [do_spawn](#do_spawn-f-) |
 ]
 
 A *task prototype* (`task`) is an abstract, spawnable definition.
@@ -115,7 +115,7 @@ Creates a task prototype from a function.
 <!--
 See also:
 - [xtask](#xtask) to create a task instance from a prototype.
-- [spawn_task](#spawn_task-t-) to create and start a task instance from a prototype.
+- [spawn](#spawn-t-) to create and start a task instance from a prototype.
 - [spawn_in](#spawn_in-tsks-t-) to spawn an task instance into a pool.
 -->
 
@@ -164,7 +164,7 @@ Aborts a task instance or task pool.
 All nested tasks are also aborted.
 All nested [deferred](#defer-f) blocks execute.
 
-## `spawn_task (t, ...)`
+## `spawn (t, ...)`
 
 Spawns a prototype as a task instance with its own identity.
 
@@ -176,30 +176,6 @@ Spawns a prototype as a task instance with its own identity.
 - Returns:
     - `: xtask`
         | task instance just spawned
-
-## `spawn_anon (f, ...)`
-
-Spawns a raw function as an anonymous transparent nested task.
-
-- Parameters:
-    - `f: function`
-        | inline task body
-    - `...`
-        | extra arguments to pass to the body
-- Returns:
-    - `: handle`
-        | close-only lifetime handle
-
-A transparent task has no identity, so the return is a close-only handle:
-it cannot be awaited, toggled, or aborted, but it can bind the body to a
-lexical block:
-
-```
-do
-    local _ <close> = spawn_anon(function () ... end)   -- aborted at block end
-    ...
-end
-```
 
 ## `spawn_in (tsks, t, ...)`
 
@@ -227,6 +203,30 @@ Toggles a task instance (or pool) on and off.
         | toggle on (`true`) or off (`false`)
 - Returns:
     - `nil`
+
+## `do_spawn (f, ...)`
+
+Spawns a raw function as an anonymous transparent nested task.
+
+- Parameters:
+    - `f: function`
+        | inline task body
+    - `...`
+        | extra arguments to pass to the body
+- Returns:
+    - `: handle`
+        | close-only lifetime handle
+
+A transparent task has no identity, so the return is a close-only handle:
+it cannot be awaited, toggled, or aborted, but it can bind the body to a
+lexical block:
+
+```
+do
+    local _ <close> = do_spawn(function () ... end)   -- aborted at block end
+    ...
+end
+```
 
 # 3. Events
 

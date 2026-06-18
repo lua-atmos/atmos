@@ -5,8 +5,8 @@ print '--- TASK ---'
 
 do
     print("Testing...", "abort task 1: from outside")
-    spawn_task(task(function ()
-        local t = spawn_task(task(function ()
+    spawn(task(function ()
+        local t = spawn(task(function ()
             await(true)
             out("no")
         end))
@@ -19,8 +19,8 @@ end
 
 do
     print("Testing...", "abort task 2: defer")
-    spawn_task(task(function ()
-        local t = spawn_task(task(function ()
+    spawn(task(function ()
+        local t = spawn(task(function ()
             local _ <close> = defer(function ()
                 out("defer")
             end)
@@ -36,7 +36,7 @@ end
 
 do
     print("Testing...", "abort task 3: self-abort")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local t = xtask()
         out("before")
         local _ <close> = defer(function ()
@@ -62,7 +62,7 @@ print '--- TASKS ---'
 
 do
     print("Testing...", "abort tasks 1: from outside")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local ts = tasks()
         spawn_in(ts, task(function ()
             await(true)
@@ -81,7 +81,7 @@ end
 
 do
     print("Testing...", "abort tasks 2: defer")
-    spawn_task(task(function ()
+    spawn(task(function ()
         local ts = tasks()
         spawn_in(ts, task(function ()
             local _ <close> = defer(function ()

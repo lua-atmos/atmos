@@ -3,30 +3,30 @@
 ## 0. RESUME — next steps (picking up on another machine)
 
 lua-atmos side is DONE and the suite is GREEN (`all.lua` + `guide.lua`):
-runtime §2.1–2.3, spawn split (`spawn_task`/`spawn_anon`), `spawn_anon`
+runtime §2.1–2.3, spawn split (`spawn`/`do_spawn`), `do_spawn`
 close-only handle, `atmos/streams.lua` lib, `api.md`, `guide.md`.
 
 Three threads remain, in priority order:
 
-### A. Finish the guide "non-reused → spawn_anon" pass (IN PROGRESS)
+### A. Finish the guide "non-reused → do_spawn" pass (IN PROGRESS)
 
-Rule: convert `spawn_task(task(function() … end))` ->
-`spawn_anon(function() … end)` ONLY when the body is **self-contained**:
+Rule: convert `spawn(task(function() … end))` ->
+`do_spawn(function() … end)` ONLY when the body is **self-contained**:
 no `emit` / `emit_in`-levels / `xtask()` / `pub` inside, result not
-captured for identity. KEEP: reused prototypes, `spawn_task(T)` of a
+captured for identity. KEEP: reused prototypes, `spawn(T)` of a
 named proto, pub/pool/toggle-handle. NOTE: a `<close>`-bound handle does
-NOT count as "captured for identity" — `spawn_anon` returns a close-only
+NOT count as "captured for identity" — `do_spawn` returns a close-only
 handle that still binds `<close>` and aborts with the block, so
-`local _ <close> = spawn_anon(fn)` is preferred for self-contained
+`local _ <close> = do_spawn(fn)` is preferred for self-contained
 bodies (DONE: guide.md §3.2.1 do-block / guide.lua §3.4). Identity is
 only truly used at §5.1/§5.3.
 
 Remaining sites to convert (others already done):
 
 DONE: guide.md §3.2.1 do-block, §5.3 toggle-*statement*, and §6 outer
-catch task all converted to `spawn_anon` (§6 inner `spawn_task(T)` of the
+catch task all converted to `do_spawn` (§6 inner `spawn(T)` of the
 named proto kept). guide.lua §3.4 do-block converted; §6.4 toggle-stmt
-already `spawn_anon`; guide.lua has no Errors/catch section.
+already `do_spawn`; guide.lua has no Errors/catch section.
 
 | file          | still TODO                                   |
 |---------------|----------------------------------------------|
@@ -36,10 +36,23 @@ already `spawn_anon`; guide.lua has no Errors/catch section.
 
 After editing: run `lua guide.lua` (and `lua all.lua`) to confirm green.
 
-### B. Rename `spawn_anon` -> `spawn_block` (DEFERRED)
+### B. Public spawn naming — DONE
 
-See `260618-spawn-block.md`. Mechanical global rename + fix one api.md
-anchor. Do AFTER (A) so it sweeps the new sites too.
+Final names (was `spawn_task`/`spawn_anon`):
+
+| primitive   | spawns          | identity            |
+|-------------|-----------------|---------------------|
+| `spawn`     | task instance   | yes (handle/xtask)  |
+| `do_spawn`  | inline block    | no (close-only)     |
+| `spawn_in`  | task into pool  | yes                 |
+
+History: `spawn_anon` -> `spawn_block` -> `do_spawn` (shortened so the
+common case takes the unmarked `spawn`, was `spawn_task`). See
+`260618-spawn-block.md`. Global word-boundary renames applied across
+code + docs (atmos/init.lua, atmos/streams.lua, api.md, guide.md, tst/);
+api.md anchors fixed automatically; internal `run.spawn`/`M.spawn`
+untouched. Done as a side quest ahead of finishing (A); the remaining
+(A) sites below already use the final names.
 
 ### C. Streams worker prototypes lazy cache (DEFERRED)
 
@@ -136,12 +149,12 @@ the `tst/` sweep are NOT done -- raw-function spawn still works.
 - `xtask()` / `xtask(T)` absorb the two old overloads of `task()`,
   resolving the constructor/query pun.
 
-### 2.2c spawn_anon close-only handle — DONE (lua-atmos)
+### 2.2c do_spawn close-only handle — DONE (lua-atmos)
 
-`spawn_anon` returns a close-only handle, not the `xtask`: a transparent
+`do_spawn` returns a close-only handle, not the `xtask`: a transparent
 task has no identity to manipulate. The handle carries only `__close`
 (`getmetatable(t).__close(t)`, same as binding the xtask directly) with
-`t` hidden in the closure. So `local _ <close> = spawn_anon(..)` still
+`t` hidden in the closure. So `local _ <close> = do_spawn(..)` still
 binds the body to a block, but `await`/`toggle`/`abort` on the handle
 fail with "expected task". Verified: no test captures the return except
 `errors.lua:276` (`<close>`), which works.
@@ -153,12 +166,12 @@ Public `spawn(tra,…)` boolean removed; replaced by two named wrappers
 
 | call               | tra   | accepts                         |
 |--------------------|-------|---------------------------------|
-| `spawn_task(t,…)`  | false | prototype or instance (opaque)  |
-| `spawn_anon(f,…)`  | true  | raw function (transparent body) |
+| `spawn(t,…)`  | false | prototype or instance (opaque)  |
+| `do_spawn(f,…)`  | true  | raw function (transparent body) |
 | `spawn_in(ts,t,…)` | false | prototype into a pool (kept)    |
 
 `run.spawn` keeps `tra` internally (no dispatch change). Errors:
-`spawn_task(rawfn)` -> "expected task prototype"; `spawn_anon(proto)`
+`spawn(rawfn)` -> "expected task prototype"; `do_spawn(proto)`
 -> "transparent task prototype". Combinators unchanged.
 
 ### 2.2 `spawn` dispatch — DONE (lua-atmos)
@@ -234,8 +247,8 @@ tested, not just the happy path.
 
 | file          | status                                                   |
 |---------------|----------------------------------------------------------|
-| tst/proto.lua | NEW + split: `spawn_task`/`spawn_anon`, `__tostring`, 5 fail |
-| atmos/init.lua| spawn split: `spawn_task` + `spawn_anon`; bare `spawn` gone |
+| tst/proto.lua | NEW + split: `spawn`/`do_spawn`, `__tostring`, 5 fail |
+| atmos/init.lua| spawn split: `spawn` + `do_spawn`; bare `spawn` gone |
 | tst/all.lua   | registers `proto.lua` first (before unmigrated task.lua) |
 | tst/task.lua  | DONE: ~40 `spawn(rawfn)`->`spawn(task(rawfn))`; `task()`->|
 |               | `xtask()`; assert l.561 -> "transparent task prototype"; |
@@ -244,39 +257,39 @@ tested, not just the happy path.
 |               | (toggle 2/3); toggle string-form bodies kept raw.        |
 | tst/abort.lua | TODO: l.40 `task()`->`xtask()`; spawn sweep               |
 | tst/guide.lua | TODO: l.215,225 `task()`->`xtask()`; spawn sweep          |
-| tst/await.lua | DONE: all opaque -> `spawn_task(task(..))`; `spawn_in`  |
+| tst/await.lua | DONE: all opaque -> `spawn(task(..))`; `spawn_in`  |
 |               | -> `spawn_in(ts, task(..))`. luac clean, l.300 pin kept. |
 | tst/tasks.lua | DONE: spawn/spawn_in sweep; pool tostring assert -> tasks:|
 |               | 0x; trace labels `(task)`->`(xtask)`; `task()`->`xtask()`.|
 | tst/abort.lua | DONE: spawn/spawn_in sweep; `task()`->`xtask()`.          |
-| tst/others.lua| DONE: spawn/spawn_anon/pcall-forms sweep; trace labels    |
+| tst/others.lua| DONE: spawn/do_spawn/pcall-forms sweep; trace labels    |
 |               | `(task)`->`(xtask)`.                                      |
-| tst/par.lua   | DONE: outer spawn -> spawn_task(task(..)); par*/watching |
+| tst/par.lua   | DONE: outer spawn -> spawn(task(..)); par*/watching |
 |               | arg-fns kept raw; pins :51/:60 intact.                   |
 | tst/errors.lua| DONE: heredoc-code spawns swept (verified via load());   |
 |               | expected trace labels `(task)`->`(xtask)`, `(tasks)` kept.|
 | streams.lua   | DONE: LIBRARY atmos/streams.lua internal spawns wrapped  |
-|  (lib+test)   | (fr_spawn/Debounce/Buffer/par/xpar -> spawn_task(task)/  |
+|  (lib+test)   | (fr_spawn/Debounce/Buffer/par/xpar -> spawn(task)/  |
 |               | spawn_in(ts,task)); test active spawns swept; commented  |
 |               | --[[]] blocks left as-is. (lua-atmos covers §4 streams.) |
-| tst/thread.lua| DONE: outer spawns -> spawn_task(task); lane-isolation    |
+| tst/thread.lua| DONE: outer spawns -> spawn(task); lane-isolation    |
 |               | spawn/par_or (forbidden tests) left raw; thread() raw.   |
 | tst/envs.lua  | clean (no direct spawn) -- passes.                       |
 | tst/readme.lua| clean (no direct spawn) -- passes (standalone).          |
 | all.lua       | **ALL GREEN** (proto/task/await/x/toggle/tasks/abort/    |
 |               | others/par/errors/streams/thread/envs).                  |
-| tst/guide.lua | DONE: ~19 spawns -> spawn_task(task); spawn_in -> task;   |
+| tst/guide.lua | DONE: ~19 spawns -> spawn(task); spawn_in -> task;   |
 |               | `task()`->`xtask()` (6.1/6.2). luac clean. (standalone)  |
-| docs          | DONE: api.md (task/xtask/spawn_task/spawn_anon/spawn_in/ |
+| docs          | DONE: api.md (task/xtask/spawn/do_spawn/spawn_in/ |
 |               | tostring/abort/toggle/await-table/X.is).                 |
-| guide.md      | DONE: prose + all examples -> task proto / spawn_task /  |
+| guide.md      | DONE: prose + all examples -> task proto / spawn /  |
 |               | xtask / spawn_in(ts,T); fr_await(T) kept raw; trace      |
 |               | label (xtask). Clean.                                    |
 |               | -------                                                   |
-| docs          | TODO: api.md (task/xtask/spawn_task/spawn_anon/tostring)  |
+| docs          | TODO: api.md (task/xtask/spawn/do_spawn/tostring)  |
 
-Sweep rule: `spawn(rawfn)` / `spawn(false, rawfn)` -> `spawn_task(task(rawfn))`;
-`spawn(true, rawfn)` -> `spawn_anon(rawfn)`; `spawn_in(ts, rawfn)` ->
+Sweep rule: `spawn(rawfn)` / `spawn(false, rawfn)` -> `spawn(task(rawfn))`;
+`spawn(true, rawfn)` -> `do_spawn(rawfn)`; `spawn_in(ts, rawfn)` ->
 `spawn_in(ts, task(rawfn))`; `par*`/`watching`/`every` args stay raw.
 
 Dedup pass (idiom): where the same body is spawned 2+ times, hoist

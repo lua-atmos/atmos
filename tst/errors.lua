@@ -54,9 +54,9 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn_task(task(function ()
+                spawn(task(function ()
                     local x,y,z = catch('Z', function ()
-                        spawn_task(task(function ()
+                        spawn(task(function ()
                             await(true)
                             throw('X',10)
                         end))
@@ -84,9 +84,9 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn_task(task(function ()
-                    spawn_task(task(function ()
-                        await(spawn_task(task(function ()
+                spawn(task(function ()
+                    spawn(task(function ()
+                        await(spawn(task(function ()
                             await(true)
                         end)))
                         throw "OK"
@@ -111,14 +111,14 @@ do
     print("Testing...", "throw 3")
     local out = exec [[
         local _, err = pcall(function () loop(function ()
-            spawn_task(task(function ()
-                spawn_anon(function ()
-                    await(spawn_task(task(function ()
+            spawn(task(function ()
+                do_spawn(function ()
+                    await(spawn(task(function ()
                         await('Y')
                     end)))
                     throw "OK"
                 end)
-                spawn_anon(function ()
+                do_spawn(function ()
                     await('X')
                     emit('Y')
                 end)
@@ -143,15 +143,15 @@ do
 
     local out = exec [[
         local _, err = pcall(function () function T ()
-            spawn_task(task(function ()
+            spawn(task(function ()
                 throw 'X'
             end))
         end
 
         loop(function ()
-            spawn_task(task(function ()
+            spawn(task(function ()
                 local ok, err = catch('Y', function ()
-                    spawn_task(task(T))
+                    spawn(task(T))
                 end)
                 print(ok, err)
             end))
@@ -170,7 +170,7 @@ do
     print("Testing...", "tasks 1")
     local out = exec [[
         local _, err = pcall(function () function T ()
-            await(spawn_task(task(function ()
+            await(spawn(task(function ()
                 await('Y')
             end)))
             local function f ()
@@ -181,13 +181,13 @@ do
             --throw "OK"
         end
         loop(function ()
-            spawn_task(task(function ()
+            spawn(task(function ()
                 local ts = tasks()
-                spawn_anon(function ()
+                do_spawn(function ()
                     spawn_in(ts, task(T))
                     await(false)
                 end)
-                spawn_anon(function ()
+                do_spawn(function ()
                     await('X')
                     emit('Y')
                 end)
@@ -249,8 +249,8 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn_task(task(function ()
-                    await(spawn_task(task(function() await('X') end)))
+                spawn(task(function ()
+                    await(spawn(task(function() await('X') end)))
                     print(1+true)
                 end))
                 emit 'X'
@@ -273,7 +273,7 @@ do
         local _, err = pcall(function ()
             loop(function ()
                 require "atmos.env.clock"
-                local _ <close> = spawn_anon((function ()
+                local _ <close> = do_spawn((function ()
                     await(1*_ms_)
                     emit("X")
                 end))
@@ -298,7 +298,7 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn_task(task(function ()
+                spawn(task(function ()
                     par_or(
                         function ()
                             throw('err')
@@ -325,7 +325,7 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn_task(task(function ()
+                spawn(task(function ()
                     par_and(
                         function ()
                             throw('err')
@@ -352,7 +352,7 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn_task(task(function ()
+                spawn(task(function ()
                     watching(true,
                         function ()
                             throw('err')
@@ -376,7 +376,7 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn_task(task(function ()
+                spawn(task(function ()
                     toggle('X',
                         function ()
                             throw('err')
@@ -403,7 +403,7 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn_task(task(function ()
+                spawn(task(function ()
                     return throw('err')
                 end))
             end)
@@ -423,7 +423,7 @@ do
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
-                spawn_task(task(function ()
+                spawn(task(function ()
                     par_or(
                         function ()
                             return throw('err')

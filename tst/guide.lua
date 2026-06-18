@@ -11,8 +11,8 @@ loop(function ()
         function T ()
             await(false)
         end
-        local t1 = spawn_task(task(T))    -- starts `t1`
-        local t2 = spawn_task(task(T))    -- starts `t2`
+        local t1 = spawn(task(T))    -- starts `t1`
+        local t2 = spawn(task(T))    -- starts `t2`
         print(t1, t2)          -- t1 & t2 started and are now suspended
     end
 
@@ -23,8 +23,8 @@ loop(function ()
             await('X')
             print("task " .. i .. " awakes from X")
         end
-        spawn_task(task(T), 1)
-        spawn_task(task(T), 2)
+        spawn(task(T), 1)
+        spawn(task(T), 2)
         emit('X')
             -- "task 1 awakes from X"
             -- "task 2 awakes from X"
@@ -33,7 +33,7 @@ loop(function ()
     -- 1.3
     do
         print "-=-=- 1.3 -=-=-"
-        spawn_anon(function()
+        do_spawn(function()
             await('X')
             print("anon task awakes on X")
         end)
@@ -46,7 +46,7 @@ loop(function ()
     -- 2.1
     do
         print "-=-=- 2.1 -=-=-"
-        spawn_anon(function ()
+        do_spawn(function ()
             await "X"       -- awakes when "x" emits "X"
             print("terminates after X")
         end)
@@ -70,13 +70,13 @@ loop(function ()
     do
         print "-=-=- 3.1 -=-=-"
         print "1"
-        spawn_task(task(function ()
+        spawn(task(function ()
             print "a1"
             await 'X'
             print "a2"
         end))
         print "2"
-        spawn_task(task(function ()
+        spawn(task(function ()
             print "b1"
             await 'X'
             print "b2"
@@ -89,8 +89,8 @@ loop(function ()
     -- 3.2
     do
         print "-=-=- 3.2 -=-=-"
-        local _ <close> = spawn_task(task(function ()
-            spawn_task(task(function ()
+        local _ <close> = spawn(task(function ()
+            spawn(task(function ()
                 await 'Y'   -- never awakes after 'X' occurs
                 print "never prints"
             end))
@@ -104,8 +104,8 @@ loop(function ()
     -- 3.3
     do
         print "-=-=- 3.3 -=-=-"
-        spawn_task(task(function ()
-            spawn_task(task(function ()
+        spawn(task(function ()
+            spawn(task(function ()
                 local _ <close> = defer(function ()
                     print "nested task aborted"
                 end)
@@ -120,7 +120,7 @@ loop(function ()
         print "-=-=- 3.4 -=-=-"
         print '1'
         do
-            local _ <close> = spawn_anon(function ()
+            local _ <close> = do_spawn(function ()
                 local _ <close> = defer(function ()
                     print 'x'
                 end)
@@ -149,7 +149,7 @@ loop(function ()
     -- 4.2
     do
         print "-=-=- 4.2 -=-=-"
-        spawn_anon(function()
+        do_spawn(function()
             watching(1*_s_, function ()
                 await 'X'
                 print "X happens before 1s" -- prints this message unless 1 second elapses
@@ -161,7 +161,7 @@ loop(function ()
     -- 4.3
     do
         print "-=-=- 4.3 -=-=-"
-        spawn_anon(function()
+        do_spawn(function()
             par_and(function ()
                 await 'X'
             end, function ()
@@ -181,7 +181,7 @@ loop(function ()
     -- 5.1
     do
         print "-=-=- 5.1 -=-=-"
-        local _ <close> = spawn_task(task(function ()
+        local _ <close> = spawn(task(function ()
             S.fr_await('X')
                 :filter(function(x) return x.v%2 == 1 end)
                 :map(function(x) return x.v end)
@@ -201,7 +201,7 @@ loop(function ()
             await('X')
             await('Y')
         end
-        local _ <close> = spawn_task(task(function ()
+        local _ <close> = spawn(task(function ()
             S.fr_await(T)                           -- XY, XY, ...
                 :zip(S.from(1))                     -- {XY,1}, {XY,2} , ...
                 :map(function (t) return t[2] end)  -- 1, 2, ...
@@ -225,7 +225,7 @@ loop(function ()
         function T ()
             xtask().v = 10
         end
-        local t = spawn_task(task(T))
+        local t = spawn(task(T))
         print(t.v)  -- 10
     end
 
@@ -253,7 +253,7 @@ loop(function ()
     -- 6.3
     do
         print "-=-=- 6.3 -=-=-"
-        local t = spawn_task(task(function ()
+        local t = spawn(task(function ()
             await 'X'
             print "awakes from X"
         end))
@@ -266,7 +266,7 @@ loop(function ()
     -- 6.4
     do
         print "-=-=- 6.4 -=-=-"
-        spawn_anon(function()
+        do_spawn(function()
             toggle('X', function ()
                 every(100*_ms_, function ()
                     print "100ms elapses"

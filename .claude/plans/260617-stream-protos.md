@@ -13,12 +13,12 @@ worker tasks by wrapping a raw function in a prototype at every spawn:
 
 | site (approx) | call                                |
 |---------------|-------------------------------------|
-| fr_spawn      | `spawn_task(task(t.T), ...)`         |
-| S.debounce    | `spawn_task(task(S.Debounce), ...)`  |
-| S.buffer      | `spawn_task(task(S.Buffer), ...)`    |
+| fr_spawn      | `spawn(task(t.T), ...)`         |
+| S.debounce    | `spawn(task(S.Debounce), ...)`  |
+| S.buffer      | `spawn(task(S.Buffer), ...)`    |
 | S.par/paror   | `spawn_in(tsks, task(T), ...)`       |
 | TT            | `spawn_in(tsks, task(T), ...)`       |
-| S.xpar/xparor | `spawn_task(task(TT), ...)`          |
+| S.xpar/xparor | `spawn(task(TT), ...)`          |
 
 `T`, `TT`, `S.Debounce`, `S.Buffer` are fixed module functions
 instantiated repeatedly (`T` once per source in the `par` loop, and
