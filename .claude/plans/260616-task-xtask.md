@@ -5,6 +5,8 @@
 lua-atmos side is DONE and the suite is GREEN (`all.lua` + `guide.lua`):
 runtime §2.1–2.3, spawn split (`spawn`/`do_spawn`), `do_spawn`
 close-only handle, `atmos/streams.lua` lib, `api.md`, `guide.md`.
+Final naming `spawn` / `do_spawn` / `spawn_in` verified GREEN after the
+rename (see §B).
 
 Three threads remain, in priority order:
 

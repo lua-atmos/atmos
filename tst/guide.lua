@@ -11,9 +11,9 @@ loop(function ()
         function T ()
             await(false)
         end
-        local t1 = spawn(task(T))    -- starts `t1`
-        local t2 = spawn(task(T))    -- starts `t2`
-        print(t1, t2)          -- t1 & t2 started and are now suspended
+        local t1 = spawn(task(T))   -- starts `t1`
+        local t2 = spawn(task(T))   -- starts `t2`
+        print(t1, t2)               -- t1 & t2 started and are now suspended
     end
 
     -- 1.2

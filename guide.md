@@ -17,13 +17,15 @@ Tasks are the basic units of execution in Atmos.
 The `task` primitive creates a task prototype from a function, and the `spawn`
 primitive starts an instance from it:
 
+<!-- tst/guide.lua : 1.1 -->
+
 ```
 local T = task(function (...)
     ...
 end)
 local t1 = spawn(T, ...)    -- starts `t1`
 local t2 = spawn(T, ...)    -- starts `t2`
-...                              -- t1 & t2 started and are now waiting
+...                         -- t1 & t2 started and are now waiting
 ```
 
 Tasks are based on Lua coroutines, meaning that they rely on cooperative
@@ -31,6 +33,8 @@ scheduling with explicit suspension points.
 The key difference is that tasks can react to each other through events.
 
 The `await` primitive suspends a task until a matching event occurs:
+
+<!-- tst/guide.lua : 1.2 -->
 
 ```
 local T = task(function (i)
@@ -41,6 +45,8 @@ end)
 
 The `emit` primitive broadcasts an event, awaking all tasks awaiting it:
 
+<!-- tst/guide.lua : 1.2 -->
+
 ```
 spawn(T, 1)
 spawn(T, 2)
@@ -50,6 +56,8 @@ emit('X')
 ```
 
 If a task is not reused, we can omit the `task` call and spawn it anonymously:
+
+<!-- tst/guide.lua : 1.3 -->
 
 ```
 do_spawn(function()
@@ -74,6 +82,8 @@ inputs, depending on the environment.
 The environment is loaded through `require` and depends on an outer `loop`
 primitive to handle events:
 
+<!-- tst/guide.lua : 2.1 -->
+
 ```
 require "x"         -- environment "x" with events X.A, X.B, ...
 
@@ -91,6 +101,8 @@ of the environment back to the Lua application.
 
 The next example relies on the built-in [clock environment](atmos/env/clock/)
 to count 5 seconds:
+
+<!-- tst/guide.lua : 2.2 -->
 
 ```
 require "atmos.env.clock"
@@ -123,6 +135,8 @@ The reactive scheduler of Atmos is deterministic and cooperative:
 
 Consider the code that spawns two tasks concurrently and await the same event
 `X` as follows:
+
+<!-- tst/guide.lua : 3.1 -->
 
 <table>
 <tr><td>
@@ -179,6 +193,8 @@ tasks.
 In the next example, the outer task terminates and aborts the inner task before
 it has the chance to awake:
 
+<!-- tst/guide.lua : 3.2 -->
+
 ```
 do_spawn(function ()
     do_spawn(function ()
@@ -195,6 +211,8 @@ emit 'Y'
 
 A task can register deferred statements to execute when they terminate or abort
 within its hierarchy:
+
+<!-- tst/guide.lua : 3.3 -->
 
 ```
 do_spawn(function ()
@@ -216,6 +234,8 @@ is necessary when bounding a `defer` to a lexical scope.
 
 Tasks and deferred statements can also be attached to the scope of explicit
 blocks:
+
+<!-- tst/guide.lua : 3.4 -->
 
 ```
 do
@@ -248,6 +268,8 @@ Atmos provides many compound statements built on top of tasks:
 - The `every` statement expands to a loop that awaits its first argument at the
   beginning of each iteration:
 
+<!-- tst/guide.lua : 4.1 -->
+
 ```
 every(1*_s_, function ()
     print "1 second elapses"    -- prints every second
@@ -256,6 +278,8 @@ end)
 
 - The `watching` statement awaits the given body to terminate, or aborts if its
   first argument occurs:
+
+<!-- tst/guide.lua : 4.2 -->
 
 ```
 watching(1*_s_, function ()
@@ -267,6 +291,8 @@ end)
 - The `par`, `par_and`, `par_or` statements spawn multiple bodies and rejoin
   after their bodies terminates: `par` never rejoins, `par_and`
   rejoins after all terminate, `par_or` rejoins after any terminates:
+
+<!-- tst/guide.lua : 4.3 -->
 
 ```
 par_and(function ()
@@ -287,6 +313,8 @@ A task is a Lua table, and can hold public data fields as usual.
 It is also possible to self refer to the running instance with a call to
 `xtask()`:
 
+<!-- tst/guide.lua : 6.1 -->
+
 ```
 local T = task(function ()
     xtask().v = 10
@@ -301,6 +329,8 @@ A task pool, created with the `tasks` primitive, allows that multiple tasks
 share a parent container in the hierarchy.
 When the pool goes out of scope, all attached tasks are aborted.
 When a task terminates, it is automatically removed from the pool.
+
+<!-- tst/guide.lua : 6.2 -->
 
 ```
 local T = task(function (id, ms)
@@ -327,6 +357,8 @@ complete.
 
 Task pools provide a `pairs` iterator to traverse currently attached tasks:
 
+<!-- tst/guide.lua : 6.2 -->
+
 ```
 for _,t in pairs(ts) do
     print(t.id)
@@ -340,6 +372,8 @@ it will print the task ids that did not awake.
 
 A task can be toggled off (and back to on) to remain alive but unresponsive
 (and back to responsive) to upcoming events:
+
+<!-- tst/guide.lua : 6.3 -->
 
 ```
 local t = spawn(task(function ()
@@ -358,6 +392,8 @@ In addition, Atmos provides a `toggle` statement, which awaits the given body
 to terminate, while also observing its first argument as a boolean event:
 When receiving `false`, the body toggles off.
 When receiving `true`, the body toggles on.
+
+<!-- tst/guide.lua : 6.4 -->
 
 ```
 do_spawn(function()
@@ -464,6 +500,8 @@ and events.
 
 The next example creates a stream that awaits occurrences of event `X`:
 
+<!-- tst/guide.lua : 5.1 -->
+
 ```
 local S = require "atmos.streams"
 do_spawn(function ()
@@ -501,6 +539,8 @@ end
 Atmos also provides stateful streams by supporting tasks as stream sources.
 The next example creates a task stream that packs awaits to `X` and `Y` in
 sequence:
+
+<!-- tst/guide.lua : 5.2 -->
 
 ```
 function T ()           -- raw function: `S.fr_await` blesses it
