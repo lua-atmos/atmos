@@ -181,7 +181,7 @@ local function trace ()
     local x = M.me(true)
     while x and x~=TASKS do
         ret[#ret+1] = {
-            msg = (getmetatable(x)==meta_xtask and 'xtask') or 'tasks',
+            msg = (getmetatable(x)==meta_xtask and 'task') or 'tasks',
             dbg = x._.dbg,
         }
         x = x._.up

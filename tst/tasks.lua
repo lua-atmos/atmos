@@ -219,9 +219,9 @@ do
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  tasks.lua:%d+ %(loop%)
-         |  tasks.lua:%d+ %(emit%) <%- tasks.lua:%d+ %(xtask%)
-         |  tasks.lua:%d+ %(emit%) <%- tasks.lua:%d+ %(xtask%) <%- tasks.lua:%d+ %(xtask%) <%- tasks.lua:%d+ %(xtask%)
-         v  tasks.lua:%d+ %(throw%) <%- tasks.lua:%d+ %(xtask%) <%- tasks.lua:%d+ %(tasks%) <%- tasks.lua:%d+ %(xtask%) <%- tasks.lua:%d+ %(xtask%)
+         |  tasks.lua:%d+ %(emit%) <%- tasks.lua:%d+ %(task%)
+         |  tasks.lua:%d+ %(emit%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(task%)
+         v  tasks.lua:%d+ %(throw%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(tasks%) <%- tasks.lua:%d+ %(task%) <%- tasks.lua:%d+ %(task%)
         ==> OK
     ]])
 end

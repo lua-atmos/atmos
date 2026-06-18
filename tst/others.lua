@@ -322,7 +322,7 @@ do
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
-         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(xtask%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%)
         ==> Z
     ]])
 end
@@ -410,7 +410,7 @@ do
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
-         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(xtask%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%)
         ==> X
     ]])
 end
@@ -433,7 +433,7 @@ do
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
          |  others.lua:%d+ %(emit%)
-         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(xtask%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%)
         ==> X
     ]])
 end
@@ -483,8 +483,8 @@ do
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
-         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(xtask%)
-         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(xtask%) <%- others.lua:%d+ %(xtask%) <%- others.lua:%d+ %(xtask%)
+         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
         ==> X, 10
     ]])
 end
@@ -509,8 +509,8 @@ do
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
-         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(xtask%)
-         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(xtask%) <%- others.lua:%d+ %(xtask%) <%- others.lua:%d+ %(xtask%)
+         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
         ==> OK
     ]])
 end
@@ -538,9 +538,9 @@ do
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
-         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(xtask%)
-         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(xtask%) <%- others.lua:%d+ %(xtask%) <%- others.lua:%d+ %(xtask%)
-         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(xtask%) <%- others.lua:%d+ %(xtask%) <%- others.lua:%d+ %(xtask%)
+         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%)
+         |  others.lua:%d+ %(emit%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
         ==> OK
     ]])
 end
@@ -567,7 +567,7 @@ do
     assertfx(trim(err), trim [[
         ==> ERROR:
          |  others.lua:%d+ %(loop%)
-         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(xtask%) <%- others.lua:%d+ %(xtask%) <%- others.lua:%d+ %(xtask%) <%- others.lua:%d+ %(xtask%)
+         v  others.lua:%d+ %(throw%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%) <%- others.lua:%d+ %(task%)
         ==> X
     ]])
 end
