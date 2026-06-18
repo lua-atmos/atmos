@@ -366,3 +366,15 @@ do
     assertx(out(), "30\n")
     atmos.stop()
 end
+
+-- bare await(ts): a pool is ambiguous (any vs all), needs :any/:all
+do
+    print("Testing...", "await tasks: error: bare pool needs :any/:all")
+    local _,err = pcall(function ()
+        spawn(function ()
+            await(tasks())
+        end)
+    end)
+    assertfx(err, "await.lua:375: invalid await : unexpected tasks pool : expected ':any' or ':all'")
+    atmos.stop()
+end
