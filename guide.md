@@ -317,7 +317,7 @@ A task is a Lua table, and can hold public data fields as usual.
 It is also possible to self refer to the running instance with a call to
 `xtask()`:
 
-<!-- tst/guide.lua : 6.1 -->
+<!-- tst/guide.lua : 5.1 -->
 
 ```
 local T = task(function ()
@@ -334,7 +334,7 @@ share a parent container in the hierarchy.
 When the pool goes out of scope, all attached tasks are aborted.
 When a task terminates, it is automatically removed from the pool.
 
-<!-- tst/guide.lua : 6.2 -->
+<!-- tst/guide.lua : 5.2 -->
 
 ```
 local T = task(function (id, ms)
@@ -361,7 +361,7 @@ complete.
 
 Task pools provide a `pairs` iterator to traverse currently attached tasks:
 
-<!-- tst/guide.lua : 6.2 -->
+<!-- tst/guide.lua : 5.2 -->
 
 ```
 for _,t in pairs(ts) do
@@ -377,7 +377,7 @@ it will print the task ids that did not awake.
 A task can be toggled off (and back to on) to remain alive but unresponsive
 (and back to responsive) to upcoming events:
 
-<!-- tst/guide.lua : 6.3 -->
+<!-- tst/guide.lua : 5.3 -->
 
 ```
 local t = spawn(task(function ()
@@ -397,7 +397,7 @@ to terminate, while also observing its first argument as a boolean event:
 When receiving `false`, the body toggles off.
 When receiving `true`, the body toggles on.
 
-<!-- tst/guide.lua : 6.4 -->
+<!-- tst/guide.lua : 5.4 -->
 
 ```
 do_spawn(function()
@@ -504,7 +504,7 @@ and events.
 
 The next example creates a stream that awaits occurrences of event `X`:
 
-<!-- tst/guide.lua : 5.1 -->
+<!-- tst/guide.lua : 7.1 -->
 
 ```
 local S = require "atmos.streams"
@@ -544,7 +544,7 @@ Atmos also provides stateful streams by supporting tasks as stream sources.
 The next example creates a task stream that packs awaits to `X` and `Y` in
 sequence:
 
-<!-- tst/guide.lua : 5.2 -->
+<!-- tst/guide.lua : 7.2 -->
 
 ```
 function T ()           -- raw function: `S.fr_await` blesses it

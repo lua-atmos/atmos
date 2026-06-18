@@ -176,11 +176,11 @@ loop(function ()
         emit 'Y'
     end
 
-    -- 6. More about Tasks
+    -- 5. More about Tasks
 
-    -- 6.1
+    -- 5.1
     do
-        print "-=-=- 6.1 -=-=-"
+        print "-=-=- 5.1 -=-=-"
         local T = task(function ()
             xtask().v = 10
         end)
@@ -188,9 +188,9 @@ loop(function ()
         print(t.v)  -- 10
     end
 
-    -- 6.2
+    -- 5.2
     do
-        print "-=-=- 6.2 -=-=-"
+        print "-=-=- 5.2 -=-=-"
         local T = task(function (id, ms)
             xtask().id = id
             print('start', id, ms)
@@ -209,9 +209,9 @@ loop(function ()
         end
     end
 
-    -- 6.3
+    -- 5.3
     do
-        print "-=-=- 6.3 -=-=-"
+        print "-=-=- 5.3 -=-=-"
         local t = spawn(task(function ()
             await 'X'
             print "awakes from X"
@@ -222,9 +222,9 @@ loop(function ()
         emit 'X'    -- awakes
     end
 
-    -- 6.4
+    -- 5.4
     do
-        print "-=-=- 6.4 -=-=-"
+        print "-=-=- 5.4 -=-=-"
         do_spawn(function()
             toggle('X', function ()
                 loop_on(100*_ms_, function ()
@@ -240,11 +240,11 @@ loop(function ()
         await(1*_s_)
     end
 
-    -- 5. Functional Streams
+    -- 7. Functional Streams
 
-    -- 5.1
+    -- 7.1
     do
-        print "-=-=- 5.1 -=-=-"
+        print "-=-=- 7.1 -=-=-"
         local _ <close> = do_spawn(function ()
             S.fr_await('X')
                 :filter(function(x) return x.v%2 == 1 end)
@@ -258,9 +258,9 @@ loop(function ()
         end
     end
 
-    -- 5.2
+    -- 7.2
     do
-        print "-=-=- 5.2 -=-=-"
+        print "-=-=- 7.2 -=-=-"
         function T ()
             await('X')
             await('Y')
