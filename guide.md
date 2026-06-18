@@ -14,15 +14,16 @@
 
 Tasks are the basic units of execution in Atmos.
 
-The `spawn` primitive starts a task from a function prototype:
+The `task` primitive creates a task prototype from a function, and the
+`spawn_task` primitive starts an instance from it:
 
 ```
-function T (...)
+local T = task(function (...)
     ...
-end
-local t1 = spawn(T, ...)    -- starts `t1`
-local t2 = spawn(T, ...)    -- starts `t2`
-...                         -- t1 & t2 started and are now waiting
+end)
+local t1 = spawn_task(T, ...)    -- starts `t1`
+local t2 = spawn_task(T, ...)    -- starts `t2`
+...                              -- t1 & t2 started and are now waiting
 ```
 
 Tasks are based on Lua coroutines, meaning that they rely on cooperative
@@ -32,20 +33,31 @@ The key difference is that tasks can react to each other through events.
 The `await` primitive suspends a task until a matching event occurs:
 
 ```
-function T (i)
+local T = task(function (i)
     await('X')
     print("task " .. i .. " awakes on X")
-end
+end)
 ```
 
 The `emit` primitive broadcasts an event, awaking all tasks awaiting it:
 
 ```
-spawn(T, 1)
-spawn(T, 2)
+spawn_task(T, 1)
+spawn_task(T, 2)
 emit('X')
     -- "task 1 awakes on X"
     -- "task 2 awakes on X"
+```
+
+If a task is not reused, we can omit the `task` call and spawn it anonymously:
+
+```
+spawn_anon(function()
+    await('X')
+    print("anon task awakes on X")
+end)
+emit('X')
+    -- "anon task awakes on X"
 ```
 
 Although explicit suspension points are still required, note that Atmos
