@@ -371,7 +371,7 @@ end
 do
     print("Testing...", "await tasks: error: bare pool needs :any/:all")
     local _,err = pcall(function ()
-        spawn(function ()
+        do_spawn(function ()
             await(tasks())
         end)
     end)
