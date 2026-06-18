@@ -44,7 +44,7 @@ know an expression is a pool and reject it statically.
     -- a bare pool has metatable meta_tasks and no .tag: it would never
     -- match and hang; require :any / :all to await a pool
     assertn(2, getmetatable(awt) ~= meta_tasks,
-        "invalid await : expected ':any' or ':all' for a task pool"
+        "invalid await : unexpected task pool : expected ':any' or ':all'"
     )
 ```
 
@@ -55,11 +55,11 @@ know an expression is a pool and reject it statically.
 
 - existing suite stays green.
 - `await(M.tasks())` now raises
-  `invalid await : expected ':any' or ':all' for a task pool`.
+  `invalid await : unexpected task pool : expected ':any' or ':all'`.
 
 ## Status
 
-- [ ] add the `meta_tasks` guard in `M.await`.
+- [x] add the `meta_tasks` guard in `M.await`.
 - [ ] run the suite; confirm bare-pool error + no regressions.
 
 ## Cross-refs

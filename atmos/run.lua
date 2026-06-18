@@ -468,6 +468,12 @@ function M.await (time, awt, ...)
     local me = M.me(true)
     assertn(2, me, "invalid await : expected enclosing task")
 
+    -- a bare pool has metatable meta_tasks and no .tag: it would never
+    -- match and hang; require :any / :all to await a pool
+    assertn(2, getmetatable(awt) ~= meta_tasks,
+        "invalid await : unexpected tasks pool : expected ':any' or ':all'"
+    )
+
     local tag = ((type(awt) == 'table') and awt.tag) or awt
 
     if tag=='or' or tag=='and' then
