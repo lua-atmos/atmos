@@ -25,6 +25,9 @@ only re-publishes corrected METADATA -- it ships no new code.
 - env-socket: migrated + DONE (rock stays 0.2-1, bump SKIPPED).
 - env-sdl:    migrated + DONE (rock stays 0.2-1, bump SKIPPED).
 - sdl-birds:  migrated, committed, pushed (v0.5, main==origin).
+- sdl-rocks:  migrated, committed, pushed (v0.5==master==origin @ 942290d).
+- sdl-pingus: migrated, committed, pushed (v0.5==main==origin @ 175928b).
+  -> env-sdl line FULLY DONE (env-sdl done/260618-release-v0.2.md).
 
 ### OPEN DECISION (resolve before any env/atmos upload)
 env-socket + env-sdl SKIPPED the rock-rev bump (branch-track
@@ -38,8 +41,9 @@ desc is wrong). Re-decide per repo by checking its published desc.
 ### NEXT (ordered, each line self-contained)
 1. [atmos, THIS repo] `luarocks make atmos-0.7-2.rockspec`
    (local install). -> §3 last box.
-2. [sdl-rocks + sdl-pingus] already migrated + tested; just
-   `git commit` + `git push` (branch `v0.5`). -> §4 apps.
+2. [x] [sdl-rocks + sdl-pingus] DONE: committed + pushed (v0.5).
+   sdl-rocks master==v0.5==origin @ 942290d; sdl-pingus
+   main==v0.5==origin @ 175928b. -> §4 apps.
 3. [env-pico] migrate per `env-pico/.claude/plans/260618-release
    -v0.3.md` (loop_on x3 + do_spawn x1), test, push `v0.3`,
    ff `main`. Rock: SKIP 0.3-2 unless desc-fix needed.
@@ -234,9 +238,10 @@ Envs (tier A mechanical: every/task()/spawn) -- have plans:
       DECISION, default SKIP; also ff `main`)
 
 Downstream apps (NO own plan -- migrate/test under their env):
-- [~] sdl-birds DONE (v0.5, committed+pushed; main==v0.5==origin).
-      sdl-rocks / sdl-pingus migrated+tested, commit/push PENDING
-      (v0.5) -- under env-sdl
+- [x] sdl-birds / sdl-rocks / sdl-pingus all DONE (v0.5,
+      committed+pushed). sdl-birds main==v0.5==origin @ edc8203;
+      sdl-rocks master==v0.5==origin @ 942290d; sdl-pingus
+      main==v0.5==origin @ 175928b. -- under env-sdl
 - [ ] pico-birds / pico-rocks             (v0.6) -- under env-pico
 - [ ] iup-7guis  (tier C: multi-arg events -> `loop_on({tag,h})`)
       -- under env-iup
