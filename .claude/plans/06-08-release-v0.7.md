@@ -28,6 +28,10 @@ only re-publishes corrected METADATA -- it ships no new code.
 - sdl-rocks:  migrated, committed, pushed (v0.5==master==origin @ 942290d).
 - sdl-pingus: migrated, committed, pushed (v0.5==main==origin @ 175928b).
   -> env-sdl line FULLY DONE (env-sdl done/260618-release-v0.2.md).
+- env-iup:    migrated + DONE (committed @ c019e19, pushed `v0.2`;
+  rock stays 0.2-1, bump SKIPPED; `main` real-merged with `v0.2`
+  -- clears the old ff loose end). env-iup done/260618-release-v0.2.md.
+- iup-7guis:  WON'T DO (TIER C re-migration deferred, out of scope).
 
 ### OPEN DECISION (resolve before any env/atmos upload)
 env-socket + env-sdl SKIPPED the rock-rev bump (branch-track
@@ -48,11 +52,11 @@ desc is wrong). Re-decide per repo by checking its published desc.
    -v0.3.md` (loop_on x3 + do_spawn x1), test, push `v0.3`,
    ff `main`. Rock: SKIP 0.3-2 unless desc-fix needed.
 4. [pico-birds + pico-rocks] migrate + test + push (branch `v0.6`).
-5. [env-iup] migrate per `env-iup/.claude/plans/260618-release
-   -v0.2.md` (loop_on x4 + do_spawn x1), test, push `v0.2`,
-   ff `main` (clears old loose end). iup-net needs env-socket.
-6. [iup-7guis] TIER C: rewrite multi-arg `every(h,'e',f)` ->
-   `loop_on({tag='e', h=h}, f)`; test vs env-iup v0.2; push.
+5. [x] [env-iup] DONE: migrated (loop_on x4 + do_spawn x1),
+   tested, pushed `v0.2`, `main` real-merged with `v0.2` (clears
+   old loose end). committed @ c019e19. -> done/260618-release-v0.2.md.
+6. [-] [iup-7guis] WON'T DO -- TIER C re-migration deferred,
+   out of scope for this re-cut.
 7. [atmos, THIS repo] commit + push the v0.7 work; CI green;
    refresh `v0.7` branch. -> §5.
 8. [atmos] `luarocks upload atmos-0.7-2.rockspec` +
@@ -63,7 +67,7 @@ desc is wrong). Re-decide per repo by checking its published desc.
 
 ### CARRY-FORWARD / POSTPONED
 - §4.5 env-js: POSTPONED (gated on `atmos-lang/atmos` v0.7).
-- env-iup `main` stale on `0.1-1`: verify branch/ff in step 5.
+- iup-7guis: WON'T DO (TIER C deferred; not part of this cut).
 
 ## Context
 
@@ -233,9 +237,9 @@ Envs (tier A mechanical: every/task()/spawn) -- have plans:
       0.2-1 -- 0.2-2 bump SKIPPED, branch-track serves loop_on fix)
 - [ ] env-pico    `260618-release-v0.3.md`   (loop_on x3 +
       do_spawn x1; rock bump 0.3-2 -> SEE OPEN DECISION, default SKIP)
-- [ ] env-iup     `260618-release-v0.2.md`   (loop_on x4 +
-      do_spawn x1; exs already 0.7; rock bump 0.2-2 -> SEE OPEN
-      DECISION, default SKIP; also ff `main`)
+- [x] env-iup     `260618-release-v0.2.md`   (DONE; rock stays
+      0.2-1 -- 0.2-2 bump SKIPPED; `main` real-merged with `v0.2`,
+      old ff loose end cleared. committed @ c019e19)
 
 Downstream apps (NO own plan -- migrate/test under their env):
 - [x] sdl-birds / sdl-rocks / sdl-pingus all DONE (v0.5,
@@ -243,8 +247,8 @@ Downstream apps (NO own plan -- migrate/test under their env):
       sdl-rocks master==v0.5==origin @ 942290d; sdl-pingus
       main==v0.5==origin @ 175928b. -- under env-sdl
 - [ ] pico-birds / pico-rocks             (v0.6) -- under env-pico
-- [ ] iup-7guis  (tier C: multi-arg events -> `loop_on({tag,h})`)
-      -- under env-iup
+- [-] iup-7guis  WON'T DO (tier C: multi-arg events ->
+      `loop_on({tag,h})`; deferred, out of scope) -- under env-iup
 
 **clock** (atmos built-in):
 - [ ] `atmos/env/clock/exs/hello.lua`
