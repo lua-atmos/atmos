@@ -444,3 +444,22 @@ do
         ==> err
     ]])
 end
+
+-- surface gate errors blame the caller's source line, not run.lua
+do
+    print("Testing...", "gate trace: spawn raw fn")
+    local out = exec [[
+        local _, err = pcall(function () spawn(function () end) end)
+        print(err)
+    ]]
+    assertfx(trim(out), "/tmp/err%.lua:%d+: invalid spawn : expected task prototype")
+end
+
+do
+    print("Testing...", "gate trace: xtask raw fn")
+    local out = exec [[
+        local _, err = pcall(function () xtask(function () end) end)
+        print(err)
+    ]]
+    assertfx(trim(out), "/tmp/err%.lua:%d+: invalid xtask : expected task prototype")
+end

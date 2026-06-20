@@ -2,11 +2,18 @@
 
 ## DONE (@ 2026-06-20)
 
-- [x] Fix applied: `run.lua:406` `or T` -> `or (tra and T)`.
-- [x] Test added: `tst/proto.lua` err 5 (`xtask(rawfn)` -> throws).
-- [x] Suite GREEN (`cd tst && lua5.4 all.lua`); no regressions.
+- [x] Fix 1 applied: `run.lua:406` `or T` -> `or (tra and T)`.
+- [x] Fix 2 applied: `run.lua:407` `assertn(3,...)` -> `assertn(2,...)`
+      (caller attribution -- blames the user call line, error level 3).
+- [x] Test (semantics): `tst/proto.lua` err 5 (`xtask(rawfn)` -> throws).
+- [x] Test (trace): `tst/errors.lua` two gate-trace blocks --
+      `spawn(rawfn)` + `xtask(rawfn)` assert `/tmp/err.lua:N: invalid
+      ... : expected task prototype` (caller-attributed, not run.lua).
+- [x] Suite GREEN (`cd tst && lua5.4 all.lua`); both trace tests pass,
+      no regressions.
 - [ ] Downstream atmos-lang (`/x/atmos-lang` `260620-task.md` §4):
-      uncomment "is 3b" negative test; drop temp `print(out)`. NOT done.
+      uncomment "is 3b"; drop temp `print(out)`. SEPARATE repo/plan --
+      out of scope here; tracked there.
 - NOT committed/pushed (per workflow -- ASK first).
 
 ## Goal
@@ -42,10 +49,30 @@ Behavior after:
   -> `assertn(type(f)=='function', "invalid xtask : expected task
      prototype")` THROWS.
 
+## Fix 2 -- error attribution (`assertn(3)` -> `assertn(2)`)
+
+After Fix 1, `xtask(\{})` THROWS but the error blames `run.lua:407`
+instead of the user's call site. `M.spawn` reports `anon.atm:N`
+correctly because it uses `assertn(2, ...)`; `M.xtask` uses level 3.
+Level 3 was tuned for the INTERNAL `M.spawn -> M.xtask` path (one frame
+deeper), but M.spawn already guards types before calling M.xtask
+(`run.lua:448` `type(t)=='function'`, `:453` `meta_task`), so this
+assert now fires ONLY on the SURFACE path -- where level 3 over-counts.
+
+`atmos/run.lua:407`:
+
+    - assertn(3, type(f)=='function', "invalid xtask : expected task prototype")
+    + assertn(2, type(f)=='function', "invalid xtask : expected task prototype")
+
+Verify: `xtask(\{})` error's `(throw)` line reads `[string "anon.atm"]:1`
+(matching `spawn (nil)()`), not `run.lua:407`. This is what unblocks the
+atmos-lang "is 3b" exact-match assert.
+
 ## Verify
 
 - runtime: `xtask(\{})` (surface) throws `invalid xtask : expected task
-  prototype`; `xtask(T)`, `xtask()`, and inline `spawn {}` all still work.
+  prototype` AT the caller's source line; `xtask(T)`, `xtask()`, and
+  inline `spawn {}` all still work.
 - run the lua-atmos suite (no regressions in spawn/await/transparent-task
   tests).
 
