@@ -478,7 +478,7 @@ function M.spawn (dbg, up, tra, t, ...)
     end
     assertn(2, t._.up==nil, "invalid spawn : unexpected active task")
     up._.dns[#up._.dns+1] = t
-    t._.up = assert(t._.up==nil and up)
+    t._.up = up
 
     task_result(t, coroutine.resume(t._.th, ...))
     return t
