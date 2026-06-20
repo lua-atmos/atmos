@@ -93,3 +93,9 @@ do
     local _,err = pcall(function () task(T) end)
     assertfx(err, "invalid task : expected function")
 end
+
+do
+    print("Testing...", "err 5: xtask a raw function (must wrap in task)")
+    local _,err = pcall(function () xtask(function () end) end)
+    assertfx(err, "invalid xtask : expected task prototype")
+end

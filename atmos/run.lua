@@ -403,7 +403,7 @@ end
 -- instance: unstarted executing task from a prototype (or raw function,
 -- the transparent-combinator path)
 function M.xtask (dbg, tra, T)
-    local f = (getmetatable(T)==meta_task and T._.f) or T
+    local f = (getmetatable(T)==meta_task and T._.f) or (tra and T)
     assertn(3, type(f)=='function', "invalid xtask : expected task prototype")
     local f = function (...)
         local _no_tco_ <close> = nil
