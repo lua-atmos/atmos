@@ -99,3 +99,12 @@ do
     local _,err = pcall(function () xtask(function () end) end)
     assertfx(err, "invalid xtask : expected task prototype")
 end
+
+do
+    print("Testing...", "err 6: re-spawn the same instance (single owner)")
+    local t = xtask(task(function () end))
+    spawn(t)
+    local _,err = pcall(function () spawn(t) end)
+    assertfx(err, "invalid spawn : unexpected active task")
+    atmos.stop()
+end

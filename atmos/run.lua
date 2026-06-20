@@ -476,6 +476,7 @@ function M.spawn (dbg, up, tra, t, ...)
             end
         end
     end
+    assertn(2, t._.up==nil, "invalid spawn : unexpected active task")
     up._.dns[#up._.dns+1] = t
     t._.up = assert(t._.up==nil and up)
 

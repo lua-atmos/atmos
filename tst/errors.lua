@@ -463,3 +463,14 @@ do
     ]]
     assertfx(trim(out), "/tmp/err%.lua:%d+: invalid xtask : expected task prototype")
 end
+
+do
+    print("Testing...", "gate trace: re-spawn same instance")
+    local out = exec [[
+        local t = xtask(task(function () end))
+        spawn(t)
+        local _, err = pcall(function () spawn(t) end)
+        print(err)
+    ]]
+    assertfx(trim(out), "/tmp/err%.lua:%d+: invalid spawn : unexpected active task")
+end
