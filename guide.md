@@ -509,7 +509,7 @@ The next example creates a stream that awaits occurrences of event `X`:
 ```
 local S = require "atmos.streams"
 do_spawn(function ()
-    S.fr_await('X')                                 -- X1, X2, ...
+    S.on('X')                                 -- X1, X2, ...
         :filter(function(x) return x.v%2 == 1 end)  -- X1, X3, ...
         :map(function(x) return x.v end)            -- 1, 3, ...
         :tap(print)
@@ -522,7 +522,7 @@ end
 ```
 
 The example spawns a dedicated task for the stream pipeline with source
-`S.fr_await('X')`, which runs concurrently with a loop that generates events
+`S.on('X')`, which runs concurrently with a loop that generates events
 `X` carrying field `v=i` on every second.
 The pipeline filters only odd occurrences of `v`, then maps to these values,
 and prints them.
@@ -547,12 +547,12 @@ sequence:
 <!-- tst/guide.lua : 7.2 -->
 
 ```
-function T ()           -- raw function: `S.fr_await` blesses it
+function T ()           -- raw function: `S.on` blesses it
     await('X')
     await('Y')
 end
 do_spawn(function ()
-    S.fr_await(T)                           -- XY, XY, ...
+    S.on(T)                           -- XY, XY, ...
         :zip(S.from(1))                     -- {XY,1}, {XY,2} , ...
         :map(function (t) return t[2] end)  -- 1, 2, ...
         :take(2)                            -- 1, 2
@@ -567,7 +567,7 @@ emit('Y')   -- 2
 emit('Y')
 ```
 
-In the example, `S.fr_await(T)` is a stream of complete executions of task `T`.
+In the example, `S.on(T)` is a stream of complete executions of task `T`.
 Therefore, each item is generated only after `X` and `Y` occur in sequence.
 The pipeline is zipped with an increasing sequence of numbers, and then mapped
 to only generate the numbers.

@@ -246,7 +246,7 @@ loop(function ()
     do
         print "-=-=- 7.1 -=-=-"
         local _ <close> = do_spawn(function ()
-            S.fr_await('X')
+            S.on('X')
                 :filter(function(x) return x.v%2 == 1 end)
                 :map(function(x) return x.v end)
                 :tap(print)
@@ -266,7 +266,7 @@ loop(function ()
             await('Y')
         end
         local _ <close> = do_spawn(function ()
-            S.fr_await(T)                           -- XY, XY, ...
+            S.on(T)                           -- XY, XY, ...
                 :zip(S.from(1))                     -- {XY,1}, {XY,2} , ...
                 :map(function (t) return t[2] end)  -- 1, 2, ...
                 :take(2)                            -- 1, 2

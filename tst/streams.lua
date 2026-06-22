@@ -6,7 +6,7 @@ require "test"
 
 do
     print("Testing...", "await 1")
-    local s = S.fr_await('E')
+    local s = S.on('E')
     emit 'E'
     emit 'E'
     spawn(task(function()
@@ -45,7 +45,7 @@ do
         await('E')
     end
     spawn(task(function()
-        S.fr_await(T):tap(out):take(2):to()
+        S.on(T):tap(out):take(2):to()
     end))
     emit('E')
     emit('E')
@@ -62,7 +62,7 @@ do
         return 'ok'
     end
     spawn(task(function()
-        local v = S.fr_await(T):to_first()
+        local v = S.on(T):to_first()
         out(v)
     end))
     emit('E')
@@ -80,7 +80,7 @@ do
     end
     spawn(task(function()
         watching('F', function()
-            local s = S.fr_await(T)
+            local s = S.on(T)
             s:table():to()
             await(false)
         end)
@@ -92,8 +92,8 @@ end
 
 do
     print("Testing...", "par 1")
-    local x = S.fr_await('X')
-    local y = S.fr_await('Y')
+    local x = S.on('X')
+    local y = S.on('Y')
     local _ <close> = spawn(task(function()
         local xy = S.par(x,y)
         xy:tap(out):to()
@@ -105,8 +105,8 @@ do
     atmos.stop()
 
     print("Testing...", "xpar 1")
-    local x = S.fr_await('X')
-    local y = S.fr_await('Y')
+    local x = S.on('X')
+    local y = S.on('Y')
     local _ <close> = spawn(task(function()
         local xy = S.from{x,y}:xpar()
         xy:tap(out):to()
@@ -121,13 +121,13 @@ end
 do
     print("Testing...", "par 2")
     local xy = S.from {
-        S.fr_await('X'):take(1),
-        S.fr_await('Y'):take(1)
+        S.on('X'):take(1),
+        S.on('Y'):take(1)
     }:xseq()
     local abc = S.from {
-        S.fr_await('A'):take(1),
-        S.fr_await('B'):take(2),
-        S.fr_await('C'):take(1)
+        S.on('A'):take(1),
+        S.on('B'):take(2),
+        S.on('C'):take(1)
     }:xseq()
     spawn(task(function()
         local s = S.par(xy,abc):tap(out):to()
@@ -155,13 +155,13 @@ end
 do
     print("Testing...", "xpar 2")
     local xy = S.from {
-        S.fr_await('X'):take(1),
-        S.fr_await('Y'):take(1)
+        S.on('X'):take(1),
+        S.on('Y'):take(1)
     }:xseq()
     local abc = S.from {
-        S.fr_await('A'):take(1),
-        S.fr_await('B'):take(2),
-        S.fr_await('C'):take(1)
+        S.on('A'):take(1),
+        S.on('B'):take(2),
+        S.on('C'):take(1)
     }:xseq()
     spawn(task(function()
         local s = S.from{xy,abc}:xpar():tap(out):to()
@@ -196,8 +196,8 @@ do
     end
     local _ <close> = spawn(task(function()
         watching ('X', function()
-            local x = S.fr_await(T, 'A')
-            local y = S.fr_await(T, 'B')
+            local x = S.on(T, 'A')
+            local y = S.on(T, 'B')
             local xy = S.par(x,y):par()
             xy:take(1):tap(out):to()
         end)
@@ -220,8 +220,8 @@ do
     end
     local _ <close> = spawn(task(function()
         watching ('X', function()
-            local x = S.fr_await(T, 'A')
-            local y = S.fr_await(T, 'B')
+            local x = S.on(T, 'A')
+            local y = S.on(T, 'B')
             local xy = S.from{x,y}:xpar()
             xy:take(1):tap(out):to()
         end)
@@ -236,8 +236,8 @@ end
 
 do
     print("Testing...", "paror 1")
-    local x = S.fr_await('X'):take(1)
-    local y = S.fr_await('Y'):take(1)
+    local x = S.on('X'):take(1)
+    local y = S.on('Y'):take(1)
     local _ <close> = spawn(task(function()
         local xy = S.paror(x,y)
         xy:tap(out):to()
@@ -252,8 +252,8 @@ end
 
 do
     print("Testing...", "xparor 1")
-    local x = S.fr_await('X'):take(1)
-    local y = S.fr_await('Y'):take(1)
+    local x = S.on('X'):take(1)
+    local y = S.on('Y'):take(1)
     local _ <close> = spawn(task(function()
         local xy = S.from{x,y}:xparor()
         xy:tap(out):to()
@@ -275,8 +275,8 @@ do
         return await(x)
     end
     local _ <close> = spawn(task(function()
-        local x = S.fr_await(T, 'A'):take(1)
-        local y = S.fr_await(T, 'B'):take(1)
+        local x = S.on(T, 'A'):take(1)
+        local y = S.on(T, 'B'):take(1)
         local xy = S.paror(x,y)
         watching ('X', function()
             xy:tap(out):to()
@@ -299,8 +299,8 @@ do
         return await(x)
     end
     local _ <close> = spawn(task(function()
-        local x = S.fr_await(T, 'A'):take(1)
-        local y = S.fr_await(T, 'B'):take(1)
+        local x = S.on(T, 'A'):take(1)
+        local y = S.on(T, 'B'):take(1)
         local xy = S.from{x,y}:xparor()
         watching ('X', function()
             xy:tap(out):to()
@@ -339,8 +339,8 @@ do
     print("Testing...", "debounce 2: stream")
     loop(function()
         spawn(task(function()
-            local x = S.fr_await 'X'
-            local y = function () return S.fr_await 'Y' end
+            local x = S.on 'X'
+            local y = function () return S.on 'Y' end
             x:debounce(y):tap(function(it)
                 out(it.v)
             end):to()
@@ -383,8 +383,8 @@ end
 do
     print("Testing...", "buffer 2: stream")
     spawn(task(function()
-        local x = S.fr_await 'X'
-        local y = S.fr_await 'Y'
+        local x = S.on 'X'
+        local y = S.on 'Y'
         x:buffer(y):tap(function(it)
             out(#it)
             for _,t in ipairs(it) do
@@ -438,9 +438,9 @@ end
 do
     print("Testing...", "buffer 3: stream debounce")
     spawn(task(function()
-        local x = S.fr_await 'X'
-        local y = S.fr_await 'Y'
-        local xy = x:debounce(function() return S.fr_await'Y' end)
+        local x = S.on 'X'
+        local y = S.on 'Y'
+        local xy = x:debounce(function() return S.on'Y' end)
         x:buffer(xy):tap(function(it)
             out(#it)
             for _,t in ipairs(it) do
@@ -466,17 +466,17 @@ do
     local xy = 0
     local c  = 0
     spawn(task(function()
-        local clicks = S.fr_await('X')
+        local clicks = S.on('X')
         clicks
             :debounce(function ()
                 local ij = S.from {
-                    S.fr_await('I'):take(1),
-                    S.fr_await('J'):take(1)
+                    S.on('I'):take(1),
+                    S.on('J'):take(1)
                 }
                 return ij:xseq():skip(1)
             end)
             :tap(function () xy = xy + 1 end)
-            :debounce(function () return S.fr_await 'C' end)
+            :debounce(function () return S.on 'C' end)
             :tap(function () c = c + 1 end)
             :to()
     end))
@@ -499,12 +499,12 @@ do
 
     local N = 0
     spawn(task(function()
-        local clicks = S.fr_await('click')
+        local clicks = S.on('click')
         clicks
-            :buffer(clicks:debounce(function () return S.fr_await '250' end))
+            :buffer(clicks:debounce(function () return S.on '250' end))
             :map(function (t) return #t end)
             :tap(function (n) N=n end)
-            :debounce(function () return S.fr_await '1000' end)
+            :debounce(function () return S.on '1000' end)
             :tap(function () N=0 end)
             :to()
     end))

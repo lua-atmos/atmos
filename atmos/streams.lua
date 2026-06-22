@@ -17,7 +17,7 @@ local function fr_spawn (t)
     return await(x) or false
 end
 
-function S.fr_await (...)
+function S.on (...)
     local T = select(1, ...)
     local t
     if type(T) == 'function' then

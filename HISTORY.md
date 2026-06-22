@@ -36,7 +36,8 @@ Major refactoring with the distinction between `task` (the prototype) vs
         - `await(5 * _s_)` awaits 5 seconds
         - `await('clock')` awaits any `dt` and returns it
         - constants `_us_`, `_ms_`, `_s_`, `_min_`, `_h_`, `_day_`
-        - `S.from(clock)` -> `S.fr_await(<us>)`
+    - Streams:
+        - `S.from` -> `S.on`
 - Environments:
     - `open`+`close` changed to main body + `quit`
 - Bug fixes:
