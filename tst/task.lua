@@ -292,6 +292,21 @@ do
     atmos.stop()
 end
 
+do
+    print("Testing...", "await 9: task prototype - spawn sugar")
+    -- await(T, ...) spawns prototype T with args, awaits its result
+    spawn(task(function ()
+        local v = await(task(function (a)
+            await(true)
+            return a * 2
+        end), 10)
+        out(v)
+    end))
+    emit(true)
+    assertx(out(), "20\n")
+    atmos.stop()
+end
+
 print '--- PUB ---'
 
 do

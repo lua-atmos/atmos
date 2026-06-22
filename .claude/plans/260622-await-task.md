@@ -2,7 +2,7 @@
 
 ## Status
 
-DONE (core).
+DONE (pending test run by user).
 
 Design refinement: the sugar keys off a **task prototype**, not a
 raw function. `X.is(awt, 'task')` -> spawn it. This leaves the
@@ -15,10 +15,15 @@ conflict, no need to remove the run.lua:597 branch.
       loads it).
 - [x] step 2: api.md await table -- added Tasks-group row
       `T: task` -> `T` ends -> `v,t`; note `await(T, ...)`.
-- [ ] step 3: api.md `S.on` "exception" note -- LEAVE as-is.
+- [x] step 3: api.md `S.on` "exception" note -- LEFT as-is.
       `S.on(f)` still spawns a *raw function* via streams' own
       `fr_spawn`, which diverges from `await(f)` = predicate. The
-      note stays accurate until streams aligns (below).
+      note stays accurate until streams aligns (separate plan).
+- [x] test: `tst/task.lua` "await 9: task prototype - spawn sugar"
+      -- `await(task(f), 10)` spawns with args, awaits result `20`.
+- [n] args doc note on the `T: task` row -- WON'T DO (user).
+- [>] streams alignment (`S.on` keys on prototype, tests ->
+      `S.on(task(T))`) -- NOT this plan; separate.
 
 ## Consequences / follow-ups
 
