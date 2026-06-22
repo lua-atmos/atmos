@@ -298,8 +298,10 @@ The task awakes when an `emit(e)` matches the given await pattern as follows:
 | Time      | `us: number`                        | timeout        | overrun  |
 |           | `'clock'`                           | clock tick     | delta    |
 | Tasks     | `t: xtask`                          | `t` ends       | `v,t`    |
+|           | `T: task`                           | `T` ends       | `v,t`    |
 |           | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts` |
 |           | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `ts`     |
+| Stream    | `s: stream`                         | `s` ends       | `v,t`    |
 | Condition | `f: function`                       | `f(e)` truthy  | `e / res`|
 |           | `{tag='until',x,...}`               | until all hold | `e / res`|
 |           | `{tag='while',x,...}`               | while any fail | `e`      |

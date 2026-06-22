@@ -2,7 +2,40 @@
 
 ## Status
 
-PENDING
+DONE (core).
+
+Design refinement: the sugar keys off a **task prototype**, not a
+raw function. `X.is(awt, 'task')` -> spawn it. This leaves the
+function slot (condition predicate) untouched: no repurposing, no
+conflict, no need to remove the run.lua:597 branch.
+
+- [x] step 1: sugar in `atmos/init.lua` `await` wrapper --
+      `if X.is(awt,'task') then return await(spawn(awt, ...)) end`.
+      Added `local X = require "atmos.x"` (cached; run.lua already
+      loads it).
+- [x] step 2: api.md await table -- added Tasks-group row
+      `T: task` -> `T` ends -> `v,t`; note `await(T, ...)`.
+- [ ] step 3: api.md `S.on` "exception" note -- LEAVE as-is.
+      `S.on(f)` still spawns a *raw function* via streams' own
+      `fr_spawn`, which diverges from `await(f)` = predicate. The
+      note stays accurate until streams aligns (below).
+
+## Consequences / follow-ups
+
+- run.lua:597 function-predicate branch: KEEP (untouched slot).
+- `await(1,2)` error test still passes (number is not a `task`).
+- Caveat: `loop_on`/`watching` call `run.await` directly
+  (run.lua:844,911), bypassing the wrapper -- they do NOT get the
+  prototype sugar. Out of scope; note only.
+- Streams alignment (separate): for `S.on(T)` to forward to
+  `await`, `S.on` should also key on a `task` prototype, and tests
+  move from `S.on(T)` (raw fn) to `S.on(task(T))`. Tracked as the
+  optional cleanup below.
+
+## Optional (later)
+
+- collapse `streams.lua` `fr_spawn` into pure `await`-forwarding,
+  keying on a `task` prototype (mirrors the runtime sugar).
 
 ## Context
 

@@ -1,5 +1,6 @@
 require "atmos.util"
 local run = require "atmos.run"
+local X = require "atmos.x"
 
 local atmos = {
     loop   = run.loop,
@@ -69,7 +70,12 @@ function emit (emt, ...)
 end
 
 function await (awt, ...)
-    return run.await(run.TIME, awt, ...)
+    -- sugar: a task prototype is spawned; await its termination
+    if X.is(awt, 'task') then
+        return await(spawn(awt, ...))
+    else
+        return run.await(run.TIME, awt, ...)
+    end
 end
 
 -- clock duration constants (base unit = microseconds)
