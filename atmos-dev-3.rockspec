@@ -17,7 +17,7 @@ description = {
         - A `task` primitive with deterministic scheduling provides predictable
           behavior and safe abortion.
         - Structured primitives compose concurrent tasks with lexical scope (e.g.,
-          `watching`, `loop_on`, `par_or`).
+          `watching`, `loop_on`, `par_any`).
         - A `tasks` container primitive holds attached tasks and controls their
           lifecycle.
     - Event Signaling Mechanisms:
