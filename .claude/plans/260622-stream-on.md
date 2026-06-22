@@ -2,10 +2,31 @@
 
 ## Status
 
-DONE -- public `S.fr_await` -> `S.on` across source, tests,
-examples, api.md, guide.md. HISTORY line 39 updated in place
-(v0.7 unreleased, so `fr_await` never shipped -- no append needed).
-Internal locals `fr_await`/`fr_spawn` left untouched.
+DONE.
+
+1. `S.fr_await` -> `S.on` across source, tests, examples, api.md,
+   guide.md. HISTORY updated in place (v0.7 unreleased).
+   Internal locals `fr_await`/`fr_spawn` left untouched.
+2. `S.[x]paror` -> `S.[x]parany` (public + internal local), all
+   sites + HISTORY.
+3. api.md Sources rewritten: single `S.on(pat)` source mirroring
+   all await patterns (was 3 pseudo-overloads), with the function
+   spawn exception noted.
+
+## Design conclusion (no further code change)
+
+f-streams needs many `fr_*` because its pull-sources are
+heterogeneous; atmos needs only ONE `S.on` because `await` already
+unifies all 13 event forms. So no `on_*` family, no `on_task`.
+`S.on(f)` keeps the spawn overload (the one form where `S.on`
+diverges from `await`: function = spawn task, not predicate;
+0 sites want predicate-fn streams, 11 want spawn).
+
+## Follow-up
+
+The `S.on(f,...)` / `await(f,...)` consistency gap is resolved
+separately: see `260622-await-task.md` -- adds `await(f, ...)` =
+spawn sugar to the runtime so `S.on` is a pure `await` forwarder.
 
 ## Context
 
