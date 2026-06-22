@@ -228,9 +228,9 @@ do
 end
 
 do
-    print("Testing...", "thread 14: thread inside par_or")
+    print("Testing...", "thread 14: thread inside par_any")
     spawn(task(function ()
-        local v = par_or(
+        local v = par_any(
             function ()
                 return thread(function ()
                     return "from thread"
@@ -344,11 +344,11 @@ end
 
 do
     print("Testing...",
-        "thread 20: par_or forbidden inside thread")
+        "thread 20: par_any forbidden inside thread")
     local _,err = pcall(function ()
         spawn(task(function ()
             thread(function ()
-                par_or(
+                par_any(
                     function () end,
                     function () end
                 )
@@ -357,17 +357,17 @@ do
         os.execute("sleep 0.1")
         emit()
     end)
-    assertfx(tostring(err[1]), "attempt to call a nil value %(global 'par_or'%)")
+    assertfx(tostring(err[1]), "attempt to call a nil value %(global 'par_any'%)")
     atmos.stop()
 end
 
 print "--- THREAD / CANCEL ---"
 
 do
-    print("Testing...", "thread 21: cancel - par_or cancels sleeping thread")
+    print("Testing...", "thread 21: cancel - par_any cancels sleeping thread")
     spawn(task(function ()
         local cleaned = false
-        local v = par_or(
+        local v = par_any(
             function ()
                 local _ <close> = defer(function ()
                     cleaned = true

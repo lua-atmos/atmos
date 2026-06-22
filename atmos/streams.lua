@@ -53,7 +53,7 @@ function S.Debounce (n, src, fctl)
         local e = await(src)
         catch(trap, function()
             while true do
-                e = par_or (
+                e = par_any (
                     function()
                         return await(src)
                     end,
@@ -98,7 +98,7 @@ function S.Buffer (n, src, ctl)
         local ret = {}
         catch(trap, function()
             while true do
-                ret[#ret+1] = par_or (
+                ret[#ret+1] = par_any (
                     function ()
                         return await(src)   -- buffered
                     end,

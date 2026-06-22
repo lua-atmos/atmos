@@ -511,14 +511,14 @@ do
     print("Testing...", "abort 4")
     do
         do_spawn(function ()
-            par_or (
+            par_any (
                 function ()
                     await(false)
                 end,
                 function ()
                     catch('atm-do', "X",
                         function ()
-                            par_or(
+                            par_any(
                                 function ()
                                     await(false)
                                 end,

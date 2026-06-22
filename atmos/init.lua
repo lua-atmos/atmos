@@ -85,8 +85,8 @@ thread   = run.thread
 
 loop_on  = run.loop_on
 par      = run.par
-par_or   = run.par_or
-par_and  = run.par_and
+par_any  = run.par_any
+par_all  = run.par_all
 watching = run.watching
 
 return atmos

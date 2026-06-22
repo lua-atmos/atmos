@@ -507,14 +507,14 @@ function M.await (time, awt, ...)
         for _,sub in ipairs(awt) do
             fs[#fs+1] = function () return M.await(time, sub) end
         end
-        local f = (tag=='or' and M.par_or) or M.par_and
+        local f = (tag=='or' and M.par_any) or M.par_all
         return f(table.unpack(fs, 1, #awt))
     elseif tag == 'not' then
         assertn(2, #awt==1, "invalid await : too many arguments")
         -- pass `time` into each re-await: an internal reject keeps the
         -- original birth time, so it does not shadow an in-flight outer emit
         while true do
-            local ret = table.pack(M.par_or(function()
+            local ret = table.pack(M.par_any(function()
                 M.await(time, awt[1])
                 return false
             end, function()
@@ -867,15 +867,15 @@ function M.par (...)
 end
 
 --@ derived: throw-based race per plan §4
-function M.par_or (...)
-    assertn(2, M.me(true), "invalid par_or : expected enclosing task")
+function M.par_any (...)
+    assertn(2, M.me(true), "invalid par_any : expected enclosing task")
     local fs = { ... }
     local dbg = debug.getinfo(2)
     local trap = {}
     return (function (_, _, ...) return ... end)(M.catch(trap, function ()
         local ts <close> = setmetatable({}, meta_par)
         for i,f in ipairs(fs) do
-            assertn(2, type(f) == 'function', "invalid par_or : expected task prototype")
+            assertn(2, type(f) == 'function', "invalid par_any : expected task prototype")
             ts[i] = M.spawn(dbg, nil, true, function ()
                 M.throw(trap, f())
             end)
@@ -885,13 +885,13 @@ function M.par_or (...)
 end
 
 --@ derived: sequential await on each spawn
-function M.par_and (...)
-    assertn(2, M.me(true), "invalid par_and : expected enclosing task")
+function M.par_all (...)
+    assertn(2, M.me(true), "invalid par_all : expected enclosing task")
     local fs = { ... }
     local dbg = debug.getinfo(2)
     local ts <close> = setmetatable({}, meta_par)
     for i,f in ipairs(fs) do
-        assertn(2, type(f) == 'function', "invalid par_and : expected task prototype")
+        assertn(2, type(f) == 'function', "invalid par_all : expected task prototype")
         ts[i] = M.spawn(dbg, nil, true, f)
     end
     local rets = {}
@@ -901,13 +901,13 @@ function M.par_and (...)
     return table.unpack(rets, 1, #fs)
 end
 
---@ derived: par_or { await(awt, payload...) } with { f() }
+--@ derived: par_any { await(awt, payload...) } with { f() }
 function M.watching (...)
     assertn(2, M.me(true), "invalid watching : expected enclosing task")
     local t = { ... }
     local f = table.remove(t, #t)
     assertn(2, type(f) == 'function', "invalid watching : expected task prototype")
-    return M.par_or(
+    return M.par_any(
         function () return M.await(M.TIME, t[1], table.unpack(t, 2, #t)) end,
         f
     )

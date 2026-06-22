@@ -162,7 +162,7 @@ loop(function ()
     do
         print "-=-=- 4.3 -=-=-"
         do_spawn(function()
-            par_and(function ()
+            par_all(function ()
                 await 'X'
             end, function ()
                 await 'Y'

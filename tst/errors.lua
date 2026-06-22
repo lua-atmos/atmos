@@ -294,12 +294,12 @@ do
 end
 
 do
-    print("Testing...", "par_or error")
+    print("Testing...", "par_any error")
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
                 spawn(task(function ()
-                    par_or(
+                    par_any(
                         function ()
                             throw('err')
                         end,
@@ -321,12 +321,12 @@ do
 end
 
 do
-    print("Testing...", "par_and error")
+    print("Testing...", "par_all error")
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
                 spawn(task(function ()
-                    par_and(
+                    par_all(
                         function ()
                             throw('err')
                         end,
@@ -419,12 +419,12 @@ do
 end
 
 do
-    print("Testing...", "tail call: return throw from par_or")
+    print("Testing...", "tail call: return throw from par_any")
     local out = exec [[
         local _, err = pcall(function ()
             loop(function ()
                 spawn(task(function ()
-                    par_or(
+                    par_any(
                         function ()
                             return throw('err')
                         end,

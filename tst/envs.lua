@@ -207,7 +207,7 @@ do
         end }
         local pat = setmetatable({'==', 'X'}, meta)
         loop(function ()
-            par_or(
+            par_any(
                 function () await(pat); out 'woke' end,
                 function () for i=1,3 do await(true) end; out('n='..n) end
             )

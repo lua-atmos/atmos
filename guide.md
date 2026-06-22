@@ -292,14 +292,14 @@ watching(1*_s_, function ()
 end)
 ```
 
-- The `par`, `par_and`, `par_or` statements spawn multiple bodies and rejoin
-  after their bodies terminates: `par` never rejoins, `par_and`
-  rejoins after all terminate, `par_or` rejoins after any terminates:
+- The `par`, `par_all`, `par_any` statements spawn multiple bodies and rejoin
+  after their bodies terminates: `par` never rejoins, `par_all`
+  rejoins after all terminate, `par_any` rejoins after any terminates:
 
 <!-- tst/guide.lua : 4.3 -->
 
 ```
-par_and(function ()
+par_all(function ()
     await 'X'
 end, function ()
     await 'Y'
@@ -601,7 +601,7 @@ end
 
 loop(function ()
     local t = watching(20*_s_, function ()
-        return par_or(function ()
+        return par_any(function ()
             local v = thread(function ()
                 return cpu(math.random(10000000000))
             end)

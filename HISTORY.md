@@ -29,6 +29,7 @@ Major refactoring with the distinction between `task` (the prototype) vs
     - `spawn(...)` -> `spawn(T)`, `do_spawn(f)`
         - `do_spawn` returns close-only handle (not task handle)
     - `every` -> `loop_on`
+    - `par_and` / `par_or` -> `par_all` / `par_any`
     - `atmos.x` consolidation:
         - `X.is`, `X.eq`, `X.xin`, `X.cat`, `X.gte`
     - `clock { ... }` -> simply `dt` in microseconds

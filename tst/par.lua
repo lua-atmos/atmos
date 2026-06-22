@@ -65,9 +65,9 @@ end
 print '--- PAR_OR ---'
 
 do
-    print("Testing...", "par_or 1")
+    print("Testing...", "par_any 1")
     spawn(task(function ()
-        par_or (
+        par_any (
             function ()
                 local e = await('X')
                 out(e.tag, e[1])
@@ -86,9 +86,9 @@ do
 end
 
 do
-    print("Testing...", "par_or 2")
+    print("Testing...", "par_any 2")
     spawn(task(function ()
-        local v = par_or (
+        local v = par_any (
             function ()
                 return await('X')
             end,
@@ -106,9 +106,9 @@ do
 end
 
 do
-    print("Testing...", "par_or 3")
+    print("Testing...", "par_any 3")
     spawn(task(function ()
-        local v = par_or (
+        local v = par_any (
             function ()
                 return await('X')
             end,
@@ -123,9 +123,9 @@ do
 end
 
 do
-    print("Testing...", "par_or 4")
+    print("Testing...", "par_any 4")
     spawn(task(function ()
-        par_or (
+        par_any (
             function ()
                 await 'X'
                 out 'ok'
@@ -142,9 +142,9 @@ do
 end
 
 do
-    print("Testing...", "par_or 5")
+    print("Testing...", "par_any 5")
     spawn(task(function ()
-        par_or (
+        par_any (
             function ()
                 await(true)
                 out 'ok'
@@ -161,11 +161,11 @@ do
 end
 
 do
-    print("Testing...", "par_or 6")
+    print("Testing...", "par_any 6")
     local _,err = pcall(function ()
         loop(function ()
             catch(true, function ()
-                par_or (
+                par_any (
                     function ()
                         return f()
                     end,
@@ -188,9 +188,9 @@ end
 print '--- PAR_AND ---'
 
 do
-    print("Testing...", "par_and 1")
+    print("Testing...", "par_all 1")
     spawn(task(function ()
-        par_and (
+        par_all (
             function ()
                 out(await('X'))
             end,
@@ -208,9 +208,9 @@ do
 end
 
 do
-    print("Testing...", "par_and 2")
+    print("Testing...", "par_all 2")
     spawn(task(function ()
-        local x,y = par_and (
+        local x,y = par_all (
             function ()
                 return await('X')
             end,
@@ -229,9 +229,9 @@ do
 end
 
 do
-    print("Testing...", "par_and 3")
+    print("Testing...", "par_all 3")
     spawn(task(function ()
-        local x,y = par_and (
+        local x,y = par_all (
             function ()
                 return await('X')
             end,
@@ -264,9 +264,9 @@ do
 end
 
 do
-    print("Testing...", "watching 2 (par_or)")
+    print("Testing...", "watching 2 (par_any)")
     spawn(task(function ()
-        local v = par_or (
+        local v = par_any (
             function ()
                 return await('X')
             end,
@@ -282,9 +282,9 @@ do
 end
 
 do
-    print("Testing...", "watching 2 (par_or)")
+    print("Testing...", "watching 2 (par_any)")
     spawn(task(function ()
-        local v = par_or (
+        local v = par_any (
             function ()
                 return await(true)
             end,

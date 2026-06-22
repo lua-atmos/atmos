@@ -339,8 +339,8 @@ Note that some patterns may modify the final result:
     [watching](#watching--f) |
     [toggle](#toggle-evt-f) |
     [par](#par-) |
-    [par_and](#par_and-) |
-    [par_or](#par_or-)
+    [par_all](#par_all-) |
+    [par_any](#par_any-)
 ]
 
 Compound statements combine tasks, awaits, and other primitive to provide
@@ -384,7 +384,7 @@ occurs.
 A `watching` is equivalent to the call as follows:
 
 ```
-par_or(function() return await(...) end, f)
+par_any(function() return await(...) end, f)
 ```
 
 ## `toggle (evt, f)`
@@ -413,7 +413,7 @@ Spawn the given bodies and never terminates.
 - Returns:
     - never returns
 
-### `par_and (...)`
+### `par_all (...)`
 
 Spawn the given bodies and terminate when all of them terminate.
 
@@ -423,7 +423,7 @@ Spawn the given bodies and terminate when all of them terminate.
 - Returns:
     - `...`: return value of tasks (first per task)
 
-### `par_or (...)`
+### `par_any (...)`
 
 Spawn the given bodies and terminate when any of them terminates.
 
