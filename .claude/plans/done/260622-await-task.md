@@ -12,7 +12,8 @@ task's `_.dbg` pointed at init.lua (the sugar line), and every
 runtime traceback blamed init.lua instead of the user's `await`
 call site.
 
-Fix: spawn via `run.spawn` directly, capturing the user frame:
+Fix (APPLIED, init.lua:75): spawn via `run.spawn` directly,
+capturing the user frame:
 
     return await(run.spawn(debug.getinfo(2), nil, false, awt, ...))
 
@@ -20,8 +21,10 @@ Fix: spawn via `run.spawn` directly, capturing the user frame:
 
 - test: `tst/errors.lua` "await sugar: task dbg location" --
   exec-style traceback test; asserts the `(task)` frame is
-  `/tmp/err.lua:3`, not init.lua. Fails pre-fix, passes post-fix.
-- FLAGGED (not fixed here): a non-task callable falls to
+  `/tmp/err.lua:3`, not init.lua. PASSES (with the fix); the full
+  trace `:2 (loop) / :4 (throw) <- :3 (task) <- :2 (task)` is
+  confirmed.
+- FLAGGED (still open, separate): a non-task callable falls to
   `run.await` and reports "invalid await : invalid event pattern"
   rather than spawn's "invalid spawn : expected task prototype".
 
