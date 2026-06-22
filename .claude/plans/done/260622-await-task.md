@@ -4,6 +4,27 @@
 
 DONE. All tests pass.
 
+### Addendum: debug-location bug + fix
+
+The first sugar landed as `await(spawn(awt, ...))`. The `spawn`
+wrapper (init.lua) captures `debug.getinfo(2)`, so the spawned
+task's `_.dbg` pointed at init.lua (the sugar line), and every
+runtime traceback blamed init.lua instead of the user's `await`
+call site.
+
+Fix: spawn via `run.spawn` directly, capturing the user frame:
+
+    return await(run.spawn(debug.getinfo(2), nil, false, awt, ...))
+
+`debug.getinfo(2)` inside `await` = await's caller = user site.
+
+- test: `tst/errors.lua` "await sugar: task dbg location" --
+  exec-style traceback test; asserts the `(task)` frame is
+  `/tmp/err.lua:3`, not init.lua. Fails pre-fix, passes post-fix.
+- FLAGGED (not fixed here): a non-task callable falls to
+  `run.await` and reports "invalid await : invalid event pattern"
+  rather than spawn's "invalid spawn : expected task prototype".
+
 Design refinement: the sugar keys off a **task prototype**, not a
 raw function. `X.is(awt, 'task')` -> spawn it. This leaves the
 function slot (condition predicate) untouched: no repurposing, no

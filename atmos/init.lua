@@ -70,10 +70,11 @@ function emit (emt, ...)
 end
 
 function await (awt, ...)
-    -- sugar: a task prototype is spawned; await its termination
     if X.is(awt, 'task') then
-        return await(spawn(awt, ...))
+        -- await T(...)
+        return await(run.spawn(debug.getinfo(2), nil, false, awt, ...))
     else
+        -- await(...)
         return run.await(run.TIME, awt, ...)
     end
 end

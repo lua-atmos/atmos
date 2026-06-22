@@ -167,6 +167,28 @@ do
 end
 
 do
+    print("Testing...", "await sugar: task dbg location")
+    -- a prototype spawned via the await(T,...) sugar must blame the
+    -- user's await call site, NOT atmos/init.lua (the sugar's spawn)
+    local out = exec [[
+        local _, err = pcall(function ()
+            loop(function ()
+                await(task(function ()
+                    throw 'X'
+                end))
+            end)
+        end)
+        print(err)
+    ]]
+    assertx(trim(out), trim [[
+        ==> ERROR:
+        |  /tmp/err.lua:2 (loop)
+        v  /tmp/err.lua:4 (throw) <- /tmp/err.lua:3 (task) <- /tmp/err.lua:2 (task)
+        ==> X
+    ]])
+end
+
+do
     print("Testing...", "tasks 1")
     local out = exec [[
         local _, err = pcall(function () function T ()
