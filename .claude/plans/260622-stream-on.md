@@ -25,8 +25,45 @@ diverges from `await`: function = spawn task, not predicate;
 ## Follow-up
 
 The `S.on(f,...)` / `await(f,...)` consistency gap is resolved
-separately: see `260622-await-task.md` -- adds `await(f, ...)` =
-spawn sugar to the runtime so `S.on` is a pure `await` forwarder.
+separately: see `done/260622-await-task.md` -- adds `await(T, ...)`
+= spawn sugar (keyed on a `task` prototype).
+
+## Streams alignment (DONE)
+
+`S.on` now keys the spawn case on a `task` prototype (mirrors
+`await`), not a raw function:
+
+- `atmos/streams.lua`: `if type(T)=='function'` -> `if X.is(T,'task')`;
+  `fr_spawn` uses `spawn(t.T, ...)` (T is already a prototype, no
+  `task()` wrap). Added `local X = require "atmos.x"`.
+- the two gotchas are preserved: `fr_spawn` keeps `await(x) or false`
+  (nil would otherwise end the stream) and `<close>` (cleanup).
+- migrated 12 task-stream sites `S.on(T)` -> `S.on(task(T))`
+  (tst/streams.lua x11, tst/guide.lua x1).
+- guide.md example + prose, api.md Sources note updated (the
+  "exception" is gone -- `S.on(task(T))` is plain `await`).
+- a raw function now goes the `fr_await` path (`await(f)` =
+  condition), consistent with `await`.
+
+## Remove `fr_spawn` (DONE)
+
+With the `await(task(T), ...)` sugar doing the spawning, `fr_spawn`
+is redundant. `S.on` collapses to a pure `await` forwarder:
+
+- deleted `fr_spawn`; dropped the `X.is` branch in `S.on` and the
+  `local X = require "atmos.x"`.
+- `fr_await` gains `or false` (the surviving nil-guard, now
+  universal -- harmless for events/clock, which never return nil).
+- `<close>` dropped: the spawned child is cleaned via task
+  hierarchy, same as the runtime `await(stream)` path.
+- `S.on(...)` = `setmetatable({ args={...}, f=fr_await }, S.mt)`.
+- migrated test sites unchanged (`S.on(task(T), ...)` still works:
+  fr_await -> `await(task(T), ...)` -> sugar spawns).
+
+Net: -1 function, -1 require, -1 branch.
+
+Pending: user runs the streams + guide suites (watch 48 nil-guard,
+73 abortion).
 
 ## Context
 

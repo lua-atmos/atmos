@@ -547,15 +547,15 @@ sequence:
 <!-- tst/guide.lua : 7.2 -->
 
 ```
-function T ()           -- raw function: `S.on` blesses it
+function T ()               -- task body to become a stream
     await('X')
     await('Y')
 end
 do_spawn(function ()
-    S.on(T)                           -- XY, XY, ...
-        :zip(S.from(1))                     -- {XY,1}, {XY,2} , ...
+    S.on(task(T))           -- XY, XY, ...
+        :zip(S.from(1))     -- {XY,1}, {XY,2} , ...
         :map(function (t) return t[2] end)  -- 1, 2, ...
-        :take(2)                            -- 1, 2
+        :take(2)            -- 1, 2
         :tap(print)
         :to()
 end)
@@ -567,7 +567,7 @@ emit('Y')   -- 2
 emit('Y')
 ```
 
-In the example, `S.on(T)` is a stream of complete executions of task `T`.
+In the example, `S.on(task(T))` is a stream of complete executions of task `T`.
 Therefore, each item is generated only after `X` and `Y` occur in sequence.
 The pipeline is zipped with an increasing sequence of numbers, and then mapped
 to only generate the numbers.

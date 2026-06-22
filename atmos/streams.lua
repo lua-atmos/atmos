@@ -8,31 +8,18 @@ end
 
 -------------------------------------------------------------------------------
 
-local function fr_await (t)
-    return await(table.unpack(t.args))
-end
-
-local function fr_spawn (t)
-    local x <close> = spawn(task(t.T), table.unpack(t.args))
-    return await(x) or false
+-- `await(...)` is forwarded each pull; a `task` prototype argument
+-- is spawned by the await sugar (init.lua). `or false` guards a nil
+-- result (e.g. a task returning nothing) from ending the stream.
+local function f (t)
+    return await(table.unpack(t.args)) or false
 end
 
 function S.on (...)
-    local T = select(1, ...)
-    local t
-    if type(T) == 'function' then
-        t = {
-            T    = T,
-            args = { select(2,...) },
-            f    = fr_spawn,
-        }
-    else
-        t = {
-            args = { ... },
-            f    = fr_await,
-        }
-    end
-    return setmetatable(t, S.mt)
+    return setmetatable({
+        args = { ... },
+        f    = f,
+    }, S.mt)
 end
 
 -------------------------------------------------------------------------------

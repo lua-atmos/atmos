@@ -448,12 +448,8 @@ local S = require "atmos.streams"
 ```
 
 - Sources
-    - `S.on(evt)`:
-        stream of events `evt`
-    - `S.on(T)`:
-        stream of tasks `T`
-    - `S.on(dt)`:
-        stream of periodic clock events in microseconds
+    - `S.on (pat)`:
+        stream of [await patterns](#await-pat)
 
 - Combinators
     - `S.emitter(s,tgt,as)`:

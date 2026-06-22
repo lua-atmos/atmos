@@ -45,7 +45,7 @@ do
         await('E')
     end
     spawn(task(function()
-        S.on(T):tap(out):take(2):to()
+        S.on(task(T)):tap(out):take(2):to()
     end))
     emit('E')
     emit('E')
@@ -62,7 +62,7 @@ do
         return 'ok'
     end
     spawn(task(function()
-        local v = S.on(T):to_first()
+        local v = S.on(task(T)):to_first()
         out(v)
     end))
     emit('E')
@@ -80,7 +80,7 @@ do
     end
     spawn(task(function()
         watching('F', function()
-            local s = S.on(T)
+            local s = S.on(task(T))
             s:table():to()
             await(false)
         end)
@@ -188,12 +188,12 @@ end
 
 do
     print("Testing...", "par 3: defer")
-    function T (x)
+    local T = task(function (x)
         local _ <close> = defer(function()
             out('defer',x)
         end)
         return await(x)
-    end
+    end)
     local _ <close> = spawn(task(function()
         watching ('X', function()
             local x = S.on(T, 'A')
@@ -212,12 +212,12 @@ end
 
 do
     print("Testing...", "xpar 3: defer")
-    function T (x)
+    local T = task(function (x)
         local _ <close> = defer(function()
             out('defer',x)
         end)
         return await(x)
-    end
+    end)
     local _ <close> = spawn(task(function()
         watching ('X', function()
             local x = S.on(T, 'A')
@@ -268,12 +268,12 @@ end
 
 do
     print("Testing...", "parany 2: defer")
-    function T (x)
+    local T = task(function (x)
         local _ <close> = defer(function()
             out('defer',x)
         end)
         return await(x)
-    end
+    end)
     local _ <close> = spawn(task(function()
         local x = S.on(T, 'A'):take(1)
         local y = S.on(T, 'B'):take(1)
@@ -292,12 +292,12 @@ end
 
 do
     print("Testing...", "xparany 2: defer")
-    function T (x)
+    local T = task(function (x)
         local _ <close> = defer(function()
             out('defer',x)
         end)
         return await(x)
-    end
+    end)
     local _ <close> = spawn(task(function()
         local x = S.on(T, 'A'):take(1)
         local y = S.on(T, 'B'):take(1)
