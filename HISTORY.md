@@ -38,6 +38,7 @@ Major refactoring with the distinction between `task` (the prototype) vs
         - constants `_us_`, `_ms_`, `_s_`, `_min_`, `_h_`, `_day_`
     - Streams:
         - `S.from` -> `S.on`
+        - `S.[x]paror` -> `S.[x]parany`
 - Environments:
     - `open`+`close` changed to main body + `quit`
 - Bug fixes:

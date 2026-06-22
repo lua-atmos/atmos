@@ -460,10 +460,10 @@ local S = require "atmos.streams"
         merges all streams `...` into a single stream
     - `S.xpar(...)`:
         merges all streams of streams `...` into a single stream
-    - `S.paror(...)`:
+    - `S.parany(...)`:
         like `par` but terminates when any of the streams `...` terminates
-    - `S.xparor(...)`:
-        like `paror` but terminates when any of the streams returned in `...`
+    - `S.xparany(...)`:
+        like `parany` but terminates when any of the streams returned in `...`
         terminates
 
 `TODO: parand / xparand`

@@ -204,7 +204,7 @@ end
 
 -------------------------------------------------------------------------------
 
-local function paror (t)
+local function parany (t)
     -- await{'or',...} forwards the winner's values: event n -> (n,payload),
     -- pool tsks -> (ret,task,ts); pool win (3rd value is the pool) ends stream
     local e,_,ts = await {tag='or', t.n, {tag='tasks', mode='any', tasks=t.tsks}}
@@ -214,7 +214,7 @@ local function paror (t)
     return e[1]
 end
 
-function S.paror (...)
+function S.parany (...)
     local n = N()
     local tsks = tasks()
     for i=1, select('#',...) do
@@ -224,20 +224,20 @@ function S.paror (...)
     local t = {
         n    = n,
         tsks = tsks,
-        f    = paror,
+        f    = parany,
         clo  = clo_tsks,
     }
     return setmetatable(t, S.mt)
 end
 
-function S.xparor (ss)
+function S.xparany (ss)
     local n = N()
     local tsks = tasks()
     local t = {
         n    = n,
         tsks = tsks,
         tsk  = spawn(task(TT), n, tsks, ss),
-        f    = paror,
+        f    = parany,
         clo  = clo_tsk,
     }
     return setmetatable(t, S.mt)

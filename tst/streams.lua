@@ -235,11 +235,11 @@ do
 end
 
 do
-    print("Testing...", "paror 1")
+    print("Testing...", "parany 1")
     local x = S.on('X'):take(1)
     local y = S.on('Y'):take(1)
     local _ <close> = spawn(task(function()
-        local xy = S.paror(x,y)
+        local xy = S.parany(x,y)
         xy:tap(out):to()
         out 'fim'
     end))
@@ -251,11 +251,11 @@ do
 end
 
 do
-    print("Testing...", "xparor 1")
+    print("Testing...", "xparany 1")
     local x = S.on('X'):take(1)
     local y = S.on('Y'):take(1)
     local _ <close> = spawn(task(function()
-        local xy = S.from{x,y}:xparor()
+        local xy = S.from{x,y}:xparany()
         xy:tap(out):to()
         out 'fim'
     end))
@@ -267,7 +267,7 @@ do
 end
 
 do
-    print("Testing...", "paror 2: defer")
+    print("Testing...", "parany 2: defer")
     function T (x)
         local _ <close> = defer(function()
             out('defer',x)
@@ -277,7 +277,7 @@ do
     local _ <close> = spawn(task(function()
         local x = S.on(T, 'A'):take(1)
         local y = S.on(T, 'B'):take(1)
-        local xy = S.paror(x,y)
+        local xy = S.parany(x,y)
         watching ('X', function()
             xy:tap(out):to()
         end)
@@ -291,7 +291,7 @@ do
 end
 
 do
-    print("Testing...", "xparor 2: defer")
+    print("Testing...", "xparany 2: defer")
     function T (x)
         local _ <close> = defer(function()
             out('defer',x)
@@ -301,7 +301,7 @@ do
     local _ <close> = spawn(task(function()
         local x = S.on(T, 'A'):take(1)
         local y = S.on(T, 'B'):take(1)
-        local xy = S.from{x,y}:xparor()
+        local xy = S.from{x,y}:xparany()
         watching ('X', function()
             xy:tap(out):to()
         end)
