@@ -93,6 +93,13 @@ New since 0.7-1 (NOT yet in HISTORY.md):
     - `every` -> `loop_on`
     - `atmos.x` (`X`) consolidation: `is`, `eq`, `xin`, `cat`,
       `gte` moved/folded into `x.lua`
+- Runtime gates (hardening, on `v0.7` -> ships in 0.7-2; see
+  done/260620-xtask-gate.md):
+    - surface `xtask(rawfn)` rejected (`invalid xtask : expected
+      task prototype`); task-ness is always declared, never retrofit
+    - re-spawning a live instance rejected (`invalid spawn :
+      unexpected active task`); instances are single-owner
+    - both errors now caller-attributed (assertn level 2)
 
 Already shipped in 0.7-1 (for reference, in HISTORY.md):
 

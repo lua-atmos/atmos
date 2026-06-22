@@ -11,10 +11,28 @@
       ... : expected task prototype` (caller-attributed, not run.lua).
 - [x] Suite GREEN (`cd tst && lua5.4 all.lua`); both trace tests pass,
       no regressions.
-- [ ] Downstream atmos-lang (`/x/atmos-lang` `260620-task.md` §4):
-      uncomment "is 3b"; drop temp `print(out)`. SEPARATE repo/plan --
-      out of scope here; tracked there.
-- NOT committed/pushed (per workflow -- ASK first).
+- [x] Committed + pushed `v0.7` (1d5cdd8 `error : xtask(f)`).
+- [x] Downstream atmos-lang (`/x/atmos-lang` `260620-task.md` §4):
+      "is 3b" uncommented + active (exact full-trace assert); temp
+      `print(out)` removed. DONE (tracked in that repo's plan).
+
+## FOLLOW-UP (@ 2026-06-22) -- re-spawn guard (grew out of this gate)
+
+Question raised: spawning an ALREADY-spawned instance. A prototype is
+reusable (`spawn(T)` mints a new instance each call); an `xtask`
+instance is single-owner. Re-spawning the same instance hit a BARE
+`assert(t._.up==nil and up)` (msg `assertion failed!`), inconsistent
+with the surrounding `assertn(2,...)` gates.
+
+- [x] `run.lua` `M.spawn`: bare assert -> `assertn(2, t._.up==nil,
+      "invalid spawn : unexpected active task")`, checked BEFORE tree
+      mutation; trailing `t._.up = assert(...)` tidied to `t._.up = up`.
+- [x] Test (semantics): `tst/proto.lua` err 6 (re-spawn -> throws).
+- [x] Test (trace): `tst/errors.lua` re-spawn block, caller-attributed.
+- [x] Suite GREEN; committed + pushed `v0.7`
+      (9a2c917 `fix : check active task spawn` + 743be3c tidy).
+
+ALL DONE -- no pendings in this plan.
 
 ## Goal
 
