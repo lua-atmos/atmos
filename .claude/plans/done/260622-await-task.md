@@ -2,7 +2,7 @@
 
 ## Status
 
-DONE (pending test run by user).
+DONE. All tests pass.
 
 Design refinement: the sugar keys off a **task prototype**, not a
 raw function. `X.is(awt, 'task')` -> spawn it. This leaves the
