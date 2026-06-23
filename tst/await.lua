@@ -428,7 +428,7 @@ do
     local _,err = pcall(function ()
         do_spawn(function () await(function () end) end)
     end)
-    assertfx(err, "invalid await : unexpected function")
+    assertfx(err, "invalid spawn : expected task prototype")
     atmos.stop()
 end
 
@@ -460,6 +460,6 @@ do
     local _,err = pcall(function ()
         do_spawn(function () S.on(function () end):to() end)
     end)
-    assertfx(err, "invalid await : unexpected function")
+    assertfx(err, "invalid spawn : expected task prototype")
     atmos.stop()
 end
