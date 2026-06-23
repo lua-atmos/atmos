@@ -15,7 +15,9 @@ Major refactoring with the distinction between `task` (the prototype) vs
         - logical combinators:
             - `{ tag='or',  ... }`, `{ tag='and', ... }`, `{ tag='not', x }`
         - predicates:
-            - `{ tag='until', pat, ... }`, `{ tag='while', pat, ... }`
+            - `{ tag='until', [awt,] f }`, `{ tag='while', [awt,] f }`
+        - tasks:
+            - `await(T, ...)`
     - `toggle(..., [filter], ...)`: optional filter pattern to keep reacting
     - `__atmos` metamethod: custom await matching for user types
 - Removals:
@@ -25,6 +27,7 @@ Major refactoring with the distinction between `task` (the prototype) vs
         - `await` now only receives and returns one argument
             - exception: `await(ts, ...)` above
     - `_and_` / `_or_`: see "logical combinators" above
+    - `await(f)`: see `until` / `while`
 - Modifications:
     - `spawn(...)` -> `spawn(T)`, `do_spawn(f)`
         - `do_spawn` returns close-only handle (not task handle)
