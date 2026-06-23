@@ -35,10 +35,10 @@ loop(function ()
         print "-=-=- 1.3 -=-=-"
         do_spawn(function()
             await('X')
-            print("anon task awakes on X")
+            print("spawned block awakes on X")
         end)
         emit('X')
-            -- "anon task awakes on X"
+            -- "spawned block awakes on X"
     end
 
     -- 2. External Environments
@@ -95,7 +95,6 @@ loop(function ()
                 print "never prints"
             end)
             await 'X'       -- awakes and aborts the whole task hierarchy
-            print "awakes from X"
         end)
         emit 'X'
         emit 'Y'
@@ -107,7 +106,7 @@ loop(function ()
         do_spawn(function ()
             do_spawn(function ()
                 local _ <close> = defer(function ()
-                    print "nested task aborted"
+                    print "nested block aborted"
                 end)
                 await(false) -- never awakes
             end)

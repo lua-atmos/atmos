@@ -71,9 +71,13 @@ cd tst && lua5.4 all.lua
 
 List all tests in the docs.
 
-- [ ] Manual tests:
-    - [ ] README.md
-    - [ ] guide.md
+- [ ] Manual tests (snippets vs `tst/*.lua`):
+    - [ ] README.md   -> `tst/readme.lua`
+    - [ ] guide.md    -> `tst/guide.lua` (markers `<!-- tst/guide.lua : N.N -->`)
+
+The `.lua` files are the runnable extractions of the doc snippets;
+they may use faster timers and add extra coverage. Verify the API
+matches and align any drifted print strings (lua follows md).
 
 ## §2. Docs
 

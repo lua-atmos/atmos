@@ -40,7 +40,7 @@ sdl apps    v0.5   pico apps v0.6   iup-7guis WON'T DO (tier C)
 
 ## §1. Run tests
 
-- [ ] Automatic tests:
+- [x] Automatic tests:
 
 ```bash
 cd tst && lua5.4 all.lua
@@ -48,9 +48,15 @@ cd tst && lua5.4 all.lua
 
 List all tests in the docs.
 
-- [ ] Manual tests:
-    - [ ] README.md
-    - [ ] guide.md
+- [x] Manual tests (snippets vs `tst/*.lua`):
+    - [x] README.md   -> `tst/readme.lua`
+    - [x] guide.md    -> `tst/guide.lua` (markers `<!-- tst/guide.lua : N.N -->`)
+
+The `.lua` files are the runnable extractions of the doc snippets;
+they may use faster timers and add extra coverage. Verify the API
+matches and align any drifted print strings (lua follows md).
+v0.7: aligned 3 print strings (1.3, 3.2, 3.3); readme.lua §2
+(streams parany) has no README counterpart (extra test, kept).
 
 ## §2. Docs
 
