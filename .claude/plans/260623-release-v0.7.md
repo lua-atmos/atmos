@@ -306,10 +306,10 @@ Order matters: envs pin `atmos ~> 0.7`, so atmos lands first.
 
 ### 8.2 Phase A -- HEADLESS (no display)
 
-- [ ] clock hello    `lua5.4 -e 'require "atmos.env.clock.exs.hello"'`
-- [ ] clock hello-rx `lua5.4 -e 'require "atmos.env.clock.exs.hello-rx"'`
-- [ ] socket hello   `lua5.4 -e 'require "atmos.env.socket.exs.hello"'`
-- [ ] socket cli-srv `lua5.4 -e 'require "atmos.env.socket.exs.cli-srv"'`
+- [x] clock hello    `lua5.4 -e 'require "atmos.env.clock.exs.hello"'`
+- [x] clock hello-rx `lua5.4 -e 'require "atmos.env.clock.exs.hello-rx"'`
+- [x] socket hello   `lua5.4 -e 'require "atmos.env.socket.exs.hello"'`
+- [x] socket cli-srv `lua5.4 -e 'require "atmos.env.socket.exs.cli-srv"'`
 
 ### 8.3 Phase B -- NEEDS DISPLAY (launch, observe, close)
 
