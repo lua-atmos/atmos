@@ -396,8 +396,8 @@ apps (NO rock -- checkout the version branch, then run):
 
 **env-js**: N/A -- not yet released (§5 postponed).
 
-## §9. Announce (manual)  (⛔ atmos-lang barrier)
+## §9. Announce (manual)  -- DONE
 
-- [ ] Twitter / BlueSky
-- [ ] Mailing list
-- [ ] Students
+- [x] Twitter / BlueSky
+- [x] Mailing list
+- [x] Students
