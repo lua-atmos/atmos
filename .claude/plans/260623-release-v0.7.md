@@ -38,10 +38,14 @@ env-js      v0.7   POSTPONED (gated on atmos-lang/atmos v0.7)
 sdl apps    v0.5   pico apps v0.6   iup-7guis WON'T DO (tier C)
 ```
 
-## §0. Cross-repo sync (all in-scope repos on `vX`)
+## §0. Conventions
 
-CONVENTION: every in-scope repo stays checked out on its `vX`
-branch, with `local == remote` and `main` ff'd to `vX`.
+CONVENTION (luarocks): every `luarocks` invocation (list / show /
+make / install / remove / search / upload) MUST pass
+`--lua-version=5.4`. Always use and recommend this form.
+
+CONVENTION (sync): every in-scope repo stays checked out on its
+`vX` branch, with `local == remote` and `main` ff'd to `vX`.
 
 Status @ 2026-06-23 -- 10/10 in-scope converged on `vX`:
 

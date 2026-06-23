@@ -20,6 +20,12 @@ Fill in per release:
 
 These drive every decision below.
 
+### Always `luarocks --lua-version=5.4`
+
+Every `luarocks` invocation (list / show / make / install /
+remove / search / upload) MUST pass `--lua-version=5.4`.
+Always use and recommend this form -- never a bare `luarocks`.
+
 ### Branch-tracking (not tags)
 
 All rocks pin `source.branch` (atmos -> `vX.Y`, envs -> `vN`),
