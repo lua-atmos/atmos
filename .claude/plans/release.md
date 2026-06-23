@@ -88,6 +88,12 @@ Check ALL docs are consistent before cutting:
 - [ ] api.md
 - [ ] HISTORY.md
 
+### 2.0 Scan recent commits for undocumented changes
+
+- [ ] `git log --since=... --stat` since the last cut; cross-check
+      each API change against the docs and HISTORY. Watch for
+      heading edits that silently break `(#anchor)` links.
+
 ### 2.1 README.md
 
 - [ ] Add `vX.Y` to version list

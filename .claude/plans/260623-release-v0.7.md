@@ -62,41 +62,52 @@ v0.7: aligned 3 print strings (1.3, 3.2, 3.3); readme.lua §2
 
 Check ALL docs are consistent before cutting:
 
-- [ ] README.md
-- [ ] guide.md
-- [ ] api.md
-- [ ] HISTORY.md
+- [x] README.md
+- [x] guide.md
+- [x] api.md
+- [x] HISTORY.md
+
+### 2.0 Scan recent commits for undocumented changes
+
+- [x] `git log --since=... --stat` since the last cut; cross-check
+      each API change against the docs. v0.7 found: api.md `emit`
+      was multi-arg (now single `emit(e)`); 3 broken anchors from
+      heading edits (`emit`, `emit_in`, `toggle` filter).
 
 ### 2.1 README.md
 
-- [ ] Add `v0.7` to version list
-- [ ] Update stable link to `v0.7`
-- [ ] Update `Install & Run`: `install atmos 0.7`
-- [ ] Re-check every example against the new API
+- [x] Add `v0.7` to version list
+- [x] Update stable link to `v0.7`
+- [x] Update `Install & Run`: `install atmos 0.7`
+- [x] Re-check every example against the new API
       (`loop_on`, `spawn`/`do_spawn`, `await(T,...)`)
-- [ ] Environments section: bundled (clock) vs separate repos
+- [x] Environments section: bundled (clock) vs separate repos
       (lua-atmos/env-sdl, env-pico, env-socket, env-iup)
 
 ### 2.2 HISTORY.md
 
-- [ ] Confirm the `v0.7` entry is complete (additions /
+- [x] Confirm the `v0.7` entry is complete (additions /
       modifications / removals / fixes). Recently added:
       `await(T,...)`, `await(f)` removal, single-pred
       `{tag='until'|'while', awt, f}`.
 
 ### 2.3 Rockspec description
 
-- [ ] `detailed` in sync with README "About". A stale word
+- [x] `detailed` in sync with README "About". A stale word
       (e.g. `every`) is a metadata-only reason to bump a rev.
+      v0.7: `0.7-2` already full sync; synced `dev-3` (was
+      missing the streams/threads block). No stale terms.
 
 ### 2.4 guide.md
 
-- [ ] Walk every snippet against the new API.
-- [ ] Terminology aligned with api.md (`task`/`xtask`).
+- [x] Walk every snippet against the new API.
+- [x] Terminology aligned with api.md (`task`/`xtask`).
 
 ### 2.5 api.md
 
-- [ ] Final consistency pass vs guide.md (api.md leads).
+- [x] Final consistency pass vs guide.md (api.md leads).
+      Fixed: `emit` single-arg, `toggle` `[filter]`, parall TODO,
+      3 anchors. Nits won't-do: `#xtask` in HTML comment.
 
 ## §3. Migrate siblings (core BROKE -- required)
 
