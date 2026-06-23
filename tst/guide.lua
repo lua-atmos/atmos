@@ -241,9 +241,9 @@ loop(function ()
 
     -- 7. Functional Streams
 
-    -- 7.1
+    -- 7.1.1
     do
-        print "-=-=- 7.1 -=-=-"
+        print "-=-=- 7.1.1 -=-=-"
         local _ <close> = do_spawn(function ()
             S.on('X')
                 :filter(function(x) return x.v%2 == 1 end)
@@ -257,9 +257,9 @@ loop(function ()
         end
     end
 
-    -- 7.2
+    -- 7.1.2
     do
-        print "-=-=- 7.2 -=-=-"
+        print "-=-=- 7.1.2 -=-=-"
         function T ()
             await('X')
             await('Y')
@@ -278,6 +278,37 @@ loop(function ()
         emit('X')
         emit('Y')   -- 2
         emit('Y')
+    end
+
+    -- 7.2
+    do
+        print "-=-=- 7.2 -=-=-"
+        math.randomseed()
+        local function cpu (max)
+            local sum = 0
+            for i=1, max do
+                sum = sum + i
+            end
+            return sum
+        end
+        local t = watching(20*_s_, function ()
+            return par_any(function ()
+                local v = thread(function ()
+                    return cpu(math.random(1000000))
+                end)
+                return { worker='A', value=v }
+            end, function ()
+                local v = thread(function ()
+                    return cpu(math.random(1000000))
+                end)
+                return { worker='B', value=v }
+            end)
+        end)
+        if t == 'clock' then
+            print("Computation timeout...")
+        else
+            print(t.worker .. " yields " .. t.value)
+        end
     end
 
 end)

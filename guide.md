@@ -504,7 +504,7 @@ and events.
 
 The next example creates a stream that awaits occurrences of event `X`:
 
-<!-- tst/guide.lua : 7.1 -->
+<!-- tst/guide.lua : 7.1.1 -->
 
 ```
 local S = require "atmos.streams"
@@ -544,7 +544,7 @@ Atmos also provides stateful streams by supporting tasks as stream sources.
 The next example creates a task stream that packs awaits to `X` and `Y` in
 sequence:
 
-<!-- tst/guide.lua : 7.2 -->
+<!-- tst/guide.lua : 7.1.2 -->
 
 ```
 function T ()               -- task body to become a stream
@@ -585,6 +585,8 @@ The `thread` primitive offloads a computation to an isolated OS thread,
 allowing CPU-bound work without blocking the Atmos cooperative scheduler.
 
 The next example spawns two threads to calculate heavy `cpu` sums:
+
+<!-- tst/guide.lua : 7.2 -->
 
 ```
 require "atmos.env.clock"
