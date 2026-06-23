@@ -372,7 +372,7 @@ do
             await(tasks())
         end)
     end)
-    assertfx(err, "await.lua:372: invalid await : unexpected tasks pool : expected ':any' or ':all'")
+    assertfx(err, "await.lua:372: invalid await : unexpected tasks pool")
     atmos.stop()
 end
 
@@ -415,5 +415,51 @@ do
     emit(true)
     out('end')
     assertx(out(), "waiting\nstopped\nend\n")
+    atmos.stop()
+end
+
+print "--- AWAIT / FUNCTION REJECTED ---"
+
+-- a bare function is no longer a valid await pattern (use until/while);
+-- rejected wherever it reaches M.await: await / watching / loop_on / stream
+
+do
+    print("Testing...", "reject fn 1: await(function)")
+    local _,err = pcall(function ()
+        do_spawn(function () await(function () end) end)
+    end)
+    assertfx(err, "invalid await : unexpected function")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "reject fn 2: watching(function, body)")
+    local _,err = pcall(function ()
+        do_spawn(function ()
+            watching(function () return true end, function () end)
+        end)
+    end)
+    assertfx(err, "invalid await : unexpected function")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "reject fn 3: loop_on(function, body)")
+    local _,err = pcall(function ()
+        do_spawn(function ()
+            loop_on(function () return true end, function () end)
+        end)
+    end)
+    assertfx(err, "invalid await : unexpected function")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "reject fn 4: stream S.on(function)")
+    local S = require "atmos.streams"
+    local _,err = pcall(function ()
+        do_spawn(function () S.on(function () end):to() end)
+    end)
+    assertfx(err, "invalid await : unexpected function")
     atmos.stop()
 end

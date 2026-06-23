@@ -354,6 +354,6 @@ do
         end))
         emit(true)
     end)
-    assertfx(err, "invalid await : unexpected tasks pool : expected ':any' or ':all'")
+    assertfx(err, "invalid await : unexpected tasks pool")
     atmos.stop()
 end
