@@ -47,6 +47,10 @@ make / install / remove / search / upload) MUST pass
 CONVENTION (sync): every in-scope repo stays checked out on its
 `vX` branch, with `local == remote` and `main` ff'd to `vX`.
 
+CONVENTION (barrier): the atmos-lang v0.7 work (separate session)
+GATES all publish/announce steps -- see the BARRIER before §6.
+Nothing in §6-§9 proceeds until it clears.
+
 Status @ 2026-06-23 -- 10/10 in-scope converged on `vX`:
 
 ```
@@ -257,13 +261,28 @@ the rev bump. Bump ONLY when the published description is wrong.
 7. [ ] Commit, push main
 8. [ ] Create version branch, push
 
-## §6. Commit, push main, create release branch
+## ⛔ BARRIER -- atmos-lang v0.7 (other session)
+
+Everything below -- §6 (push / ff main), §7 (publish rocks),
+§8.1 (remote-install verify), §9 (announce) -- is BLOCKED until
+the atmos-lang v0.7 work clears in its own session
+(`/x/atmos-lang/atmos`, plan `260618-task-xtask.md`).
+
+atmos-lang is the LANGUAGE / compiler project; lua-atmos/atmos
+(this repo) is the LIBRARY. They share `v0.7` versioning, so the
+library rocks must NOT publish and we must NOT announce until
+atmos-lang v0.7 is ready -- the two ship coordinated.
+
+- DONE pre-barrier:  §1-§5 + §8.2/§8.3 local verify (on `0.7-2`).
+- HELD post-barrier:  §6, §7, §8.1, §9.
+
+## §6. Commit, push main, create release branch  (⛔ atmos-lang barrier)
 
 - [ ] Push main, check GitHub Actions CI green
 - [ ] Create/update branch `v0.7`, push
 - [ ] Return to main (verify `main == v0.7 == origin/main`)
 
-## §7. Publish rockspecs to LuaRocks
+## §7. Publish rockspecs to LuaRocks  (⛔ atmos-lang barrier)
 
 Publish ALL rockspecs -- atmos AND every env. The new env
 versions are NOT yet on luarocks.org (verified 2026-06-23: only
@@ -297,7 +316,7 @@ branch.
 - `pico-lua`/`pico-sdl`, `lua-sdl2`, `iuplua` per env
 - a graphical display for sdl/pico/iup (or `Xvfb`)
 
-### 8.1 Clean install of the published rocks
+### 8.1 Clean install of the published rocks  (⛔ atmos-lang barrier; needs §7)
 
 ```bash
 sudo luarocks --lua-version=5.4 remove atmos --force
@@ -340,7 +359,7 @@ apps (NO rock -- checkout the version branch, then run):
 
 **env-js**: N/A -- not yet released (§5 postponed).
 
-## §9. Announce (manual)
+## §9. Announce (manual)  (⛔ atmos-lang barrier)
 
 - [ ] Twitter / BlueSky
 - [ ] Mailing list

@@ -74,6 +74,14 @@ Keep every in-scope repo checked out on its `vN` branch (not
 Verify per repo: `HEAD == vN`.
 Excluded repos (postponed / won't-do / deps) may stay on `main`.
 
+### Cross-project barrier (coordinated releases)
+
+A release may be GATED by work in another project / session
+(e.g. the atmos-lang language vs the lua-atmos library share
+`vX.Y`). When so, name the BARRIER explicitly before §6 and HOLD
+every publish/announce step (§6, §7, §8.1, §9) until it clears,
+so the projects ship coordinated. No barrier -> proceed normally.
+
 ## §1. Run tests
 
 - [ ] Automatic tests:
@@ -248,7 +256,14 @@ Bump ONLY when the published description is wrong.
 7. [ ] Commit, push main
 8. [ ] Create version branch, push
 
-## §6. Commit, push main, create release branch
+## ⛔ BARRIER (if any) -- HOLD publish/announce
+
+If a cross-project barrier applies (see §0), NAME it here and do
+NOT proceed past this point -- §6 (push / ff main), §7 (publish),
+§8.1 (remote verify), §9 (announce) all wait until it clears.
+Pre-barrier work (§1-§5 + local verify) may complete freely.
+
+## §6. Commit, push main, create release branch  (⛔ barrier)
 
 - [ ] Push main, check GitHub Actions CI green
 - [ ] Create/update branch `vX.Y`, push
@@ -256,7 +271,7 @@ Bump ONLY when the published description is wrong.
 - [ ] Verify EVERY in-scope repo HEAD == `vN` (checked out on the
       version branch), local == remote, main ff'd to `vN`.
 
-## §7. Publish rockspecs to LuaRocks
+## §7. Publish rockspecs to LuaRocks  (⛔ barrier)
 
 Publish ALL rockspecs -- atmos AND every env.
 Check what is already on luarocks.org first
@@ -290,7 +305,7 @@ Apps have NO rock: run from the repo on its version branch.
 - `pico-lua`/`pico-sdl`, `lua-sdl2`, `iuplua` per env
 - a graphical display for sdl/pico/iup (or `Xvfb`)
 
-### 8.1 Clean install of the published rocks
+### 8.1 Clean install of the published rocks  (⛔ barrier; needs §7)
 
 ```bash
 sudo luarocks --lua-version=5.4 remove atmos --force
@@ -331,7 +346,7 @@ apps (NO rock -- checkout the version branch, then run):
   `luarocks make` per repo if you keep developing.
 - after app runs, `git checkout main`/`master`.
 
-## §9. Announce (manual)
+## §9. Announce (manual)  (⛔ barrier)
 
 - [ ] Twitter / BlueSky
 - [ ] Mailing list
