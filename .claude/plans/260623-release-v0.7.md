@@ -314,8 +314,8 @@ Order matters: envs pin `atmos ~> 0.7`, so atmos lands first.
 ### 8.3 Phase B -- NEEDS DISPLAY (launch, observe, close)
 
 envs:
-- [ ] env-sdl   hello / across / click-drag-cancel
-- [ ] env-pico  hello / across / click-drag-cancel
+- [x] env-sdl   hello / across / click-drag-cancel
+- [x] env-pico  hello / across / click-drag-cancel
 - [ ] env-iup   hello / button-counter / iup-net
 
 apps (NO rock -- checkout the version branch, then run):
