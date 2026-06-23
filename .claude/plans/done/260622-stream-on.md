@@ -60,10 +60,10 @@ is redundant. `S.on` collapses to a pure `await` forwarder:
 - migrated test sites unchanged (`S.on(task(T), ...)` still works:
   fr_await -> `await(task(T), ...)` -> sugar spawns).
 
-Net: -1 function, -1 require, -1 branch.
+Net: -1 function, -1 require, -1 branch. The sole remaining
+handler `fr_await` was renamed `f` (only one now).
 
-Pending: user runs the streams + guide suites (watch 48 nil-guard,
-73 abortion).
+All tests pass (48 nil-guard, 73 abortion confirmed green).
 
 ## Context
 
