@@ -38,6 +38,31 @@ env-js      v0.7   POSTPONED (gated on atmos-lang/atmos v0.7)
 sdl apps    v0.5   pico apps v0.6   iup-7guis WON'T DO (tier C)
 ```
 
+## §0. Cross-repo sync (all in-scope repos on `vX`)
+
+CONVENTION: every in-scope repo stays checked out on its `vX`
+branch, with `local == remote` and `main` ff'd to `vX`.
+
+Status @ 2026-06-23 -- 10/10 in-scope converged on `vX`:
+
+```
+atmos v0.7   env-socket v0.2   env-sdl v0.2   env-pico v0.3 *
+env-iup v0.2   sdl-birds v0.5   sdl-rocks v0.5   sdl-pingus v0.5
+pico-birds v0.6   pico-rocks v0.6
+```
+
+- `*` env-pico: local `init.lua` dirty (drops `pico.zet`) --
+  resolve before the cut.
+- atmos `main` is -108 vs `v0.7` (ff `main`->`v0.7` at §6).
+
+WON'T DO -- excluded from the `vX`-checkout sync:
+
+```
+env-js      POSTPONED, on main
+iup-7guis   tier C WON'T DO; remote stub v0.3, local on main
+f-streams   dependency (own cadence); main -1, no local vX
+```
+
 ## §1. Run tests
 
 - [x] Automatic tests:

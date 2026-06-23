@@ -61,6 +61,13 @@ Develop + commit on the release branch `vN`, push it, THEN ff
 Always verify `main == vN == origin/main` before calling a repo
 done.
 
+### All repos checked out on `vN`
+
+Keep every in-scope repo checked out on its `vN` branch (not
+`main`/`master`), with `local == remote` and `main` ff'd to `vN`.
+Verify per repo: `HEAD == vN`.
+Excluded repos (postponed / won't-do / deps) may stay on `main`.
+
 ## §1. Run tests
 
 - [ ] Automatic tests:
@@ -240,6 +247,8 @@ Bump ONLY when the published description is wrong.
 - [ ] Push main, check GitHub Actions CI green
 - [ ] Create/update branch `vX.Y`, push
 - [ ] Return to main (verify `main == vX.Y == origin/main`)
+- [ ] Verify EVERY in-scope repo HEAD == `vN` (checked out on the
+      version branch), local == remote, main ff'd to `vN`.
 
 ## §7. Publish rockspecs to LuaRocks
 
