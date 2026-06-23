@@ -30,6 +30,15 @@ do
     end)
     assertfx(err, "task.lua:28: invalid await : invalid event pattern")
     atmos.stop()
+
+    print("Testing...", "await 3: raw function + args")
+    local _,err = pcall(function ()
+        spawn(task(function ()
+            await(function () end, 'A')
+        end))
+    end)
+    assertfx(err, "task.lua:37: invalid spawn : expected task prototype")
+    atmos.stop()
 end
 
 do
@@ -40,7 +49,7 @@ do
             emit_in(false,1)
         end)()
     end)
-    assertfx(err, "task.lua:40: invalid emit : invalid target")
+    assertfx(err, "task.lua:49: invalid emit : invalid target")
     atmos.stop()
 end
 

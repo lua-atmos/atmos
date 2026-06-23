@@ -73,6 +73,9 @@ function await (awt, ...)
     if X.is(awt, 'task') then
         -- await T(...)
         return await(run.spawn(debug.getinfo(2), nil, false, awt, ...))
+    elseif type(awt) == 'function' then
+        -- await f(...)
+        assertn(2, false, "invalid spawn : expected task prototype")
     else
         -- await(...)
         return run.await(run.TIME, awt, ...)

@@ -2,7 +2,10 @@
 
 ## Status
 
-DONE. All tests pass.
+REOPENED (2026-06-22): adding a synchronous-predicate form to
+`until`/`while` (the capability lost when bare `await(f)` became an
+error). Prior work below (spawn sugar, dbg fix, func/task gate)
+stays done; new work in "until/while synchronous predicate".
 
 ### Addendum: debug-location bug + fix
 
@@ -24,9 +27,15 @@ capturing the user frame:
   `/tmp/err.lua:3`, not init.lua. PASSES (with the fix); the full
   trace `:2 (loop) / :4 (throw) <- :3 (task) <- :2 (task)` is
   confirmed.
-- FLAGGED (still open, separate): a non-task callable falls to
-  `run.await` and reports "invalid await : invalid event pattern"
-  rather than spawn's "invalid spawn : expected task prototype".
+- func/task error msg (FIXED): `await(rawfn, ...)` used to fall to
+  `run.await` and report "invalid await : invalid event pattern".
+  The sugar now raises "invalid spawn : expected task prototype"
+  (via `assertn(2,...)`, blaming the user site) for ANY raw
+  function (`type(awt)=='function'`; the `select('#')>0` guard was
+  dropped). NOTE: this also blocks bare `await(f)` as a predicate --
+  which is why the synchronous predicate moves to
+  `{tag='until'/'while', f}` (see below). Streams (tables) and
+  `await(1,2)` untouched. Test: `tst/task.lua` "await 3".
 
 Design refinement: the sugar keys off a **task prototype**, not a
 raw function. `X.is(awt, 'task')` -> spawn it. This leaves the
@@ -139,3 +148,54 @@ function `awt`.
 
 - collapse `streams.lua` `fr_spawn` into pure `await`-forwarding,
   since `await` now covers the spawn case.
+  (DONE in `done/260622-stream-on.md`.)
+
+## until/while synchronous predicate (PENDING)
+
+### Problem
+
+Bare `await(f)` evaluated its predicate SYNCHRONOUSLY: `f(nil)` runs
+before the first `coroutine.yield()` (run.lua:597 is checked at the
+top of the loop, yield is at 605), so it can return without waiting
+for any event. Now that bare `await(f)` errors, that capability has
+no public form.
+
+`until`/`while` cannot replace it: they always `M.await(time,
+awt[1])` first (run.lua:534) -- yielding on a base pattern before
+any predicate is tested. No base pattern yields immediately (e.g.
+`{tag='until', 0, f}` would busy-loop).
+
+### Decision
+
+Give `until`/`while` a function-first-arg mode == old synchronous
+`await(f)`:
+
+    await{tag='until', f}  ===  await(f)   (old, synchronous)
+
+- discriminator: `awt[1]` is a function -> predicate mode (no base
+  await; check now + on each event). Else -> current base-pattern
+  mode.
+- relax `#awt >= 2` to allow `{tag='until', f}` (single function).
+- `until`: accept when predicate holds (== run.lua:597 semantics).
+- `while`: mirror -- accept when predicate FAILS (synchronous).
+- run.lua:597 stays as the shared engine (reached via `until` now,
+  and still via `loop_on(f)`/`watching(f)`); bare public `await(f)`
+  stays gated/erroring.
+
+### Steps
+
+1. run.lua `until`/`while` branch: if `type(awt[1])=='function'`,
+   run synchronous-predicate mode (reuse the 597 engine; for a
+   single-predicate `until` this is `M.await(time, awt[1])`); relax
+   the `#awt>=2` assertion for this case.
+2. api.md: drop the standalone `f: function` Condition row; document
+   `{tag='until'/'while', f}` as the synchronous predicate.
+3. test: `tst/await.lua` -- `await{tag='until', f}` returns without
+   an event when `f` already holds; `while` mirror; existing
+   base-pattern `until`/`while` tests still pass.
+
+### Verify
+
+- `await{tag='until', f}` == old `await(f)` (synchronous first
+  check, then re-check per event).
+- `while` negation correct.
