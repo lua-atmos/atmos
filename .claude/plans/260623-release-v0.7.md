@@ -319,8 +319,8 @@ envs:
 - [x] env-iup   hello / button-counter / iup-net
 
 apps (NO rock -- checkout the version branch, then run):
-- [ ] sdl-birds (v0.5) / sdl-rocks (v0.5) / sdl-pingus (v0.5)
-- [ ] pico-birds (v0.6) / pico-rocks (v0.6)
+- [x] sdl-birds (v0.5) / sdl-rocks (v0.5) / sdl-pingus (v0.5)
+- [x] pico-birds (v0.6) / pico-rocks (v0.6)
 
 ### 8.4 Gotchas
 
