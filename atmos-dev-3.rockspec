@@ -24,6 +24,17 @@ description = {
         - An `await` primitive suspends a task and waits for events.
         - An `emit` primitive signals events and awakes awaiting tasks.
 
+    Atmos also complements its core synchronous concurrency model with
+    Functional Streams (à la ReactiveX) and Multithreading Parallelism
+    (via LuaLanes):
+
+    - Functional Streams:
+        - Interoperability with tasks & events.
+        - Safe finalization of stateful streams.
+    - Asynchronous Parallelism:
+        - A `thread` primitive offloads computations to isolated OS threads.
+        - Safe abortion and finalization for threads.
+
     Atmos is inspired by synchronous programming languages like Céu
     and Esterel.
    ]],
