@@ -525,28 +525,28 @@ function M.await (time, awt, ...)
             end
         end
     elseif tag=='until' or tag=='while' then
-        assertn(2, #awt >= 2, "invalid await : expected predicate")
-        -- pass `time` into each re-await: keeps the original birth time, so
-        -- an internal reject does not shadow an in-flight outer emit.
-        -- until: accept when all predicates hold (last one decides result);
-        -- while: accept when any predicate fails (returns the event).
-        while true do
-            local it = M.await(time, awt[1])
-            local res, all = it, true
-            for i=2, #awt do
-                local r = awt[i](it)
-                if not r then
-                    all = false
-                    break
-                end
-                if r ~= true then
-                    res = r
-                end
+        if type(awt[1]) == 'function' then
+            local f = awt[1]
+            awt = f
+            if tag == 'while' then
+                awt = function (e) return not f(e) end
             end
-            if tag=='until' and all then
-                return res
-            elseif tag=='while' and (not all) then
-                return it
+        else
+            assertn(2, #awt==2 and type(awt[2])=='function',
+                "invalid await : expected single function predicate"
+            )
+            -- pass `time` into each re-await: keeps the original birth time, so
+            -- an internal reject does not shadow an in-flight outer emit.
+            -- until: accept when all predicates hold (last one decides result);
+            -- while: accept when any predicate fails (returns the event).
+            while true do
+                local it = M.await(time, awt[1])
+                local res = awt[2](it)
+                if tag=='until' and res then
+                    return (res~=true and res) or it
+                elseif tag=='while' and (not res) then
+                    return it
+                end
             end
         end
     elseif S.is(awt) then
@@ -597,7 +597,11 @@ function M.await (time, awt, ...)
         elseif type(awt) == 'function' then
             local ret = awt(emt)
             if ret then
-                return (ret~=true and ret) or emt
+                if ret == true then
+                    return emt
+                else
+                    return ret
+                end
             end
         end
 
@@ -627,7 +631,7 @@ function M.await (time, awt, ...)
                     return emt
                 end
             end
-        elseif type(awt)=='table' then
+        elseif type(awt) == 'table' then
             if mta~=meta_xtask and X.gte(awt, emt) then
                 return emt
             end

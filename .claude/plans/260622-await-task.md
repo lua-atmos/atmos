@@ -2,10 +2,11 @@
 
 ## Status
 
-REOPENED (2026-06-22): adding a synchronous-predicate form to
-`until`/`while` (the capability lost when bare `await(f)` became an
-error). Prior work below (spawn sugar, dbg fix, func/task gate)
-stays done; new work in "until/while synchronous predicate".
+DONE. All tests pass.
+
+Includes the `until`/`while` synchronous-predicate work (added
+2026-06-22 after bare `await(f)` became an error) plus the earlier
+spawn sugar, dbg-location fix, and func/task gate.
 
 ### Addendum: debug-location bug + fix
 
@@ -184,15 +185,60 @@ Give `until`/`while` a function-first-arg mode == old synchronous
 
 ### Steps
 
-1. run.lua `until`/`while` branch: if `type(awt[1])=='function'`,
-   run synchronous-predicate mode (reuse the 597 engine; for a
-   single-predicate `until` this is `M.await(time, awt[1])`); relax
-   the `#awt>=2` assertion for this case.
-2. api.md: drop the standalone `f: function` Condition row; document
-   `{tag='until'/'while', f}` as the synchronous predicate.
-3. test: `tst/await.lua` -- `await{tag='until', f}` returns without
-   an event when `f` already holds; `while` mirror; existing
-   base-pattern `until`/`while` tests still pass.
+0. [x] REMOVE bare-function support first (option a):
+   - run.lua: deleted the `elseif type(awt)=='function'` predicate
+     branch (was ~597). A bare function now has no engine.
+   - api.md: removed the standalone `f: function` Condition row.
+   - init.lua gate KEPT: public `await(f)` still errors cleanly.
+   - migrated the bare-function pattern sites to `{tag='until', f}`:
+     `tst/task.lua:403` "loop_on 2" (`loop_on(function...)`) and
+     `tst/par.lua:353` "watching 6" (`watching (function...)`). The
+     latter was missed at first (grep skipped the space in
+     `watching (`) -> surfaced as the "watching 6" failure; both
+     `loop_on`/`watching` route a bare-function pattern to
+     `run.await`, which no longer has the function branch.
+   - NOTE: suite will NOT pass until step 1 lands (the migrated
+     site + any `{tag='until', f}` hit `#awt>=2` and error). Do not
+     run tests between step 0 and step 1.
+1. [x] run.lua `until`/`while` (final shape):
+   - function first-arg -> assign `awt` and fall through to the
+     re-added bare-function branch (~594):
+         local f = awt[1]
+         awt = f
+         if tag == 'while' then
+             awt = function (e) return not f(e) end
+         end
+     `f` stays immutable so the `while` closure closes over the real
+     predicate (NOT the reassigned var -> no infinite recursion);
+     594's truthy-accept + `(ret~=true and ret) or emt` returns the
+     event for `while`. (Two bugs caught in review: missing
+     `awt = f` -> hang; `f = function() not f() end` self-capture ->
+     recursion.)
+   - base form: EXACTLY one predicate --
+     `assertn(#awt==2 and type(awt[2])=='function', "... expected
+     single function predicate")`; loop does `res = awt[2](it)`,
+     `until` returns `(res~=true and res) or it`, `while` returns
+     `it`. The `(res~=true and res) or it` matches api.md ("defaults
+     to e if true") AND the function-form (594) -- so a predicate
+     returning bare `true` yields the EVENT in both forms. (Surfaced
+     by "until 9", whose boolean predicate made `out(v[1])` index a
+     `true`.)
+   - review bugs fixed along the way: swapped `preds` return,
+     undefined `it`, post-yield table guard (earlier iteration);
+     `while` was acting like `until` (negation fix above).
+2. [x] api.md: added a note under the await table -- a `function`
+   first item makes `until`/`while` a synchronous predicate (no base
+   pattern); the `f: function` row was already removed.
+3. [x] tst/await.lua:
+   - appended at EOF: "until fn 1" (synchronous, no event),
+     "until fn 2" (re-checked per event), "while fn 3" (mirror).
+   - single-predicate refactor: rewrote "until 3/4/7" from two
+     predicates to one (predicate now returns the VALUE, `out(v)`),
+     and "until 8" error -> "expected single function predicate".
+   - fixed the hardcoded line refs shifted by the -3 lines:
+     `await.lua:300->297` (until 8) and `375->372` (bare pool).
+   Also migrated `tst/task.lua:403` "loop_on 2" + `tst/par.lua:353`
+   "watching 6" in step 0.
 
 ### Verify
 

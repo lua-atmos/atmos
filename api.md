@@ -302,9 +302,8 @@ The task awakes when an `emit(e)` matches the given await pattern as follows:
 |           | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts` |
 |           | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `ts`     |
 | Stream    | `s: stream`                         | `s` ends       | `v,t`    |
-| Condition | `f: function`                       | `f(e)` truthy  | `e / res`|
-|           | `{tag='until',x,...}`               | until all hold | `e / res`|
-|           | `{tag='while',x,...}`               | while any fail | `e`      |
+| Condition | `{tag='until', awt, f}`             | until f holds  | `e / res`|
+|           | `{tag='while', awt, f}`             | while f fails  | `e`      |
 | Logical   | `{tag='not',x}`                     | not `p`        | `e`      |
 |           | `{tag='and',...}`                   | all subs       | `e`      |
 |           | `{tag='or',...}`                    | any sub        | `e`      |

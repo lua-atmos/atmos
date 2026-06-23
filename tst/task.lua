@@ -400,7 +400,7 @@ end
 do
     print("Testing...", "loop_on 2")
     spawn(task(function ()
-        loop_on(function (v) return v and v>10 and v end,
+        loop_on({tag='until', function (v) return v and v>10 end},
             function (e)
                 out(e)
             end

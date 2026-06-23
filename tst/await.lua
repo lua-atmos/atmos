@@ -226,11 +226,10 @@ do
 end
 
 do
-    print("Testing...", "await until 3: many preds, all hold")
+    print("Testing...", "await until 3: pred holds -> result")
     spawn(task(function ()
         local v = await {tag='until', 'X',
-            function (e) return e[1]>0 end,
-            function (e) return e[1]<100 end
+            function (e) return e[1]>0 and e[1]<100 end
         }
         out(v[1])
     end))
@@ -240,11 +239,10 @@ do
 end
 
 do
-    print("Testing...", "await until 4: many preds, one false")
+    print("Testing...", "await until 4: pred false then true")
     spawn(task(function ()
         local v = await {tag='until', 'X',
-            function (e) return e[1]>0 end,
-            function (e) return e[1]<100 end
+            function (e) return e[1]>0 and e[1]<100 end
         }
         out(v[1])
     end))
@@ -280,11 +278,10 @@ do
 end
 
 do
-    print("Testing...", "await until 7: last pred decides result")
+    print("Testing...", "await until 7: pred result is the value")
     spawn(task(function ()
         local v = await {tag='until', 'X',
-            function (e) return e[1]>0 end,
-            function (e) return e[1]*2 end
+            function (e) return e[1]>0 and e[1]*2 end
         }
         out(v)
     end))
@@ -300,7 +297,7 @@ do
             await {tag='until', 'X'}
         end))
     end)
-    assertfx(err, "await.lua:300: invalid await : expected predicate")
+    assertfx(err, "await.lua:297: invalid await : expected single function predicate")
     atmos.stop()
 end
 
@@ -375,6 +372,48 @@ do
             await(tasks())
         end)
     end)
-    assertfx(err, "await.lua:375: invalid await : unexpected tasks pool : expected ':any' or ':all'")
+    assertfx(err, "await.lua:372: invalid await : unexpected tasks pool : expected ':any' or ':all'")
+    atmos.stop()
+end
+
+-- until/while with a function first-arg: synchronous predicate
+do
+    print("Testing...", "await until fn 1: synchronous (no event)")
+    local ready = true
+    spawn(task(function ()
+        local v = await {tag='until', function () return ready and 'go' end}
+        out(v)
+    end))
+    out('after')
+    assertx(out(), "go\nafter\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "await until fn 2: re-checked on each event")
+    local n = 0
+    spawn(task(function ()
+        local v = await {tag='until', function () n = n + 1; return n>=3 and n end}
+        out(v)
+    end))
+    emit(true)
+    emit(true)
+    out('end')
+    assertx(out(), "3\nend\n")
+    atmos.stop()
+end
+
+do
+    print("Testing...", "await while fn 3: mirror (accept when pred fails)")
+    local ok = true
+    spawn(task(function ()
+        await {tag='while', function () return ok end}
+        out('stopped')
+    end))
+    out('waiting')
+    ok = false
+    emit(true)
+    out('end')
+    assertx(out(), "waiting\nstopped\nend\n")
     atmos.stop()
 end
