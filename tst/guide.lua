@@ -239,7 +239,7 @@ loop(function ()
         await(1*_s_)
     end
 
-    -- 7. Functional Streams
+    -- 7. Complementary Concurrency Models
 
     -- 7.1.1
     do
