@@ -258,15 +258,21 @@ Bump ONLY when the published description is wrong.
 
 ## §7. Publish rockspecs to LuaRocks
 
+Publish ALL rockspecs -- atmos AND every env.
+Check what is already on luarocks.org first
+(`luarocks --lua-version=5.4 search <rock>`): a NEW version is a
+first upload (no bump); re-publishing an existing rev needs a
+fresh rev. Do NOT silently skip an env whose new version was
+never uploaded.
+
 ```bash
-luarocks upload atmos-X.Y-<rev>.rockspec
-luarocks upload atmos-env-sdl-<rev>.rockspec      # only if bumped
-luarocks upload atmos-env-pico-<rev>.rockspec     # only if bumped
-luarocks upload atmos-env-socket-<rev>.rockspec   # only if bumped
-luarocks upload atmos-env-iup-<rev>.rockspec      # only if bumped
+luarocks --lua-version=5.4 upload atmos-X.Y-<rev>.rockspec
+luarocks --lua-version=5.4 upload atmos-env-sdl-<rev>.rockspec
+luarocks --lua-version=5.4 upload atmos-env-pico-<rev>.rockspec
+luarocks --lua-version=5.4 upload atmos-env-socket-<rev>.rockspec
+luarocks --lua-version=5.4 upload atmos-env-iup-<rev>.rockspec
 ```
 
-Env rocks unchanged unless the §5 DECISION resolved to bump.
 Verify: `luarocks --lua-version=5.4 search atmos`.
 
 ## §8. Verify LuaRocks install + test all examples (REMOTE)

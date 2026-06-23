@@ -30,10 +30,10 @@ Per-repo versions for this cut:
 
 ```
 atmos       v0.7   rock 0.7-2 (desc fix; branch=v0.7)
-env-sdl     v0.2   rock 0.2-1 (bump SKIPPED unless desc wrong)
-env-pico    v0.3   rock 0.3-1 (bump SKIPPED unless desc wrong)
-env-socket  v0.2   rock 0.2-1 (bump SKIPPED unless desc wrong)
-env-iup     v0.2   rock 0.2-1 (bump SKIPPED unless desc wrong)
+env-sdl     v0.2   rock 0.2-1 (PUBLISH: new ver, only 0.1 on org)
+env-pico    v0.3   rock 0.3-1 (PUBLISH: new ver, only 0.2 on org)
+env-socket  v0.2   rock 0.2-1 (PUBLISH: new ver, only 0.1 on org)
+env-iup     v0.2   rock 0.2-1 (PUBLISH: new ver, only 0.1 on org)
 env-js      v0.7   POSTPONED (gated on atmos-lang/atmos v0.7)
 sdl apps    v0.5   pico apps v0.6   iup-7guis WON'T DO (tier C)
 ```
@@ -265,15 +265,21 @@ the rev bump. Bump ONLY when the published description is wrong.
 
 ## §7. Publish rockspecs to LuaRocks
 
+Publish ALL rockspecs -- atmos AND every env. The new env
+versions are NOT yet on luarocks.org (verified 2026-06-23: only
+sdl 0.1, pico 0.2, socket 0.1, iup 0.1 published) -- so these are
+FIRST uploads of a new version, NO rev bump needed.
+
 ```bash
-luarocks upload atmos-0.7-2.rockspec
-luarocks upload atmos-env-sdl-0.2-2.rockspec      # only if bumped
-luarocks upload atmos-env-pico-0.3-2.rockspec     # only if bumped
-luarocks upload atmos-env-socket-0.2-2.rockspec   # only if bumped
-luarocks upload atmos-env-iup-0.2-2.rockspec      # only if bumped
+luarocks --lua-version=5.4 upload atmos-0.7-2.rockspec
+cd /x/lua-atmos/env-socket && luarocks --lua-version=5.4 upload atmos-env-socket-0.2-1.rockspec
+cd /x/lua-atmos/env-sdl    && luarocks --lua-version=5.4 upload atmos-env-sdl-0.2-1.rockspec
+cd /x/lua-atmos/env-pico   && luarocks --lua-version=5.4 upload atmos-env-pico-0.3-1.rockspec
+cd /x/lua-atmos/env-iup    && luarocks --lua-version=5.4 upload atmos-env-iup-0.2-1.rockspec
 ```
 
-Env rocks unchanged unless the §5 DECISION resolved to bump.
+If luarocks.org rejects a rev as already published, bump that
+rev (`-2`) and re-upload.
 Verify: `luarocks --lua-version=5.4 search atmos`.
 
 ## §8. Verify LuaRocks install + test all examples (REMOTE)
