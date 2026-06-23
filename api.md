@@ -88,13 +88,13 @@ Returns the status of the given task instance.
     [abort](#abort-t) |
     [spawn](#spawn-t-) |
     [spawn_in](#spawn_in-tsks-t-) |
-    [toggle](#toggle-tsk-on)
     [do_spawn](#do_spawn-f-) |
+    [toggle](#toggle-tsk-on)
 ]
 
 A *task prototype* (`task`) is an abstract, spawnable definition.
 
-An *task instance* (`xtask`) is a spawned protoype with its own identity.
+A *task instance* (`xtask`) is a spawned protoype with its own identity.
 
 A *pool of task instances* (`tasks`) holds a set of spawned prototypes.
 
@@ -192,18 +192,6 @@ Spawns a task prototype into a pool.
     - `: xtask`
         | task instance just spawned (or `nil` if the pool is full)
 
-## `toggle (tsk, on)`
-
-Toggles a task instance (or pool) on and off.
-
-- Parameters:
-    - `tsk: xtask | tasks`
-        | task instance or pool to toggle
-    - `on: boolean`
-        | toggle on (`true`) or off (`false`)
-- Returns:
-    - `nil`
-
 ## `do_spawn (f, ...)`
 
 Spawns a raw function as an anonymous transparent nested task.
@@ -228,29 +216,37 @@ do
 end
 ```
 
+## `toggle (tsk, on)`
+
+Toggles a task instance (or pool) on and off.
+
+- Parameters:
+    - `tsk: xtask | tasks`
+        | task instance or pool to toggle
+    - `on: boolean`
+        | toggle on (`true`) or off (`false`)
+- Returns:
+    - `nil`
+
 # 3. Events
 
 [
-    [emit](#emit-e-) |
-    [emit_in](#emit_in-to-) |
+    [emit](#emit-e) |
+    [emit_in](#emit_in-to-e) |
     [await](#await-pat)
 ]
 
-`TODO: event tag/payload`
-
-### `emit (e, ...)`
+### `emit (e)`
 
 Emits an event.
 
 - Parameters:
     - `e`
         | event to emit
-    - `...`
-        | event payloads
 - Returns
     - `nil`
 
-### `emit_in (to, e, ...)`
+### `emit_in (to, e)`
 
 Emits an event into a target.
 
@@ -259,8 +255,6 @@ Emits an event into a target.
         | emit target
     - `e`
         | event to emit
-    - `...`
-        | event payloads
 - Returns
     - `nil`
 
@@ -338,7 +332,7 @@ Note that some patterns may modify the final result:
 [
     [loop_on](#loop_on--f) |
     [watching](#watching--f) |
-    [toggle](#toggle-evt-f) |
+    [toggle](#toggle-evt-filter-f) |
     [par](#par-) |
     [par_all](#par_all-) |
     [par_any](#par_any-)
@@ -388,7 +382,7 @@ A `watching` is equivalent to the call as follows:
 par_any(function() return await(...) end, f)
 ```
 
-## `toggle (evt, f)`
+## `toggle (evt, [filter,] f)`
 
 Executes the given body until it terminates.
 Meanwhile, toggles it on and off based on occurrences of the given event.
@@ -396,11 +390,16 @@ Meanwhile, toggles it on and off based on occurrences of the given event.
 - Parameters:
     - `evt`
         | boolean event
+    - `filter`
+        | (optional) always-on await pattern
     - `f: function`
         | body as a function
 - Returns:
     - `...`
         | return values of the body
+
+A task that is toggled off does not react to upcoming events, except those
+matching the optional filter.
 
 ## 5.1. Parallels
 
@@ -463,7 +462,7 @@ local S = require "atmos.streams"
         like `parany` but terminates when any of the streams returned in `...`
         terminates
 
-`TODO: parand / xparand`
+`TODO: parall / xparall`
 
 # 7. Threads
 
