@@ -71,6 +71,28 @@ iup-7guis   tier C WON'T DO; remote stub v0.3, local on main
 f-streams   dependency (own cadence); main -1, no local vX
 ```
 
+## LATE CHANGE -- `await(function)` rejection (post §8)
+
+A runtime guard was added AFTER §8 first passed: `M.await` now
+rejects a bare function pattern (`run.lua`, message
+`invalid await : unexpected function`). This newly breaks
+`watching(fn,body)` / `loop_on(fn,body)` (the legacy silent
+predicate). `await(fn)` / `S.on(fn)` were ALREADY rejected by the
+init.lua sugar (`invalid spawn : expected task prototype`).
+
+Done + RE-TESTED (item-2 re-run):
+- core: assert in `run.lua`; 4 rejection tests in `tst/await.lua`
+  (await / watching / loop_on / stream); full suite passes.
+- apps migrated to `{tag='until', f}` + re-run green:
+    - birds 05-11 (sdl+pico): bare-lambda predicates
+    - rocks `ts.lua` (sdl+pico): named `out_of_screen` -- grep
+      MISSED it, caught at RUNTIME (the R4 risk realized)
+    - pingus: `await(f)` (fixed earlier)
+- envs unaffected.
+
+Ships in `0.7-2` via branch-tracking (NO new rev). Pending push:
+atmos `v0.7`, sdl/pico-birds, sdl/pico-rocks.
+
 ## §1. Run tests
 
 - [x] Automatic tests:
