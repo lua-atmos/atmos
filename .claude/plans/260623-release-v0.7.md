@@ -316,7 +316,7 @@ Order matters: envs pin `atmos ~> 0.7`, so atmos lands first.
 envs:
 - [x] env-sdl   hello / across / click-drag-cancel
 - [x] env-pico  hello / across / click-drag-cancel
-- [ ] env-iup   hello / button-counter / iup-net
+- [x] env-iup   hello / button-counter / iup-net
 
 apps (NO rock -- checkout the version branch, then run):
 - [ ] sdl-birds (v0.5) / sdl-rocks (v0.5) / sdl-pingus (v0.5)
