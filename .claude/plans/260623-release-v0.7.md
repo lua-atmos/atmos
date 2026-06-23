@@ -283,7 +283,10 @@ the rev bump. Bump ONLY when the published description is wrong.
 7. [ ] Commit, push main
 8. [ ] Create version branch, push
 
-## ⛔ BARRIER -- atmos-lang v0.7 (other session)
+## ⛔ BARRIER -- atmos-lang v0.7 (other session)  [LIFTED 2026-06-23]
+
+LIFTED: atmos `0.7-2` + all env rocks published; §6 main-ff done.
+Only §8.1 remote-install verify + §9 announce remain.
 
 Everything below -- §6 (push / ff main), §7 (publish rocks),
 §8.1 (remote-install verify), §9 (announce) -- is BLOCKED until
@@ -298,13 +301,21 @@ atmos-lang v0.7 is ready -- the two ship coordinated.
 - DONE pre-barrier:  §1-§5 + §8.2/§8.3 local verify (on `0.7-2`).
 - HELD post-barrier:  §6, §7, §8.1, §9.
 
-## §6. Commit, push main, create release branch  (⛔ atmos-lang barrier)
+## §6. Commit, push main, create release branch
 
-- [ ] Push main, check GitHub Actions CI green
-- [ ] Create/update branch `v0.7`, push
-- [ ] Return to main (verify `main == v0.7 == origin/main`)
+- [x] Push main, check GitHub Actions CI green
+- [x] Create/update branch `v0.7`, push
+- [x] Return to main (verify `main == v0.7 == origin/main`)
+      DONE 2026-06-23: main ff'd to `v0.7` (`1c4ad78`), pushed;
+      main == v0.7 == origin. (Not actually barrier-gated: rocks
+      track v0.7, dev tracks main -- ff publishes nothing.)
 
-## §7. Publish rockspecs to LuaRocks  (⛔ atmos-lang barrier)
+## §7. Publish rockspecs to LuaRocks  -- DONE 2026-06-23
+
+DONE: atmos `0.7-2` + `dev-3`; envs published -- env-socket
+`0.2-1`, env-sdl `0.2-1`, env-pico `0.3-1`, env-iup `0.2-1`.
+(env dev specs already on server: `dev-1` re-upload rejected =
+expected.) BARRIER lifted -- library rocks now live.
 
 Publish ALL rockspecs -- atmos AND every env. The new env
 versions are NOT yet on luarocks.org (verified 2026-06-23: only
@@ -338,7 +349,11 @@ branch.
 - `pico-lua`/`pico-sdl`, `lua-sdl2`, `iuplua` per env
 - a graphical display for sdl/pico/iup (or `Xvfb`)
 
-### 8.1 Clean install of the published rocks  (⛔ atmos-lang barrier; needs §7)
+### 8.1 Clean install of the published rocks  -- DONE 2026-06-23
+
+DONE: removed local make, installed published atmos `0.7-2` +
+envs from luarocks.org; re-ran headless + display smokes (envs +
+all 5 apps) -- all green. Published artifacts == local make.
 
 ```bash
 sudo luarocks --lua-version=5.4 remove atmos --force
