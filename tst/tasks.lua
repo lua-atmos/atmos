@@ -357,3 +357,26 @@ do
     assertfx(err, "invalid await : unexpected tasks pool")
     atmos.stop()
 end
+
+-- emit @N is identity-based: skip transparent spawn-blocks
+do
+    print("Testing...", "emit target : transparent spawn-block")
+    local Inner = task(function ()
+        await('go')
+        emit_in(2, 'h')
+    end)
+    spawn(task(function ()
+        spawn(task(function ()        -- Mid
+            do_spawn(function ()      -- transparent spawn-block
+                await(Inner)
+            end)
+            await(false)
+        end))
+        par_any(
+            function () await('h'); out('ok') end,
+            function () emit('go') end
+        )
+    end))
+    assertx(out(), "ok\n")
+    atmos.stop()
+end

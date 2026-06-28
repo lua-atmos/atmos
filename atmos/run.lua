@@ -658,16 +658,21 @@ local function fto (me, to)
 
     if to == 'global' then
         to = TASKS
+    elseif getmetatable(to)==meta_xtask or getmetatable(to)==meta_tasks then
+        to = to
     elseif type(to) == 'number' then
         local n = tonumber(to)
         to = me or TASKS
         while n > 0 do
             to = to._.up
             assertn(3, to~=nil, "invalid emit : invalid target")
+            -- identity-based: transparent tasks are invisible (pools count)
+            while (to~=TASKS) and to._.tra do
+                to = to._.up
+                assertn(3, to~=nil, "invalid emit : invalid target")
+            end
             n = n - 1
         end
-    elseif getmetatable(to)==meta_xtask or getmetatable(to)==meta_tasks then
-        to = to
     else
         error("invalid emit : invalid target", 3)
     end
