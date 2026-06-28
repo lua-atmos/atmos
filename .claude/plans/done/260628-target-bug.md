@@ -5,7 +5,7 @@
 - [x] Diagnose root cause
 - [x] Add failing test (`tst/tasks.lua`) — confirmed red
 - [x] Fix `fto` to skip transparent tasks (and pools)
-- [ ] Run `tst/all.lua`
+- [x] Run `tst/all.lua` — all green
 
 ## Summary
 
