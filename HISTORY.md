@@ -4,6 +4,9 @@ v0.8 (???/??)
 - Removals:
     - `loop_on`, `_break_`
 
+- Fixes:
+    - `X.gte`: don't recurse into tasks
+
 v0.7 (jun/26)
 -------------
 
