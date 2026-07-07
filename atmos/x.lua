@@ -42,12 +42,20 @@ function M.gte (a, b)
     elseif ta=='string' and tb=='string' then
         return (string.sub(b, 1, #a+1) == a..'.')
     elseif ta== 'table' and tb=='table' then
-        for k,va in pairs(a) do
-            if not M.gte(va,b[k]) then
-                return false
+        local ma = getmetatable(a)
+        local mb = getmetatable(b)
+        if ma==meta_task or ma==meta_xtask or ma==meta_tasks then
+            return false
+        elseif mb==meta_task or mb==meta_xtask or mb==meta_tasks then
+            return false
+        else
+            for k,va in pairs(a) do
+                if not M.gte(va,b[k]) then
+                    return false
+                end
             end
+            return true
         end
-        return true
     else
         return false
     end
