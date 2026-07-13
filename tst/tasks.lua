@@ -289,6 +289,34 @@ do
     atmos.stop()
 end
 
+-- :any consumed per iteration: loop must block between terminations
+do
+    print("Testing...", "pools :any loop consumes one-by-one")
+    do
+        local T = task(function (v)
+            await('e'..v)
+            return v
+        end)
+        local ts = tasks()
+        local t1 = spawn_in (ts, T, 1)
+        local t2 = spawn_in (ts, T, 2)
+        spawn(task(function ()
+            local n = 0
+            loop_on({tag='tasks', mode='any', tasks=ts}, function (ret,t,ts2)
+                n = n + 1
+                out(ret)
+                if n == 2 then
+                    _break_()
+                end
+            end)
+        end))
+        emit('e1')
+        emit('e2')
+    end
+    assertx(out(), "1\n2\n")
+    atmos.stop()
+end
+
 do
     print("Testing...", "pools :all -> last to terminate")
     do

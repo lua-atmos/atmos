@@ -6,6 +6,7 @@ v0.8 (???/??)
 
 - Fixes:
     - `X.gte`: don't recurse into tasks
+    - `await(ts)`: clear terminated task
 
 v0.7 (jun/26)
 -------------

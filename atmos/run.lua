@@ -582,7 +582,9 @@ function M.await (time, awt, ...)
                 if #ts == 0 then              -- immediate if empty
                     return nil, nil, ts
                 elseif ts.ret then            -- some task terminated
-                    return ts.ret.ret, ts.ret, ts
+                    local t = ts.ret
+                    ts.ret = nil              -- consume; next await blocks again
+                    return t.ret, t, ts
                 end
             else
                 assertn(2, false, "invalid await : invalid mode")
