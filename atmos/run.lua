@@ -129,7 +129,7 @@ local function task_result (t, ok, err)
         --if t._.status ~= 'aborted' then
             local up = _me_(false, t._.up)
             if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
-                t._.up.ret = t._.up.ret or t
+                t._.up.ret = t
                 up = _me_(false, t._.up._.up)   -- await(ts) must reach parent
             end
             M.emit(false, up, t)
@@ -574,23 +574,19 @@ function M.await (time, awt, ...)
             end
         elseif tag == 'tasks' then
             local ts = awt.tasks
-            if awt.mode == 'all' then
-                if (not awt.awoke) and #ts==0 then   -- only on first empty
-                    awt.awoke = true
-                    return ts
+            local ok; do
+                if awt.mode == 'all' then
+                    ok = ts.ret and (#ts == 0)
+                elseif awt.mode == 'any' then
+                    ok = ts.ret
+                else
+                    assertn(2, false, "invalid await : invalid mode")
                 end
-            elseif awt.mode == 'any' then
-                if (not awt.awoke) and #ts==0 then   -- only on immediate empty
-                    awt.awoke = true
-                    return nil, nil, ts
-                elseif ts.ret then            -- some task terminated
-                    local t = ts.ret
-                    ts.ret = nil              -- consume; next await blocks again
-                    awt.awoke = true
-                    return t.ret, t, ts
-                end
-            else
-                assertn(2, false, "invalid await : invalid mode")
+            end
+            if ok then
+                local t = ts.ret
+                ts.ret = nil            -- consume: next await blocks again
+                return t.ret, t, ts
             end
         elseif mta == meta_xtask then
             if coroutine.status(awt._.th) == 'dead' then

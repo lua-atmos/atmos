@@ -4,9 +4,12 @@ v0.8 (???/??)
 - Removals:
     - `loop_on`, `_break_`
 
+- Modifications:
+    - `await :any/all` no longer awakes if pool starts empty
+
 - Fixes:
     - `X.gte`: don't recurse into tasks
-    - `await(ts)`: clear terminated task, clear empty awake
+    - `await :any/all`: clear terminated task
 
 v0.7 (jun/26)
 -------------
