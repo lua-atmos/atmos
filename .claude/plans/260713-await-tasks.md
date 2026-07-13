@@ -88,14 +88,29 @@ The consumer cannot distinguish "pool empty" from "a task ended".
 Not caused by the consume fix; only unmasked by it (the old latch
 never let the loop reach the empty path).
 
-### Decision (pending)
+### Decision: option C (`awt.awoke` flag)
 
-| option        | behavior                                       | cost                                                         |
-| ------------- | ---------------------------------------------- | ----------------------------------------------------------- |
-| A (recommend) | drop `#ts==0` return for `any`; wake on `ts.ret` only | single-shot `await(:any ts)` on never-populated pool blocks (structured abort still cleans up) |
-| B             | keep immediate-empty; consumers guard `#ts>0`  | every loop-consumer needs a manual guard; easy to forget    |
+Neither A nor B. Gate the immediate `#ts==0` return on a per-await
+flag `awt.awoke`, set on the first empty-return OR on a `ts.ret`
+consume. The empty-return then fires at most once, before the
+await's first wake.
 
-`:all` keeps its empty->return (vacuously true); only `:any` changes.
+| case                          | behavior                          |
+| ----------------------------- | --------------------------------- |
+| single `await(:any ts)` empty | returns `nil` once (vacuous)      |
+| `loop :any` on empty pool     | one `nil`, then blocks (no spin)  |
+| `loop :any` drain + later emit | blocks (awoke set) -> no `nil`   |
+| `:all` empty                  | returns `ts` once (vacuous)       |
+
+Flag lives on `awt`, not `ts`: `awt` is fresh per `await(...)`
+statement and reused within one `loop_on`, so a later independent
+await on the same (reused) pool keeps its vacuous empty-return.
+
+The real bug was non-empty -> empty: a `:any` consumer re-checks the
+tasks branch on *any* resuming emit (`run.lua:575`), so after drain
+an unrelated emit hit `#ts==0` and returned a spurious `nil`. The
+plain drain (no follow-up emit) never reproduced it (pruning is
+deferred past the consumer's re-block via `task_gc` at `ing==0`).
 
 ## Verification
 
@@ -114,5 +129,12 @@ never let the loop reach the empty path).
 - [x] Decide on simultaneous-termination handling: WON'T DO
       (single latch kept; first-of-reaction only).
 - [x] Maintainer verification: all tests pass.
-- [ ] Empty-pool double-wake: decide A vs B.
-- [ ] Apply chosen fix + add failing test (drain -> no `nil` wake).
+- [x] Empty-pool double-wake: resolved via option C (`awt.awoke`),
+      not A/B.
+- [x] Real bug found: non-empty -> empty spurious `nil` on any
+      resuming emit (not the plain-drain path).
+- [x] Apply fix (`run.lua:575-594`: `awt.awoke` gates the `#ts==0`
+      immediate return for `:any` and `:all`).
+- [x] Tests added (`tst/tasks.lua`): drain -> no `nil`; drain then
+      emit -> no `nil`; loop on empty -> one `nil` then blocks.
+- [x] Maintainer verification: all tests pass.

@@ -575,15 +575,18 @@ function M.await (time, awt, ...)
         elseif tag == 'tasks' then
             local ts = awt.tasks
             if awt.mode == 'all' then
-                if #ts == 0 then              -- only when empty
+                if (not awt.awoke) and #ts==0 then   -- only on first empty
+                    awt.awoke = true
                     return ts
                 end
             elseif awt.mode == 'any' then
-                if #ts == 0 then              -- immediate if empty
+                if (not awt.awoke) and #ts==0 then   -- only on immediate empty
+                    awt.awoke = true
                     return nil, nil, ts
                 elseif ts.ret then            -- some task terminated
                     local t = ts.ret
                     ts.ret = nil              -- consume; next await blocks again
+                    awt.awoke = true
                     return t.ret, t, ts
                 end
             else
