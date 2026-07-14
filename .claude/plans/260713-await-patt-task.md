@@ -63,6 +63,10 @@ elseif tag == 'spawn' then
   (cosmetic : error location only)
 - `:any [T(a), U(b)]` pool form is compiler-side (maps to `or`/pool
   tables); no extra runtime support beyond the two branches above
+- `until`/`while`/`not` re-await `awt[1]` per rejected event
+  (`run.lua:517-551`) : with a prototype/carrier operand this RESPAWNS
+  `T` each round — explicit semantics decision deferred to the
+  compiler plan (STEP 4)
 
 ## Status
 
