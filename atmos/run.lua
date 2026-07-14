@@ -552,6 +552,11 @@ function M.await (time, awt, ...)
         end
     elseif S.is(awt) then
         return M.await(time, M.spawn(debug.getinfo(2), nil, false, M.task(debug.getinfo(2), function () return awt() end)))
+    elseif tag == 'spawn' then
+        -- spawn the prototype inside the awaiting task/branch, then await it:
+        -- in an or/and sub, `me(true)` is the branch, so a losing branch aborts
+        -- the spawned task via the cascading __close (mirrors the S.is case)
+        return M.await(time, M.spawn(debug.getinfo(2), nil, false, awt[1], table.unpack(awt, 2, #awt)))
     end
 
     local mta = getmetatable(awt)

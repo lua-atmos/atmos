@@ -1,6 +1,10 @@
 v0.8 (???/??)
 -------------
 
+- Additions:
+    - `await` patterns:
+        - `{ tag='spawn', T, ... }`
+
 - Removals:
     - `loop_on`, `_break_`
 

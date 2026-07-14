@@ -463,3 +463,137 @@ do
     assertfx(err, "invalid spawn : expected task prototype")
     atmos.stop()
 end
+
+print "--- AWAIT / TASK PROTOTYPE ---"
+
+-- a {tag='spawn', T, args...} carrier is a first-class await pattern: M.await
+-- spawns T inside the awaiting task/branch and awaits the resulting xtask. the
+-- carrier funnels prototypes through or/and, watching, loop_on. a bare prototype
+-- is NOT a pattern: the compiler always emits the carrier (even for no args)
+
+-- solo carrier: spawn T, await it, return its result
+do
+    print("Testing...", "await proto 1: spawn carrier solo")
+    local T = task(function ()
+        return await('go')
+    end)
+    spawn(task(function ()
+        local v = await {tag='spawn', T}
+        out(v.tag, v[1])
+    end))
+    emit{tag='go', 7}
+    assertx(out(), "go\t7\n")
+    atmos.stop()
+end
+
+-- solo carrier with args: args reach the spawned prototype
+do
+    print("Testing...", "await proto 2: spawn carrier with args")
+    local T = task(function (a, b)
+        await('go')
+        return a + b
+    end)
+    spawn(task(function ()
+        local v = await {tag='spawn', T, 3, 4}
+        out(v)
+    end))
+    emit 'go'
+    assertx(out(), "7\n")
+    atmos.stop()
+end
+
+-- carrier as an `or` sub: spawned in-branch, wins the race
+do
+    print("Testing...", "await proto 3: in or, T wins")
+    -- T folds its arg into a single return (a task keeps only its first
+    -- return value; the await also yields the xtask handle as a 2nd value)
+    local T = task(function (label)
+        local e = await('X')
+        return label .. e[1]
+    end)
+    spawn(task(function ()
+        local v = await {tag='or', {tag='spawn', T, 'hi'}, 'Y'}
+        out(v)
+    end))
+    emit{tag='X', 7}
+    assertx(out(), "hi7\n")
+    atmos.stop()
+end
+
+-- carrier as an `or` sub: when another branch wins, the spawned T is aborted
+do
+    print("Testing...", "await proto 4: in or, loser aborted")
+    local aborted = false
+    local T = task(function ()
+        local _ <close> = defer(function ()
+            aborted = true
+        end)
+        await('never')
+    end)
+    spawn(task(function ()
+        local v = await {tag='or', {tag='spawn', T}, 'X'}
+        out(v, aborted)
+    end))
+    emit 'X'
+    assertx(out(), "X\ttrue\n")
+    atmos.stop()
+end
+
+-- carrier as an `and` sub: both the spawned T and the sibling must complete
+do
+    print("Testing...", "await proto 5: in and")
+    local T = task(function (n)
+        await('go')
+        return n * 10
+    end)
+    spawn(task(function ()
+        local v,u = await {tag='and', {tag='spawn', T, 5}, 'X'}
+        out(v, u.tag)
+    end))
+    emit 'go'
+    emit{tag='X', 1}
+    assertx(out(), "50\tX\n")
+    atmos.stop()
+end
+
+-- watching(carrier, body): T funnels into M.await; T ending aborts the body
+do
+    print("Testing...", "await proto 6: watching")
+    -- the arg names the event T awaits: proves it reached the spawn
+    local T = task(function (ev)
+        return await(ev)
+    end)
+    spawn(task(function ()
+        watching({tag='spawn', T, 'done'}, function ()
+            await('never')
+        end)
+        out('watched')
+    end))
+    emit 'done'
+    assertx(out(), "watched\n")
+    atmos.stop()
+end
+
+-- loop_on(carrier, body): T is respawned each round, body sees each result
+do
+    print("Testing...", "await proto 7: loop_on respawns")
+    local n = 0
+    -- the arg (event name) is re-applied on every respawn
+    local T = task(function (ev)
+        return await(ev)
+    end)
+    spawn(task(function ()
+        loop_on({tag='spawn', T, 'tick'}, function (e)
+            n = n + e[1]
+            if n >= 6 then
+                _break_()
+            end
+        end)
+        out(n)
+    end))
+    emit{tag='tick', 2}
+    emit{tag='tick', 2}
+    emit{tag='tick', 2}
+    assertx(out(), "6\n")
+    atmos.stop()
+end

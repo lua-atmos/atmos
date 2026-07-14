@@ -71,8 +71,8 @@ end
 
 function await (awt, ...)
     if X.is(awt, 'task') then
-        -- await T(...)
-        return await(run.spawn(debug.getinfo(2), nil, false, awt, ...))
+        -- await T(...) : wrap into a spawn carrier funneled through M.await
+        return run.await(run.TIME, {tag='spawn', awt, ...})
     elseif type(awt) == 'function' then
         -- await f(...)
         assertn(2, false, "invalid spawn : expected task prototype")

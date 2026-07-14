@@ -5,15 +5,17 @@ Runtime half of the Atmos compiler plan :
 
 ## Goal
 
-`M.await` accepts a task **prototype** directly (spawn inside the
-awaiting task/branch), plus a `{tag='spawn', T, args...}` carrier for
-prototype calls with args.
+`M.await` accepts a `{tag='spawn', T, args...}` **carrier** : it spawns
+`T` inside the awaiting task/branch and awaits the resulting xtask.
+**Carrier-only** (decision) : the compiler always emits the carrier,
+even for no args ; a bare prototype is NOT an await pattern, so `M.await`
+needs a single branch (mirrors the `S.is` stream case).
 Then `init.lua`'s `await` sugar collapses and the compiler needs no
 thunk lowering :
 
 ```
-await T(a,b)                ;; solo : varargs reach spawn directly
-await T() || :X             ;; sub spawned in-branch, aborted on lose
+await T(a,b)                ;; -> {tag='spawn', T, a, b} : solo
+await T() || :X             ;; -> {tag='spawn', T} sub, aborted on lose
 watching T()                ;; free : funnels into M.await
 loop on T()                 ;; free : funnels into M.await
 ```
@@ -34,28 +36,30 @@ loop on T()                 ;; free : funnels into M.await
 
 | file       | place              | change                              |
 |------------|--------------------|-------------------------------------|
-| `run.lua`  | `M.await` `489-492`| relax `select('#',...)==0` assert : varargs allowed when `awt` is a prototype |
-| `run.lua`  | `M.await` `~553`   | new branch `getmetatable(awt)==meta_task` -> `M.await(time, M.spawn(dbg, nil, false, awt, ...))` |
 | `run.lua`  | `M.await` `~553`   | new branch `tag=='spawn'` -> spawn `awt[1]` with `awt[2..]` args, recurse |
 | `init.lua` | `await` `72-83`    | collapse to `run.await(run.TIME, ...)` |
+
+Carrier-only : no `meta_task` branch, and the `489-492` varargs assert
+stays as-is (the carrier packs args in the table, so `M.await` still
+receives a single operand).
 
 Sketch (next to the `S.is` branch in the pre-loop dispatch chain) :
 
 ```lua
-elseif getmetatable(awt) == meta_task then
-    return M.await(time, M.spawn(debug.getinfo(2), nil, false, awt, ...))
 elseif tag == 'spawn' then
     return M.await(time, M.spawn(debug.getinfo(2), nil, false, awt[1], table.unpack(awt, 2, #awt)))
 ```
 
 ## Notes
 
-- `meta_task` is local to `run.lua`, so the check lives there (no
-  `X.is` needed)
+- bare prototype dropped : compiler always emits the carrier, so
+  `M.await` never sees a raw `meta_task` operand (no `X.is` / no
+  `meta_task` local check needed in `run.lua`)
 - error message : `run.lua:500` already rejects plain functions
-  ("invalid await : unexpected function"); `init.lua`'s friendlier
-  "invalid spawn : expected task prototype" is lost unless kept as a
-  thin check in the collapsed sugar
+  ("invalid await : unexpected function"); collapsing `init.lua` drops
+  its friendlier "invalid spawn : expected task prototype" -> update
+  reject-fn tests (`await.lua` `reject fn 1`, `reject fn 4`) to the
+  `M.await` message, or keep a thin function check in the sugar
 - `{tag='spawn'}` carrier + nil args : `#awt` is unreliable with nil
   holes; consider storing `n` (compiler emits `table.pack`-style) or
   document no-nil-args
@@ -68,10 +72,40 @@ elseif tag == 'spawn' then
   `T` each round — explicit semantics decision deferred to the
   compiler plan (STEP 4)
 
+## Tests
+
+Failing tests appended to `tst/await.lua` (`--- AWAIT / TASK PROTOTYPE ---`) :
+
+| test                       | form                                          |
+|----------------------------|-----------------------------------------------|
+| proto 1 : carrier solo     | `await {tag='spawn', T}`                       |
+| proto 2 : carrier args     | `await {tag='spawn', T, 3, 4}`                |
+| proto 3 : in or, T wins    | `await {tag='or', {tag='spawn',T,'hi'}, 'Y'}` (single ret) |
+| proto 4 : in or, aborted   | `await {tag='or', {tag='spawn',T}, 'X'}`      |
+| proto 5 : in and           | `await {tag='and', {tag='spawn',T,5}, 'X'}`   |
+| proto 6 : watching         | `watching({tag='spawn',T,'done'}, body)`      |
+| proto 7 : loop_on respawn  | `loop_on({tag='spawn',T,'tick'}, body)`       |
+
+All carriers (no bare prototype) per the carrier-only decision.
+Proto 3/5/6/7 pass args through the carrier and verify they reach the
+spawn ; proto 4 has no arg (loser is aborted before it can observe one).
+
+Appended (not inserted) : keeps `await.lua:297` / `await.lua:372`
+hardcoded line-number asserts valid.
+
 ## Status
 
-- [ ] relax varargs assert for prototype case
-- [ ] `meta_task` branch in `M.await`
-- [ ] `{tag='spawn', T, args...}` branch in `M.await`
-- [ ] collapse `init.lua` `await` sugar
-- [ ] confirm in-branch lifetime (`await T() || :X` aborts loser)
+- [x] `{tag='spawn', T, args...}` branch in `M.await` (`run.lua` after `S.is`)
+- [x] collapse `init.lua` `await` sugar : bare `await(T,...)` now wraps into
+      the carrier -> single `M.await` path (kept the `function` guard, so
+      `task.lua:308` and `reject fn 1/4` are unaffected)
+- [~] reconcile reject-fn error message : NOT needed (guard kept in sugar)
+- [x] confirm in-branch lifetime (`await T() || :X` aborts loser) : proto 4
+      passes (loser's `defer` runs on abort)
+
+## Done
+
+Runtime half complete : all proto 1-7 tests pass + no regressions.
+Compiler half (carrier emission for `T(a,b)` / `:any [T(a), U(b)]`) is
+tracked in `/x/atmos-lang/atmos/.claude/plans/260713-await-patt-task.md`.
+Ready to move to `./.claude/plans/done/`.
