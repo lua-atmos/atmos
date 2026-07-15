@@ -109,3 +109,14 @@ Runtime half complete : all proto 1-7 tests pass + no regressions.
 Compiler half (carrier emission for `T(a,b)` / `:any [T(a), U(b)]`) is
 tracked in `/x/atmos-lang/atmos/.claude/plans/260713-await-patt-task.md`.
 Ready to move to `./.claude/plans/done/`.
+
+## Post-done fix : error attribution (2026-07-14)
+
+`await F()` with a plain func regressed the throw location : the assert
+fired inside `M.spawn` and attributed to `run.lua` internals instead of
+the user line (compiler test tasks.lua:318).
+Fixed by guarding the prototype in the `tag=='spawn'` branch itself
+with `assertn(2, ...)` : `init.lua`'s sugar tail-calls `run.await`, so
+level 2 reaches the user frame.
+Carrier subs nested in `||`/`&&` still attribute to internals (same as
+any in-branch runtime error).

@@ -555,7 +555,10 @@ function M.await (time, awt, ...)
     elseif tag == 'spawn' then
         -- spawn the prototype inside the awaiting task/branch, then await it:
         -- in an or/and sub, `me(true)` is the branch, so a losing branch aborts
-        -- the spawned task via the cascading __close (mirrors the S.is case)
+        -- the spawned task via the cascading __close (mirrors the S.is case);
+        -- guard here so the error attributes to the user frame (level 2), not
+        -- to M.spawn's internal assert
+        assertn(2, getmetatable(awt[1])==meta_task, "invalid spawn : expected task prototype")
         return M.await(time, M.spawn(debug.getinfo(2), nil, false, awt[1], table.unpack(awt, 2, #awt)))
     end
 

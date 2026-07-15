@@ -270,16 +270,23 @@ The following values are accepted as target:
 - `'global'`| all top-level tasks
 - `: task`| the given task
 
-## `await (pat)`
+## `await (pat, ...)`
 
 Awaits an event pattern in the running task.
 
 - Parameters:
     - `pat`
         | event pattern
+    - `...`
+        | spawn arguments (task prototype patterns only)
 - Returns:
     - `e`
         | argument of matching emit
+
+A task prototype as `pat` is sugar for the `{tag='spawn', T, ...}`
+carrier and accepts spawn arguments.
+The sugar applies only at the top level: inside combinators
+(`and`/`or`/...), use the carrier form.
 
 The task awakes when an `emit(e)` matches the given await pattern as follows:
 
@@ -292,7 +299,8 @@ The task awakes when an `emit(e)` matches the given await pattern as follows:
 | Time      | `us: number`                        | timeout        | overrun  |
 |           | `'clock'`                           | clock tick     | delta    |
 | Tasks     | `t: xtask`                          | `t` ends       | `v,t`    |
-|           | `T: task`                           | `T` ends       | `v,t`    |
+|           | `T: task`                           | spawns; ends   | `v,t`    |
+|           | `{tag='spawn',T,...}`               | spawns; ends   | `v,t`    |
 |           | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts` |
 |           | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `ts`     |
 | Stream    | `s: stream`                         | `s` ends       | `v,t`    |
