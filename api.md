@@ -278,15 +278,10 @@ Awaits an event pattern in the running task.
     - `pat`
         | event pattern
     - `...`
-        | spawn arguments (task prototype patterns only)
+        | spawn arguments (if `pat` is a task)
 - Returns:
     - `e`
         | argument of matching emit
-
-A task prototype as `pat` is sugar for the `{tag='spawn', T, ...}`
-carrier and accepts spawn arguments.
-The sugar applies only at the top level: inside combinators
-(`and`/`or`/...), use the carrier form.
 
 The task awakes when an `emit(e)` matches the given await pattern as follows:
 
@@ -298,9 +293,9 @@ The task awakes when an `emit(e)` matches the given await pattern as follows:
 |           | `x: any`                            | `X.is(e,x)`    | `e`      |
 | Time      | `us: number`                        | timeout        | overrun  |
 |           | `'clock'`                           | clock tick     | delta    |
-| Tasks     | `t: xtask`                          | `t` ends       | `v,t`    |
-|           | `T: task`                           | spawns; ends   | `v,t`    |
-|           | `{tag='spawn',T,...}`               | spawns; ends   | `v,t`    |
+| Tasks     | `t: xtask`                          | `t` end        | `v,t`    |
+|           | `T: task`                           | T end          | `v,t`    |
+|           | `{tag='spawn',T,...}`               | T end          | `v,t`    |
 |           | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts` |
 |           | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `ts`     |
 | Stream    | `s: stream`                         | `s` ends       | `v,t`    |
@@ -316,6 +311,8 @@ Note that some patterns may modify the final result:
 - Time: difference between the time elapsed and expected
 - Tasks: task result, terminating task, and task pool
 - Condition, Meta: function result (defaults to `e` if `true`)
+
+If `pat` is a task prototype `T`, then it expands to `{tag='spawn', T, ...}`.
 
 # 4. Errors
 
