@@ -559,7 +559,7 @@ function M.await (time, awt, ...)
         -- guard here so the error attributes to the user frame (level 2), not
         -- to M.spawn's internal assert
         assertn(2, getmetatable(awt[1])==meta_task, "invalid spawn : expected task prototype")
-        return M.await(time, M.spawn(debug.getinfo(2), nil, false, awt[1], table.unpack(awt, 2, #awt)))
+        return M.await(time, M.spawn(debug.getinfo(2), nil, false, awt[1], table.unpack(awt, 2, awt.n or #awt)))
     end
 
     local mta = getmetatable(awt)

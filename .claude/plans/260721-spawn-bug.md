@@ -73,5 +73,9 @@ Rejected as the primary fix: O(n) per await and still guesswork.
 
 ## Status
 
-- [ ] runtime uses `n`
+- [x] failing test added (`tst/await.lua`, "await proto 2b")
+      the carrier must use explicit numeric keys (`[1]=T, [2]=nil, ...`),
+      as the compiler emits: a positional constructor `{T, nil, 10, 20}`
+      sizes the array part to 4, so `#` returns 4 and hides the bug
+- [x] runtime uses `n`
 - [ ] paired compiler change landed in atmos-lang (`mk_tagged`)

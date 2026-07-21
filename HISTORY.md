@@ -14,6 +14,7 @@ v0.8 (???/??)
 - Fixes:
     - `X.gte`: don't recurse into tasks
     - `await :any/all`: clear terminated task
+    - `await T(nil,...)`: properly handle `nil` arguments
 
 v0.7 (jun/26)
 -------------

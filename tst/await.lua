@@ -502,6 +502,25 @@ do
     atmos.stop()
 end
 
+-- carrier with a nil arg: `n` counts the items after the tag, so the interior
+-- nil hole does not truncate the argument list. the explicit numeric keys
+-- mirror what the compiler emits ([1]=T, [2]=nil, ...), for which `#` stops
+-- at the hole and returns 1
+do
+    print("Testing...", "await proto 2b: spawn carrier with nil arg")
+    local T = task(function (a, b, c)
+        await('go')
+        return tostring(a) .. '-' .. tostring(b) .. '-' .. tostring(c)
+    end)
+    spawn(task(function ()
+        local v = await {tag='spawn', n=4, [1]=T, [2]=nil, [3]=10, [4]=20}
+        out(v)
+    end))
+    emit 'go'
+    assertx(out(), "nil-10-20\n")
+    atmos.stop()
+end
+
 -- carrier as an `or` sub: spawned in-branch, wins the race
 do
     print("Testing...", "await proto 3: in or, T wins")
