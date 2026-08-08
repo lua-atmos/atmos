@@ -9,11 +9,12 @@ v0.8 (???/??)
     - `loop_on`, `_break_`
 
 - Modifications:
-    - `await :any/all` no longer awakes if pool starts empty
+    - `await :any/all`:
+        - awake requires non-empty pool
+        - awake requires previous await (no longer buffered)
 
 - Fixes:
     - `X.gte`: don't recurse into tasks
-    - `await :any/all`: clear terminated task
     - `await T(nil,...)`: properly handle `nil` arguments
 
 v0.7 (jun/26)

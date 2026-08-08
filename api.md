@@ -297,7 +297,7 @@ The task awakes when an `emit(e)` matches the given await pattern as follows:
 |           | `T: task`                           | T end          | `v,t`    |
 |           | `{tag='spawn',T,...}`               | T end          | `v,t`    |
 |           | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts` |
-|           | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `ts`     |
+|           | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `v,t,ts` |
 | Stream    | `s: stream`                         | `s` ends       | `v,t`    |
 | Condition | `{tag='until', [p,] c}`             | [p] until c    | `e / res`|
 |           | `{tag='while', [p,] c}`             | [p] while c    | `e`      |

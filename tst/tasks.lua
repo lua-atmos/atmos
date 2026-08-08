@@ -289,7 +289,7 @@ do
     atmos.stop()
 end
 
--- :any consumed per iteration: loop must block between terminations
+-- :any awakes once per death event: loop must block between terminations
 do
     print("Testing...", "pools :any loop consumes one-by-one")
     do
@@ -317,10 +317,56 @@ do
     atmos.stop()
 end
 
+-- SPEC: `:any` termination is a broadcast: ALL tasks awaiting the
+-- pool wake on each termination, not only the first-visited one
+do
+    print("Testing...", "pools :any broadcast to all awaiters")
+    do
+        local T = task(function (v)
+            await('e'..v)
+            return v
+        end)
+        local ts = tasks()
+        spawn_in(ts, T, 1)
+        spawn(task(function ()
+            local ret = await {tag='tasks', mode='any', tasks=ts}
+            out('A'..ret)
+        end))
+        spawn(task(function ()
+            local ret = await {tag='tasks', mode='any', tasks=ts}
+            out('B'..ret)
+        end))
+        emit('e1')
+    end
+    assertx(out(), "A1\nB1\n")
+    atmos.stop()
+end
+
+-- SPEC: no buffering: a death is only observable while awaiting;
+-- an awaiter established after the death misses it and blocks
+do
+    print("Testing...", "pools :any late awaiter -> misses past death")
+    do
+        local T = task(function (v)
+            await('e'..v)
+            return v
+        end)
+        local ts = tasks()
+        spawn_in(ts, T, 1)
+        emit('e1')
+        spawn(task(function ()
+            await {tag='tasks', mode='any', tasks=ts}
+            out 'late'
+        end))
+        emit('x')
+    end
+    assertx(out(), "")
+    atmos.stop()
+end
+
 -- regression: draining the pool in a :any loop must not spuriously
--- wake with `nil`. Pruning is deferred past the consumer's re-await
--- (`task_gc` at `ts._.ing==0`), so the loop re-blocks and no unrelated
--- emit re-broadcasts to the now-empty pool. Output stays "1\n2\n".
+-- wake with `nil`: only death events awake, so after the pool drains
+-- the loop re-blocks for good. Output stays "1\n2\n".
 do
     print("Testing...", "pools :any loop drain -> no spurious nil")
     do
@@ -346,10 +392,9 @@ do
     atmos.stop()
 end
 
--- regression (original non-empty -> empty bug): a :any consumer re-checks
--- the tasks branch on *any* emit that resumes it (`run.lua:575`), not only
--- on terminations. After the pool drains, an unrelated emit must NOT wake
--- it with a spurious `nil` -- `:any` wakes only on `ts.ret`, never on empty.
+-- regression (original non-empty -> empty bug): after the pool drains,
+-- an unrelated emit must NOT wake a :any awaiter with a spurious `nil`:
+-- `:any` awakes only on a death event, never on emptiness.
 do
     print("Testing...", "pools :any drain then emit -> no spurious nil")
     do

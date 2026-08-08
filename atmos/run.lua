@@ -129,7 +129,6 @@ local function task_result (t, ok, err)
         --if t._.status ~= 'aborted' then
             local up = _me_(false, t._.up)
             if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
-                t._.up.ret = t
                 up = _me_(false, t._.up._.up)   -- await(ts) must reach parent
             end
             M.emit(false, up, t)
@@ -503,7 +502,10 @@ function M.await (time, awt, ...)
 
     local tag = ((type(awt) == 'table') and awt.tag) or awt
 
-    if tag=='or' or tag=='and' then
+    if tag == 'tasks' then
+        assertn(2, awt.mode=='any' or awt.mode=='all',
+            "invalid await : invalid mode")
+    elseif tag=='or' or tag=='and' then
         local fs = {}
         for _,sub in ipairs(awt) do
             fs[#fs+1] = function () return M.await(time, sub) end
@@ -580,22 +582,6 @@ function M.await (time, awt, ...)
             if ret then
                 return (ret~=true and ret) or emt
             end
-        elseif tag == 'tasks' then
-            local ts = awt.tasks
-            local ok; do
-                if awt.mode == 'all' then
-                    ok = ts.ret and (#ts == 0)
-                elseif awt.mode == 'any' then
-                    ok = ts.ret
-                else
-                    assertn(2, false, "invalid await : invalid mode")
-                end
-            end
-            if ok then
-                local t = ts.ret
-                ts.ret = nil            -- consume: next await blocks again
-                return t.ret, t, ts
-            end
         elseif mta == meta_xtask then
             if coroutine.status(awt._.th) == 'dead' then
                 return awt.ret, awt
@@ -640,6 +626,21 @@ function M.await (time, awt, ...)
                     -- clock tick: wake on any bare-number emit, return the delta
                     return emt
                 end
+            end
+        elseif tag == 'tasks' then
+            local ts = awt.tasks
+            local ok = (getmetatable(emt)==meta_xtask and emt._.up==ts)
+            if ok and awt.mode=='all' then
+                -- requires pool poll to check at the very termination moment
+                for _,dn in ipairs(ts._.dns) do
+                    if coroutine.status(dn._.th) ~= 'dead' then
+                        ok = false
+                        break
+                    end
+                end
+            end
+            if ok then
+                return emt.ret, emt, ts
             end
         elseif type(awt) == 'table' then
             if mta~=meta_xtask and X.gte(awt, emt) then
