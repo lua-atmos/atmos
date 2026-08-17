@@ -1,5 +1,7 @@
 # remove loop_on / _break_ / atm-loop
 
+DEFERRED to v0.9 (2026-08-15): skipped for the v0.8 cut.
+
 ## Goal
 
 Drop the loop/break sugar from the lua-atmos runtime library.
