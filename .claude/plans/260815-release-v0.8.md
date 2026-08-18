@@ -57,26 +57,26 @@ sdl apps    v0.6   pico apps v0.7   iup-7guis WON'T DO (tier C)
 Envs worked FROM THIS SESSION (user-authorized, 2026-08-15).
 
 ```
-atmos       v0.8 pushed; 0.8-1 UPLOADED to luarocks
-            (2026-08-17, before main ff -- ff+CI PENDING);
+atmos       v0.8 DONE (2026-08-17): main==v0.8 pushed,
+            CI green, 0.8-1 UPLOADED to luarocks,
             make+tests OK vs installed rock
-env-sdl     v0.3 DONE (2026-08-17): audit clean, README+spec,
-            phase-1+2 green, 0.3-1 installed, v0.3 pushed,
-            main ff'd; ONLY §7 upload left (after atmos)
-env-pico    v0.4 branched; audit clean, README+spec done,
-            phase-1 green; PENDING sudo make + phase-2
-            ⛔ text.dyn fix kept -> pins pico-sdl ~> 0.7;
-            pico-sdl 0.7 ships TOGETHER (user) -- publish
-            of 0.4-1 gated on pico-sdl 0.7 upload
-env-socket  v0.3 branched; audit clean, README+spec done,
-            phase-1 green; PENDING sudo make + phase-2
-env-iup     v0.3 branched; audit clean, README+spec done,
-            phase-1 green; PENDING sudo make + phase-2
+env-sdl     v0.3 DONE (2026-08-17): phase-1+2 green,
+            0.3-1 installed, pushed, main ff'd, UPLOADED;
+            leftover .src.rock artifact to rm
+env-pico    v0.4 DONE (2026-08-17): phase-1+2 green,
+            0.4-1 installed, pushed, main ff'd, UPLOADED;
+            leftover .src.rock artifact to rm
+env-socket  v0.3 DONE (2026-08-17): phase-1+2 green,
+            0.3-1 installed, pushed, main ff'd, UPLOADED;
+            leftover .src.rock artifact to rm
+env-iup     v0.3 DONE (2026-08-17): phase-1+2 green,
+            0.3-1 installed, pushed, main ff'd, UPLOADED;
+            leftover .src.rock artifact to rm
 env-js      WON'T DO (user)
 sdl apps    v0.6 DONE (2026-08-17): birds/rocks/pingus pushed,
             main/master ff'd to v0.6
-pico apps   v0.7 branched, README bumped, smoked;
-            uncommitted pico-sdl-0.7 API migrations ride along
+pico apps   v0.7 DONE (2026-08-17): birds + rocks pushed,
+            main/master ff'd, pico-lua smoke OK
 ```
 
 ## §1. Run tests
@@ -108,10 +108,10 @@ Verify API matches; align drifted print strings (lua follows md).
 
 ## §2. Docs
 
-- [ ] README.md
-- [ ] guide.md
-- [ ] api.md
-- [ ] HISTORY.md
+- [x] README.md
+- [x] guide.md
+- [x] api.md
+- [x] HISTORY.md
 
 ### 2.0 Scan recent commits for undocumented changes
 
@@ -211,47 +211,42 @@ the old stable pairing forever.
 
 ### Envs
 
-- [x] env-sdl     `v0.3`  (2026-08-17; §7 upload pending)
-- [ ] env-pico    `v0.4`
-- [ ] env-socket  `v0.3`
-- [ ] env-iup     `v0.3`
+- [x] env-sdl     `v0.3`  (2026-08-17, uploaded)
+- [x] env-pico    `v0.4`  (2026-08-17, uploaded)
+- [x] env-socket  `v0.3`  (2026-08-17, uploaded)
+- [x] env-iup     `v0.3`  (2026-08-17, uploaded)
 - [-] env-js      WON'T DO (user, 2026-08-15)
 
 ### Downstream apps (tracked under their env)
 
 - [x] sdl-birds / sdl-rocks / sdl-pingus   `v0.6`
-      branched, README bumped (atmos 0.8 / env-sdl 0.3 / v0.6);
-      smoke-ran §1. PENDING: commit+push (user)
+      DONE (2026-08-17): pushed, main/master ff'd to v0.6
 - [x] pico-birds / pico-rocks              `v0.7`
-      branched, README bumped (atmos 0.8 / env-pico 0.4 / v0.7);
-      carry UNCOMMITTED pico-sdl-0.7 API migrations
-      (text.dyn/fix, layer.images table form; birds 10 files,
-      rocks 2 files); smoke-ran §1. ⛔ pico-sdl 0.7 barrier.
-      PENDING: commit+push (user)
+      DONE (2026-08-17): migrations committed, pushed,
+      main/master ff'd, pico-lua smoke OK
 - [-] iup-7guis   WON'T DO (tier C)
 
 ### clock (atmos built-in)
 
-- [ ] `atmos/env/clock/exs/hello.lua`
-- [ ] `atmos/env/clock/exs/hello-rx.lua`
+- [x] `atmos/env/clock/exs/hello.lua`     (2026-08-17)
+- [x] `atmos/env/clock/exs/hello-rx.lua`  (2026-08-17)
 
 ## ⛔ BARRIER (if any) -- HOLD §6-§9
 
 Named per GATES decision. Pre-barrier: §1-§5 + local verify.
 
-BARRIER (named 2026-08-15): pico-sdl 0.7 release (user, own
-repo/session) -- env-pico 0.4-1 pins `pico-sdl ~> 0.7` for the
-`text.dyn` fix; do not upload it before pico-sdl 0.7 is live.
-Other rocks (atmos, sdl, socket, iup) are NOT gated by it.
-atmos-lang barrier still UNDECIDED (see GATES).
+BARRIER RESOLVED (2026-08-17): pico-sdl 0.7-1 live on
+luarocks -- env-pico 0.4-1 upload unblocked.
+atmos-lang barrier still UNDECIDED (see GATES); atmos core
+was uploaded anyway (user decision, 2026-08-17).
 
 ## §6. Commit, push main, create release branch  (⛔)
 
-- [ ] Push main, GitHub Actions CI green
-- [ ] Create branch `v0.8`, push
-- [ ] Verify `main == v0.8 == origin/main`
-- [ ] Verify EVERY in-scope repo HEAD == `vN`, local == remote,
-      main ff'd
+- [x] Push main, GitHub Actions CI green (2026-08-17)
+- [x] Create branch `v0.8`, push
+- [x] Verify `main == v0.8 == origin/main` (05306bc)
+- [x] Verify EVERY in-scope repo HEAD == `vN`, local == remote,
+      main ff'd (all 10 repos, 2026-08-17)
 
 ## §7. Publish rockspecs to LuaRocks  (⛔)
 
@@ -259,15 +254,15 @@ Check server first: `luarocks --lua-version=5.4 search atmos`.
 
 ```bash
 luarocks --lua-version=5.4 upload atmos-0.8-1.rockspec       # DONE 2026-08-17
-luarocks --lua-version=5.4 upload atmos-env-sdl-0.3-1.rockspec
-luarocks --lua-version=5.4 upload atmos-env-pico-0.4-1.rockspec
-luarocks --lua-version=5.4 upload atmos-env-socket-0.3-1.rockspec
-luarocks --lua-version=5.4 upload atmos-env-iup-0.3-1.rockspec
+luarocks --lua-version=5.4 upload atmos-env-sdl-0.3-1.rockspec   # DONE
+luarocks --lua-version=5.4 upload atmos-env-pico-0.4-1.rockspec  # DONE
+luarocks --lua-version=5.4 upload atmos-env-socket-0.3-1.rockspec  # DONE
+luarocks --lua-version=5.4 upload atmos-env-iup-0.3-1.rockspec   # DONE
 ```
 
 ## §8. Verify LuaRocks install + test all examples (REMOTE)
 
-### 8.1 Clean install of published rocks  (⛔; needs §7)
+### 8.1 Clean install of published rocks  [x] (2026-08-17)
 
 ```bash
 sudo luarocks --lua-version=5.4 remove atmos --force
@@ -280,16 +275,16 @@ sudo luarocks --lua-version=5.4 install atmos-env-iup 0.3
 
 ### 8.2 Phase A -- HEADLESS
 
-- [ ] clock hello / hello-rx
-- [ ] socket hello / cli-srv
+- [x] clock hello / hello-rx   (2026-08-17)
+- [x] socket hello / cli-srv   (2026-08-17)
 
 ### 8.3 Phase B -- NEEDS DISPLAY
 
-- [ ] env-sdl   hello / across / click-drag-cancel
-- [ ] env-pico  hello / across / click-drag-cancel
-- [ ] env-iup   hello / button-counter / iup-net
-- [ ] sdl-birds / sdl-rocks / sdl-pingus  (v0.6)
-- [ ] pico-birds / pico-rocks             (v0.7)
+- [x] env-sdl   hello / across / click-drag-cancel  (2026-08-17)
+- [x] env-pico  hello / across / click-drag-cancel  (2026-08-17)
+- [x] env-iup   hello / button-counter / iup-net  (2026-08-17)
+- [x] sdl-birds / sdl-rocks / sdl-pingus  (v0.6)  (2026-08-17)
+- [x] pico-birds / pico-rocks             (v0.7)  (2026-08-17)
 
 ### 8.4 Gotchas
 
