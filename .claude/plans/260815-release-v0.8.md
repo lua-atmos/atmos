@@ -57,7 +57,9 @@ sdl apps    v0.6   pico apps v0.7   iup-7guis WON'T DO (tier C)
 Envs worked FROM THIS SESSION (user-authorized, 2026-08-15).
 
 ```
-atmos       v0.8 branched, docs+specs done, make PENDING sudo
+atmos       v0.8 branched, docs+specs done, make+tests OK
+            (sudo make 0.8-1 + tst all/readme/guide vs
+            installed rock, 2026-08-17)
 env-sdl     v0.3 branched; audit clean, README+spec done,
             phase-1 green; PENDING sudo make + phase-2
 env-pico    v0.4 branched; audit clean, README+spec done,
@@ -179,8 +181,9 @@ pico-rocks   -
       `exs.hello-rx` module -- absent since 0.7-2)
 - [x] Refresh `atmos-dev-4.rockspec` (replaces dev-3, removed;
       also gains `exs.hello-rx`)
-- [ ] Local install (needs sudo -- USER runs):
+- [x] Local install (user, 2026-08-17):
       `sudo luarocks --lua-version=5.4 make atmos-0.8-1.rockspec`
+      + tst all/readme/guide green vs installed rock
 
 ## §5. Release all environments and apps
 

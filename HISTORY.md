@@ -1,12 +1,9 @@
-v0.8 (???/??)
+v0.8 (aug/26)
 -------------
 
 - Additions:
     - `await` patterns:
         - `{ tag='spawn', T, ... }`
-
-- Removals:
-    - `loop_on`, `_break_`
 
 - Modifications:
     - `await :any/all`:
@@ -16,6 +13,7 @@ v0.8 (???/??)
 - Fixes:
     - `X.gte`: don't recurse into tasks
     - `await T(nil,...)`: properly handle `nil` arguments
+    - `emit(n, e)` target: skip transparent tasks
 
 v0.7 (jun/26)
 -------------
