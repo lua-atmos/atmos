@@ -114,7 +114,7 @@ Creates a task prototype from a function.
 
 <!--
 See also:
-- [xtask](#xtask) to create a task instance from a prototype.
+- [xtask](#xtask-t) to create a task instance from a prototype.
 - [spawn](#spawn-t-) to create and start a task instance from a prototype.
 - [spawn_in](#spawn_in-tsks-t-) to spawn an task instance into a pool.
 -->
@@ -233,7 +233,7 @@ Toggles a task instance (or pool) on and off.
 [
     [emit](#emit-e) |
     [emit_in](#emit_in-to-e) |
-    [await](#await-pat)
+    [await](#await-pat-)
 ]
 
 ### `emit (e)`
@@ -452,7 +452,7 @@ local S = require "atmos.streams"
 
 - Sources
     - `S.on (pat)`:
-        stream of [await patterns](#await-pat)
+        stream of [await patterns](#await-pat-)
 
 - Combinators
     - `S.emitter(s,tgt,as)`:

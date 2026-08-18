@@ -61,7 +61,8 @@ atmos       v0.8 branched, docs+specs done, make+tests OK
             (sudo make 0.8-1 + tst all/readme/guide vs
             installed rock, 2026-08-17)
 env-sdl     v0.3 branched; audit clean, README+spec done,
-            phase-1 green; PENDING sudo make + phase-2
+            phase-1 green; 0.3-1 installed + phase-2 green
+            (hello/across/click-drag-cancel, 2026-08-17)
 env-pico    v0.4 branched; audit clean, README+spec done,
             phase-1 green; PENDING sudo make + phase-2
             ⛔ text.dyn fix kept -> pins pico-sdl ~> 0.7;
@@ -72,7 +73,8 @@ env-socket  v0.3 branched; audit clean, README+spec done,
 env-iup     v0.3 branched; audit clean, README+spec done,
             phase-1 green; PENDING sudo make + phase-2
 env-js      WON'T DO (user)
-sdl apps    v0.6 branched, README bumped, smoked
+sdl apps    v0.6 branched, README bumped, smoked;
+            sdl-birds v0.6 pushed (2026-08-17), main ff PENDING
 pico apps   v0.7 branched, README bumped, smoked;
             uncommitted pico-sdl-0.7 API migrations ride along
 ```
