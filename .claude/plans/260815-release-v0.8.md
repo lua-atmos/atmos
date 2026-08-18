@@ -57,9 +57,9 @@ sdl apps    v0.6   pico apps v0.7   iup-7guis WON'T DO (tier C)
 Envs worked FROM THIS SESSION (user-authorized, 2026-08-15).
 
 ```
-atmos       v0.8 branched, docs+specs done, make+tests OK
-            (sudo make 0.8-1 + tst all/readme/guide vs
-            installed rock, 2026-08-17)
+atmos       v0.8 pushed; 0.8-1 UPLOADED to luarocks
+            (2026-08-17, before main ff -- ff+CI PENDING);
+            make+tests OK vs installed rock
 env-sdl     v0.3 DONE (2026-08-17): audit clean, README+spec,
             phase-1+2 green, 0.3-1 installed, v0.3 pushed,
             main ff'd; ONLY §7 upload left (after atmos)
@@ -258,7 +258,7 @@ atmos-lang barrier still UNDECIDED (see GATES).
 Check server first: `luarocks --lua-version=5.4 search atmos`.
 
 ```bash
-luarocks --lua-version=5.4 upload atmos-0.8-1.rockspec
+luarocks --lua-version=5.4 upload atmos-0.8-1.rockspec       # DONE 2026-08-17
 luarocks --lua-version=5.4 upload atmos-env-sdl-0.3-1.rockspec
 luarocks --lua-version=5.4 upload atmos-env-pico-0.4-1.rockspec
 luarocks --lua-version=5.4 upload atmos-env-socket-0.3-1.rockspec
