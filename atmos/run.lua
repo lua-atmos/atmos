@@ -860,6 +860,9 @@ local meta_par = {
     __close = function (ts)
         for _, t in ipairs(ts) do
             meta_xtask.__close(t)
+            if t._.up then
+                t._.up._.gc = true
+            end
         end
     end
 }
