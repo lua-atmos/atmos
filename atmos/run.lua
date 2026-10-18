@@ -14,25 +14,6 @@ local meta_defer = {
     __close = function (t) t.f() end
 }
 
-local function _next (s, i)
-    if i == s.max then
-        return nil
-    else
-        i = i + 1
-        return i, s.ts._.dns[i]
-    end
-end
-local function _ipairs (ts)
-    ts._.ing = ts._.ing + 1
-    local close = setmetatable({}, {
-        __close = function ()
-            ts._.ing = ts._.ing - 1
-            task_gc(ts)
-        end
-    })
-    return _next, {ts=ts,max=#ts._.dns}, 0, close
-end
-
 local meta_task = {
     __tostring = function (t) return string.format('task: %p', t) end,
 }
@@ -40,16 +21,20 @@ local meta_tasks
 local meta_xtask
 
 meta_tasks = {
-    __tostring = function (ts) return string.format('tasks: %p', ts) end,
+    __tostring = function (ts)
+        return string.format('tasks: %p', ts)
+    end,
+    __len = function (ts)
+        return #ts._.dns
+    end,
+    __pairs = function (ts)
+        return ipairs(ts._.dns)
+    end,
     __close = function (ts)
         for _,dn in ipairs(ts._.dns) do
             getmetatable(dn).__close(dn)
         end
     end,
-    __len = function (ts)
-        return #ts._.dns
-    end,
-    __pairs = _ipairs,
 }
 
 meta_xtask = {
