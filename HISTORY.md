@@ -1,3 +1,18 @@
+v0.9 (???/??)
+-----------------
+
+- Modifications:
+    - `atmos.gc`: terminated tasks are now removed only between environment steps
+        - environment must call it every step
+            - `loop` envs call automatically
+            - `start` envs must call each callback
+        - `pairs(ts)` may traverse dead tasks
+    - task termination is emitted on normal end only
+        - aborted task (even while running) never emits it
+
+- Fixes:
+    - terminated tasks leaked in parent pools (#23)
+
 v0.8 (aug/26)
 -------------
 
@@ -37,6 +52,7 @@ Major refactoring with the distinction between `task` (the prototype) vs
             - `await(T, ...)`
     - `toggle(..., [filter], ...)`: optional filter pattern to keep reacting
     - `__atmos` metamethod: custom await matching for user types
+
 - Removals:
     - multi-arg events:
         - `emit` now only receives one argument
@@ -45,6 +61,7 @@ Major refactoring with the distinction between `task` (the prototype) vs
             - exception: `await(ts, ...)` above
     - `_and_` / `_or_`: see "logical combinators" above
     - `await(f)`: see `until` / `while`
+
 - Modifications:
     - `spawn(...)` -> `spawn(T)`, `do_spawn(f)`
         - `do_spawn` returns close-only handle (not task handle)
@@ -59,8 +76,10 @@ Major refactoring with the distinction between `task` (the prototype) vs
     - Streams:
         - `S.from` -> `S.on`
         - `S.[x]paror` -> `S.[x]parany`
+
 - Environments:
     - `open`+`close` changed to main body + `quit`
+
 - Bug fixes:
     - `break()` inside `loop_on`
 
@@ -69,8 +88,10 @@ v0.6 (mar/26)
 
 - Additions:
     - `thread` block (CPU parallelism via LuaLanes)
+
 - Modifications:
     - `loop` (was `call`)
+
 - Environments:
     - new API: `open`, `step`, `close`
     - multi-env mode system (primary/secondary)
@@ -85,6 +106,7 @@ v0.5 (jan/26)
     - Environments
         - `lua-sdl2` `v2.0`
         - `pico-sdl` `v0.2`
+
 - Bug fixes:
     - tasks count ignores dead tasks
     - pico env: function predicates, mouse buttons

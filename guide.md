@@ -332,7 +332,8 @@ print(t.v)  -- 10
 A task pool, created with the `tasks` primitive, allows that multiple tasks
 share a parent container in the hierarchy.
 When the pool goes out of scope, all attached tasks are aborted.
-When a task terminates, it is automatically removed from the pool.
+When a task terminates, it is automatically removed from the pool but only
+between environment steps.
 
 <!-- tst/guide.lua : 5.2 -->
 
