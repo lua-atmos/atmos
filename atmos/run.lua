@@ -348,6 +348,7 @@ function M.stop ()
     meta_tasks.__close(TASKS)
     M.gc()
     TASKS._.dns = {}    -- remove pools
+    CLK.min, CLK.late = math.huge, 0
     for i=#_envs_, 1, -1 do
         if _envs_[i].quit then
             _envs_[i].quit()
@@ -783,6 +784,7 @@ function M.toggle (t, on, filter, ...)
             meta_xtask.__close(t._.toggle.task)   -- off-tree: just close it
             t._.toggle = nil
         end
+        M.emit(false, t, 0)     -- frozen timers re-report to `CLK.min`
     else
         assertn(2, t._.status==nil --[[and coroutine.status(t._.th)=='suspended']],
             "invalid toggle : expected awaiting task")

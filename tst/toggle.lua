@@ -74,11 +74,11 @@ do
         out(1)
         emit('X')
         emit('X')
-        toggle (t, true)
+        toggle (t, true)        -- emit(0, t): awakes `await(true)`
         out(2)
         emit('X')
     end
-    assertx(out(), "1\n2\n10\n")
+    assertx(out(), "1\n10\n2\n")
     atmos.stop()
 end
 

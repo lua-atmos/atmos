@@ -97,3 +97,15 @@ do
     assertx(out(), "-\nok\n")
     atmos.stop()
 end
+
+do
+    print("Testing...", "timers 8: toggle on re-reports timer")
+    spawn(task(function () await(20*_ms_); out 'b' end))
+    local t = spawn(task(function () await(10*_ms_); out 'a' end))
+    toggle(t, false)
+    emit(1*_ms_)                -- t frozen: its timer not re-reported
+    toggle(t, true)
+    emit(30*_ms_)               -- a (10ms) before b (19ms)
+    assertx(out(), "a\nb\n")
+    atmos.stop()
+end

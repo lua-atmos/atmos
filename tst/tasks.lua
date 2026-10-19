@@ -157,10 +157,10 @@ do
         emit('X')
         emit('X')
         out("---")
-        toggle (ts, true)
+        toggle (ts, true)       -- emit(0, ts): awakes `loop_on(true)`
         emit('X')
     end
-    assertx(out(), "1\n2\n---\n---\n1\n2\n")
+    assertx(out(), "1\n2\n---\n---\n1\n2\n1\n2\n")
     atmos.stop()
 end
 
