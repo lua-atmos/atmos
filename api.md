@@ -129,6 +129,8 @@ Returns a self-reference to the running task instance.
     - `: xtask`
         | running task instance
 
+Emits itself on termination or abortion.
+
 ## `xtask (T)`
 
 Creates a task instance from a prototype.
@@ -150,6 +152,8 @@ Creates a task pool.
 - Returns:
     - `: tasks`
         | task pool
+
+TODO: emit itself, child, abortion order
 
 ## `abort (t)`
 

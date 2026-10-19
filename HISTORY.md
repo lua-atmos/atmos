@@ -1,3 +1,29 @@
+v0.9 (???/??)
+-----------------
+
+- Additions:
+    - `atmos.gc()`: removes terminated tasks from their parents
+
+- Modifications:
+    - terminated tasks are removed between environment steps
+        - `loop` calls `atmos.gc()` after each step
+    - `pairs(ts)`: same semantics as `ipairs`
+        - tasks spawned during the loop are visited
+        - `await`/`emit` in the loop may skip tasks
+    - `abort(t)`: awakes tasks awaiting `t`
+    - task termination is emitted after its nested tasks are closed
+
+- Fixes:
+    - terminated tasks leaked in parent pools (#23)
+        - `par_any`, `watching`, `await` or/not
+        - `catch` / `pcall` around a failing `spawn` / `emit`
+    - pool never collected again after `pairs(ts)`
+    - tasks never collected again after an aborted emitter
+    - failing task: nested tasks and defers close immediately
+
+- Environments:
+    - `start` environments must call `atmos.gc()` after each callback
+
 v0.8 (aug/26)
 -------------
 

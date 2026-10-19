@@ -127,6 +127,11 @@ require                   step...step      quit
 `loop` uses `step` to drive the event loop.  `start` does not --
 the environment itself drives events (e.g. JS browser callbacks).
 
+`loop` also calls `atmos.gc()` after each `step`, to remove terminated tasks
+from their parents.
+With `start`, the environment must call `atmos.gc()` itself, at the end of
+each callback that emits (never from inside a task).
+
 ### Teardown: `stop`
 
 `stop` performs full teardown: kills all tasks (running their `<close>`

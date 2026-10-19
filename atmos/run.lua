@@ -34,6 +34,8 @@ meta_tasks = {
         return ipairs(ts._.dns)
     end,
     __close = function (ts)
+        local st = ts._.status
+        ts._.status = 'aborted'     -- closing: `emit` skips its subtree
         for _,dn in ipairs(ts._.dns) do
             getmetatable(dn).__close(dn)
         end
@@ -41,6 +43,7 @@ meta_tasks = {
             -- close the off-tree toggle gate
             meta_xtask.__close(ts._.toggle.task)
         end
+        ts._.status = st            -- closed pool is still usable
     end,
 }
 
@@ -50,7 +53,7 @@ meta_xtask = {
         if t._.status == 'ended' then
             return      -- may be closed again (dead in `dns`, abort, `<close>`)
         end
-        t._.status = 'aborted'      -- being closed: `emit` never resumes it
+        t._.status = 'aborted'      -- being closed: `emit` skips its subtree
         for _,dn in ipairs(t._.dns) do
             getmetatable(dn).__close(dn)
         end
@@ -63,17 +66,21 @@ meta_xtask = {
             return                  -- closed later, in `task_result`
         end
         -- dead: runs pending `<close>` of an errored coroutine
-        local ok = coroutine.close(t._.th)
-        assert(ok or st=='dead')
+        local ok, err = coroutine.close(t._.th)
         t._.status = 'ended'
         if t._.up then
             GC[t._.up] = true
-            -- emits termination to parent
+        end
+        if t._.up and ok then
+            -- emits termination to parent (error exit: no emit)
             local up = _me_(false, t._.up)
             if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
                 up = _me_(false, t._.up._.up)   -- await(ts) must reach parent
             end
             M.emit(false, up, t)
+        end
+        if not (ok or st=='dead') then
+            error(err, 0)       -- error in defer while aborting
         end
     end
 }
@@ -680,12 +687,17 @@ end
 local function emit (time, t, emt, ...)
     local ok, err = true, nil
 
+    if t._.status == 'aborted' then
+        return ok, err      -- dying subtree ignores its own terminations
+    end
+
     if t._.status == 'toggled' then
         -- toggled off: drive the off-tree gate task first, then gate the subtree
         if t._.toggle then
+            t._.toggle.pass = false     -- gate sets it on a match
             emit(time, t._.toggle.task, emt)
         end
-        if not (t._.toggle and t._.toggle.pass==time) then
+        if not (t._.toggle and t._.toggle.pass) then
             return ok, err
         end
     end
@@ -699,6 +711,7 @@ local function emit (time, t, emt, ...)
     end
 
     if getmetatable(t) == meta_xtask then
+        -- may be aborted by its own subtree during the loop above
         local awk = (coroutine.status(t._.th)=='suspended' and t._.status~='aborted')
         if not ok then
             if awk then
@@ -723,7 +736,8 @@ function M.emit (stk, to, emt, ...)
     M.TIME = M.TIME + 1
     local ret = xcall(debug.getinfo(2), stk and "emit", emit, M.TIME, fto(M.me(false),to), emt)
     local me = M.me(true)
-    if me and me._.status=='aborted' then
+    -- user emit only: termination emit runs inside a `__close` cascade
+    if stk and me and me._.status=='aborted' then
         -- TODO: lua5.5
         coroutine.yield()   -- wait to be closed from outside
         error "bug found"
@@ -757,6 +771,9 @@ function M.toggle (t, on, filter, ...)
     assertn(2, getmetatable(t)==meta_xtask or getmetatable(t)==meta_tasks,
         "invalid toggle : expected task")
     assertn(2, type(on) == 'boolean', "invalid toggle : expected bool argument")
+    if t._.status == 'ended' then
+        return      -- dead task: no-op
+    end
     if on then
         assertn(2, filter==nil, "invalid toggle : unexpected argument")
         assertn(2, t._.status=='toggled', "invalid toggle : expected toggled off task")
@@ -771,11 +788,11 @@ function M.toggle (t, on, filter, ...)
         t._.status = 'toggled'
         if filter ~= nil then
             -- hidden gate task (off-tree): emit drives it explicitly before the
-            -- gate check; on a match it stamps t._.toggle.pass = M.TIME
+            -- gate check; on a match it sets t._.toggle.pass
             local gate = M.xtask(debug.getinfo(2), true, function ()
                 while true do
                     M.await(M.TIME, filter)
-                    t._.toggle.pass = M.TIME
+                    t._.toggle.pass = true  -- flag: nested emits bump `M.TIME`
                 end
             end)
             gate._.up = t._.up
