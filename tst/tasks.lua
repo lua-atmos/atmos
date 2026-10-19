@@ -26,6 +26,7 @@ do
     local ts = tasks()
     spawn_in(ts, task(T))
     out "out"
+    atmos.gc()
     assertx(#ts, 0)
     assertx(out(), "in\nout\n")
     atmos.stop()
@@ -39,6 +40,7 @@ do
     local ts = tasks(2)
     spawn_in(ts, T)
     spawn_in(ts, T)
+    atmos.gc()
     assertx(#ts, 0)
     assertx(out(), "ok\nok\n")
     atmos.stop()
@@ -91,6 +93,7 @@ do
     local ok1 = spawn_in(ts, T, 1)
     assertx(#ts, 1)
     emit(true)
+    atmos.gc()
     assertx(#ts, 0)
     local ok2 = spawn_in(ts, T, 2)
     assertx(#ts, 1)
@@ -116,21 +119,22 @@ do
 end
 
 do
-    print("Testing...", "tasks 8: pairs gc: (now ok)")
+    print("Testing...", "tasks 8: pairs + spawn_in")
     local T = task(function ()
         await(true)
         out 'ok'
     end)
     local ts = tasks(1)
     spawn_in(ts, T)
-    for _, t in getmetatable(ts).__pairs(ts) do
-        emit(true)                      -- kills t
-        local ok = spawn_in(ts, T)  -- (no) failure b/c ts.ing>0
+    for _, t in pairs(ts) do
+        emit(true)                  -- kills t (not removed yet)
+        local ok = spawn_in(ts, T)  -- dead slot is free (max=1)
         out(ok ~= nil)
+        break                       -- new task would be visited
     end
-    local ok = spawn_in(ts, T)      -- (no) success b/c ts.ing=0
-    out(ok ~= nil)
-    assertx(out(), "ok\ntrue\nfalse\n")
+    atmos.gc()
+    out(#ts)
+    assertx(out(), "ok\ntrue\n1\n")
     atmos.stop()
 end
 

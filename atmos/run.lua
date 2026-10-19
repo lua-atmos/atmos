@@ -8,30 +8,12 @@ local M = {
     thread_modules = {}, -- requires to pass to threads
 }
 
-local task_gc
+-- set of parents with dead tasks, swept by `M.gc()`
+local GC = {}
 
 local meta_defer = {
     __close = function (t) t.f() end
 }
-
-local function _next (s, i)
-    if i == s.max then
-        return nil
-    else
-        i = i + 1
-        return i, s.ts._.dns[i]
-    end
-end
-local function _ipairs (ts)
-    ts._.ing = ts._.ing + 1
-    local close = setmetatable({}, {
-        __close = function ()
-            ts._.ing = ts._.ing - 1
-            task_gc(ts)
-        end
-    })
-    return _next, {ts=ts,max=#ts._.dns}, 0, close
-end
 
 local meta_task = {
     __tostring = function (t) return string.format('task: %p', t) end,
@@ -40,16 +22,20 @@ local meta_tasks
 local meta_xtask
 
 meta_tasks = {
-    __tostring = function (ts) return string.format('tasks: %p', ts) end,
+    __tostring = function (ts)
+        return string.format('tasks: %p', ts)
+    end,
+    __len = function (ts)
+        return #ts._.dns
+    end,
+    __pairs = function (ts)
+        return ipairs(ts._.dns)
+    end,
     __close = function (ts)
         for _,dn in ipairs(ts._.dns) do
             getmetatable(dn).__close(dn)
         end
     end,
-    __len = function (ts)
-        return #ts._.dns
-    end,
-    __pairs = _ipairs,
 }
 
 meta_xtask = {
@@ -68,6 +54,9 @@ meta_xtask = {
         elseif st ~= 'dead' then
             t._.status = 'aborted'
         end
+        if t._.up then
+            GC[t._.up] = true
+        end
     end
 }
 
@@ -78,8 +67,6 @@ local TASKS = setmetatable({
         up  = nil,
         dns = {},
         pin = true,
-        ing = 0,
-        gc  = false,
         max = nil,
         cache = setmetatable({}, {__mode='k'}),
     }
@@ -125,7 +112,6 @@ local function task_result (t, ok, err)
 
     if coroutine.status(t._.th) == 'dead' then
         t.ret = err
-        t._.up._.gc = true
         --if t._.status ~= 'aborted' then
             local up = _me_(false, t._.up)
             if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
@@ -137,9 +123,11 @@ local function task_result (t, ok, err)
     end
 end
 
-task_gc = function (t)
-    if t._.gc and t._.ing==0 then
-        t._.gc = false
+-- sweeps dead tasks: call between reactions only
+-- (`loop` calls it after each step, `start` envs after each callback)
+function M.gc ()
+    for t in pairs(GC) do
+        GC[t] = nil     -- ok: clearing existing fields during traversal
         for i=#t._.dns, 1, -1 do
             local s = t._.dns[i]
             if getmetatable(s)==meta_xtask and coroutine.status(s._.th)=='dead' then
@@ -341,8 +329,9 @@ function M.loop (body, ...)
                 end
             end
             if quit then
-                break
+                break    -- will call stop, will call M.gc()
             end
+            M.gc()
         end
         return t.ret
     end, ...)
@@ -356,6 +345,7 @@ end
 
 function M.stop ()
     meta_tasks.__close(TASKS)
+    M.gc()
     for i=#_envs_, 1, -1 do
         if _envs_[i].quit then
             _envs_[i].quit()
@@ -376,8 +366,6 @@ function M.tasks (max)
             up  = up,
             dns = {},
             pin = false,
-            ing = 0,
-            gc  = false,
             dbg = {file=dbg.short_src, line=dbg.currentline},
             ---
             max = n,
@@ -413,8 +401,6 @@ function M.xtask (dbg, tra, T)
             up  = nil,
             dns = {},
             pin = false,
-            ing = 0,
-            gc  = false,
             dbg = {file=dbg.short_src, line=dbg.currentline},
             ---
             th     = coroutine.create(f),
@@ -432,9 +418,6 @@ end
 function M.abort (t)
     assertn(2, getmetatable(t)==meta_xtask or getmetatable(t)==meta_tasks, "invalid abort : expected task")
     getmetatable(t).__close(t)
-    if t._.up then
-        t._.up._.gc = true
-    end
     local me = M.me(true)
     if me and me._.status=='aborted' then
         -- TODO: lua5.5
@@ -703,7 +686,6 @@ local function emit (time, t, emt, ...)
         end
     end
 
-    t._.ing = t._.ing + 1
     for i=1, #t._.dns do
         local dn = t._.dns[i]
         ok, err = pcall(emit, time, dn, emt)
@@ -711,9 +693,6 @@ local function emit (time, t, emt, ...)
             break
         end
     end
-    t._.ing = t._.ing - 1
-
-    task_gc(t)
 
     if getmetatable(t) == meta_xtask then
         if not ok then
