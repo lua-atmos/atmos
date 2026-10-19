@@ -8,7 +8,7 @@ local M = {
     thread_modules = {}, -- requires to pass to threads
 }
 
--- set of parents with dead tasks, swept at the end of the reaction
+-- set of parents with dead tasks, swept by `M.gc()`
 local GC = {}
 
 local meta_defer = {
