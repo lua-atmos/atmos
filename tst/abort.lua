@@ -70,6 +70,7 @@ do
         end))
         spawn_in(ts, task(function ()
             await(true)
+            await(true)
             out("no2")
         end))
         abort(ts)
