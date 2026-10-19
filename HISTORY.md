@@ -2,15 +2,17 @@ v0.9 (???/??)
 -----------------
 
 - Modifications:
-    - `atmos.gc`: terminated tasks are now removed only between environment steps
-        - environment must call it every step
-            - `loop` envs call automatically
-            - `start` envs must call each callback
-        - `pairs(ts)` may traverse dead tasks
-    - task termination is emitted on normal end only
-        - aborted task (even while running) never emits it
-    - `:clock`: synchronous clocks (#25)
+    - `:clock` synchronous emit/await (#25)
         - timers expire in time order, residual time carried
+    - task termination
+        - pool removal through `atmos.gc`
+        - emitted on normal end only (abortion/error never emits)
+
+- Environments:
+    - `atmos.next()`: us to nearest timer, `nil` if none (#25)
+    - `atmos.gc()`: remove tasks from pools between environment steps
+        - `loop` envs call automatically
+        - `start` envs must call each callback
 
 - Fixes:
     - terminated tasks leaked in parent pools (#23)

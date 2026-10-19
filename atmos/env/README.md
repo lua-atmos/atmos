@@ -132,6 +132,14 @@ from their parents.
 With `start`, the environment must call `atmos.gc()` itself, at the end of
 each callback that emits (never from inside a task).
 
+`atmos.next()` returns the microseconds to the nearest timer (or `nil` if
+none), relative to the last emitted clock tick.
+An environment may sleep until then, instead of polling with a fixed period,
+and must read it again after each step (emits change it).
+It is a lower bound: waking early only emits a tick with no expired timer.
+Emit the elapsed tick before each external input, so that timers born on
+input do not expire early.
+
 ### Teardown: `stop`
 
 `stop` performs full teardown: kills all tasks (running their `<close>`

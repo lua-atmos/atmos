@@ -109,3 +109,15 @@ do
     assertx(out(), "a\nb\n")
     atmos.stop()
 end
+
+do
+    print("Testing...", "timers 9: next")
+    out(atmos.next())           -- no timer
+    spawn(task(function () await(10*_ms_) end))
+    out(atmos.next())
+    emit(4*_ms_)
+    out(atmos.next())           -- 6ms left
+    atmos.stop()
+    out(atmos.next())
+    assertx(out(), "nil\n10000\n6000\nnil\n")
+end

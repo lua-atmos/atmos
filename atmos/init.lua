@@ -11,6 +11,7 @@ local atmos = {
     status = run.status,
     env    = run.env,
     gc     = run.gc,
+    next   = run.next,
     --
     thread_modules = run.thread_modules,
 }

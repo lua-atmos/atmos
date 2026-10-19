@@ -750,6 +750,11 @@ function M.emit (stk, to, emt, ...)
     CLK.late = late                         -- outer piece's (0 at top)
 end
 
+-- us to nearest timer (lower bound), or nil if none (envs may sleep)
+function M.next ()
+    return (CLK.min < math.huge) and CLK.min or nil
+end
+
 -------------------------------------------------------------------------------
 
 function M.toggle (t, on, filter, ...)
