@@ -35,6 +35,10 @@ meta_tasks = {
         for _,dn in ipairs(ts._.dns) do
             getmetatable(dn).__close(dn)
         end
+        if ts._.toggle and ts._.toggle.task then
+            -- close the off-tree toggle gate
+            meta_xtask.__close(ts._.toggle.task)
+        end
     end,
 }
 
@@ -46,7 +50,7 @@ meta_xtask = {
         end
         if t._.toggle and t._.toggle.task then
             -- close the off-tree toggle gate
-            getmetatable(t._.toggle.task).__close(t._.toggle.task)
+            meta_xtask.__close(t._.toggle.task)
         end
         local st = coroutine.status(t._.th)
         if st == 'suspended' then
