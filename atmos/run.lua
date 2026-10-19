@@ -11,6 +11,8 @@ local M = {
 -- set of parents with dead tasks, swept by `M.gc()`
 local GC = {}
 
+local TASKS, _me_   -- forward: used in `meta_xtask.__close`
+
 local meta_defer = {
     __close = function (t) t.f() end
 }
@@ -45,6 +47,10 @@ meta_tasks = {
 meta_xtask = {
     __tostring = function (t) return string.format('xtask: %p', t) end,
     __close = function (t)
+        if t._.status == 'ended' then
+            return      -- may be closed again (dead in `dns`, abort, `<close>`)
+        end
+        t._.status = 'aborted'      -- being closed: `emit` never resumes it
         for _,dn in ipairs(t._.dns) do
             getmetatable(dn).__close(dn)
         end
@@ -53,20 +59,28 @@ meta_xtask = {
             meta_xtask.__close(t._.toggle.task)
         end
         local st = coroutine.status(t._.th)
-        if st == 'suspended' then
-            assert(coroutine.close(t._.th))
-        elseif st ~= 'dead' then
-            t._.status = 'aborted'
+        if st=='running' or st=='normal' then
+            return                  -- closed later, in `task_result`
         end
+        -- dead: runs pending `<close>` of an errored coroutine
+        local ok = coroutine.close(t._.th)
+        assert(ok or st=='dead')
+        t._.status = 'ended'
         if t._.up then
             GC[t._.up] = true
+            -- emits termination to parent
+            local up = _me_(false, t._.up)
+            if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
+                up = _me_(false, t._.up._.up)   -- await(ts) must reach parent
+            end
+            M.emit(false, up, t)
         end
     end
 }
 
 X._metas(meta_task, meta_xtask, meta_tasks) -- inject metatables into `X.is`
 
-local TASKS = setmetatable({
+TASKS = setmetatable({
     _ = {
         up  = nil,
         dns = {},
@@ -78,7 +92,7 @@ local TASKS = setmetatable({
 
 -------------------------------------------------------------------------------
 
-local function _me_ (tra, t)
+_me_ = function (tra, t)
     if t == TASKS then
         return nil
     elseif (getmetatable(t) == meta_tasks) or ((not tra) and t._.tra) then
@@ -100,30 +114,16 @@ end
 -------------------------------------------------------------------------------
 
 local function task_result (t, ok, err)
-    if ok then
-        -- no error: continue normally
-        if t._.status == 'aborted' then
-            -- t aborted from outside
-            -- close now and continue normally
-            -- could not close before b/c t was running
-            -- TODO: lua5.5
-            assert(coroutine.close(t._.th))
-        end
-    else
-        coroutine.close(t._.th) -- TODO: assert fails "tasks.lua: error 2"
-        error(err, 0)
-    end
-
-    if coroutine.status(t._.th) == 'dead' then
+    local dead = (coroutine.status(t._.th) == 'dead')
+    if dead and ok then
         t.ret = err
-        --if t._.status ~= 'aborted' then
-            local up = _me_(false, t._.up)
-            if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
-                up = _me_(false, t._.up._.up)   -- await(ts) must reach parent
-            end
-            M.emit(false, up, t)
-        --end
+    end
+    if dead or t._.status=='aborted' then
+        -- aborted: t yielded, now suspended (could not close while running)
         meta_xtask.__close(t)
+    end
+    if not ok then
+        error(err, 0)
     end
 end
 
@@ -699,8 +699,9 @@ local function emit (time, t, emt, ...)
     end
 
     if getmetatable(t) == meta_xtask then
+        local awk = (coroutine.status(t._.th)=='suspended' and t._.status~='aborted')
         if not ok then
-            if coroutine.status(t._.th) == 'suspended' then
+            if awk then
                 ok, err = coroutine.resume(t._.th, 'atm_error', err)
                 if ok then
                     task_result(t, ok, err)
@@ -708,7 +709,7 @@ local function emit (time, t, emt, ...)
             end
             assertn(0, ok, err) -- TODO: error in defer?
         else
-            if (t._.time < time) and (coroutine.status(t._.th) == 'suspended') then
+            if awk and (t._.time < time) then
                 task_result(t, coroutine.resume(t._.th, nil, emt))
             end
         end
