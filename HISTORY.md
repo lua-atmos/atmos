@@ -12,6 +12,7 @@ v0.9 (???/??)
 
 - Fixes:
     - terminated tasks leaked in parent pools (#23)
+    - `toggle(ts)`: filter task was not closed with pool
 
 v0.8 (aug/26)
 -------------

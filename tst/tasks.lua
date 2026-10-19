@@ -164,6 +164,19 @@ do
     atmos.stop()
 end
 
+do
+    print("Testing...", "toggle 2: close gate with pool")
+    spawn(task(function ()
+        do
+            local ts <close> = tasks()
+            toggle(ts, false, {tag='until', true, function () out 'gate' end})
+        end
+        emit('X')
+    end))
+    assertx(out(), "")
+    atmos.stop()
+end
+
 print("--- AWAIT / TASKS ---")
 
 do
