@@ -285,30 +285,30 @@ Awaits an event pattern in the running task.
 
 The task awakes when an `emit(e)` matches the given await pattern as follows:
 
-| Group     | Pattern                             | matches        | returns  |
-|-----------|-------------------------------------|----------------|----------|
-| Boolean   | `true`                              | any event      | `e`      |
-|           | `false`                             | never          | —        |
-| Value     | `{tag=t,...}`                       | `X.gte(pat,e)` | `e`      |
-|           | `x: any`                            | `X.is(e,x)`    | `e`      |
-| Time      | `us: number`                        | timeout        | overrun  |
-|           | `'clock'`                           | clock tick     | delta    |
-| Tasks     | `t: xtask`                          | `t` end        | `v,t`    |
-|           | `T: task`                           | T end          | `v,t`    |
-|           | `{tag='spawn',T,...}`               | T end          | `v,t`    |
-|           | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts` |
-|           | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `v,t,ts` |
-| Stream    | `s: stream`                         | `s` ends       | `v,t`    |
-| Condition | `{tag='until', [p,] c}`             | [p] until c    | `e / res`|
-|           | `{tag='while', [p,] c}`             | [p] while c    | `e`      |
-| Logical   | `{tag='not',x}`                     | not `p`        | `e`      |
-|           | `{tag='and',...}`                   | all subs       | `e`      |
-|           | `{tag='or',...}`                    | any sub        | `e`      |
-| Meta      | `mt: meta`                          | via `__atmos`  | `e / res`|
+| Group     | Pattern                             | matches        | returns   |
+|-----------|-------------------------------------|----------------|-----------|
+| Boolean   | `true`                              | any event      | `e`       |
+|           | `false`                             | never          | —         |
+| Value     | `{tag=t,...}`                       | `X.gte(pat,e)` | `e`       |
+|           | `x: any`                            | `X.is(e,x)`    | `e`       |
+| Time      | `us: number`                        | timeout        | `late`    |
+|           | `'clock'`                           | clock tick     | `dt,late` |
+| Tasks     | `t: xtask`                          | `t` end        | `v,t`     |
+|           | `T: task`                           | T end          | `v,t`     |
+|           | `{tag='spawn',T,...}`               | T end          | `v,t`     |
+|           | `{tag='tasks',mode='any',tasks=ts}` | any pool end   | `v,t,ts`  |
+|           | `{tag='tasks',mode='all',tasks=ts}` | all pool end   | `v,t,ts`  |
+| Stream    | `s: stream`                         | `s` ends       | `v,t`     |
+| Condition | `{tag='until', [p,] c}`             | [p] until c    | `e / res` |
+|           | `{tag='while', [p,] c}`             | [p] while c    | `e`       |
+| Logical   | `{tag='not',x}`                     | not `p`        | `e`       |
+|           | `{tag='and',...}`                   | all subs       | `e`       |
+|           | `{tag='or',...}`                    | any sub        | `e`       |
+| Meta      | `mt: meta`                          | via `__atmos`  | `e / res` |
 
 Note that some patterns may modify the final result:
 
-- Time: difference between the time elapsed and expected
+- Time: `late`: time elapsed past expiry; `dt`: clock tick length
 - Tasks: task result, terminating task, and task pool
 - Condition, Meta: function result (defaults to `e` if `true`)
 

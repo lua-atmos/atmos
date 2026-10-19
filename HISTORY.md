@@ -9,6 +9,8 @@ v0.9 (???/??)
         - `pairs(ts)` may traverse dead tasks
     - task termination is emitted on normal end only
         - aborted task (even while running) never emits it
+    - `:clock`: synchronous clocks (#25)
+        - timers expire in time order, residual time carried
 
 - Fixes:
     - terminated tasks leaked in parent pools (#23)

@@ -11,6 +11,9 @@ local M = {
 -- set of parents with dead tasks, swept by `M.gc()`
 local GC = {}
 
+-- clock: nearest timer (lower bound), residual of current piece
+local CLK = { min=math.huge, late=0 }
+
 local meta_defer = {
     __close = function (t) t.f() end
 }
@@ -570,8 +573,9 @@ function M.await (time, awt, ...)
             end
         elseif clk then
             if clk <= 0 then
-                return -clk
+                return CLK.late - clk           -- on time: `late`
             end
+            CLK.min = math.min(CLK.min, clk)    -- report
         elseif type(awt) == 'function' then
             local ret = awt(emt)
             if ret then
@@ -606,7 +610,7 @@ function M.await (time, awt, ...)
                     clk = clk - emt
                 else
                     -- clock tick: wake on any bare-number emit, return the delta
-                    return emt
+                    return emt, CLK.late
                 end
             end
         elseif tag == 'tasks' then
@@ -713,9 +717,9 @@ local function emit (time, t, emt, ...)
     end
 end
 
-function M.emit (stk, to, emt, ...)
+local function emit_ (dbg, stk, tgt, emt)
     M.TIME = M.TIME + 1
-    local ret = xcall(debug.getinfo(2), stk and "emit", emit, M.TIME, fto(M.me(false),to), emt)
+    local ret = xcall(dbg, stk and "emit", emit, M.TIME, tgt, emt)
     local me = M.me(true)
     if me and me._.status=='aborted' then
         -- TODO: lua5.5
@@ -723,6 +727,26 @@ function M.emit (stk, to, emt, ...)
         error "bug found"
     end
     return ret
+end
+
+function M.emit (stk, to, emt, ...)
+    local dbg = debug.getinfo(2)
+    local tgt = fto(M.me(false), to)
+    if type(emt) ~= 'number' then
+        return emit_(dbg, stk, tgt, emt)
+    end
+    -- numeric tick: split in pieces, each ends at the nearest timer
+    local late = CLK.late                   -- nested numeric emit
+    repeat                                  -- `emit(0)`: one piece
+        local d = math.min(CLK.min, emt)
+        emt = emt - d                       -- residual after this piece
+        if tgt == TASKS then
+            CLK.min = math.huge             -- timers re-report
+        end
+        CLK.late = emt
+        emit_(dbg, stk, tgt, d)
+    until emt <= 0
+    CLK.late = late                         -- outer piece's (0 at top)
 end
 
 -------------------------------------------------------------------------------
