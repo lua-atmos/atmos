@@ -49,10 +49,12 @@ meta_xtask = {
             getmetatable(t._.toggle.task).__close(t._.toggle.task)
         end
         local st = coroutine.status(t._.th)
-        if st == 'suspended' then
-            assert(coroutine.close(t._.th))
-        elseif st ~= 'dead' then
-            t._.status = 'aborted'
+        if st=='suspended' or st=='dead' then
+            -- dead: runs pending `<close>` of an errored coroutine
+            local ok, err = coroutine.close(t._.th)
+            assert(ok or st=='dead', err)   -- dead+error: raised by `task_result`
+        else
+            t._.status = 'aborted'          -- running: closed in `task_result`
         end
         if t._.up then
             GC[t._.up] = true
@@ -96,29 +98,21 @@ end
 -------------------------------------------------------------------------------
 
 local function task_result (t, ok, err)
-    if ok then
-        -- no error: continue normally
-        if t._.status == 'aborted' then
-            -- t aborted from outside
-            -- close now and continue normally
-            -- could not close before b/c t was running
-            -- TODO: lua5.5
-            assert(coroutine.close(t._.th))
-        end
-    else
-        coroutine.close(t._.th) -- TODO: assert fails "tasks.lua: error 2"
+    if not ok then
+        -- error exit: no emit
+        meta_xtask.__close(t)   -- closes subtree, flags parent `GC`
         error(err, 0)
-    end
-
-    if coroutine.status(t._.th) == 'dead' then
+    elseif t._.status == 'aborted' then
+        -- aborted while running: close now (could not before), no emit
+        meta_xtask.__close(t)
+    elseif coroutine.status(t._.th) == 'dead' then
+        -- normal end: emits termination to parent
         t.ret = err
-        --if t._.status ~= 'aborted' then
-            local up = _me_(false, t._.up)
-            if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
-                up = _me_(false, t._.up._.up)   -- await(ts) must reach parent
-            end
-            M.emit(false, up, t)
-        --end
+        local up = _me_(false, t._.up)
+        if (getmetatable(t._.up) == meta_tasks) and (t._.up ~= TASKS) then
+            up = _me_(false, t._.up._.up)   -- await(ts) must reach parent
+        end
+        M.emit(false, up, t)
         meta_xtask.__close(t)
     end
 end
