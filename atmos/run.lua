@@ -346,6 +346,7 @@ end
 function M.stop ()
     meta_tasks.__close(TASKS)
     M.gc()
+    TASKS._.dns = {}    -- remove pools
     for i=#_envs_, 1, -1 do
         if _envs_[i].quit then
             _envs_[i].quit()
