@@ -58,6 +58,25 @@ do
     atmos.stop()
 end
 
+do
+    print("Testing...", "abort task 5: by spawned child")
+    spawn(task(function ()
+        local t = xtask()
+        local _ <close> = defer(function ()
+            out(3)
+        end)
+        out(1)
+        spawn(task(function ()
+            out(2)
+            abort(t)
+            out(999)
+        end))
+        out(999)
+    end))
+    assertx(out(), "1\n2\n3\n")    -- today: 1 2 999 3
+    atmos.stop()
+end
+
 print '--- TASKS ---'
 
 do

@@ -418,15 +418,24 @@ function M.xtask (dbg, tra, T)
     return t
 end
 
-function M.abort (t)
-    assertn(2, getmetatable(t)==meta_xtask or getmetatable(t)==meta_tasks, "invalid abort : expected task")
-    getmetatable(t).__close(t)
+-- Suspends the running task if it was aborted while running.
+-- Callers:
+--  - M.abort [run.lua]: self or ancestor abort
+--  - M.spawn [run.lua]: spawned child aborted `me`
+--  - emit_ [run.lua]: awakened task aborted `me`
+local function yield_if_aborted ()
     local me = M.me(true)
     if me and me._.status=='aborted' then
         -- TODO: lua5.5
-        coroutine.yield()
+        coroutine.yield()   -- wait to be closed from outside
         error "bug found"
     end
+end
+
+function M.abort (t)
+    assertn(2, getmetatable(t)==meta_xtask or getmetatable(t)==meta_tasks, "invalid abort : expected task")
+    getmetatable(t).__close(t)
+    yield_if_aborted()      -- self or ancestor
 end
 
 function M.spawn (dbg, up, tra, t, ...)
@@ -466,6 +475,7 @@ function M.spawn (dbg, up, tra, t, ...)
     t._.up = up
 
     task_result(t, coroutine.resume(t._.th, ...))
+    yield_if_aborted()      -- maybe `t` aborted me
     return t
 end
 
@@ -721,12 +731,7 @@ end
 local function emit_ (dbg, stk, tgt, emt)
     M.TIME = M.TIME + 1
     local ret = xcall(dbg, stk and "emit", emit, M.TIME, tgt, emt)
-    local me = M.me(true)
-    if me and me._.status=='aborted' then
-        -- TODO: lua5.5
-        coroutine.yield()   -- wait to be closed from outside
-        error "bug found"
-    end
+    yield_if_aborted()      -- maybe awakened tasks aborted me
     return ret
 end
 
