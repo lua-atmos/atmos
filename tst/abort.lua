@@ -77,6 +77,32 @@ do
     atmos.stop()
 end
 
+do
+    print("Testing...", "abort task 6: emitter aborted, emit completes")
+    spawn(task(function ()
+        local e = xtask()
+        local _ <close> = defer(function ()
+            out('defer')
+        end)
+        spawn(task(function ()
+            await('X')
+            out('c1')
+            abort(e)
+            out(999)
+        end))
+        await('Y')
+        emit_in('global', 'X')
+        out(999)
+    end))
+    spawn(task(function ()
+        await('X')
+        out('q')        -- outside aborted subtree: still awakes
+    end))
+    emit('Y')
+    assertx(out(), "c1\nq\ndefer\n")    -- before `b120a07`: c1 defer
+    atmos.stop()
+end
+
 print '--- TASKS ---'
 
 do

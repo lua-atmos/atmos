@@ -1,5 +1,7 @@
 # TODO
 
+- `<close>` block: child's defer aborts ancestor (abort)
+    - `M.abort` yields inside `__close`: C-call boundary crash
 - timers: registry of live timers (exact `CLK.min`)
     - stale bounds (aborted timers, targeted emits) split pieces
     - would drop toggle on `emit(0, t)`
