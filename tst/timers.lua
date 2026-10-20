@@ -121,3 +121,14 @@ do
     out(atmos.next())
     assertx(out(), "nil\n10000\n6000\nnil\n")
 end
+
+do
+    print("Testing...", "timers 10: targeted numeric emit: error")
+    local _,err = pcall(function ()
+        spawn(task(function ()
+            emit(1*_ms_)            -- default target: current task
+        end))
+    end)
+    assertfx(err, "invalid emit : expected global")
+    atmos.stop()
+end

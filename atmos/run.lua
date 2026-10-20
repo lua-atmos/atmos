@@ -741,14 +741,14 @@ function M.emit (stk, to, emt, ...)
     if type(emt) ~= 'number' then
         return emit_(dbg, stk, tgt, emt)
     end
-    -- numeric tick: split in pieces, each ends at the nearest timer
+    -- numeric tick: global only (targeted would keep a stale `CLK.min`)
+    assertn(2, tgt == TASKS, "invalid emit : expected global")
+    -- split in pieces, each ends at the nearest timer
     local late = CLK.late                   -- nested numeric emit
     repeat                                  -- `emit(0)`: one piece
         local d = math.min(CLK.min, emt)
         emt = emt - d                       -- residual after this piece
-        if tgt == TASKS then
-            CLK.min = math.huge             -- timers re-report
-        end
+        CLK.min = math.huge                 -- timers re-report
         CLK.late = emt
         emit_(dbg, stk, tgt, d)
     until emt <= 0
@@ -794,7 +794,9 @@ function M.toggle (t, on, filter, ...)
             meta_xtask.__close(t._.toggle.task)   -- off-tree: just close it
             t._.toggle = nil
         end
-        M.emit(false, t, 0)     -- frozen timers re-report to `CLK.min`
+        -- frozen timers re-report
+        -- `emit_`, not `M.emit`: skips global check (0 is not a tick)
+        emit_(debug.getinfo(2), false, t, 0)
     else
         assertn(2, t._.status==nil --[[and coroutine.status(t._.th)=='suspended']],
             "invalid toggle : expected awaiting task")
