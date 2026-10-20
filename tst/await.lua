@@ -61,8 +61,7 @@ do
         local v = await {tag='or', 'X', 1*_s_}
         out(v)
     end))
-    emit(510*_ms_)
-    emit(515*_ms_)
+    emit(1025*_ms_)                 -- late: 25ms
     emit 'X'
     assertx(out(), "25000\n")
     atmos.stop()
@@ -297,7 +296,7 @@ do
             await {tag='until', 'X'}
         end))
     end)
-    assertfx(err, "await.lua:297: invalid await : expected single function predicate")
+    assertfx(err, "await.lua:296: invalid await : expected single function predicate")
     atmos.stop()
 end
 
@@ -372,7 +371,7 @@ do
             await(tasks())
         end)
     end)
-    assertfx(err, "await.lua:372: invalid await : unexpected tasks pool")
+    assertfx(err, "await.lua:371: invalid await : unexpected tasks pool")
     atmos.stop()
 end
 
