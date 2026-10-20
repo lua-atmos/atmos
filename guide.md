@@ -188,6 +188,37 @@ In the example, the scheduling behaves as follows:
 - The second block awakes, prints `b2`, and suspends.
 - The main application prints `4`.
 
+### 3.1.1. Synchronous Timers
+
+Determinism and predictability also extend to timers because they all advance
+together due to the same clock ticks emitted by the environment.
+The scheduler guarantees that timers in concurrent tasks respect the
+specification and awake in perfect synchrony, regardless of the granularity of
+ticks:
+
+<!-- tst/guide.lua : 3.1.1 -->
+
+```
+do_spawn(function ()
+    par_any(function ()
+        await(30*_ms_)
+        print "30ms"        -- never prints
+    end, function ()
+        await(10*_ms_)
+        print "10ms"        -- prints
+        await(15*_ms_)
+        print "15ms"        -- prints, aborts the other branch
+    end)
+end)
+emit(30*_ms_)
+```
+
+Although the `await` in the first branch appears first in the source and
+matches the `emit`, both `await`s in the second branch expire first
+(`10+15<30`).
+The program prints `10ms` and `15ms`, but never `30ms` since the second
+branch terminates and aborts the whole `par_any` composition.
+
 ## 3.2. Lexical Hierarchy
 
 Tasks form a hierarchy based on the source position in which they are spawned.
@@ -253,7 +284,7 @@ do
 end
 ```
 
-In the example, we attach a `do_spawn` and a `defer` to an explicit block.
+We attach a `do_spawn` and a `defer` to an explicit block.
 When the outer block goes out of scope, it automatically aborts the nested
 spawned block and executes the deferred statement.
 The aborted block may also have pending defers, which also execute immediately.
@@ -391,10 +422,13 @@ toggle(t, true)
 emit 'X'    -- awakes
 ```
 
-`TODO: explain`
+Just after we spawn the task, we toggle it off, making it unresponsive to
+events.
+Therefore, the first `emit 'X'` is ignored by the task.
+Then, we toggle the task back to on, and the second `emit` awakes the task.
 
-In addition, Atmos provides a `toggle` statement, which awaits the given body
-to terminate, while also observing its first argument as a boolean event:
+Atmos also provides a `toggle` statement, which awaits the given body to
+terminate, while also observing its first argument as a boolean event:
 When receiving `false`, the body toggles off.
 When receiving `true`, the body toggles on.
 
@@ -522,7 +556,7 @@ for i=1, 10 do
 end
 ```
 
-The example spawns a dedicated task for the stream pipeline with source
+We spawn a dedicated task for the stream pipeline with source
 `S.on('X')`, which runs concurrently with a loop that generates events
 `X` carrying field `v=i` on every second.
 The pipeline filters only odd occurrences of `v`, then maps to these values,
@@ -617,7 +651,7 @@ loop(function ()
         end)
     end)
 
-    if t == 'clock' then
+    if type(t) == 'number' then    -- timeout
         print("Computation timeout...")
     else
         print(t.worker .. " yields " .. t.value)

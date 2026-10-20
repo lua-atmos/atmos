@@ -1,5 +1,8 @@
 # TODO
 
+- timers: registry of live timers (exact `CLK.min`)
+    - stale bounds (aborted timers, targeted emits) split pieces
+    - would drop toggle on `emit(0, t)`
 - envs: adapt to timers and `atmos.gc` (lua-atmos/atmos#26)
     - `socket`: `select` timeout from `atmos.next()`, tick before input
     - `iup`: one-shot timer at `atmos.next()`, real elapsed time

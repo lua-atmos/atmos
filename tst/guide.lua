@@ -86,6 +86,23 @@ loop(function ()
         print "4"
     end
 
+    -- 3.1.1
+    do
+        print "-=-=- 3.1.1 -=-=-"
+        local _ <close> = do_spawn(function ()
+            par_any(function ()
+                await(30*_ms_)
+                print "30ms"        -- never prints
+            end, function ()
+                await(10*_ms_)
+                print "10ms"        -- prints
+                await(15*_ms_)
+                print "15ms"        -- prints, aborts the other branch
+            end)
+        end)
+        emit_in('global', 30*_ms_)  -- top-level `emit` in the guide
+    end
+
     -- 3.2
     do
         print "-=-=- 3.2 -=-=-"
@@ -304,7 +321,7 @@ loop(function ()
                 return { worker='B', value=v }
             end)
         end)
-        if t == 'clock' then
+        if type(t) == 'number' then    -- timeout
             print("Computation timeout...")
         else
             print(t.worker .. " yields " .. t.value)
