@@ -2,9 +2,6 @@
 
 - `<close>` block: child's defer aborts ancestor (abort)
     - `M.abort` yields inside `__close`: C-call boundary crash
-- timers: registry of live timers (exact `CLK.min`)
-    - stale bounds (aborted timers, targeted emits) split pieces
-    - would drop toggle on `emit(0, t)`
 - envs: adapt to timers and `atmos.gc` (lua-atmos/atmos#26)
     - `socket`: `select` timeout from `atmos.next()`, tick before input
     - `iup`: one-shot timer at `atmos.next()`, real elapsed time
@@ -14,6 +11,9 @@
 
 <!-- ------------------------------ WON'T DO ------------------------------ -->
 
+- timers: registry of live timers (exact `CLK.min`)
+    - stale bounds (aborted timers, targeted emits) split pieces
+    - would drop toggle on `emit(0, t)`
 - `tasks()` in loop: pools stay in parent `dns` (gc)
     - by design: closed pool still usable
 - `loop`: no sweep before first `step` (gc)

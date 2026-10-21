@@ -3,6 +3,7 @@ v0.9 (???/??)
 
 - Modifications:
     - `:clock` synchronous emit/await (#25)
+        - `emit_in('global', dt)` required for clocks
         - timers expire in time order, residual time carried
     - task termination
         - pool removal through `atmos.gc`
